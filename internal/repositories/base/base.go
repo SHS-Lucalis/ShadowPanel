@@ -19,6 +19,8 @@ const ServerTaskFailsTable = "servers_tasks_fails"
 const ServerSettingsTable = "servers_settings"
 const NodesTable = "dedicated_servers"
 const ClientCertificatesTable = "client_certificates"
+const PluginStorageTable = "plugin_storage"
+const PluginsTable = "plugins"
 
 var (
 	GameFields                = allFields(domain.Game{})
@@ -36,4 +38,5 @@ var (
 	ServerSettingFields       = allFields(domain.ServerSetting{})
 	NodeFields                = allFields(domain.Node{})
 	ClientCertificateFields   = allFields(domain.ClientCertificate{})
+	PluginStorageFields       = allFields(domain.PluginStorageEntry{})
 )

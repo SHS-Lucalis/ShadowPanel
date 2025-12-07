@@ -14,10 +14,7 @@ import (
 	"github.com/pressly/goose/v3"
 )
 
-// TODO: enable embedded migrations when needed
-// //go:embed mysql/*.sql sqlite/*.sql postgres/*.sql
-//
-//go:embed postgres/*.sql
+//go:embed mysql/*.sql sqlite/*.sql postgres/*.sql
 var migrationsFS embed.FS
 
 func GetFS() embed.FS {

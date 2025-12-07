@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package gameap.plugin.sdk.nodes;
+
+option go_package = "github.com/gameap/gameap/pkg/plugin/sdk/nodes";
+
+import "pkg/plugin/sdk/common/common.proto";
+import "pkg/proto/node.proto";
+
+// NodesService provides node repository access to plugins
+// go:plugin type=host module=gameap-nodes
+service NodesService {
+  rpc FindNodes(FindNodesRequest) returns (FindNodesResponse);
+  rpc GetNode(GetNodeRequest) returns (GetNodeResponse);
+}
+
+message FindNodesRequest {
+  optional NodeFilter filter = 1;
+  repeated gameap.plugin.sdk.common.Sorting sorting = 2;
+  optional gameap.plugin.sdk.common.Pagination pagination = 3;
+}
+
+message NodeFilter {
+  repeated uint64 ids = 1;
+  optional bool enabled = 2;
+  optional string os = 3;
+}
+
+message FindNodesResponse {
+  repeated gameap.Node nodes = 1;
+  int32 total = 2;
+}
+
+message GetNodeRequest {
+  uint64 id = 1;
+}
+
+message GetNodeResponse {
+  optional gameap.Node node = 1;
+  bool found = 2;
+}

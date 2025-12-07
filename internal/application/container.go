@@ -19,7 +19,10 @@ import (
 	"github.com/gameap/gameap/internal/certificates"
 	"github.com/gameap/gameap/internal/config"
 	"github.com/gameap/gameap/internal/daemon"
+	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/files"
+	internalplugin "github.com/gameap/gameap/internal/plugin"
+	"github.com/gameap/gameap/internal/plugin/hostlibrary"
 	"github.com/gameap/gameap/internal/rbac"
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/internal/repositories/base"
@@ -32,6 +35,7 @@ import (
 	"github.com/gameap/gameap/internal/services/servercontrol"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
+	pkgplugin "github.com/gameap/gameap/pkg/plugin"
 	"github.com/pkg/errors"
 )
 
@@ -93,6 +97,12 @@ type Container struct {
 	daemonStatus   *daemon.StatusService
 	daemonFiles    *daemon.FileService
 	daemonCommands *daemon.CommandService
+
+	// Plugins
+	pluginManager    *pkgplugin.Manager
+	pluginDispatcher *pkgplugin.Dispatcher
+	pluginRepository repositories.PluginRepository
+	pluginLoader     *internalplugin.Loader
 
 	// HTTP
 	router      *http.ServeMux
@@ -423,10 +433,18 @@ func (c *Container) ServerControlService() *servercontrol.Service {
 }
 
 func (c *Container) createServerControlService() *servercontrol.Service {
+	var opts []servercontrol.ServiceOption
+	if !c.config.Plugins.Disabled {
+		opts = append(opts, servercontrol.WithPluginDispatcher(
+			pkgplugin.NewServerControlAdapter(c.PluginDispatcher()),
+		))
+	}
+
 	return servercontrol.NewService(
 		c.DaemonTaskRepository(),
 		c.ServerSettingRepository(),
 		c.TransactionManager(),
+		opts...,
 	)
 }
 
@@ -895,4 +913,111 @@ func (c *Container) DaemonCommands() *daemon.CommandService {
 	}
 
 	return c.daemonCommands
+}
+
+func (c *Container) PluginManager() *pkgplugin.Manager {
+	if c.pluginManager == nil {
+		c.pluginManager = c.createPluginManager()
+
+		c.appendShutdownFunc(func() error {
+			return c.pluginManager.Shutdown(c.context)
+		})
+	}
+
+	return c.pluginManager
+}
+
+func (c *Container) createPluginManager() *pkgplugin.Manager {
+	return pkgplugin.NewManager(pkgplugin.ManagerConfig{
+		Libraries: []pkgplugin.HostLibrary{
+			hostlibrary.NewServersHostLibrary(c.ServerRepository()),
+			hostlibrary.NewUsersHostLibrary(c.UserRepository()),
+			hostlibrary.NewNodesHostLibrary(c.NodeRepository()),
+			hostlibrary.NewGamesHostLibrary(c.GameRepository()),
+			hostlibrary.NewGameModsHostLibrary(c.GameModRepository()),
+			hostlibrary.NewDaemonTasksHostLibrary(c.DaemonTaskRepository()),
+			hostlibrary.NewServerSettingsHostLibrary(c.ServerSettingRepository()),
+			hostlibrary.NewServerControlHostLibrary(
+				c.ServerRepository(),
+				&lazyServerController{container: c},
+			),
+			hostlibrary.NewCacheHostLibrary(c.Cache(), "plugin:"),
+			hostlibrary.NewHTTPHostLibrary(),
+			hostlibrary.NewLogHostLibrary(slog.Default()),
+		},
+	})
+}
+
+// lazyServerController is a wrapper that lazily resolves the ServerControlService to break circular deps.
+type lazyServerController struct {
+	container *Container
+}
+
+func (l *lazyServerController) Start(ctx context.Context, server *domain.Server) (uint, error) {
+	return l.container.ServerControlService().Start(ctx, server)
+}
+
+func (l *lazyServerController) Stop(ctx context.Context, server *domain.Server) (uint, error) {
+	return l.container.ServerControlService().Stop(ctx, server)
+}
+
+func (l *lazyServerController) Restart(ctx context.Context, server *domain.Server) (uint, error) {
+	return l.container.ServerControlService().Restart(ctx, server)
+}
+
+func (l *lazyServerController) Update(ctx context.Context, server *domain.Server) (uint, error) {
+	return l.container.ServerControlService().Update(ctx, server)
+}
+
+func (l *lazyServerController) Install(ctx context.Context, server *domain.Server) (uint, error) {
+	return l.container.ServerControlService().Install(ctx, server)
+}
+
+func (l *lazyServerController) Reinstall(ctx context.Context, server *domain.Server) (uint, error) {
+	return l.container.ServerControlService().Reinstall(ctx, server)
+}
+
+func (c *Container) PluginDispatcher() *pkgplugin.Dispatcher {
+	if c.pluginDispatcher == nil {
+		c.pluginDispatcher = pkgplugin.NewDispatcher(c.PluginManager(), slog.Default())
+	}
+
+	return c.pluginDispatcher
+}
+
+func (c *Container) PluginRepository() repositories.PluginRepository {
+	if c.pluginRepository == nil {
+		c.pluginRepository = c.createPluginRepository()
+	}
+
+	return c.pluginRepository
+}
+
+func (c *Container) createPluginRepository() repositories.PluginRepository {
+	switch c.config.DatabaseDriver {
+	case databaseDriverMySQL:
+		return mysql.NewPluginRepository(c.TransactionalDB())
+	case databaseDriverPostgres, databaseDriverPGX:
+		return postgres.NewPluginRepository(c.TransactionalDB())
+	case databaseDriverSQLite:
+		return sqlite.NewPluginRepository(c.TransactionalDB())
+	case databaseDriverInMemory:
+		return inmemory.NewPluginRepository()
+	default:
+		return inmemory.NewPluginRepository()
+	}
+}
+
+func (c *Container) PluginLoader() *internalplugin.Loader {
+	if c.pluginLoader == nil {
+		c.pluginLoader = internalplugin.NewLoader(
+			c.PluginManager(),
+			c.FileManager(),
+			c.PluginRepository(),
+			c.config.Plugins.AutoLoad,
+			"plugins",
+		)
+	}
+
+	return c.pluginLoader
 }

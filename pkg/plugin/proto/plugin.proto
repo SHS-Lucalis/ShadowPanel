@@ -1,0 +1,195 @@
+syntax = "proto3";
+
+package gameap.plugin;
+
+option go_package = "github.com/gameap/gameap/pkg/plugin/proto";
+
+import "pkg/proto/server.proto";
+
+// ===============================
+// Events
+// ===============================
+
+// EventType defines all plugin event types
+enum EventType {
+  EVENT_TYPE_UNSPECIFIED = 0;
+
+  // Server lifecycle events
+  EVENT_TYPE_SERVER_PRE_START = 100;
+  EVENT_TYPE_SERVER_POST_START = 101;
+  EVENT_TYPE_SERVER_PRE_STOP = 102;
+  EVENT_TYPE_SERVER_POST_STOP = 103;
+  EVENT_TYPE_SERVER_PRE_RESTART = 104;
+  EVENT_TYPE_SERVER_POST_RESTART = 105;
+  EVENT_TYPE_SERVER_PRE_INSTALL = 106;
+  EVENT_TYPE_SERVER_POST_INSTALL = 107;
+  EVENT_TYPE_SERVER_PRE_UPDATE = 108;
+  EVENT_TYPE_SERVER_POST_UPDATE = 109;
+  EVENT_TYPE_SERVER_PRE_REINSTALL = 110;
+  EVENT_TYPE_SERVER_POST_REINSTALL = 111;
+  EVENT_TYPE_SERVER_PRE_DELETE = 112;
+  EVENT_TYPE_SERVER_POST_DELETE = 113;
+
+  // Server CRUD events
+  EVENT_TYPE_SERVER_CREATED = 120;
+  EVENT_TYPE_SERVER_UPDATED = 121;
+  EVENT_TYPE_SERVER_DELETED = 122;
+
+  // Task events
+  EVENT_TYPE_DAEMON_TASK_CREATED = 300;
+  EVENT_TYPE_DAEMON_TASK_COMPLETED = 301;
+  EVENT_TYPE_DAEMON_TASK_FAILED = 302;
+}
+
+// Event is the main event message sent to plugins
+message Event {
+  EventType type = 1;
+  PluginContext context = 2;
+  int64 timestamp = 3;
+
+  oneof payload {
+    ServerEventPayload server_event = 10;
+    TaskEventPayload task_event = 11;
+  }
+}
+
+// PluginContext provides context for plugin calls
+message PluginContext {
+  string plugin_id = 1;
+  string request_id = 2;
+  optional uint64 user_id = 3;
+  repeated string permissions = 4;
+}
+
+// ServerEventPayload contains server-related event data
+message ServerEventPayload {
+  gameap.Server server = 1;
+  map<string, string> extra_data = 2;
+}
+
+// TaskEventPayload contains task-related event data
+message TaskEventPayload {
+  uint64 task_id = 1;
+  uint64 node_id = 2;
+  optional uint64 server_id = 3;
+  string task_type = 4;
+  string status = 5;
+  map<string, string> extra_data = 6;
+}
+
+// EventResult is returned by plugins after handling an event
+message EventResult {
+  bool handled = 1;
+  bool should_cancel = 2;
+  optional string message = 3;
+  map<string, string> modified_data = 4;
+}
+
+// ===============================
+// Plugin Service
+// ===============================
+
+// Result wrapper for operations that can fail
+message Result {
+  bool success = 1;
+  optional string error = 2;
+  optional string error_code = 3;
+}
+
+// PluginService is the interface that plugins must implement
+// go:plugin type=plugin version=1
+service PluginService {
+  // GetInfo returns plugin metadata
+  rpc GetInfo(GetInfoRequest) returns (PluginInfo);
+
+  // Initialize is called when the plugin is loaded
+  rpc Initialize(InitializeRequest) returns (InitializeResponse);
+
+  // Shutdown is called when the plugin is being unloaded
+  rpc Shutdown(ShutdownRequest) returns (ShutdownResponse);
+
+  // HandleEvent is called when an event occurs
+  rpc HandleEvent(Event) returns (EventResult);
+
+  // GetSubscribedEvents returns the list of events this plugin wants to receive
+  rpc GetSubscribedEvents(GetSubscribedEventsRequest) returns (GetSubscribedEventsResponse);
+
+  // GetHTTPRoutes returns the HTTP routes this plugin provides
+  rpc GetHTTPRoutes(GetHTTPRoutesRequest) returns (GetHTTPRoutesResponse);
+
+  // HandleHTTPRequest handles an HTTP request for a plugin route
+  rpc HandleHTTPRequest(HTTPRequest) returns (HTTPResponse);
+}
+
+// Plugin metadata
+message PluginInfo {
+  string id = 1;
+  string name = 2;
+  string version = 3;
+  string description = 4;
+  string author = 5;
+  string license = 6;
+  string homepage = 7;
+  repeated string required_permissions = 8;
+  string api_version = 9;
+}
+
+// GetInfo request/response
+message GetInfoRequest {}
+
+// Initialize request/response
+message InitializeRequest {
+  PluginContext context = 1;
+  map<string, string> config = 2;
+}
+
+message InitializeResponse {
+  Result result = 1;
+}
+
+// Shutdown request/response
+message ShutdownRequest {
+  PluginContext context = 1;
+}
+
+message ShutdownResponse {
+  Result result = 1;
+}
+
+// Event subscription
+message GetSubscribedEventsRequest {}
+
+message GetSubscribedEventsResponse {
+  repeated EventType events = 1;
+}
+
+// HTTP routes
+message GetHTTPRoutesRequest {}
+
+message GetHTTPRoutesResponse {
+  repeated HTTPRoute routes = 1;
+}
+
+message HTTPRoute {
+  string path = 1;
+  repeated string methods = 2;
+  bool requires_auth = 3;
+  bool admin_only = 4;
+  string description = 5;
+}
+
+message HTTPRequest {
+  PluginContext context = 1;
+  string method = 2;
+  string path = 3;
+  map<string, string> headers = 4;
+  map<string, string> path_params = 5;
+  map<string, string> query_params = 6;
+  bytes body = 7;
+}
+
+message HTTPResponse {
+  int32 status_code = 1;
+  map<string, string> headers = 2;
+  bytes body = 3;
+}

@@ -243,3 +243,39 @@ type ClientCertificateRepository interface {
 
 	Delete(ctx context.Context, id uint) error
 }
+
+type PluginStorageRepository interface {
+	Find(
+		ctx context.Context,
+		filter *filters.FindPluginStorage,
+		order []filters.Sorting,
+		pagination *filters.Pagination,
+	) ([]domain.PluginStorageEntry, error)
+
+	Save(ctx context.Context, entry *domain.PluginStorageEntry) error
+
+	Delete(ctx context.Context, id uint64) error
+
+	DeleteByPlugin(ctx context.Context, pluginID uint64) error
+}
+
+type PluginRepository interface {
+	FindAll(
+		ctx context.Context,
+		order []filters.Sorting,
+		pagination *filters.Pagination,
+	) ([]domain.Plugin, error)
+
+	Find(
+		ctx context.Context,
+		filter *filters.FindPlugin,
+		order []filters.Sorting,
+		pagination *filters.Pagination,
+	) ([]domain.Plugin, error)
+
+	Save(ctx context.Context, plugin *domain.Plugin) error
+
+	Delete(ctx context.Context, id uint) error
+
+	Exists(ctx context.Context, filter *filters.FindPlugin) (bool, error)
+}

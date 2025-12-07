@@ -44,3 +44,11 @@ High-level scheduled tasks for game servers with support for recurring execution
 
 ### ServerSetting (`server_setting.go`)
 Key-value configuration storage for individual game servers with type-flexible values (string, boolean, integer).
+
+## Plugin System
+
+### Plugin (`plugin.go`)
+Represents a WebAssembly plugin with metadata, event hooks, and HTTP route registrations for extending GameAP functionality.
+
+### PluginStorageEntry (`plugin_storage.go`)
+Persistent key-value storage for plugins, allowing them to store and retrieve data associated with specific entities (servers, users, etc.).

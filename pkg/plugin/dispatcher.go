@@ -1,0 +1,269 @@
+package plugin
+
+import (
+	"context"
+	"log/slog"
+	"maps"
+	"sync"
+	"time"
+
+	"github.com/gameap/gameap/internal/domain"
+	"github.com/gameap/gameap/pkg/plugin/proto"
+	domainproto "github.com/gameap/gameap/pkg/proto"
+	"github.com/google/uuid"
+	"github.com/pkg/errors"
+)
+
+// EventDispatchResult contains the result of dispatching an event.
+type EventDispatchResult struct {
+	// Cancelled indicates if the event was cancelled by a plugin.
+	Cancelled bool
+	// CancelledBy contains the plugin ID that cancelled the event.
+	CancelledBy string
+	// CancelMessage contains the cancellation message if any.
+	CancelMessage string
+	// HandledBy contains the list of plugin IDs that handled the event.
+	HandledBy []string
+	// ModifiedData contains any data modified by plugins.
+	ModifiedData map[string]string
+	// Errors contains any errors that occurred during dispatch.
+	Errors []error
+}
+
+// Dispatcher handles event dispatching to plugins.
+type Dispatcher struct {
+	mu              sync.RWMutex
+	manager         *Manager
+	subscriptions   map[proto.EventType][]*LoadedPlugin
+	logger          *slog.Logger
+	subscriptionsOK bool
+}
+
+// NewDispatcher creates a new event dispatcher.
+func NewDispatcher(manager *Manager, logger *slog.Logger) *Dispatcher {
+	return &Dispatcher{
+		manager:       manager,
+		subscriptions: make(map[proto.EventType][]*LoadedPlugin),
+		logger:        logger,
+	}
+}
+
+// RefreshSubscriptions queries all plugins for their subscribed events.
+func (d *Dispatcher) RefreshSubscriptions(ctx context.Context) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	d.subscriptions = make(map[proto.EventType][]*LoadedPlugin)
+	d.subscriptionsOK = false
+
+	plugins := d.manager.GetPlugins()
+	for _, plugin := range plugins {
+		if !plugin.Enabled {
+			continue
+		}
+
+		resp, err := plugin.Instance.GetSubscribedEvents(ctx, &proto.GetSubscribedEventsRequest{})
+		if err != nil {
+			d.logger.Error("failed to get subscribed events",
+				slog.String("plugin_id", plugin.Info.Id),
+				slog.Any("error", err),
+			)
+
+			continue
+		}
+
+		for _, eventType := range resp.Events {
+			d.subscriptions[eventType] = append(d.subscriptions[eventType], plugin)
+		}
+	}
+
+	d.subscriptionsOK = true
+
+	return nil
+}
+
+// Dispatch dispatches an event to all subscribed plugins.
+func (d *Dispatcher) Dispatch(ctx context.Context, event *proto.Event) *EventDispatchResult {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+
+	result := &EventDispatchResult{
+		HandledBy:    make([]string, 0),
+		ModifiedData: make(map[string]string),
+		Errors:       make([]error, 0),
+	}
+
+	subscribers := d.subscriptions[event.Type]
+	if len(subscribers) == 0 {
+		return result
+	}
+
+	cancellable := isCancellableEvent(event.Type)
+
+	for _, plugin := range subscribers {
+		if !plugin.Enabled {
+			continue
+		}
+
+		eventResult, err := plugin.Instance.HandleEvent(ctx, event)
+		if err != nil {
+			result.Errors = append(result.Errors, errors.Wrapf(
+				err, "plugin %s failed to handle event", plugin.Info.Id,
+			))
+
+			d.logger.Error("plugin failed to handle event",
+				slog.String("plugin_id", plugin.Info.Id),
+				slog.Int("event_type", int(event.Type)),
+				slog.Any("error", err),
+			)
+
+			continue
+		}
+
+		if eventResult.Handled {
+			result.HandledBy = append(result.HandledBy, plugin.Info.Id)
+		}
+
+		if cancellable && eventResult.ShouldCancel {
+			result.Cancelled = true
+			result.CancelledBy = plugin.Info.Id
+			if eventResult.Message != nil {
+				result.CancelMessage = *eventResult.Message
+			}
+
+			return result
+		}
+
+		maps.Copy(result.ModifiedData, eventResult.ModifiedData)
+	}
+
+	return result
+}
+
+// DispatchServerEvent is a convenience method to dispatch a server event.
+func (d *Dispatcher) DispatchServerEvent(
+	ctx context.Context,
+	eventType proto.EventType,
+	server *domain.Server,
+	extraData map[string]string,
+) *EventDispatchResult {
+	event := &proto.Event{
+		Type:      eventType,
+		Timestamp: time.Now().Unix(),
+		Context: &proto.PluginContext{
+			RequestId: uuid.New().String(),
+		},
+		Payload: &proto.Event_ServerEvent{
+			ServerEvent: &proto.ServerEventPayload{
+				Server:    domainServerToProto(server),
+				ExtraData: extraData,
+			},
+		},
+	}
+
+	return d.Dispatch(ctx, event)
+}
+
+// DispatchTaskEvent is a convenience method to dispatch a task event.
+func (d *Dispatcher) DispatchTaskEvent(
+	ctx context.Context,
+	eventType proto.EventType,
+	taskID, nodeID uint,
+	serverID *uint,
+	taskType, status string,
+	extraData map[string]string,
+) *EventDispatchResult {
+	payload := &proto.TaskEventPayload{
+		TaskId:    uint64(taskID),
+		NodeId:    uint64(nodeID),
+		TaskType:  taskType,
+		Status:    status,
+		ExtraData: extraData,
+	}
+	if serverID != nil {
+		sid := uint64(*serverID)
+		payload.ServerId = &sid
+	}
+
+	event := &proto.Event{
+		Type:      eventType,
+		Timestamp: time.Now().Unix(),
+		Context: &proto.PluginContext{
+			RequestId: uuid.New().String(),
+		},
+		Payload: &proto.Event_TaskEvent{
+			TaskEvent: payload,
+		},
+	}
+
+	return d.Dispatch(ctx, event)
+}
+
+// HasSubscribers returns true if there are any subscribers for the event type.
+func (d *Dispatcher) HasSubscribers(eventType proto.EventType) bool {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+
+	subscribers := d.subscriptions[eventType]
+	for _, p := range subscribers {
+		if p.Enabled {
+			return true
+		}
+	}
+
+	return false
+}
+
+// isCancellableEvent returns true if the event type supports cancellation.
+func isCancellableEvent(eventType proto.EventType) bool {
+	switch eventType {
+	case proto.EventType_EVENT_TYPE_SERVER_PRE_START,
+		proto.EventType_EVENT_TYPE_SERVER_PRE_STOP,
+		proto.EventType_EVENT_TYPE_SERVER_PRE_RESTART,
+		proto.EventType_EVENT_TYPE_SERVER_PRE_INSTALL,
+		proto.EventType_EVENT_TYPE_SERVER_PRE_UPDATE,
+		proto.EventType_EVENT_TYPE_SERVER_PRE_REINSTALL,
+		proto.EventType_EVENT_TYPE_SERVER_PRE_DELETE:
+		return true
+	default:
+		return false
+	}
+}
+
+// domainServerToProto converts a domain.Server to proto.Server.
+func domainServerToProto(s *domain.Server) *domainproto.Server {
+	if s == nil {
+		return nil
+	}
+
+	var queryPort, rconPort *int32
+	if s.QueryPort != nil {
+		qp := int32(*s.QueryPort) //nolint:gosec
+		queryPort = &qp
+	}
+	if s.RconPort != nil {
+		rp := int32(*s.RconPort) //nolint:gosec
+		rconPort = &rp
+	}
+
+	return &domainproto.Server{
+		Id:            uint64(s.ID),
+		Uuid:          s.UUID.String(),
+		UuidShort:     s.UUIDShort,
+		Enabled:       s.Enabled,
+		Installed:     domainproto.ServerInstalledStatus(s.Installed), //nolint:gosec
+		Blocked:       s.Blocked,
+		Name:          s.Name,
+		GameId:        s.GameID,
+		DsId:          uint64(s.DSID),
+		GameModId:     uint64(s.GameModID),
+		ServerIp:      s.ServerIP,
+		ServerPort:    int32(s.ServerPort), //nolint:gosec
+		QueryPort:     queryPort,
+		RconPort:      rconPort,
+		Dir:           s.Dir,
+		SuUser:        s.SuUser,
+		StartCommand:  s.StartCommand,
+		ProcessActive: s.ProcessActive,
+	}
+}

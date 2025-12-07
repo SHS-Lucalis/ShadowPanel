@@ -87,6 +87,11 @@ type Config struct {
 	UI struct {
 		DefaultLanguage string `env:"DEFAULT_LANGUAGE" envDefault:""`
 	}
+
+	Plugins struct {
+		Disabled bool     `env:"PLUGINS_DISABLED" envDefault:"false"`
+		AutoLoad []string `env:"PLUGINS_AUTOLOAD" envDefault:"" envSeparator:","`
+	}
 }
 
 func LoadConfig() (*Config, error) {

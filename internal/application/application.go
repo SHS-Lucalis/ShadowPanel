@@ -121,6 +121,13 @@ func Run(runParams RunParams) {
 		startHTTPSServer(ctx, cfg, container)
 	}
 
+	err = container.PluginLoader().LoadAll(ctx)
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to load plugins", slog.String("error", err.Error()))
+
+		os.Exit(1)
+	}
+
 	server := container.HTTPServer()
 
 	err = server.ListenAndServe()

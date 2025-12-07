@@ -22,7 +22,45 @@ var (
 	ErrAnotherTaskAlreadyExists      = errors.New("another task already exists, please wait until it is completed")
 	ErrEmptyServerStartCommand       = errors.New("empty server start command")
 	ErrServerUpdateInstallInProgress = errors.New("server update/install task is already in progress")
+	ErrCancelledByPlugin             = errors.New("operation cancelled by plugin")
 )
+
+// PluginEventType represents the type of plugin event.
+type PluginEventType int
+
+const (
+	PluginEventServerPreStart PluginEventType = iota
+	PluginEventServerPostStart
+	PluginEventServerPreStop
+	PluginEventServerPostStop
+	PluginEventServerPreRestart
+	PluginEventServerPostRestart
+	PluginEventServerPreInstall
+	PluginEventServerPostInstall
+	PluginEventServerPreUpdate
+	PluginEventServerPostUpdate
+	PluginEventServerPreReinstall
+	PluginEventServerPostReinstall
+	PluginEventServerPreDelete
+	PluginEventServerPostDelete
+)
+
+// PluginDispatchResult contains the result of dispatching an event.
+type PluginDispatchResult struct {
+	Cancelled     bool
+	CancelledBy   string
+	CancelMessage string
+}
+
+// PluginDispatcher is an interface for dispatching plugin events.
+type PluginDispatcher interface {
+	DispatchServerEvent(
+		ctx context.Context,
+		eventType PluginEventType,
+		server *domain.Server,
+		extraData map[string]string,
+	) *PluginDispatchResult
+}
 
 type TaskAlreadyExistsError struct {
 	taskName string
@@ -43,23 +81,81 @@ type Service struct {
 	daemonTaskRepo    repositories.DaemonTaskRepository
 	serverSettingRepo repositories.ServerSettingRepository
 	tm                base.TransactionManager
+	pluginDispatcher  PluginDispatcher
+}
+
+// ServiceOption is a functional option for configuring the Service.
+type ServiceOption func(*Service)
+
+// WithPluginDispatcher sets the plugin dispatcher for the service.
+func WithPluginDispatcher(dispatcher PluginDispatcher) ServiceOption {
+	return func(s *Service) {
+		s.pluginDispatcher = dispatcher
+	}
 }
 
 func NewService(
 	daemonTaskRepo repositories.DaemonTaskRepository,
 	serverSettingRepo repositories.ServerSettingRepository,
 	tm base.TransactionManager,
+	opts ...ServiceOption,
 ) *Service {
-	return &Service{
+	s := &Service{
 		daemonTaskRepo:    daemonTaskRepo,
 		serverSettingRepo: serverSettingRepo,
 		tm:                tm,
 	}
+
+	for _, opt := range opts {
+		opt(s)
+	}
+
+	return s
+}
+
+// dispatchPreEvent dispatches a pre-event and returns an error if cancelled.
+func (s *Service) dispatchPreEvent(
+	ctx context.Context,
+	eventType PluginEventType,
+	server *domain.Server,
+) error {
+	if s.pluginDispatcher == nil {
+		return nil
+	}
+
+	result := s.pluginDispatcher.DispatchServerEvent(ctx, eventType, server, nil)
+	if result != nil && result.Cancelled {
+		msg := result.CancelMessage
+		if msg == "" {
+			msg = result.CancelledBy
+		}
+
+		return errors.Wrapf(ErrCancelledByPlugin, "cancelled by %s: %s", result.CancelledBy, msg)
+	}
+
+	return nil
+}
+
+// dispatchPostEvent dispatches a post-event (non-blocking).
+func (s *Service) dispatchPostEvent(
+	ctx context.Context,
+	eventType PluginEventType,
+	server *domain.Server,
+) {
+	if s.pluginDispatcher == nil {
+		return
+	}
+
+	s.pluginDispatcher.DispatchServerEvent(ctx, eventType, server, nil)
 }
 
 // Start creates a server start task.
 // If the server has autostart enabled, it will also enable autostart_current.
 func (s *Service) Start(ctx context.Context, server *domain.Server) (uint, error) {
+	if err := s.dispatchPreEvent(ctx, PluginEventServerPreStart, server); err != nil {
+		return 0, err
+	}
+
 	// If autostart is enabled, set autostart_current to true
 	if err := s.updateAutostartCurrentIfEnabled(ctx, server.ID, true); err != nil {
 		return 0, err
@@ -71,12 +167,18 @@ func (s *Service) Start(ctx context.Context, server *domain.Server) (uint, error
 		return 0, err
 	}
 
+	s.dispatchPostEvent(ctx, PluginEventServerPostStart, server)
+
 	return taskID, nil
 }
 
 // Stop creates a server stop task.
 // This method also disables autostart_current.
 func (s *Service) Stop(ctx context.Context, server *domain.Server) (uint, error) {
+	if err := s.dispatchPreEvent(ctx, PluginEventServerPreStop, server); err != nil {
+		return 0, err
+	}
+
 	// Set autostart_current to false
 	if err := s.updateAutostartCurrent(ctx, server.ID, false); err != nil {
 		return 0, err
@@ -88,12 +190,18 @@ func (s *Service) Stop(ctx context.Context, server *domain.Server) (uint, error)
 		return 0, err
 	}
 
+	s.dispatchPostEvent(ctx, PluginEventServerPostStop, server)
+
 	return taskID, nil
 }
 
 // Restart creates a server restart task.
 // If the server has autostart enabled, it will also enable autostart_current.
 func (s *Service) Restart(ctx context.Context, server *domain.Server) (uint, error) {
+	if err := s.dispatchPreEvent(ctx, PluginEventServerPreRestart, server); err != nil {
+		return 0, err
+	}
+
 	// If autostart is enabled, set autostart_current to true
 	if err := s.updateAutostartCurrentIfEnabled(ctx, server.ID, true); err != nil {
 		return 0, err
@@ -105,25 +213,39 @@ func (s *Service) Restart(ctx context.Context, server *domain.Server) (uint, err
 		return 0, err
 	}
 
+	s.dispatchPostEvent(ctx, PluginEventServerPostRestart, server)
+
 	return taskID, nil
 }
 
 // Update creates a server update task.
 func (s *Service) Update(ctx context.Context, server *domain.Server) (uint, error) {
+	if err := s.dispatchPreEvent(ctx, PluginEventServerPreUpdate, server); err != nil {
+		return 0, err
+	}
+
 	taskID, err := s.addServerUpdate(ctx, server, 0)
 	if err != nil {
 		return 0, err
 	}
+
+	s.dispatchPostEvent(ctx, PluginEventServerPostUpdate, server)
 
 	return taskID, nil
 }
 
 // Install creates a server install task.
 func (s *Service) Install(ctx context.Context, server *domain.Server) (uint, error) {
+	if err := s.dispatchPreEvent(ctx, PluginEventServerPreInstall, server); err != nil {
+		return 0, err
+	}
+
 	taskID, err := s.addServerInstall(ctx, server, 0)
 	if err != nil {
 		return 0, err
 	}
+
+	s.dispatchPostEvent(ctx, PluginEventServerPostInstall, server)
 
 	return taskID, nil
 }
@@ -131,6 +253,10 @@ func (s *Service) Install(ctx context.Context, server *domain.Server) (uint, err
 // Reinstall creates a server reinstall task.
 // This is a combination of stop, delete, and install tasks.
 func (s *Service) Reinstall(ctx context.Context, server *domain.Server) (uint, error) {
+	if err := s.dispatchPreEvent(ctx, PluginEventServerPreReinstall, server); err != nil {
+		return 0, err
+	}
+
 	// First, ensure no working tasks exist
 	exists, err := s.workingTasksExist(
 		ctx,
@@ -176,6 +302,8 @@ func (s *Service) Reinstall(ctx context.Context, server *domain.Server) (uint, e
 	if err != nil {
 		return 0, err
 	}
+
+	s.dispatchPostEvent(ctx, PluginEventServerPostReinstall, server)
 
 	return installTaskID, nil
 }

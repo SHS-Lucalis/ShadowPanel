@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package gameap;
+
+option go_package = "github.com/gameap/gameap/pkg/proto";
+
+message GameMod {
+  uint64 id = 1;
+  string game_code = 2;
+  string name = 3;
+  optional string start_cmd_linux = 4;
+  optional string start_cmd_windows = 5;
+  optional string kick_cmd = 6;
+  optional string ban_cmd = 7;
+}
