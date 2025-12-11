@@ -5,6 +5,8 @@ package gameap.plugin;
 option go_package = "github.com/gameap/gameap/pkg/plugin/proto";
 
 import "pkg/proto/server.proto";
+import "pkg/proto/user.proto";
+import "pkg/proto/pat.proto";
 
 // ===============================
 // Events
@@ -178,14 +180,28 @@ message HTTPRoute {
   string description = 5;
 }
 
+// QueryParamValues supports multi-value query parameters (JSON API spec)
+message QueryParamValues {
+  repeated string values = 1;
+}
+
+// Session contains user session data passed to plugins
+message Session {
+  string id = 1;
+  gameap.User user = 2;
+  optional gameap.PersonalAccessToken token = 3;
+}
+
 message HTTPRequest {
   PluginContext context = 1;
   string method = 2;
   string path = 3;
   map<string, string> headers = 4;
   map<string, string> path_params = 5;
-  map<string, string> query_params = 6;
-  bytes body = 7;
+  map<string, QueryParamValues> query_params = 6;
+  reserved 7, 8;
+  bytes body = 9;
+  optional Session session = 10;
 }
 
 message HTTPResponse {

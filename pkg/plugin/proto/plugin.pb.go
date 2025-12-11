@@ -688,18 +688,75 @@ func (x *HTTPRoute) GetDescription() string {
 	return ""
 }
 
+// QueryParamValues supports multi-value query parameters (JSON API spec)
+type QueryParamValues struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Values []string `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+}
+
+func (x *QueryParamValues) ProtoReflect() protoreflect.Message {
+	panic(`not implemented`)
+}
+
+func (x *QueryParamValues) GetValues() []string {
+	if x != nil {
+		return x.Values
+	}
+	return nil
+}
+
+// Session contains user session data passed to plugins
+type Session struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id    string                     `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	User  *proto.User                `protobuf:"bytes,2,opt,name=user,proto3" json:"user,omitempty"`
+	Token *proto.PersonalAccessToken `protobuf:"bytes,3,opt,name=token,proto3,oneof" json:"token,omitempty"`
+}
+
+func (x *Session) ProtoReflect() protoreflect.Message {
+	panic(`not implemented`)
+}
+
+func (x *Session) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Session) GetUser() *proto.User {
+	if x != nil {
+		return x.User
+	}
+	return nil
+}
+
+func (x *Session) GetToken() *proto.PersonalAccessToken {
+	if x != nil {
+		return x.Token
+	}
+	return nil
+}
+
 type HTTPRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Context     *PluginContext    `protobuf:"bytes,1,opt,name=context,proto3" json:"context,omitempty"`
-	Method      string            `protobuf:"bytes,2,opt,name=method,proto3" json:"method,omitempty"`
-	Path        string            `protobuf:"bytes,3,opt,name=path,proto3" json:"path,omitempty"`
-	Headers     map[string]string `protobuf:"bytes,4,rep,name=headers,proto3" json:"headers,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	PathParams  map[string]string `protobuf:"bytes,5,rep,name=path_params,json=pathParams,proto3" json:"path_params,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	QueryParams map[string]string `protobuf:"bytes,6,rep,name=query_params,json=queryParams,proto3" json:"query_params,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	Body        []byte            `protobuf:"bytes,7,opt,name=body,proto3" json:"body,omitempty"`
+	Context     *PluginContext               `protobuf:"bytes,1,opt,name=context,proto3" json:"context,omitempty"`
+	Method      string                       `protobuf:"bytes,2,opt,name=method,proto3" json:"method,omitempty"`
+	Path        string                       `protobuf:"bytes,3,opt,name=path,proto3" json:"path,omitempty"`
+	Headers     map[string]string            `protobuf:"bytes,4,rep,name=headers,proto3" json:"headers,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	PathParams  map[string]string            `protobuf:"bytes,5,rep,name=path_params,json=pathParams,proto3" json:"path_params,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	QueryParams map[string]*QueryParamValues `protobuf:"bytes,6,rep,name=query_params,json=queryParams,proto3" json:"query_params,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Body        []byte                       `protobuf:"bytes,9,opt,name=body,proto3" json:"body,omitempty"`
+	Session     *Session                     `protobuf:"bytes,10,opt,name=session,proto3,oneof" json:"session,omitempty"`
 }
 
 func (x *HTTPRequest) ProtoReflect() protoreflect.Message {
@@ -741,7 +798,7 @@ func (x *HTTPRequest) GetPathParams() map[string]string {
 	return nil
 }
 
-func (x *HTTPRequest) GetQueryParams() map[string]string {
+func (x *HTTPRequest) GetQueryParams() map[string]*QueryParamValues {
 	if x != nil {
 		return x.QueryParams
 	}
@@ -751,6 +808,13 @@ func (x *HTTPRequest) GetQueryParams() map[string]string {
 func (x *HTTPRequest) GetBody() []byte {
 	if x != nil {
 		return x.Body
+	}
+	return nil
+}
+
+func (x *HTTPRequest) GetSession() *Session {
+	if x != nil {
+		return x.Session
 	}
 	return nil
 }

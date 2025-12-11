@@ -4,6 +4,8 @@ import (
 	"context"
 	"io"
 	"log/slog"
+	"regexp"
+	"strings"
 	"sync"
 
 	"github.com/gameap/gameap/pkg/plugin/proto"
@@ -22,10 +24,11 @@ type HostLibrary interface {
 
 // LoadedPlugin represents a loaded plugin instance.
 type LoadedPlugin struct {
-	Info     *proto.PluginInfo
-	Instance proto.PluginService
-	Config   map[string]string
-	Enabled  bool
+	Info       *proto.PluginInfo
+	Instance   proto.PluginService
+	Config     map[string]string
+	Enabled    bool
+	HTTPRoutes []*proto.HTTPRoute
 
 	runtime wazero.Runtime
 }
@@ -104,7 +107,9 @@ func (m *Manager) Load(
 		return nil, err
 	}
 
-	m.plugins[loadedPlugin.Info.Id] = loadedPlugin
+	id := CompactPluginID(ParsePluginID(loadedPlugin.Info.Id))
+
+	m.plugins[id] = loadedPlugin
 
 	return loadedPlugin, nil
 }
@@ -243,12 +248,18 @@ func (m *Manager) initializePlugin(
 		return nil, errors.Wrapf(ErrInitializationFailed, "%s", errMsg)
 	}
 
+	httpRoutes, err := m.fetchAndValidateHTTPRoutes(ctx, plugin, info.Id)
+	if err != nil {
+		return nil, errors.WithMessage(err, "failed to get HTTP routes")
+	}
+
 	return &LoadedPlugin{
-		Info:     info,
-		Instance: plugin,
-		Config:   config,
-		Enabled:  true,
-		runtime:  r,
+		Info:       info,
+		Instance:   plugin,
+		Config:     config,
+		Enabled:    true,
+		HTTPRoutes: httpRoutes,
+		runtime:    r,
 	}, nil
 }
 
@@ -424,4 +435,92 @@ func joinErrors(errs []error) error {
 	}
 
 	return err
+}
+
+// GetHTTPRoutes returns all HTTP routes from all loaded plugins.
+// Returns a map of plugin ID to their routes.
+func (m *Manager) GetHTTPRoutes() map[string][]*proto.HTTPRoute {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	routes := make(map[string][]*proto.HTTPRoute)
+	for pluginID, p := range m.plugins {
+		if p.Enabled && len(p.HTTPRoutes) > 0 {
+			routes[pluginID] = p.HTTPRoutes
+		}
+	}
+
+	return routes
+}
+
+// fetchAndValidateHTTPRoutes fetches HTTP routes from a plugin and validates them.
+func (m *Manager) fetchAndValidateHTTPRoutes(
+	ctx context.Context,
+	plugin proto.PluginService,
+	pluginID string,
+) ([]*proto.HTTPRoute, error) {
+	resp, err := plugin.GetHTTPRoutes(ctx, &proto.GetHTTPRoutesRequest{})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to call GetHTTPRoutes")
+	}
+
+	if resp == nil || len(resp.Routes) == 0 {
+		return nil, nil
+	}
+
+	for _, route := range resp.Routes {
+		if err := validateRoutePath(route.Path); err != nil {
+			return nil, errors.Wrapf(err, "invalid route path %q for plugin %s", route.Path, pluginID)
+		}
+
+		if len(route.Methods) == 0 {
+			return nil, errors.Errorf("route %q for plugin %s has no methods defined", route.Path, pluginID)
+		}
+
+		for _, method := range route.Methods {
+			if !isValidHTTPMethod(method) {
+				return nil, errors.Errorf("invalid HTTP method %q for route %q in plugin %s", method, route.Path, pluginID)
+			}
+		}
+	}
+
+	return resp.Routes, nil
+}
+
+// validPathRegex matches valid route path characters including path parameters.
+var validPathRegex = regexp.MustCompile(`^(/[a-zA-Z0-9_\-{}]+)+$|^/$`)
+
+// validateRoutePath validates a plugin route path.
+func validateRoutePath(path string) error {
+	if path == "" {
+		return errors.New("path cannot be empty")
+	}
+
+	if !strings.HasPrefix(path, "/") {
+		return errors.New("path must start with '/'")
+	}
+
+	if strings.Contains(path, "..") {
+		return errors.New("path cannot contain '..'")
+	}
+
+	if strings.Contains(path, "//") {
+		return errors.New("path cannot contain '//'")
+	}
+
+	if !validPathRegex.MatchString(path) {
+		return errors.New("path contains invalid characters")
+	}
+
+	return nil
+}
+
+// isValidHTTPMethod checks if the given method is a valid HTTP method for plugin routes.
+func isValidHTTPMethod(method string) bool {
+	switch strings.ToUpper(method) {
+	case "GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS":
+		return true
+	default:
+		return false
+	}
 }

@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.10
 // 	protoc        v5.29.3
-// source: serversetting.proto
+// source: pkg/proto/serversetting.proto
 
 package proto
 
@@ -33,7 +33,7 @@ type ServerSetting struct {
 
 func (x *ServerSetting) Reset() {
 	*x = ServerSetting{}
-	mi := &file_serversetting_proto_msgTypes[0]
+	mi := &file_pkg_proto_serversetting_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -45,7 +45,7 @@ func (x *ServerSetting) String() string {
 func (*ServerSetting) ProtoMessage() {}
 
 func (x *ServerSetting) ProtoReflect() protoreflect.Message {
-	mi := &file_serversetting_proto_msgTypes[0]
+	mi := &file_pkg_proto_serversetting_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -58,7 +58,7 @@ func (x *ServerSetting) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ServerSetting.ProtoReflect.Descriptor instead.
 func (*ServerSetting) Descriptor() ([]byte, []int) {
-	return file_serversetting_proto_rawDescGZIP(), []int{0}
+	return file_pkg_proto_serversetting_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *ServerSetting) GetId() uint64 {
@@ -89,11 +89,11 @@ func (x *ServerSetting) GetValue() string {
 	return ""
 }
 
-var File_serversetting_proto protoreflect.FileDescriptor
+var File_pkg_proto_serversetting_proto protoreflect.FileDescriptor
 
-const file_serversetting_proto_rawDesc = "" +
+const file_pkg_proto_serversetting_proto_rawDesc = "" +
 	"\n" +
-	"\x13serversetting.proto\x12\x06gameap\"f\n" +
+	"\x1dpkg/proto/serversetting.proto\x12\x06gameap\"f\n" +
 	"\rServerSetting\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x1b\n" +
 	"\tserver_id\x18\x02 \x01(\x04R\bserverId\x12\x12\n" +
@@ -101,22 +101,22 @@ const file_serversetting_proto_rawDesc = "" +
 	"\x05value\x18\x04 \x01(\tR\x05valueB$Z\"github.com/gameap/gameap/pkg/protob\x06proto3"
 
 var (
-	file_serversetting_proto_rawDescOnce sync.Once
-	file_serversetting_proto_rawDescData []byte
+	file_pkg_proto_serversetting_proto_rawDescOnce sync.Once
+	file_pkg_proto_serversetting_proto_rawDescData []byte
 )
 
-func file_serversetting_proto_rawDescGZIP() []byte {
-	file_serversetting_proto_rawDescOnce.Do(func() {
-		file_serversetting_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_serversetting_proto_rawDesc), len(file_serversetting_proto_rawDesc)))
+func file_pkg_proto_serversetting_proto_rawDescGZIP() []byte {
+	file_pkg_proto_serversetting_proto_rawDescOnce.Do(func() {
+		file_pkg_proto_serversetting_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_pkg_proto_serversetting_proto_rawDesc), len(file_pkg_proto_serversetting_proto_rawDesc)))
 	})
-	return file_serversetting_proto_rawDescData
+	return file_pkg_proto_serversetting_proto_rawDescData
 }
 
-var file_serversetting_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
-var file_serversetting_proto_goTypes = []any{
+var file_pkg_proto_serversetting_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_pkg_proto_serversetting_proto_goTypes = []any{
 	(*ServerSetting)(nil), // 0: gameap.ServerSetting
 }
-var file_serversetting_proto_depIdxs = []int32{
+var file_pkg_proto_serversetting_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
 	0, // [0:0] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
@@ -124,26 +124,26 @@ var file_serversetting_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for field type_name
 }
 
-func init() { file_serversetting_proto_init() }
-func file_serversetting_proto_init() {
-	if File_serversetting_proto != nil {
+func init() { file_pkg_proto_serversetting_proto_init() }
+func file_pkg_proto_serversetting_proto_init() {
+	if File_pkg_proto_serversetting_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_serversetting_proto_rawDesc), len(file_serversetting_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_proto_serversetting_proto_rawDesc), len(file_pkg_proto_serversetting_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   1,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_serversetting_proto_goTypes,
-		DependencyIndexes: file_serversetting_proto_depIdxs,
-		MessageInfos:      file_serversetting_proto_msgTypes,
+		GoTypes:           file_pkg_proto_serversetting_proto_goTypes,
+		DependencyIndexes: file_pkg_proto_serversetting_proto_depIdxs,
+		MessageInfos:      file_pkg_proto_serversetting_proto_msgTypes,
 	}.Build()
-	File_serversetting_proto = out.File
-	file_serversetting_proto_goTypes = nil
-	file_serversetting_proto_depIdxs = nil
+	File_pkg_proto_serversetting_proto = out.File
+	file_pkg_proto_serversetting_proto_goTypes = nil
+	file_pkg_proto_serversetting_proto_depIdxs = nil
 }

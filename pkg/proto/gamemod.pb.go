@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.10
 // 	protoc        v5.29.3
-// source: gamemod.proto
+// source: pkg/proto/gamemod.proto
 
 package proto
 
@@ -36,7 +36,7 @@ type GameMod struct {
 
 func (x *GameMod) Reset() {
 	*x = GameMod{}
-	mi := &file_gamemod_proto_msgTypes[0]
+	mi := &file_pkg_proto_gamemod_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -48,7 +48,7 @@ func (x *GameMod) String() string {
 func (*GameMod) ProtoMessage() {}
 
 func (x *GameMod) ProtoReflect() protoreflect.Message {
-	mi := &file_gamemod_proto_msgTypes[0]
+	mi := &file_pkg_proto_gamemod_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -61,7 +61,7 @@ func (x *GameMod) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GameMod.ProtoReflect.Descriptor instead.
 func (*GameMod) Descriptor() ([]byte, []int) {
-	return file_gamemod_proto_rawDescGZIP(), []int{0}
+	return file_pkg_proto_gamemod_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *GameMod) GetId() uint64 {
@@ -113,11 +113,11 @@ func (x *GameMod) GetBanCmd() string {
 	return ""
 }
 
-var File_gamemod_proto protoreflect.FileDescriptor
+var File_pkg_proto_gamemod_proto protoreflect.FileDescriptor
 
-const file_gamemod_proto_rawDesc = "" +
+const file_pkg_proto_gamemod_proto_rawDesc = "" +
 	"\n" +
-	"\rgamemod.proto\x12\x06gameap\"\xa9\x02\n" +
+	"\x17pkg/proto/gamemod.proto\x12\x06gameap\"\xa9\x02\n" +
 	"\aGameMod\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x1b\n" +
 	"\tgame_code\x18\x02 \x01(\tR\bgameCode\x12\x12\n" +
@@ -133,22 +133,22 @@ const file_gamemod_proto_rawDesc = "" +
 	"\b_ban_cmdB$Z\"github.com/gameap/gameap/pkg/protob\x06proto3"
 
 var (
-	file_gamemod_proto_rawDescOnce sync.Once
-	file_gamemod_proto_rawDescData []byte
+	file_pkg_proto_gamemod_proto_rawDescOnce sync.Once
+	file_pkg_proto_gamemod_proto_rawDescData []byte
 )
 
-func file_gamemod_proto_rawDescGZIP() []byte {
-	file_gamemod_proto_rawDescOnce.Do(func() {
-		file_gamemod_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_gamemod_proto_rawDesc), len(file_gamemod_proto_rawDesc)))
+func file_pkg_proto_gamemod_proto_rawDescGZIP() []byte {
+	file_pkg_proto_gamemod_proto_rawDescOnce.Do(func() {
+		file_pkg_proto_gamemod_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_pkg_proto_gamemod_proto_rawDesc), len(file_pkg_proto_gamemod_proto_rawDesc)))
 	})
-	return file_gamemod_proto_rawDescData
+	return file_pkg_proto_gamemod_proto_rawDescData
 }
 
-var file_gamemod_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
-var file_gamemod_proto_goTypes = []any{
+var file_pkg_proto_gamemod_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_pkg_proto_gamemod_proto_goTypes = []any{
 	(*GameMod)(nil), // 0: gameap.GameMod
 }
-var file_gamemod_proto_depIdxs = []int32{
+var file_pkg_proto_gamemod_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
 	0, // [0:0] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
@@ -156,27 +156,27 @@ var file_gamemod_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for field type_name
 }
 
-func init() { file_gamemod_proto_init() }
-func file_gamemod_proto_init() {
-	if File_gamemod_proto != nil {
+func init() { file_pkg_proto_gamemod_proto_init() }
+func file_pkg_proto_gamemod_proto_init() {
+	if File_pkg_proto_gamemod_proto != nil {
 		return
 	}
-	file_gamemod_proto_msgTypes[0].OneofWrappers = []any{}
+	file_pkg_proto_gamemod_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_gamemod_proto_rawDesc), len(file_gamemod_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_proto_gamemod_proto_rawDesc), len(file_pkg_proto_gamemod_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   1,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_gamemod_proto_goTypes,
-		DependencyIndexes: file_gamemod_proto_depIdxs,
-		MessageInfos:      file_gamemod_proto_msgTypes,
+		GoTypes:           file_pkg_proto_gamemod_proto_goTypes,
+		DependencyIndexes: file_pkg_proto_gamemod_proto_depIdxs,
+		MessageInfos:      file_pkg_proto_gamemod_proto_msgTypes,
 	}.Build()
-	File_gamemod_proto = out.File
-	file_gamemod_proto_goTypes = nil
-	file_gamemod_proto_depIdxs = nil
+	File_pkg_proto_gamemod_proto = out.File
+	file_pkg_proto_gamemod_proto_goTypes = nil
+	file_pkg_proto_gamemod_proto_depIdxs = nil
 }

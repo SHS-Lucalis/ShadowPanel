@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.10
 // 	protoc        v5.29.3
-// source: entity.proto
+// source: pkg/proto/entity.proto
 
 package proto
 
@@ -69,11 +69,11 @@ func (x EntityType) String() string {
 }
 
 func (EntityType) Descriptor() protoreflect.EnumDescriptor {
-	return file_entity_proto_enumTypes[0].Descriptor()
+	return file_pkg_proto_entity_proto_enumTypes[0].Descriptor()
 }
 
 func (EntityType) Type() protoreflect.EnumType {
-	return &file_entity_proto_enumTypes[0]
+	return &file_pkg_proto_entity_proto_enumTypes[0]
 }
 
 func (x EntityType) Number() protoreflect.EnumNumber {
@@ -82,14 +82,14 @@ func (x EntityType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use EntityType.Descriptor instead.
 func (EntityType) EnumDescriptor() ([]byte, []int) {
-	return file_entity_proto_rawDescGZIP(), []int{0}
+	return file_pkg_proto_entity_proto_rawDescGZIP(), []int{0}
 }
 
-var File_entity_proto protoreflect.FileDescriptor
+var File_pkg_proto_entity_proto protoreflect.FileDescriptor
 
-const file_entity_proto_rawDesc = "" +
+const file_pkg_proto_entity_proto_rawDesc = "" +
 	"\n" +
-	"\fentity.proto\x12\x06gameap*\xd7\x01\n" +
+	"\x16pkg/proto/entity.proto\x12\x06gameap*\xd7\x01\n" +
 	"\n" +
 	"EntityType\x12\x1b\n" +
 	"\x17ENTITY_TYPE_UNSPECIFIED\x10\x00\x12\x14\n" +
@@ -102,22 +102,22 @@ const file_entity_proto_rawDesc = "" +
 	"\x10ENTITY_TYPE_ROLE\x10\aB$Z\"github.com/gameap/gameap/pkg/protob\x06proto3"
 
 var (
-	file_entity_proto_rawDescOnce sync.Once
-	file_entity_proto_rawDescData []byte
+	file_pkg_proto_entity_proto_rawDescOnce sync.Once
+	file_pkg_proto_entity_proto_rawDescData []byte
 )
 
-func file_entity_proto_rawDescGZIP() []byte {
-	file_entity_proto_rawDescOnce.Do(func() {
-		file_entity_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_entity_proto_rawDesc), len(file_entity_proto_rawDesc)))
+func file_pkg_proto_entity_proto_rawDescGZIP() []byte {
+	file_pkg_proto_entity_proto_rawDescOnce.Do(func() {
+		file_pkg_proto_entity_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_pkg_proto_entity_proto_rawDesc), len(file_pkg_proto_entity_proto_rawDesc)))
 	})
-	return file_entity_proto_rawDescData
+	return file_pkg_proto_entity_proto_rawDescData
 }
 
-var file_entity_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_entity_proto_goTypes = []any{
+var file_pkg_proto_entity_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_pkg_proto_entity_proto_goTypes = []any{
 	(EntityType)(0), // 0: gameap.EntityType
 }
-var file_entity_proto_depIdxs = []int32{
+var file_pkg_proto_entity_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
 	0, // [0:0] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
@@ -125,26 +125,26 @@ var file_entity_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for field type_name
 }
 
-func init() { file_entity_proto_init() }
-func file_entity_proto_init() {
-	if File_entity_proto != nil {
+func init() { file_pkg_proto_entity_proto_init() }
+func file_pkg_proto_entity_proto_init() {
+	if File_pkg_proto_entity_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_entity_proto_rawDesc), len(file_entity_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_proto_entity_proto_rawDesc), len(file_pkg_proto_entity_proto_rawDesc)),
 			NumEnums:      1,
 			NumMessages:   0,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_entity_proto_goTypes,
-		DependencyIndexes: file_entity_proto_depIdxs,
-		EnumInfos:         file_entity_proto_enumTypes,
+		GoTypes:           file_pkg_proto_entity_proto_goTypes,
+		DependencyIndexes: file_pkg_proto_entity_proto_depIdxs,
+		EnumInfos:         file_pkg_proto_entity_proto_enumTypes,
 	}.Build()
-	File_entity_proto = out.File
-	file_entity_proto_goTypes = nil
-	file_entity_proto_depIdxs = nil
+	File_pkg_proto_entity_proto = out.File
+	file_pkg_proto_entity_proto_goTypes = nil
+	file_pkg_proto_entity_proto_depIdxs = nil
 }

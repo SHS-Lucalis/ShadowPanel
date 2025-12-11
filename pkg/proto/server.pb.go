@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.10
 // 	protoc        v5.29.3
-// source: server.proto
+// source: pkg/proto/server.proto
 
 package proto
 
@@ -54,11 +54,11 @@ func (x ServerInstalledStatus) String() string {
 }
 
 func (ServerInstalledStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_server_proto_enumTypes[0].Descriptor()
+	return file_pkg_proto_server_proto_enumTypes[0].Descriptor()
 }
 
 func (ServerInstalledStatus) Type() protoreflect.EnumType {
-	return &file_server_proto_enumTypes[0]
+	return &file_pkg_proto_server_proto_enumTypes[0]
 }
 
 func (x ServerInstalledStatus) Number() protoreflect.EnumNumber {
@@ -67,7 +67,7 @@ func (x ServerInstalledStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ServerInstalledStatus.Descriptor instead.
 func (ServerInstalledStatus) EnumDescriptor() ([]byte, []int) {
-	return file_server_proto_rawDescGZIP(), []int{0}
+	return file_pkg_proto_server_proto_rawDescGZIP(), []int{0}
 }
 
 type Server struct {
@@ -109,7 +109,7 @@ type Server struct {
 
 func (x *Server) Reset() {
 	*x = Server{}
-	mi := &file_server_proto_msgTypes[0]
+	mi := &file_pkg_proto_server_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -121,7 +121,7 @@ func (x *Server) String() string {
 func (*Server) ProtoMessage() {}
 
 func (x *Server) ProtoReflect() protoreflect.Message {
-	mi := &file_server_proto_msgTypes[0]
+	mi := &file_pkg_proto_server_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -134,7 +134,7 @@ func (x *Server) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Server.ProtoReflect.Descriptor instead.
 func (*Server) Descriptor() ([]byte, []int) {
-	return file_server_proto_rawDescGZIP(), []int{0}
+	return file_pkg_proto_server_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *Server) GetId() uint64 {
@@ -354,11 +354,11 @@ func (x *Server) GetDeletedAt() int64 {
 	return 0
 }
 
-var File_server_proto protoreflect.FileDescriptor
+var File_pkg_proto_server_proto protoreflect.FileDescriptor
 
-const file_server_proto_rawDesc = "" +
+const file_pkg_proto_server_proto_rawDesc = "" +
 	"\n" +
-	"\fserver.proto\x12\x06gameap\"\x85\n" +
+	"\x16pkg/proto/server.proto\x12\x06gameap\"\x85\n" +
 	"\n" +
 	"\x06Server\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x12\n" +
@@ -429,24 +429,24 @@ const file_server_proto_rawDesc = "" +
 	"0SERVER_INSTALLED_STATUS_INSTALLATION_IN_PROGRESS\x10\x02B$Z\"github.com/gameap/gameap/pkg/protob\x06proto3"
 
 var (
-	file_server_proto_rawDescOnce sync.Once
-	file_server_proto_rawDescData []byte
+	file_pkg_proto_server_proto_rawDescOnce sync.Once
+	file_pkg_proto_server_proto_rawDescData []byte
 )
 
-func file_server_proto_rawDescGZIP() []byte {
-	file_server_proto_rawDescOnce.Do(func() {
-		file_server_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_server_proto_rawDesc), len(file_server_proto_rawDesc)))
+func file_pkg_proto_server_proto_rawDescGZIP() []byte {
+	file_pkg_proto_server_proto_rawDescOnce.Do(func() {
+		file_pkg_proto_server_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_pkg_proto_server_proto_rawDesc), len(file_pkg_proto_server_proto_rawDesc)))
 	})
-	return file_server_proto_rawDescData
+	return file_pkg_proto_server_proto_rawDescData
 }
 
-var file_server_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_server_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
-var file_server_proto_goTypes = []any{
+var file_pkg_proto_server_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_pkg_proto_server_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_pkg_proto_server_proto_goTypes = []any{
 	(ServerInstalledStatus)(0), // 0: gameap.ServerInstalledStatus
 	(*Server)(nil),             // 1: gameap.Server
 }
-var file_server_proto_depIdxs = []int32{
+var file_pkg_proto_server_proto_depIdxs = []int32{
 	0, // 0: gameap.Server.installed:type_name -> gameap.ServerInstalledStatus
 	1, // [1:1] is the sub-list for method output_type
 	1, // [1:1] is the sub-list for method input_type
@@ -455,28 +455,28 @@ var file_server_proto_depIdxs = []int32{
 	0, // [0:1] is the sub-list for field type_name
 }
 
-func init() { file_server_proto_init() }
-func file_server_proto_init() {
-	if File_server_proto != nil {
+func init() { file_pkg_proto_server_proto_init() }
+func file_pkg_proto_server_proto_init() {
+	if File_pkg_proto_server_proto != nil {
 		return
 	}
-	file_server_proto_msgTypes[0].OneofWrappers = []any{}
+	file_pkg_proto_server_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_server_proto_rawDesc), len(file_server_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_proto_server_proto_rawDesc), len(file_pkg_proto_server_proto_rawDesc)),
 			NumEnums:      1,
 			NumMessages:   1,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_server_proto_goTypes,
-		DependencyIndexes: file_server_proto_depIdxs,
-		EnumInfos:         file_server_proto_enumTypes,
-		MessageInfos:      file_server_proto_msgTypes,
+		GoTypes:           file_pkg_proto_server_proto_goTypes,
+		DependencyIndexes: file_pkg_proto_server_proto_depIdxs,
+		EnumInfos:         file_pkg_proto_server_proto_enumTypes,
+		MessageInfos:      file_pkg_proto_server_proto_msgTypes,
 	}.Build()
-	File_server_proto = out.File
-	file_server_proto_goTypes = nil
-	file_server_proto_depIdxs = nil
+	File_pkg_proto_server_proto = out.File
+	file_pkg_proto_server_proto_goTypes = nil
+	file_pkg_proto_server_proto_depIdxs = nil
 }

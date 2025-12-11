@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.10
 // 	protoc        v5.29.3
-// source: game.proto
+// source: pkg/proto/game.proto
 
 package proto
 
@@ -39,7 +39,7 @@ type Game struct {
 
 func (x *Game) Reset() {
 	*x = Game{}
-	mi := &file_game_proto_msgTypes[0]
+	mi := &file_pkg_proto_game_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -51,7 +51,7 @@ func (x *Game) String() string {
 func (*Game) ProtoMessage() {}
 
 func (x *Game) ProtoReflect() protoreflect.Message {
-	mi := &file_game_proto_msgTypes[0]
+	mi := &file_pkg_proto_game_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -64,7 +64,7 @@ func (x *Game) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Game.ProtoReflect.Descriptor instead.
 func (*Game) Descriptor() ([]byte, []int) {
-	return file_game_proto_rawDescGZIP(), []int{0}
+	return file_pkg_proto_game_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *Game) GetCode() string {
@@ -137,12 +137,11 @@ func (x *Game) GetEnabled() bool {
 	return false
 }
 
-var File_game_proto protoreflect.FileDescriptor
+var File_pkg_proto_game_proto protoreflect.FileDescriptor
 
-const file_game_proto_rawDesc = "" +
+const file_pkg_proto_game_proto_rawDesc = "" +
 	"\n" +
-	"\n" +
-	"game.proto\x12\x06gameap\"\xa6\x04\n" +
+	"\x14pkg/proto/game.proto\x12\x06gameap\"\xa6\x04\n" +
 	"\x04Game\x12\x12\n" +
 	"\x04code\x18\x01 \x01(\tR\x04code\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x16\n" +
@@ -162,22 +161,22 @@ const file_game_proto_rawDesc = "" +
 	"\x1a_remote_repository_windowsB$Z\"github.com/gameap/gameap/pkg/protob\x06proto3"
 
 var (
-	file_game_proto_rawDescOnce sync.Once
-	file_game_proto_rawDescData []byte
+	file_pkg_proto_game_proto_rawDescOnce sync.Once
+	file_pkg_proto_game_proto_rawDescData []byte
 )
 
-func file_game_proto_rawDescGZIP() []byte {
-	file_game_proto_rawDescOnce.Do(func() {
-		file_game_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_game_proto_rawDesc), len(file_game_proto_rawDesc)))
+func file_pkg_proto_game_proto_rawDescGZIP() []byte {
+	file_pkg_proto_game_proto_rawDescOnce.Do(func() {
+		file_pkg_proto_game_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_pkg_proto_game_proto_rawDesc), len(file_pkg_proto_game_proto_rawDesc)))
 	})
-	return file_game_proto_rawDescData
+	return file_pkg_proto_game_proto_rawDescData
 }
 
-var file_game_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
-var file_game_proto_goTypes = []any{
+var file_pkg_proto_game_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_pkg_proto_game_proto_goTypes = []any{
 	(*Game)(nil), // 0: gameap.Game
 }
-var file_game_proto_depIdxs = []int32{
+var file_pkg_proto_game_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
 	0, // [0:0] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
@@ -185,27 +184,27 @@ var file_game_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for field type_name
 }
 
-func init() { file_game_proto_init() }
-func file_game_proto_init() {
-	if File_game_proto != nil {
+func init() { file_pkg_proto_game_proto_init() }
+func file_pkg_proto_game_proto_init() {
+	if File_pkg_proto_game_proto != nil {
 		return
 	}
-	file_game_proto_msgTypes[0].OneofWrappers = []any{}
+	file_pkg_proto_game_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_game_proto_rawDesc), len(file_game_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_proto_game_proto_rawDesc), len(file_pkg_proto_game_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   1,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_game_proto_goTypes,
-		DependencyIndexes: file_game_proto_depIdxs,
-		MessageInfos:      file_game_proto_msgTypes,
+		GoTypes:           file_pkg_proto_game_proto_goTypes,
+		DependencyIndexes: file_pkg_proto_game_proto_depIdxs,
+		MessageInfos:      file_pkg_proto_game_proto_msgTypes,
 	}.Build()
-	File_game_proto = out.File
-	file_game_proto_goTypes = nil
-	file_game_proto_depIdxs = nil
+	File_pkg_proto_game_proto = out.File
+	file_pkg_proto_game_proto_goTypes = nil
+	file_pkg_proto_game_proto_depIdxs = nil
 }

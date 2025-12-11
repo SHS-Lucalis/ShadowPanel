@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.10
 // 	protoc        v5.29.3
-// source: node.proto
+// source: pkg/proto/node.proto
 
 package proto
 
@@ -41,7 +41,7 @@ type Node struct {
 
 func (x *Node) Reset() {
 	*x = Node{}
-	mi := &file_node_proto_msgTypes[0]
+	mi := &file_pkg_proto_node_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -53,7 +53,7 @@ func (x *Node) String() string {
 func (*Node) ProtoMessage() {}
 
 func (x *Node) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[0]
+	mi := &file_pkg_proto_node_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -66,7 +66,7 @@ func (x *Node) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Node.ProtoReflect.Descriptor instead.
 func (*Node) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{0}
+	return file_pkg_proto_node_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *Node) GetId() uint64 {
@@ -153,12 +153,11 @@ func (x *Node) GetUpdatedAt() int64 {
 	return 0
 }
 
-var File_node_proto protoreflect.FileDescriptor
+var File_pkg_proto_node_proto protoreflect.FileDescriptor
 
-const file_node_proto_rawDesc = "" +
+const file_pkg_proto_node_proto_rawDesc = "" +
 	"\n" +
-	"\n" +
-	"node.proto\x12\x06gameap\"\xf9\x02\n" +
+	"\x14pkg/proto/node.proto\x12\x06gameap\"\xf9\x02\n" +
 	"\x04Node\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x18\n" +
 	"\aenabled\x18\x02 \x01(\bR\aenabled\x12\x12\n" +
@@ -180,22 +179,22 @@ const file_node_proto_rawDesc = "" +
 	"\v_updated_atB$Z\"github.com/gameap/gameap/pkg/protob\x06proto3"
 
 var (
-	file_node_proto_rawDescOnce sync.Once
-	file_node_proto_rawDescData []byte
+	file_pkg_proto_node_proto_rawDescOnce sync.Once
+	file_pkg_proto_node_proto_rawDescData []byte
 )
 
-func file_node_proto_rawDescGZIP() []byte {
-	file_node_proto_rawDescOnce.Do(func() {
-		file_node_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_node_proto_rawDesc), len(file_node_proto_rawDesc)))
+func file_pkg_proto_node_proto_rawDescGZIP() []byte {
+	file_pkg_proto_node_proto_rawDescOnce.Do(func() {
+		file_pkg_proto_node_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_pkg_proto_node_proto_rawDesc), len(file_pkg_proto_node_proto_rawDesc)))
 	})
-	return file_node_proto_rawDescData
+	return file_pkg_proto_node_proto_rawDescData
 }
 
-var file_node_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
-var file_node_proto_goTypes = []any{
+var file_pkg_proto_node_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_pkg_proto_node_proto_goTypes = []any{
 	(*Node)(nil), // 0: gameap.Node
 }
-var file_node_proto_depIdxs = []int32{
+var file_pkg_proto_node_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
 	0, // [0:0] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
@@ -203,27 +202,27 @@ var file_node_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for field type_name
 }
 
-func init() { file_node_proto_init() }
-func file_node_proto_init() {
-	if File_node_proto != nil {
+func init() { file_pkg_proto_node_proto_init() }
+func file_pkg_proto_node_proto_init() {
+	if File_pkg_proto_node_proto != nil {
 		return
 	}
-	file_node_proto_msgTypes[0].OneofWrappers = []any{}
+	file_pkg_proto_node_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_node_proto_rawDesc), len(file_node_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_proto_node_proto_rawDesc), len(file_pkg_proto_node_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   1,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_node_proto_goTypes,
-		DependencyIndexes: file_node_proto_depIdxs,
-		MessageInfos:      file_node_proto_msgTypes,
+		GoTypes:           file_pkg_proto_node_proto_goTypes,
+		DependencyIndexes: file_pkg_proto_node_proto_depIdxs,
+		MessageInfos:      file_pkg_proto_node_proto_msgTypes,
 	}.Build()
-	File_node_proto = out.File
-	file_node_proto_goTypes = nil
-	file_node_proto_depIdxs = nil
+	File_pkg_proto_node_proto = out.File
+	file_pkg_proto_node_proto_goTypes = nil
+	file_pkg_proto_node_proto_depIdxs = nil
 }

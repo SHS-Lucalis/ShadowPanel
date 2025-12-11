@@ -122,6 +122,7 @@ import (
 	"github.com/gameap/gameap/internal/services/servercontrol"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
+	"github.com/gameap/gameap/pkg/plugin"
 	webstatic "github.com/gameap/gameap/web/static"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -156,6 +157,7 @@ type container interface {
 	DaemonStatus() *daemon.StatusService
 	DaemonFiles() *daemon.FileService
 	DaemonCommands() *daemon.CommandService
+	PluginManager() *plugin.Manager
 }
 
 func CreateRouter(c container) *http.ServeMux {
@@ -1356,7 +1358,44 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 		router.Handle(r.Path, handler).Methods(r.Method)
 	}
 
+	registerPluginRoutes(
+		c,
+		router,
+		authMiddleware,
+		isAdminMiddleware,
+		corsMiddleware,
+		recoveryMiddleware,
+	)
+
 	return router
+}
+
+func registerPluginRoutes(
+	c container,
+	router *mux.Router,
+	authMiddleware *middlewares.AuthMiddleware,
+	isAdminMiddleware *middlewares.IsAdminMiddleware,
+	corsMiddleware *middlewares.CORSMiddleware,
+	recoveryMiddleware *middlewares.RecoveryMiddleware,
+) {
+	pluginManager := c.PluginManager()
+	if pluginManager == nil {
+		return
+	}
+
+	pluginHandler := plugin.NewHTTPHandler(
+		pluginManager,
+		authMiddleware,
+		isAdminMiddleware,
+	)
+
+	var handler http.Handler = pluginHandler
+	handler = corsMiddleware.Middleware(handler)
+	handler = authMiddleware.OptionalMiddleware(handler)
+	handler = recoveryMiddleware.Middleware(handler)
+
+	router.PathPrefix("/api/plugins/{plugin_id}/").Handler(handler)
+	router.Handle("/api/plugins/{plugin_id}", handler)
 }
 
 func gdaemonSetupRoutes(c container, router *mux.Router) *mux.Router {

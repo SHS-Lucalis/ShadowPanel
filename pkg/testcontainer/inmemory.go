@@ -20,6 +20,7 @@ import (
 	"github.com/gameap/gameap/internal/services/servercontrol"
 	pkgapi "github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
+	"github.com/gameap/gameap/pkg/plugin"
 	"github.com/samber/lo"
 )
 
@@ -96,6 +97,7 @@ func (c *InmemoryContainer) GlobalAPIService() *services.GlobalAPIService { retu
 func (c *InmemoryContainer) DaemonStatus() *daemon.StatusService          { return c.daemonStatusService }
 func (c *InmemoryContainer) DaemonFiles() *daemon.FileService             { return c.daemonFilesService }
 func (c *InmemoryContainer) DaemonCommands() *daemon.CommandService       { return c.daemonCommandsService }
+func (c *InmemoryContainer) PluginManager() *plugin.Manager               { return nil }
 
 func LoadInmemoryContainer() (*InmemoryContainer, error) {
 	c := buildInmemoryTestContainer()

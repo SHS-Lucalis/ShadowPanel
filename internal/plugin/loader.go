@@ -2,9 +2,6 @@ package plugin
 
 import (
 	"context"
-	"encoding/base64"
-	"encoding/binary"
-	"hash/fnv"
 	"log/slog"
 	"path"
 	"strconv"
@@ -164,9 +161,9 @@ func (l *Loader) processAutoLoad(ctx context.Context) error {
 			return errors.WithMessage(err, "failed to load plugin for info")
 		}
 
-		pluginID := parsePluginID(loaded.Info.Id)
+		pluginID := pkgplugin.ParsePluginID(loaded.Info.Id)
 
-		if err := l.manager.Unload(ctx, loaded.Info.Id); err != nil {
+		if err := l.manager.Unload(ctx, pkgplugin.CompactPluginID(pluginID)); err != nil {
 			slog.Warn("failed to unload temporary plugin",
 				slog.String("plugin", loaded.Info.Id),
 				slog.String("error", err.Error()))
@@ -190,7 +187,7 @@ func (l *Loader) processAutoLoad(ctx context.Context) error {
 		}
 
 		plugin := &domain.Plugin{
-			ID:          parsePluginID(loaded.Info.Id),
+			ID:          pkgplugin.ParsePluginID(loaded.Info.Id),
 			Name:        loaded.Info.Name,
 			Version:     loaded.Info.Version,
 			Description: loaded.Info.Description,
@@ -207,23 +204,4 @@ func (l *Loader) processAutoLoad(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-func parsePluginID(idStr string) uint {
-	if id, err := strconv.ParseUint(idStr, 10, 64); err == nil {
-		return uint(id)
-	}
-
-	if decoded, err := base64.StdEncoding.DecodeString(idStr); err == nil {
-		if len(decoded) == 8 {
-			id := binary.BigEndian.Uint64(decoded)
-
-			return uint(id)
-		}
-	}
-
-	h := fnv.New64a()
-	_, _ = h.Write([]byte(idStr))
-
-	return uint(h.Sum64())
 }

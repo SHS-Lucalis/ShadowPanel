@@ -184,7 +184,7 @@ func TestLoader_ProcessAutoLoad_ActivatesExisting(t *testing.T) {
 	_ = fileManager.Write(ctx, "plugins/existing-plugin.wasm", []byte("wasm-content"))
 
 	plugin := &domain.Plugin{
-		ID:      parsePluginID("test-plugin-id"),
+		ID:      pkgplugin.ParsePluginID("test-plugin-id"),
 		Name:    "existing-plugin",
 		Version: "1.0.0",
 		Status:  domain.PluginStatusDisabled,
@@ -276,7 +276,7 @@ func TestLoader_Unload(t *testing.T) {
 }
 
 func TestParsePluginID_Numeric(t *testing.T) {
-	id := parsePluginID("12345")
+	id := pkgplugin.ParsePluginID("12345")
 	assert.Equal(t, uint(12345), id)
 }
 
@@ -286,7 +286,7 @@ func TestParsePluginID_Base64(t *testing.T) {
 	binary.BigEndian.PutUint64(buf, num)
 	encoded := base64.StdEncoding.EncodeToString(buf)
 
-	id := parsePluginID(encoded)
+	id := pkgplugin.ParsePluginID(encoded)
 	assert.Equal(t, uint(num), id)
 }
 
@@ -295,7 +295,7 @@ func TestParsePluginID_Hash(t *testing.T) {
 	_, _ = h.Write([]byte("arbitrary-plugin-id"))
 	expected := uint(h.Sum64())
 
-	id := parsePluginID("arbitrary-plugin-id")
+	id := pkgplugin.ParsePluginID("arbitrary-plugin-id")
 	assert.Equal(t, expected, id)
 }
 
