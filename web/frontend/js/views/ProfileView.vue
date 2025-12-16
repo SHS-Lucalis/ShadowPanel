@@ -56,8 +56,8 @@
 </template>
 
 <script setup>
+import { GBreadcrumbs } from "@gameap/ui"
 import {computed, ref} from "vue"
-import GBreadcrumbs from "@/components/GBreadcrumbs.vue"
 import {trans, getCurrentLanguage, changeLanguage} from "@/i18n/i18n"
 import {
   NCard,

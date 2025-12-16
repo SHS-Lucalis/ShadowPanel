@@ -5,8 +5,8 @@
 </template>
 
 <script setup>
+import { GBreadcrumbs } from "@gameap/ui";
 import {computed, defineAsyncComponent} from "vue";
-import GBreadcrumbs from "@/components/GBreadcrumbs.vue";
 import ServerMainList from "@/views/servertabs/ServerMainList.vue";
 import {trans} from "@/i18n/i18n";
 

@@ -46,8 +46,8 @@
 </template>
 
 <script setup>
+import { GBreadcrumbs, GDeletableList, Loading } from "@gameap/ui"
 import UpdateGameForm from "./forms/UpdateGameForm.vue"
-import GBreadcrumbs from "../../components/GBreadcrumbs.vue"
 import {computed, ref, onMounted} from "vue"
 import {trans} from "../../i18n/i18n";
 import GButton from "../../components/GButton.vue";
@@ -61,8 +61,6 @@ import {
 } from "naive-ui"
 import {useRoute, useRouter} from "vue-router"
 import {storeToRefs} from "pinia"
-import GDeletableList from "../../components/GDeletableList.vue";
-import Loading from "../../components/Loading.vue";
 
 const route = useRoute()
 const router = useRouter()

@@ -122,6 +122,7 @@
 </template>
 
 <script setup>
+import { Loading } from "@gameap/ui"
 import {ref, defineModel, defineProps, defineEmits} from "vue"
 import {trans} from "../../../i18n/i18n";
 import GButton from "../../../components/GButton.vue";
@@ -140,7 +141,6 @@ import {
   stringMinLengthValidator,
   ifNotEmptyValidator,
 } from "../../../parts/validators"
-import Loading from "../../../components/Loading.vue";
 import {useUserStore} from "../../../store/user"
 
 const userStore = useUserStore()

@@ -42,8 +42,8 @@
 </template>
 
 <script setup>
+import { GBreadcrumbs, GStatusBadge, Loading } from "@gameap/ui"
 import {computed, onMounted} from "vue"
-import GBreadcrumbs from "../../components/GBreadcrumbs.vue"
 import {trans} from "../../i18n/i18n"
 import {errorNotification, notification} from "../../parts/dialogs"
 import {
@@ -52,8 +52,6 @@ import {
 import {useRoute} from "vue-router"
 import {storeToRefs} from "pinia"
 import {useDaemonTaskStore} from "../../store/daemonTask";
-import GStatusBadge from "../../components/GStatusBadge.vue";
-import Loading from "../../components/Loading.vue";
 import { replace } from "lodash-es";
 
 const daemonTaskStore = useDaemonTaskStore()

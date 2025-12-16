@@ -1,6 +1,5 @@
 <template>
     <div class="flex flex-col">
-        <div class="text-sm text-stone-500 mb-2">{{ fileName }}</div>
         <div v-if="contentLoaded" class="plugin-editor-container">
             <component
                 ref="editorRef"

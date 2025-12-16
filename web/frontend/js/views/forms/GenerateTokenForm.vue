@@ -50,6 +50,7 @@
 </template>
 
 <script setup>
+import { Loading } from "@gameap/ui"
 import {ref, defineModel, defineProps} from "vue"
 import {trans} from "../../i18n/i18n";
 import GButton from "../../components/GButton.vue";
@@ -60,7 +61,6 @@ import {
   NFormItem,
   NInput,
 } from "naive-ui"
-import Loading from "@/components/Loading.vue";
 import {isArrayNotEmptyValidator, requiredValidator} from "@/parts/validators";
 import { isEmpty } from "lodash-es";
 

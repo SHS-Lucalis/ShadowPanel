@@ -191,7 +191,7 @@
 </template>
 
 <script setup>
-import GBreadcrumbs from "@/components/GBreadcrumbs.vue"
+import { GBreadcrumbs, Loading } from "@gameap/ui"
 import {computed, ref, onMounted} from "vue"
 import {trans} from "@/i18n/i18n"
 import {NForm, NFormItem, NSwitch} from "naive-ui"
@@ -204,7 +204,6 @@ import {useServerStore} from "@/store/server"
 import {useGameListStore} from "@/store/gameList"
 import {useNodeListStore} from "@/store/nodeList"
 import {requiredValidator} from "@/parts/validators";
-import Loading from "@/components/Loading.vue";
 
 const route = useRoute()
 const router = useRouter()

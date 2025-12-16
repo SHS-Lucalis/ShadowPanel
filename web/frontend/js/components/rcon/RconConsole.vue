@@ -48,10 +48,10 @@ import {computed, ref, onMounted, defineProps} from "vue"
 import {
   NInput,
 } from "naive-ui"
+import { Loading } from "@gameap/ui"
 import {storeToRefs} from "pinia"
 import GButton from "../GButton.vue"
 import {errorNotification} from "../../parts/dialogs"
-import Loading from "../Loading.vue"
 import {useServerRconStore} from "../../store/serverRcon";
 
 const serverRconStore = useServerRconStore()

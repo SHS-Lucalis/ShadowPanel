@@ -9,7 +9,7 @@
 </template>
 
 <script setup>
-import GBreadcrumbs from "../../components/GBreadcrumbs.vue"
+import { GBreadcrumbs } from "@gameap/ui"
 import UpdateUserForm from "./forms/UpdateUserForm.vue"
 import {computed, ref, onMounted} from "vue"
 import {trans} from "../../i18n/i18n"

@@ -41,9 +41,8 @@
 
 <script setup>
 import {computed, onMounted, ref, h} from "vue"
-import GBreadcrumbs from "@/components/GBreadcrumbs.vue"
+import { GBreadcrumbs, Loading } from "@gameap/ui"
 import {trans} from "@/i18n/i18n"
-import Loading from "@/components/Loading.vue";
 import GButton from "@/components/GButton.vue";
 import {useTokensStore} from "@/store/tokens";
 import {storeToRefs} from "pinia"

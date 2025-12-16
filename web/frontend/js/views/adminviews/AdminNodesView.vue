@@ -31,13 +31,12 @@
 </template>
 
 <script setup>
-import GBreadcrumbs from "../../components/GBreadcrumbs.vue"
+import { GBreadcrumbs, Loading } from "@gameap/ui"
 import {computed, h, ref, onMounted} from "vue"
 import {trans} from "../../i18n/i18n"
 import GButton from "../../components/GButton.vue"
 import {useNodeListStore} from "../../store/nodeList"
 import {errorNotification, notification} from "../../parts/dialogs"
-import Loading from "../../components/Loading.vue"
 import {storeToRefs} from "pinia"
 import { join } from "lodash-es"
 import {

@@ -15,7 +15,7 @@
     </GButton>
   </div>
 
-  <div class="w-1/3 mb-1">
+  <div class="w-1/4 mb-1">
     <n-input-group>
       <n-input-group-label>
         <i class="fa-solid fa-magnifying-glass"></i>
@@ -80,11 +80,10 @@
 </template>
 
 <script setup>
-import GBreadcrumbs from "../../components/GBreadcrumbs.vue"
+import { GBreadcrumbs, GDeletableList, Loading } from "@gameap/ui"
 import {computed, ref, onMounted, h, watch} from "vue"
 import {trans} from "../../i18n/i18n"
 import GButton from "../../components/GButton.vue"
-import Loading from "../../components/Loading.vue"
 import GameIcon from "../../components/GameIcon.vue"
 import {useGameListStore} from "../../store/gameList"
 import {errorNotification, notification} from "../../parts/dialogs"
@@ -99,7 +98,6 @@ import {
 } from "naive-ui"
 import {useRouter} from "vue-router"
 import {storeToRefs} from "pinia"
-import GDeletableList from "../../components/GDeletableList.vue";
 import CreateModForm from "./forms/CreateModForm.vue";
 import CreateGameForm from "./forms/CreateGameForm.vue";
 

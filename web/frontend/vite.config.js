@@ -13,6 +13,7 @@ export default defineConfig({
     resolve: {
         alias: {
             '@': resolve(__dirname, 'js'),
+            '@gameap/ui': resolve(__dirname, 'packages/gameap-ui'),
         },
     },
     build: {

@@ -48,7 +48,13 @@ import {pluralize, trans, changeLanguage, getCurrentLanguage} from "./i18n/i18n"
 
 import { useAuthStore } from './store/auth'
 
-import GBreadcrumbs from "./components/GBreadcrumbs.vue";
+import {
+    GBreadcrumbs,
+    GDeletableList,
+    GStatusBadge,
+    Loading,
+    Progressbar
+} from '@gameap/ui'
 import GButton from "./components/GButton.vue";
 
 import App from './App.vue';
@@ -172,6 +178,10 @@ const authStore = useAuthStore()
 
 // Register global components BEFORE mounting
 app.component('GBreadcrumbs', GBreadcrumbs);
+app.component('GDeletableList', GDeletableList);
+app.component('GStatusBadge', GStatusBadge);
+app.component('Loading', Loading);
+app.component('Progressbar', Progressbar);
 app.component('GButton', GButton);
 app.component('GuestNavbar', GuestNavbar);
 app.component('MainNavbar', MainNavbar);

@@ -90,7 +90,7 @@
 </template>
 
 <script setup>
-import GBreadcrumbs from "../../components/GBreadcrumbs.vue"
+import { GBreadcrumbs, Loading, Progressbar } from "@gameap/ui"
 import {computed, onMounted, ref} from "vue"
 import {trans} from "../../i18n/i18n"
 import {
@@ -99,8 +99,6 @@ import {
 } from "naive-ui"
 import {useNodeStore} from "../../store/node"
 import {errorNotification} from "../../parts/dialogs"
-import Loading from "../../components/Loading.vue"
-import Progressbar from "../../components/Progressbar.vue"
 import {storeToRefs} from "pinia"
 import {useRoute} from "vue-router"
 import GButton from "../../components/GButton.vue"

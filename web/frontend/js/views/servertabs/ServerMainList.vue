@@ -1,4 +1,5 @@
 <script setup>
+    import { Loading } from "@gameap/ui";
     import {h, ref, onMounted, computed} from 'vue'
     import {storeToRefs} from 'pinia'
     import {trans} from "@/i18n/i18n";
@@ -7,7 +8,6 @@
     import {useServerListStore} from "@/store/serverList";
 
     import GButton from "@/components/GButton.vue";
-    import Loading from "@/components/Loading.vue";
     import GameIcon from "@/components/GameIcon.vue";
 
     import ServerControlButton  from "./ServerControlButton.vue";

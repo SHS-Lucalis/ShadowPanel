@@ -155,6 +155,7 @@
 </template>
 
 <script setup>
+import { Loading } from "@gameap/ui"
 import {ref, defineModel, defineProps} from "vue"
 import {trans} from "../../../i18n/i18n";
 import GButton from "../../../components/GButton.vue";
@@ -165,7 +166,6 @@ import {
   NInput,
 } from "naive-ui"
 import {allOfValidator, requiredValidator, stringLengthValidator} from "../../../parts/validators"
-import Loading from "../../../components/Loading.vue";
 
 const props = defineProps({
   loading: {

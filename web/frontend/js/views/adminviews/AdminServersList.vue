@@ -26,15 +26,14 @@
 </template>
 
 <script setup>
+import { GBreadcrumbs, Loading } from "@gameap/ui"
 import {trans} from "../../i18n/i18n"
-import Loading from "../../components/Loading.vue"
 import GButton from "../../components/GButton.vue"
 import {h, onMounted, computed, ref} from "vue"
 import {useServerListStore} from "../../store/serverList"
 import {useNodeListStore} from "../../store/nodeList"
 import {errorNotification} from "../../parts/dialogs"
 import {storeToRefs} from "pinia"
-import GBreadcrumbs from "../../components/GBreadcrumbs.vue"
 import {
   NDataTable,
   NEmpty,

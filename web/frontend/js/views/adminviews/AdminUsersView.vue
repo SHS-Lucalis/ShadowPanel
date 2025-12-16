@@ -65,7 +65,7 @@
 </template>
 
 <script setup>
-import GBreadcrumbs from "@/components/GBreadcrumbs.vue";
+import { GBreadcrumbs, Loading } from "@gameap/ui";
 import {trans} from "@/i18n/i18n";
 import {computed, h, ref, onMounted} from "vue"
 import {useUserListStore} from "@/store/userList";
@@ -78,7 +78,6 @@ import {
   NTable,
   NDataTable,
 } from "naive-ui"
-import Loading from "@/components/Loading.vue";
 import GButton from "@/components/GButton.vue";
 import CreateUserForm from "./forms/CreateUserForm.vue";
 

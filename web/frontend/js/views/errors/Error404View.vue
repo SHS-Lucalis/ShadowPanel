@@ -15,8 +15,8 @@
 </template>
 
 <script setup>
+import { GBreadcrumbs } from "@gameap/ui";
 import {computed} from "vue";
-import GBreadcrumbs from "@/components/GBreadcrumbs.vue";
 import {trans} from "@/i18n/i18n";
 import GButton from "@/components/GButton.vue";
 

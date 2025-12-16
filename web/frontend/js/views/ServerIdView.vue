@@ -290,8 +290,7 @@ const FileManager = defineAsyncComponent(() =>
     import('../filemanager/FileManager.vue')
 )
 
-import GBreadcrumbs from "../components/GBreadcrumbs.vue";
-import Loading from "../components/Loading.vue";
+import { GBreadcrumbs, Loading } from "@gameap/ui";
 
 import {useServerStore} from "@/store/server"
 import {useServerRconStore} from "@/store/serverRcon"

@@ -12,8 +12,7 @@
 </template>
 
 <script setup>
-import GBreadcrumbs from "@/components/GBreadcrumbs.vue"
-import Loading from "@/components/Loading.vue"
+import { GBreadcrumbs, Loading } from "@gameap/ui"
 import {computed, ref, onMounted} from "vue"
 import { camelCase, snakeCase } from "lodash-es"
 import {trans} from "@/i18n/i18n"
