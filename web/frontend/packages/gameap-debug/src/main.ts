@@ -1,206 +1,329 @@
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
-import { createRouter, createWebHistory } from 'vue-router'
-import * as Vue from 'vue'
-import * as VueRouter from 'vue-router'
-import * as Pinia from 'pinia'
+/**
+ * GameAP Debug Harness - Main Entry Point
+ *
+ * This harness loads the real GameAP frontend with mock API responses,
+ * allowing plugin testing in a realistic environment.
+ */
 
-import './styles/main.css'
-// Import plugin CSS
-// @ts-expect-error - Plugin path is configured via Vite alias
-import '@plugin/hex-editor-plugin.css'
-import App from './App.vue'
-import { useDebugStore } from './stores/debug'
-import { usePluginsStore } from './stores/plugins'
-import type { PluginDefinition } from '@gameap/plugin-sdk'
+import { startMockServiceWorker, setPluginContent, updateDebugState } from './mocks/browser'
 
-// Setup globals for plugin compatibility
-function setupGlobals() {
-    window.Vue = Vue
-    window.VueRouter = VueRouter
-    window.Pinia = Pinia
-
-    // Mock axios
-    window.axios = {
-        get: async (url: string) => {
-            console.log('[Mock Axios] GET', url)
-            return { data: null }
-        },
-        post: async (url: string, data?: unknown) => {
-            console.log('[Mock Axios] POST', url, data)
-            return { data: { success: true } }
-        },
-        put: async (url: string, data?: unknown) => {
-            console.log('[Mock Axios] PUT', url, data)
-            return { data: { success: true } }
-        },
-        delete: async (url: string) => {
-            console.log('[Mock Axios] DELETE', url)
-            return { data: { success: true } }
-        },
-        patch: async (url: string, data?: unknown) => {
-            console.log('[Mock Axios] PATCH', url, data)
-            return { data: { success: true } }
-        },
+// Declare window globals for plugin compatibility
+declare global {
+    interface Window {
+        Vue: typeof import('vue')
+        VueRouter: typeof import('vue-router')
+        Pinia: typeof import('pinia')
+        axios: typeof import('axios').default
+        gameapLang: string
+        gameapDebug: {
+            updateDebugState: typeof updateDebugState
+            setPluginContent: typeof setPluginContent
+            loadPlugin: (js: string, css?: string) => void
+        }
     }
 }
 
-// Find plugin definition from module exports
-function findPluginDefinition(module: Record<string, unknown>): PluginDefinition | null {
-    // Try common export names
-    const exportNames = [
-        'default',
-        'plugin',
-        'hexEditorPlugin',
-        'myPlugin',
-    ]
+// Load plugin from dist directory (set via PLUGIN_PATH env var)
+// Using glob imports to handle dynamic file names
+const pluginJsFiles = import.meta.glob('@plugin/plugin.js', { query: '?raw', import: 'default', eager: true })
+const pluginCssFiles = import.meta.glob('@plugin/*.css', { query: '?raw', import: 'default', eager: true })
 
-    for (const name of exportNames) {
-        const exported = module[name]
-        if (exported && typeof exported === 'object' && 'id' in exported && 'name' in exported) {
-            return exported as PluginDefinition
+async function loadPluginBundle(): Promise<{ js: string; css: string }> {
+    try {
+        // Get plugin JS
+        const jsEntries = Object.entries(pluginJsFiles)
+        const pluginJs = jsEntries.length > 0 ? (jsEntries[0][1] as string) : ''
+
+        // Get plugin CSS (any .css file in the dist)
+        const cssEntries = Object.entries(pluginCssFiles)
+        const pluginCss = cssEntries.length > 0 ? (cssEntries[0][1] as string) : ''
+
+        if (!pluginJs) {
+            console.warn('[Debug] No plugin.js found in plugin directory')
         }
-    }
-
-    // Search all exports for something that looks like a plugin definition
-    for (const [key, value] of Object.entries(module)) {
-        if (value && typeof value === 'object' && 'id' in value && 'name' in value && 'version' in value) {
-            console.log(`[Debug] Found plugin definition in export: ${key}`)
-            return value as PluginDefinition
+        if (!pluginCss) {
+            console.log('[Debug] No plugin CSS found')
         }
-    }
 
-    return null
+        return { js: pluginJs, css: pluginCss }
+    } catch (error) {
+        console.warn('[Debug] Could not load plugin bundle:', error)
+        return { js: '', css: '' }
+    }
 }
 
-// Load and register the plugin
-async function loadPlugin(pluginsStore: ReturnType<typeof usePluginsStore>, debugStore: ReturnType<typeof useDebugStore>) {
-    // Dynamic import - plugin.js needs window.Vue to be set first
-    // @ts-expect-error - Plugin path is configured via Vite alias
-    const pluginModule = await import('@plugin/plugin.js')
-    const pluginDef = findPluginDefinition(pluginModule as Record<string, unknown>)
+// Set up mock authentication based on debug state
+function setupMockAuth() {
+    // Get stored debug user type or default to 'admin'
+    const storedUserType = localStorage.getItem('gameap_debug_user_type') || 'admin'
+    updateDebugState({ userType: storedUserType as 'admin' | 'user' | 'guest' })
 
-    if (!pluginDef) {
-        console.error('[Debug] Could not find plugin definition in module exports:', Object.keys(pluginModule))
-        throw new Error('No plugin definition found')
+    if (storedUserType === 'guest') {
+        // Guest mode - remove auth token
+        localStorage.removeItem('auth_token')
+        console.log('[Debug] Auth: Guest mode (not authenticated)')
+    } else {
+        // Authenticated mode - set mock token
+        const mockToken = 'mock-debug-token-' + storedUserType
+        localStorage.setItem('auth_token', mockToken)
+        console.log('[Debug] Auth: Authenticated as', storedUserType)
+    }
+}
+
+// Load translations after MSW starts (since MSW intercepts the request)
+async function loadTranslations() {
+    const lang = window.gameapLang || 'en'
+    console.log('[Debug] Loading translations for:', lang)
+
+    try {
+        const response = await fetch(`/lang/${lang}.json`)
+        if (response.ok) {
+            window.i18n = await response.json()
+            console.log('[Debug] Translations loaded successfully')
+        } else {
+            console.warn('[Debug] Failed to load translations, using fallback')
+            window.i18n = {}
+        }
+    } catch (error) {
+        console.error('[Debug] Error loading translations:', error)
+        window.i18n = {}
+    }
+}
+
+// Initialize the debug harness
+async function init() {
+    console.log('[Debug] Starting GameAP Debug Harness...')
+
+    // Load plugin bundle first
+    console.log('[Debug] Loading plugin bundle...')
+    const { js, css } = await loadPluginBundle()
+
+    if (js) {
+        console.log('[Debug] Plugin bundle loaded, size:', js.length, 'bytes')
+        setPluginContent(js, css)
     }
 
-    console.log(`[Debug] Loading plugin: ${pluginDef.name} v${pluginDef.version}`)
+    // Start MSW
+    console.log('[Debug] Starting Mock Service Worker...')
+    await startMockServiceWorker()
+    console.log('[Debug] MSW started successfully')
 
-    // Register plugin
-    pluginsStore.registerPlugin(pluginDef)
+    // Set up mock authentication BEFORE loading the app
+    setupMockAuth()
 
-    // Set plugin info in debug store
-    debugStore.setPluginInfo({
-        id: pluginDef.id,
-        name: pluginDef.name,
-        version: pluginDef.version,
+    // Load translations AFTER MSW starts (so MSW can intercept the request)
+    await loadTranslations()
+
+    // Expose debug utilities globally
+    window.gameapDebug = {
+        updateDebugState,
+        setPluginContent,
+        loadPlugin: (newJs: string, newCss?: string) => {
+            setPluginContent(newJs, newCss || '')
+            console.log('[Debug] Plugin content updated, reload to apply')
+        },
+    }
+
+    // Now load the real GameAP frontend
+    console.log('[Debug] Loading GameAP frontend...')
+
+    // Import the real app.js - this will initialize the Vue app
+    // @ts-expect-error - Real app import
+    await import('@app/app.js')
+
+    console.log('[Debug] GameAP frontend loaded successfully')
+
+    // Add debug panel after app is mounted
+    setTimeout(() => {
+        createDebugPanel()
+    }, 500)
+}
+
+// Create a floating debug panel for controlling the mock environment
+function createDebugPanel() {
+    const panel = document.createElement('div')
+    panel.id = 'gameap-debug-panel'
+    panel.innerHTML = `
+        <style>
+            #gameap-debug-panel {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                z-index: 99999;
+                font-family: system-ui, sans-serif;
+                font-size: 12px;
+            }
+            #gameap-debug-panel .debug-toggle {
+                background: #4f46e5;
+                color: white;
+                border: none;
+                padding: 8px 12px;
+                border-radius: 8px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+            #gameap-debug-panel .debug-toggle:hover {
+                background: #4338ca;
+            }
+            #gameap-debug-panel .debug-content {
+                display: none;
+                position: absolute;
+                bottom: 100%;
+                right: 0;
+                margin-bottom: 8px;
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+                min-width: 280px;
+                overflow: hidden;
+            }
+            #gameap-debug-panel.open .debug-content {
+                display: block;
+            }
+            #gameap-debug-panel .debug-header {
+                background: #4f46e5;
+                color: white;
+                padding: 12px 16px;
+                font-weight: 600;
+            }
+            #gameap-debug-panel .debug-body {
+                padding: 16px;
+            }
+            #gameap-debug-panel .debug-section {
+                margin-bottom: 12px;
+            }
+            #gameap-debug-panel .debug-section:last-child {
+                margin-bottom: 0;
+            }
+            #gameap-debug-panel label {
+                display: block;
+                font-size: 11px;
+                font-weight: 500;
+                color: #64748b;
+                margin-bottom: 4px;
+                text-transform: uppercase;
+            }
+            #gameap-debug-panel select, #gameap-debug-panel input {
+                width: 100%;
+                padding: 8px 10px;
+                border: 1px solid #e2e8f0;
+                border-radius: 6px;
+                font-size: 13px;
+            }
+            #gameap-debug-panel select:focus, #gameap-debug-panel input:focus {
+                outline: none;
+                border-color: #4f46e5;
+            }
+            #gameap-debug-panel .debug-badge {
+                background: #dbeafe;
+                color: #1d4ed8;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 11px;
+                margin-top: 4px;
+                display: inline-block;
+            }
+            @media (prefers-color-scheme: dark) {
+                #gameap-debug-panel .debug-content {
+                    background: #1e293b;
+                }
+                #gameap-debug-panel label {
+                    color: #94a3b8;
+                }
+                #gameap-debug-panel select, #gameap-debug-panel input {
+                    background: #0f172a;
+                    border-color: #334155;
+                    color: #f1f5f9;
+                }
+                #gameap-debug-panel .debug-badge {
+                    background: #1e3a5f;
+                    color: #93c5fd;
+                }
+            }
+        </style>
+        <div class="debug-content">
+            <div class="debug-header">🔧 Debug Panel</div>
+            <div class="debug-body">
+                <div class="debug-section">
+                    <label>User Type</label>
+                    <select id="debug-user-type">
+                        <option value="admin">Admin</option>
+                        <option value="user">Regular User</option>
+                        <option value="guest">Guest (not authenticated)</option>
+                    </select>
+                </div>
+                <div class="debug-section">
+                    <label>Network Delay (ms)</label>
+                    <input type="number" id="debug-network-delay" value="100" min="0" max="5000" step="50">
+                </div>
+                <div class="debug-section">
+                    <label>Locale</label>
+                    <select id="debug-locale">
+                        <option value="en">English</option>
+                        <option value="ru">Русский</option>
+                    </select>
+                </div>
+                <div class="debug-section">
+                    <span class="debug-badge">MSW Active</span>
+                    <span class="debug-badge">Plugin Loaded</span>
+                </div>
+            </div>
+        </div>
+        <button class="debug-toggle">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            Debug
+        </button>
+    `
+
+    document.body.appendChild(panel)
+
+    // Toggle panel
+    const toggleBtn = panel.querySelector('.debug-toggle') as HTMLButtonElement
+    toggleBtn.addEventListener('click', () => {
+        panel.classList.toggle('open')
     })
 
-    // Register translations
-    if (pluginDef.translations) {
-        pluginsStore.setPluginTranslations(pluginDef.id, pluginDef.translations)
-    }
+    // User type change
+    const userTypeSelect = panel.querySelector('#debug-user-type') as HTMLSelectElement
+    // Set current value from localStorage
+    const currentUserType = localStorage.getItem('gameap_debug_user_type') || 'admin'
+    userTypeSelect.value = currentUserType
 
-    // Register file editors
-    if (pluginDef.fileEditors) {
-        for (const editor of pluginDef.fileEditors) {
-            pluginsStore.registerFileEditor(pluginDef.id, editor)
+    userTypeSelect.addEventListener('change', () => {
+        const newUserType = userTypeSelect.value as 'admin' | 'user' | 'guest'
+        // Save to localStorage for persistence
+        localStorage.setItem('gameap_debug_user_type', newUserType)
+        updateDebugState({ userType: newUserType })
+        console.log('[Debug] User type changed to:', newUserType)
+        // Reload to apply
+        if (confirm('Reload page to apply user type change?')) {
+            window.location.reload()
         }
-    }
+    })
 
-    // Register slots
-    if (pluginDef.slots) {
-        for (const [slotName, components] of Object.entries(pluginDef.slots)) {
-            const comps = Array.isArray(components) ? components : [components]
-            for (const comp of comps) {
-                pluginsStore.registerSlotComponent(slotName, pluginDef.id, comp.component, {
-                    props: comp.props,
-                    order: comp.order || 0,
-                    label: comp.label,
-                    icon: comp.icon,
-                    name: comp.name,
-                })
-            }
-        }
-    }
+    // Network delay change
+    const delayInput = panel.querySelector('#debug-network-delay') as HTMLInputElement
+    delayInput.addEventListener('change', () => {
+        updateDebugState({ networkDelay: parseInt(delayInput.value) || 100 })
+        console.log('[Debug] Network delay set to:', delayInput.value, 'ms')
+    })
 
-    // Register menu items
-    if (pluginDef.menuItems) {
-        for (const item of pluginDef.menuItems) {
-            pluginsStore.registerMenuItem(item.section || 'custom', pluginDef.id, item)
-        }
-    }
-
-    // Register routes
-    if (pluginDef.routes) {
-        for (const route of pluginDef.routes) {
-            pluginsStore.addPendingRoute(pluginDef.id, route)
-        }
-    }
-
-    // Call onInit if exists
-    if (typeof pluginDef.onInit === 'function') {
-        await pluginDef.onInit()
-    }
-
-    pluginsStore.setInitialized(true)
-    console.log(`[Debug] Plugin loaded successfully`)
+    // Locale change
+    const localeSelect = panel.querySelector('#debug-locale') as HTMLSelectElement
+    localeSelect.addEventListener('change', () => {
+        updateDebugState({ locale: localeSelect.value as 'en' | 'ru' })
+        window.gameapLang = localeSelect.value
+        console.log('[Debug] Locale changed to:', localeSelect.value)
+    })
 }
 
-// Create router
-const router = createRouter({
-    history: createWebHistory(),
-    routes: [
-        {
-            path: '/',
-            name: 'home',
-            component: () => import('./views/HomeView.vue'),
-        },
-        {
-            path: '/file-editor',
-            name: 'file-editor',
-            component: () => import('./views/FileEditorTest.vue'),
-        },
-        {
-            path: '/server-tab',
-            name: 'server-tab',
-            component: () => import('./views/ServerTabTest.vue'),
-        },
-        {
-            path: '/routes',
-            name: 'routes',
-            component: () => import('./views/RouteTest.vue'),
-        },
-    ],
+// Start initialization
+init().catch(error => {
+    console.error('[Debug] Failed to initialize:', error)
 })
-
-// Initialize app
-async function init() {
-    setupGlobals()
-
-    const app = createApp(App)
-    const pinia = createPinia()
-
-    app.use(pinia)
-    app.use(router)
-
-    // Get stores
-    const debugStore = useDebugStore()
-    const pluginsStore = usePluginsStore()
-
-    // Load plugin
-    try {
-        await loadPlugin(pluginsStore, debugStore)
-
-        // Register plugin routes with router
-        pluginsStore.registerRoutes(router)
-    } catch (error) {
-        console.error('[Debug] Failed to load plugin:', error)
-        pluginsStore.addLoadError(String(error))
-    }
-
-    app.mount('#app')
-}
-
-init()

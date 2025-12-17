@@ -3,81 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GameAP Plugin Debug Harness</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <title>GameAP - Debug Mode</title>
     <script>
-        // Initialize theme from localStorage
+        // Load theme from localStorage and apply it immediately
         (function() {
-            const theme = localStorage.getItem('gameap-theme') || 'light';
-            if (theme === 'dark') {
-                document.documentElement.classList.add('dark');
+            let theme = 'light';
+            try {
+                const settings = localStorage.getItem('gameap_ui_settings');
+                if (settings) {
+                    const parsed = JSON.parse(settings);
+                    theme = parsed.theme || 'light';
+                } else {
+                    const oldTheme = localStorage.getItem('gameap_theme');
+                    if (oldTheme) {
+                        theme = oldTheme;
+                        localStorage.setItem('gameap_ui_settings', JSON.stringify({ theme: oldTheme }));
+                        localStorage.removeItem('gameap_theme');
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load theme from localStorage:', e);
             }
+            document.documentElement.classList.add(theme);
         })();
 
-        // Initialize language
-        window.gameapLang = localStorage.getItem('gameap-locale') || 'en';
+        // Initialize language detection
+        (function() {
+            function detectLanguage() {
+                try {
+                    const settings = localStorage.getItem('gameap_ui_settings');
+                    if (settings) {
+                        const parsed = JSON.parse(settings);
+                        if (parsed.language) {
+                            return parsed.language;
+                        }
+                    } else {
+                        const oldLang = localStorage.getItem('gameap_lang');
+                        if (oldLang) {
+                            return oldLang;
+                        }
+                    }
+                } catch (e) {
+                    console.error('Failed to load language from localStorage:', e);
+                }
 
-        // Minimal i18n for harness UI (not plugin translations)
-        window.i18n = {
-            en: {
-                'debug.title': 'Plugin Debug Harness',
-                'debug.file_editors': 'File Editors',
-                'debug.server_tabs': 'Server Tabs',
-                'debug.routes': 'Routes',
-                'debug.user_type': 'User Type',
-                'debug.server': 'Server',
-                'debug.locale': 'Locale',
-                'debug.admin': 'Admin',
-                'debug.user': 'Regular User',
-                'debug.guest': 'Guest',
-                'debug.none': 'None',
-                'debug.minecraft': 'Minecraft',
-                'debug.cs': 'Counter-Strike',
-                'debug.events': 'Events',
-                'debug.no_events': 'No events yet',
-                'debug.select_file': 'Select a file to test the editor',
-                'debug.no_server_tabs': 'No server tab components registered',
-                'debug.no_routes': 'No routes registered by the plugin',
-            },
-            ru: {
-                'debug.title': 'Отладка плагина',
-                'debug.file_editors': 'Редакторы файлов',
-                'debug.server_tabs': 'Вкладки сервера',
-                'debug.routes': 'Маршруты',
-                'debug.user_type': 'Тип пользователя',
-                'debug.server': 'Сервер',
-                'debug.locale': 'Язык',
-                'debug.admin': 'Администратор',
-                'debug.user': 'Обычный пользователь',
-                'debug.guest': 'Гость',
-                'debug.none': 'Нет',
-                'debug.minecraft': 'Minecraft',
-                'debug.cs': 'Counter-Strike',
-                'debug.events': 'События',
-                'debug.no_events': 'Пока нет событий',
-                'debug.select_file': 'Выберите файл для тестирования редактора',
-                'debug.no_server_tabs': 'Нет зарегистрированных вкладок сервера',
-                'debug.no_routes': 'Плагин не зарегистрировал маршруты',
+                const browserLang = navigator.language || navigator.userLanguage;
+                if (browserLang) {
+                    return browserLang.split('-')[0].toLowerCase();
+                }
+
+                const htmlLang = document.documentElement.lang;
+                if (htmlLang) {
+                    return htmlLang;
+                }
+
+                return 'en';
             }
-        };
+
+            const lang = detectLanguage();
+            const supportedLangs = ['en', 'ru'];
+            const finalLang = supportedLangs.includes(lang) ? lang : 'en';
+
+            document.documentElement.lang = finalLang;
+            window.gameapLang = finalLang;
+
+            // For debug mode, translations will be loaded via MSW mock
+            // Initialize with empty object, will be populated after MSW starts
+            window.i18n = {};
+
+            // Debug mode flag
+            window.gameapDebugMode = true;
+        })();
     </script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        html, body, #app {
-            height: 100%;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-        .dark {
-            color-scheme: dark;
-        }
-    </style>
 </head>
-<body>
-    <div id="app"></div>
+<body class="bg-white dark:bg-stone-800">
+    <div id="app">
+        <!-- Loading indicator while debug harness initializes -->
+        <div id="debug-loader" style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: system-ui, sans-serif;
+            color: #64748b;
+        ">
+            <div style="
+                width: 40px;
+                height: 40px;
+                border: 3px solid #e2e8f0;
+                border-top-color: #4f46e5;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            "></div>
+            <p style="margin-top: 16px; font-size: 14px;">Initializing Debug Harness...</p>
+            <p style="margin-top: 4px; font-size: 12px; opacity: 0.7;">Starting Mock Service Worker</p>
+        </div>
+        <style>
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+        </style>
+    </div>
+    <!-- Debug harness entry point - loads MSW first, then the real app -->
     <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
