@@ -148,12 +148,6 @@ const ru = {
             fieldFeedback: 'Папка существует!',
             warning: 'Внимание! При совпадении имен файлы будут перезаписаны!',
         },
-        cropper: {
-            title: 'Обрезка',
-            apply: 'Применить',
-            reset: 'Сбросить',
-            save: 'Сохранить',
-        },
     },
     notifications: {
         cutToClipboard: 'Вырезано!',

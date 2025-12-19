@@ -147,12 +147,6 @@ const de = {
             fieldFeedback: 'Ordner ist vorhanden!',
             warning: 'Achtung! Wenn die Namen übereinstimmen, werden die Dateien überschrieben!',
         },
-        cropper: {
-            title: 'Beschneiden',
-            apply: 'Übernehmen',
-            reset: 'Zurücksetzen',
-            save: 'Speichern',
-        },
     },
     notifications: {
         cutToClipboard: 'Ausgeschnitten in die Zwischenablage!',

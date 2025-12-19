@@ -148,12 +148,6 @@ const fa = {
             fieldFeedback: 'پوشه وجود دارد!',
             warning: 'توجه! اگر نام ها تکراری باشند، فایل های قدیمی با فایل های جدید جایگزین خواهند شد',
         },
-        cropper: {
-            title: 'کوچک کردن',
-            apply: 'اجرا',
-            reset: 'تنظیم مجدد',
-            save: 'ذخیره',
-        },
     },
     notifications: {
         cutToClipboard: 'برش یه کلیپ بورد!',

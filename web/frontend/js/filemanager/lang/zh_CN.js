@@ -149,12 +149,6 @@ const zh_CN = {
             fieldFeedback: '目录存在!',
             warning: '注意！如果文件存在将会被覆盖！',
         },
-        cropper: {
-            title: '裁剪',
-            apply: '应用',
-            reset: '重置',
-            save: '保存',
-        },
     },
     notifications: {
         cutToClipboard: '剪切到粘贴板!',

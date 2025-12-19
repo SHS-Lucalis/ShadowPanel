@@ -148,12 +148,6 @@ const pt_BR = {
             fieldFeedback: 'Pasta existente!',
             warning: 'Atenção! Se os nomes forem idênticos, os arquivos serão substituídos!',
         },
-        cropper: {
-            title: 'Cortar',
-            apply: 'Aplicar',
-            reset: 'Resetar',
-            save: 'Salvar',
-        },
     },
     notifications: {
         cutToClipboard: 'Recortado para área de transferência!',

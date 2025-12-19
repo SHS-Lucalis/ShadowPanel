@@ -148,12 +148,6 @@ const zh_TW = {
             fieldFeedback: '目錄存在!',
             warning: '注意！如果文件存在將會被覆蓋！',
         },
-        cropper: {
-            title: '裁剪',
-            apply: '套用',
-            reset: '重設',
-            save: '儲存',
-        },
     },
     notifications: {
         cutToClipboard: '剪下到剪貼簿!',

@@ -148,12 +148,6 @@ const en = {
             fieldFeedback: 'Folder exists!',
             warning: 'Attention! If the names match, the files will be overwritten!',
         },
-        cropper: {
-            title: 'Cropping',
-            apply: 'Apply',
-            reset: 'Reset',
-            save: 'Save',
-        },
     },
     notifications: {
         cutToClipboard: 'Cut to clipboard!',

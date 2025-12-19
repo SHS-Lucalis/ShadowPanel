@@ -148,12 +148,6 @@ const hu = {
             fieldFeedback: 'Mappa létezik!',
             warning: 'Vigyázz! Amennyiben a nevek egyeznek akkor a fájlok felülírásra kerülnek!',
         },
-        cropper: {
-            title: 'Kivágás',
-            apply: 'Apply',
-            reset: 'Visszaállítás',
-            save: 'Mentés',
-        },
     },
     notifications: {
         cutToClipboard: 'Kivágás a vágólapra!',

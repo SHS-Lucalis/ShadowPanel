@@ -147,12 +147,6 @@ const pl = {
             fieldFeedback: 'Katalog istnieje!',
             warning: 'Uwaga! Przy identycznej nazwie, pliki zostaną nadpisane!',
         },
-        cropper: {
-            title: 'Przycinanie',
-            apply: 'Zastosuj',
-            reset: 'Reset',
-            save: 'Zapisz',
-        },
     },
     notifications: {
         cutToClipboard: 'Wytnij do schowka!',

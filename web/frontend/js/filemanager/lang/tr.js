@@ -147,12 +147,6 @@ const tr = {
             fieldFeedback: 'Klasör mevcut!',
             warning: 'Dikkat! Eğer dosya isimleri aynı olursa, üzerine yazılacak!',
         },
-        cropper: {
-            title: 'Kırpma',
-            apply: 'Uygula',
-            reset: 'Sıfırla',
-            save: 'Kaydet',
-        },
     },
     notifications: {
         cutToClipboard: 'Panoya kesildi!',

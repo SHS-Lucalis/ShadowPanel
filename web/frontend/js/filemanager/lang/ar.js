@@ -147,12 +147,6 @@ const ar = {
             fieldFeedback: 'المجلد موجود!',
             warning: 'تحذير! اذا تشابهت الاسماء, سيتم استبدال الملفات!',
         },
-        cropper: {
-            title: 'قص',
-            apply: 'تطبيق',
-            reset: 'اعادة تعين',
-            save: 'حفظ',
-        },
     },
     notifications: {
         cutToClipboard: 'قص إلى الحافظة!',

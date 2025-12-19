@@ -148,12 +148,6 @@ const es = {
             fieldFeedback: 'Carpeta existente!',
             warning: 'Attention! If the names match, the files will be overwritten!',
         },
-        cropper: {
-            title: 'Cropping',
-            apply: 'Aceptar',
-            reset: 'Reset',
-            save: 'Guardar',
-        },
     },
     notifications: {
         cutToClipboard: 'Copiado!',

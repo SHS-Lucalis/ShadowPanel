@@ -148,12 +148,6 @@ const sr = {
             fieldFeedback: 'Direktorijum Postoji!',
             warning: 'Pažnja! Ako se nazivi poklapaju, datoteke će biti prepisane!',
         },
-        cropper: {
-            title: 'Orezivanje',
-            apply: 'Primeni',
-            reset: 'Resetuj',
-            save: 'Sačuvaj',
-        },
     },
     notifications: {
         cutToClipboard: 'Isečeno u klipbord!',

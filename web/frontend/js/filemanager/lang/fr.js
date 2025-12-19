@@ -147,12 +147,6 @@ const fr = {
             fieldFeedback: 'Dossier existant!',
             warning: 'Attention! Si le nom correspond, les fichiers seront écrasés!',
         },
-        cropper: {
-            title: 'Recadrer',
-            apply: 'Appliquer',
-            reset: 'Réinitialisé',
-            save: 'Sauvegarder',
-        },
     },
     notifications: {
         cutToClipboard: 'Coller dans le presse-papier!',

@@ -150,12 +150,6 @@ const nl = {
             fieldFeedback: 'Map bestaat!',
             warning: 'Attentie! Als bestandsnamen hetzelfde zijn worden de bestanden overschreven!',
         },
-        cropper: {
-            title: 'Bijsnijden',
-            apply: 'Toepassen',
-            reset: 'Resetten',
-            save: 'Opslaan',
-        },
     },
     notifications: {
         cutToClipboard: 'Knippen naar klembord!',

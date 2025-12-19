@@ -148,12 +148,6 @@ const it = {
             fieldFeedback: 'Cartella esistente!',
             warning: 'Attenzione! se i nomi dei file coincidono i file presenti verranno sovrascritti!',
         },
-        cropper: {
-            title: 'Ritaglia',
-            apply: 'Applica',
-            reset: 'Reset',
-            save: 'Salva',
-        },
     },
     notifications: {
         cutToClipboard: 'Tagliato e salvato negli appunti!',

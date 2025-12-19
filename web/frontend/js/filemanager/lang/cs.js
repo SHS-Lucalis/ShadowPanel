@@ -148,12 +148,6 @@ const cs = {
             fieldFeedback: 'Složka již existuje!',
             warning: 'Pozor! Pokud se jména shodují, budou soubory přepsány!',
         },
-        cropper: {
-            title: 'Oříznutí',
-            apply: 'Aplikovat',
-            reset: 'Obnovit',
-            save: 'Uložit',
-        },
     },
     notifications: {
         cutToClipboard: 'Vyjmuto do schránky!',
