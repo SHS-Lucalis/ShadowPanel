@@ -1,24 +1,24 @@
 <template>
-  <Menu as="div" :class="$attrs.class" class="relative inline-block text-left">
+  <GMenu as="div" :class="$attrs.class" class="relative inline-block text-left">
     <div class="sm:hidden">
-      <MenuButton @click="onMenuButtonClick" class="gap-x-1.5 mt-4 text-white hover:bg-stone-800 px-4 py-2 rounded">
+      <GMenuButton @click="onMenuButtonClick" class="gap-x-1.5 mt-4 text-white hover:bg-stone-800 px-4 py-2 rounded">
         <i v-if="buttonIcon" :class="buttonIcon"></i>
-      </MenuButton>
+      </GMenuButton>
     </div>
 
     <div class="sm:visible invisible">
-      <MenuButton @click="onMenuButtonClick" class="w-full gap-x-1.5 text-white hover:bg-stone-800 md:px-4 md:py-2 rounded">
+      <GMenuButton @click="onMenuButtonClick" class="w-full gap-x-1.5 text-white hover:bg-stone-800 md:px-4 md:py-2 rounded">
         <i v-if="buttonIcon" :class="buttonIcon" class="mr-1"></i>
         <span class="md:visible collapse">{{ props.buttonText }}</span>
         <i v-if="!menuOpened" class="fa-solid fa-chevron-down ml-4 md:visible collapse"></i>
         <i v-else class="fa-solid fa-chevron-up ml-4 md:visible collapse"></i>
-      </MenuButton>
+      </GMenuButton>
     </div>
 
     <transition @after-leave="transitionAfterLeave" enter-active-class="transition ease-out duration-100" enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100" leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95">
-      <MenuItems :unmount="menuItemsUnmount" class="absolute right-0 z-10 mt-2 w-56 origin-top-right divide-y divide-stone-100 rounded bg-white dark:bg-stone-900 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+      <GMenuItems :unmount="menuItemsUnmount" class="absolute right-0 z-10 mt-2 w-56 origin-top-right divide-y divide-stone-100 rounded bg-white dark:bg-stone-900 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
         <div class="py-1" v-for="itemGroup in items">
-          <MenuItem v-slot="{ active, close }" v-for="item in itemGroup">
+          <GMenuItem v-slot="{ active, close }" v-for="item in itemGroup">
             <a
                 v-if="item.route"
                 @click="onLinkClick(item, close)"
@@ -57,15 +57,15 @@
               <i v-if="item.icon" :class="item.icon"></i>
               {{ item.label }}
             </a>
-          </MenuItem>
+          </GMenuItem>
         </div>
-      </MenuItems>
+      </GMenuItems>
     </transition>
-  </Menu>
+  </GMenu>
 </template>
 
 <script setup>
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
+import { GMenu, GMenuButton, GMenuItem, GMenuItems } from "@gameap/ui"
 import {defineProps, ref} from "vue"
 import {useRouter} from "vue-router"
 

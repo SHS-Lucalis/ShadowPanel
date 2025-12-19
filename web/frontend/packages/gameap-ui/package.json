@@ -17,14 +17,10 @@
   ],
   "peerDependencies": {
     "vue": "^3.5.0",
-    "vue-router": "^4.0.0",
-    "@headlessui/vue": "^1.7.0"
+    "vue-router": "^4.0.0"
   },
   "peerDependenciesMeta": {
     "vue-router": {
-      "optional": true
-    },
-    "@headlessui/vue": {
       "optional": true
     }
   }
