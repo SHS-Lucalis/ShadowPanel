@@ -6,38 +6,10 @@
 
 import '../sass/app.scss';
 
-import {createApp, h} from "vue";
+import {createApp} from "vue";
 import {defineAsyncComponent} from 'vue'
 
 import {createPinia} from 'pinia'
-
-import {
-    create,
-    NAlert,
-    NButton,
-    NCard,
-    NCheckbox,
-    NCollapse,
-    NCollapseItem,
-    NConfigProvider,
-    NDatePicker,
-    NDataTable,
-    NDialog,
-    NDialogProvider,
-    NEmpty,
-    NInput,
-    NInputNumber,
-    NMessageProvider,
-    NModal,
-    NProgress,
-    NRadio,
-    NSelect,
-    NTable,
-    NTabs,
-    NTabPane,
-    NThemeEditor,
-    NTooltip,
-} from 'naive-ui'
 
 import { createWebHistory, createRouter } from 'vue-router'
 
@@ -129,38 +101,7 @@ app.config.globalProperties.trans = trans;
 app.config.globalProperties.changeLanguage = changeLanguage;
 app.config.globalProperties.getCurrentLanguage = getCurrentLanguage;
 
-const naive = create({
-    components: [
-        NAlert,
-        NButton,
-        NCard,
-        NCheckbox,
-        NCollapse,
-        NCollapseItem,
-        NConfigProvider,
-        NDialog,
-        NDataTable,
-        NDatePicker,
-        NDialogProvider,
-        NEmpty,
-        NInput,
-        NInputNumber,
-        NMessageProvider,
-        NModal,
-        NProgress,
-        NRadio,
-        NSelect,
-        NTable,
-        NTabs,
-        NTabPane,
-        NThemeEditor,
-        NTooltip,
-    ],
-})
-
 const pinia = createPinia()
-
-app.use(naive)
 
 app.use(pinia)
 

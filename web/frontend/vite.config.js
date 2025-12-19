@@ -2,11 +2,17 @@ import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue'
 import { viteCommonjs } from '@originjs/vite-plugin-commonjs'
 import { resolve } from 'path'
+import Components from 'unplugin-vue-components/vite'
+import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 
 export default defineConfig({
     plugins: [
         viteCommonjs(),
-        vue()
+        vue(),
+        Components({
+            resolvers: [NaiveUiResolver()],
+            dts: false,
+        }),
     ],
     base: '/',
     publicDir: 'public',

@@ -1,10 +1,6 @@
 import {trans} from "./i18n/i18n";
 
-import EmptyView from "./views/EmptyView.vue";
-import ServersView from "./views/ServersView.vue";
 import HomeView from "./views/HomeView.vue";
-import ProfileView from "./views/ProfileView.vue";
-import TokensView from "./views/TokensView.vue";
 import LoginView from "./views/LoginView.vue";
 
 import {useAuthStore} from "./store/auth";
@@ -13,7 +9,11 @@ import Error403View from "./views/errors/Error403View.vue";
 import Error500View from "./views/errors/Error500View.vue";
 import {requestCancellation} from "./config/requestCancellation";
 
-// Lazy-loaded view that contains FileManager (keeps filemanager out of main bundle)
+// Lazy-loaded views
+const ServersView = () => import("./views/ServersView.vue");
+const ProfileView = () => import("./views/ProfileView.vue");
+const TokensView = () => import("./views/TokensView.vue");
+const EmptyView = () => import("./views/EmptyView.vue");
 const ServerIdView = () => import("./views/ServerIdView.vue");
 
 // Lazy-loaded admin views (code-split for smaller initial bundle)
