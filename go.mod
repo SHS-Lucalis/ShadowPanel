@@ -19,6 +19,7 @@ require (
 	github.com/knqyf263/go-plugin v0.9.0
 	github.com/minio/minio-go/v7 v7.0.97
 	github.com/pkg/errors v0.9.1
+	github.com/planetscale/vtprotobuf v0.6.0
 	github.com/pressly/goose/v3 v3.26.0
 	github.com/redis/go-redis/v9 v9.17.2
 	github.com/rs/cors v1.11.1
@@ -26,10 +27,11 @@ require (
 	github.com/rumblefrog/go-a2s v1.0.2
 	github.com/samber/lo v1.52.0
 	github.com/stretchr/testify v1.11.1
-	github.com/tetratelabs/wazero v1.10.1
+	github.com/tetratelabs/wazero v1.11.0
 	go.uber.org/mock v0.6.0
 	go.uber.org/multierr v1.11.0
 	golang.org/x/crypto v0.46.0
 	golang.org/x/text v0.32.0
+	google.golang.org/protobuf v1.36.11
 	modernc.org/sqlite v1.41.0
 )
