@@ -2,6 +2,7 @@ package getusers_test
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -122,7 +123,21 @@ func TestGetUsers(t *testing.T) {
 				assert.Equal(t, http.StatusUnauthorized, recorder.Code)
 			} else {
 				assert.Equal(t, http.StatusOK, recorder.Code)
-				assert.JSONEq(t, test.want, recorder.Body.String())
+
+				var expected, actual []map[string]any
+				require.NoError(t, json.Unmarshal([]byte(test.want), &expected))
+				require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &actual))
+
+				for i := range actual {
+					if updatedAt, ok := actual[i]["updated_at"].(string); ok {
+						parsedTime, err := time.Parse(time.RFC3339Nano, updatedAt)
+						require.NoError(t, err)
+						assert.InDelta(t, time.Now().Unix(), parsedTime.Unix(), 1)
+						actual[i]["updated_at"] = expected[i]["updated_at"]
+					}
+				}
+
+				assert.Equal(t, expected, actual)
 			}
 		})
 	}

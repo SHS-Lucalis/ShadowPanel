@@ -85,9 +85,7 @@ func (r *ServerTaskRepository) Save(_ context.Context, task *domain.ServerTask) 
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if task.UpdatedAt == nil || task.UpdatedAt.IsZero() {
-		task.UpdatedAt = lo.ToPtr(time.Now())
-	}
+	task.UpdatedAt = lo.ToPtr(time.Now())
 
 	if task.ID == 0 && (task.CreatedAt == nil || task.CreatedAt.IsZero()) {
 		task.CreatedAt = lo.ToPtr(time.Now())

@@ -58,7 +58,7 @@ export const useNodeStore = defineStore('node', () => {
 
     // From legacy dedicatedServers.js
     async function fetchIpList() {
-        if (nodeId.value <= 0) {
+        if (!nodeId.value || nodeId.value <= 0) {
             return
         }
 
@@ -72,7 +72,7 @@ export const useNodeStore = defineStore('node', () => {
     }
 
     async function fetchBusyPorts(callback = null) {
-        if (nodeId.value <= 0) {
+        if (!nodeId.value || nodeId.value <= 0) {
             return
         }
 

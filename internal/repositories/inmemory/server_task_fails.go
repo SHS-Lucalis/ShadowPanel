@@ -74,9 +74,7 @@ func (r *ServerTaskFailRepository) Save(_ context.Context, fail *domain.ServerTa
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if fail.UpdatedAt == nil || fail.UpdatedAt.IsZero() {
-		fail.UpdatedAt = lo.ToPtr(time.Now())
-	}
+	fail.UpdatedAt = lo.ToPtr(time.Now())
 
 	if fail.ID == 0 && (fail.CreatedAt == nil || fail.CreatedAt.IsZero()) {
 		fail.CreatedAt = lo.ToPtr(time.Now())

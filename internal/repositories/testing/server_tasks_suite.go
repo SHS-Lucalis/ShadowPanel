@@ -113,6 +113,9 @@ func (s *ServerTaskRepositorySuite) TestServerTaskRepositorySave() {
 		err := s.repo.Save(ctx, task)
 		require.NoError(t, err)
 		originalID := task.ID
+		originalUpdatedAt := task.UpdatedAt
+
+		time.Sleep(10 * time.Millisecond)
 
 		task.Command = domain.ServerTaskCommandRestart
 		task.Counter = 10
@@ -120,6 +123,7 @@ func (s *ServerTaskRepositorySuite) TestServerTaskRepositorySave() {
 		err = s.repo.Save(ctx, task)
 		require.NoError(t, err)
 		assert.Equal(t, originalID, task.ID)
+		assert.True(t, task.UpdatedAt.After(*originalUpdatedAt))
 
 		filter := &filters.FindServerTask{IDs: []uint{task.ID}}
 		results, err := s.repo.Find(ctx, filter, nil, nil)

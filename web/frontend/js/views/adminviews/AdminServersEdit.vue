@@ -380,8 +380,8 @@ const onClickSave = () => {
 const saveServer = () => {
   serverStore.save({
     name: serverForm.value.name,
-    game_id: server.value.game_id,
-    game_mod_id: server.value.game_mod_id,
+    game_id: serverForm.value.game,
+    game_mod_id: serverForm.value.gameMod,
     enabled: serverForm.value.enabled,
     blocked: serverForm.value.blocked,
     installed: serverForm.value.status,

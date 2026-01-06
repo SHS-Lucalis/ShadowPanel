@@ -87,9 +87,7 @@ func (r *PersonalAccessTokenRepository) Save(_ context.Context, token *domain.Pe
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if token.UpdatedAt == nil || token.UpdatedAt.IsZero() {
-		token.UpdatedAt = lo.ToPtr(time.Now())
-	}
+	token.UpdatedAt = lo.ToPtr(time.Now())
 
 	if token.ID == 0 && (token.CreatedAt == nil || token.CreatedAt.IsZero()) {
 		token.CreatedAt = lo.ToPtr(time.Now())

@@ -155,9 +155,7 @@ func (r *ServerTaskRepository) find(
 }
 
 func (r *ServerTaskRepository) Save(ctx context.Context, task *domain.ServerTask) error {
-	if task.UpdatedAt == nil || task.UpdatedAt.IsZero() {
-		task.UpdatedAt = lo.ToPtr(time.Now())
-	}
+	task.UpdatedAt = lo.ToPtr(time.Now())
 
 	if task.ID == 0 && (task.CreatedAt == nil || task.CreatedAt.IsZero()) {
 		task.CreatedAt = lo.ToPtr(time.Now())

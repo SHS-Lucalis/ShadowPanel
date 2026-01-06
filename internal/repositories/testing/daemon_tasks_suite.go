@@ -101,7 +101,7 @@ func (s *DaemonTaskRepositorySuite) TestDaemonTaskRepositorySave() {
 		require.NoError(t, err)
 		assert.Equal(t, originalID, task.ID)
 		assert.Equal(t, originalCreatedAt, task.CreatedAt)
-		assert.True(t, task.UpdatedAt.After(*originalUpdatedAt) || task.UpdatedAt.Equal(*originalUpdatedAt))
+		assert.True(t, task.UpdatedAt.After(*originalUpdatedAt))
 		assert.Equal(t, domain.DaemonTaskStatusSuccess, task.Status)
 		assert.Equal(t, "updated output", *task.Output)
 		assert.Equal(t, "updated data", *task.Data)
@@ -148,7 +148,7 @@ func (s *DaemonTaskRepositorySuite) TestDaemonTaskRepositorySave() {
 		require.NoError(t, err)
 		assert.Equal(t, originalID, taskToUpdate.ID)
 		assert.InDelta(t, originalCreatedAt.Unix(), taskToUpdate.CreatedAt.Unix(), 1.0)
-		assert.True(t, taskToUpdate.UpdatedAt.After(*originalUpdatedAt) || taskToUpdate.UpdatedAt.Equal(*originalUpdatedAt))
+		assert.True(t, taskToUpdate.UpdatedAt.After(*originalUpdatedAt))
 		assert.Equal(t, domain.DaemonTaskStatusSuccess, taskToUpdate.Status)
 
 		find, err := s.repo.FindWithOutput(ctx, filters.FindDaemonTaskByIDs(task.ID), nil, nil)

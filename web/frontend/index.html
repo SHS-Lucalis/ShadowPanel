@@ -49,20 +49,35 @@
                     console.error('Failed to load language from localStorage:', e);
                 }
 
-                // 2. Check browser language
+                // 2. Check admin default from server config
+                try {
+                    const configXhr = new XMLHttpRequest();
+                    configXhr.open('GET', '/api/config/public', false);
+                    configXhr.send();
+                    if (configXhr.status === 200) {
+                        const config = JSON.parse(configXhr.responseText);
+                        if (config.default_language) {
+                            return config.default_language;
+                        }
+                    }
+                } catch (e) {
+                    console.error('Failed to load default language from config:', e);
+                }
+
+                // 3. Check browser language
                 const browserLang = navigator.language || navigator.userLanguage;
                 if (browserLang) {
                     // Extract language code (e.g., 'en' from 'en-US')
                     return browserLang.split('-')[0].toLowerCase();
                 }
 
-                // 3. Check HTML lang attribute
+                // 4. Check HTML lang attribute
                 const htmlLang = document.documentElement.lang;
                 if (htmlLang) {
                     return htmlLang;
                 }
 
-                // 4. Default to English
+                // 5. Default to English
                 return 'en';
             }
 

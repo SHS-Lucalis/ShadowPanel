@@ -113,9 +113,7 @@ func (r *NodeRepository) find(
 
 //nolint:funlen
 func (r *NodeRepository) Save(ctx context.Context, node *domain.Node) error {
-	if node.UpdatedAt == nil || node.UpdatedAt.IsZero() {
-		node.UpdatedAt = lo.ToPtr(time.Now())
-	}
+	node.UpdatedAt = lo.ToPtr(time.Now())
 
 	if node.ID == 0 && (node.CreatedAt == nil || node.CreatedAt.IsZero()) {
 		node.CreatedAt = lo.ToPtr(time.Now())

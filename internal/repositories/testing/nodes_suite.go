@@ -158,7 +158,7 @@ func (s *NodeRepositorySuite) TestNodeRepositorySave() {
 		err = s.repo.Save(ctx, node)
 		require.NoError(t, err)
 		assert.Equal(t, originalID, node.ID)
-		assert.True(t, node.UpdatedAt.After(*originalUpdatedAt) || node.UpdatedAt.Equal(*originalUpdatedAt))
+		assert.True(t, node.UpdatedAt.After(*originalUpdatedAt))
 
 		filter := &filters.FindNode{IDs: []uint{node.ID}}
 		results, err := s.repo.Find(ctx, filter, nil, nil)

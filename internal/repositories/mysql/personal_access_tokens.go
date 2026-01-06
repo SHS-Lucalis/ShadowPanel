@@ -101,9 +101,7 @@ func (r *PersonalAccessTokenRepository) find(
 }
 
 func (r *PersonalAccessTokenRepository) Save(ctx context.Context, token *domain.PersonalAccessToken) error {
-	if token.UpdatedAt == nil || token.UpdatedAt.IsZero() {
-		token.UpdatedAt = lo.ToPtr(time.Now())
-	}
+	token.UpdatedAt = lo.ToPtr(time.Now())
 
 	if token.ID == 0 && (token.CreatedAt == nil || token.CreatedAt.IsZero()) {
 		token.CreatedAt = lo.ToPtr(time.Now())

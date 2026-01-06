@@ -111,20 +111,20 @@ export const useAuthStore = defineStore('auth', {
             // Load token from localStorage
             const token = localStorage.getItem('auth_token')
 
-            if (token) {
-                // Restore token to state
-                this.authToken = token
-
-                // Set token as default Authorization header for all axios requests
-                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+            if (!token) {
+                return
             }
 
-            // Try to get user profile from server-side session/cookies
+            // Restore token to state
+            this.authToken = token
+
+            // Set token as default Authorization header for all axios requests
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+
+            // Try to get user profile from server
             try {
                 await this.fetchProfile()
             } catch (error) {
-                //this.profile = {}
-
                 // Only log if it's not a 401 (unauthorized) error
                 if (error.response?.status !== 401
                     && error.response?.status !== 403

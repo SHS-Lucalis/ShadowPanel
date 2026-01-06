@@ -50,20 +50,28 @@ import {
 import { trans } from '@/i18n/i18n';
 
 const DEFAULT_PORTS = {
+  'ark': 7777,
   'arma2': 2302,
   'arma2ao': 2302,
   'arma3': 2302,
   'cod4': 28960,
-  'mta': 22003,
-  'samp': 7777,
+  'fivem': 30120,
   'hurtworld': 12871,
   'justcause': 7777,
-  'fivem': 30120,
-  'ark': 7777,
-  'rust': 28015,
   'minecraft': 25565,
+  'mta': 22003,
   'rok': 7350,
+  'rust': 28015,
+  'samp': 7777,
   'teamspeak3': 9987,
+  'quake': 26000,
+  'q1': 26000,
+  'quake2': 27910,
+  'q2': 27910,
+  'quake3': 27960,
+  'q3': 27960,
+  'quake4': 28004,
+  'q4': 28004,
   'default': 27015,
 };
 
@@ -112,14 +120,17 @@ const rconPort = defineModel('rconPort')
 const serverPortWarning = ref('')
 
 function setPorts() {
+  const gameCode = getExistsPortGameCode();
+
   if (props.initialServerIp === selectedIp.value) {
     serverPort.value = parseInt(props.initialServerPort) || 27015;
-    queryPort.value = parseInt(props.initialQueryPort) || 27015;
-    rconPort.value = parseInt(props.initialRconPort) || 27015;
+
+    const portDiff = getPortDiff();
+    queryPort.value = parseInt(props.initialQueryPort) || serverPort.value + portDiff[0];
+    rconPort.value = parseInt(props.initialRconPort) || serverPort.value + portDiff[1];
+
     return
   }
-
-  const gameCode = getExistsPortGameCode();
 
   let portCorrect = -1;
 
@@ -130,14 +141,18 @@ function setPorts() {
 }
 
 function correctPorts() {
-  const gameCode = getExistsPortGameCode();
+  const portDiff = getPortDiff();
 
-  queryPort.value = serverPort.value + PORT_DIFF[gameCode][0];
-  rconPort.value = serverPort.value + PORT_DIFF[gameCode][1];
+  queryPort.value = serverPort.value + portDiff[0];
+  rconPort.value = serverPort.value + portDiff[1];
 }
 
 function getExistsPortGameCode() {
   return DEFAULT_PORTS.hasOwnProperty(gameCode.value) ? gameCode.value : 'default';
+}
+
+function getPortDiff() {
+  return PORT_DIFF[gameCode.value] || PORT_DIFF['default'];
 }
 
 function isBusy(serverIp, serverPort) {

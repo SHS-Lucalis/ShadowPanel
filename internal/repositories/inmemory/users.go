@@ -96,9 +96,7 @@ func (r *UserRepository) Save(_ context.Context, user *domain.User) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if user.UpdatedAt == nil || user.UpdatedAt.IsZero() {
-		user.UpdatedAt = lo.ToPtr(time.Now())
-	}
+	user.UpdatedAt = lo.ToPtr(time.Now())
 
 	if user.ID == 0 && (user.CreatedAt == nil || user.CreatedAt.IsZero()) {
 		user.CreatedAt = lo.ToPtr(time.Now())

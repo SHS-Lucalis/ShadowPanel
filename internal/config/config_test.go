@@ -404,6 +404,51 @@ func TestConfig_LoadTLSCertificate(t *testing.T) {
 	})
 }
 
+func TestNormalizeConfigValues_DefaultLanguage(t *testing.T) {
+	tests := []struct {
+		name             string
+		defaultLanguage  string
+		expectedLanguage string
+	}{
+		{
+			name:             "empty_unchanged",
+			defaultLanguage:  "",
+			expectedLanguage: "",
+		},
+		{
+			name:             "en_unchanged",
+			defaultLanguage:  "en",
+			expectedLanguage: "en",
+		},
+		{
+			name:             "ru_unchanged",
+			defaultLanguage:  "ru",
+			expectedLanguage: "ru",
+		},
+		{
+			name:             "uppercase_EN_normalized_to_lowercase",
+			defaultLanguage:  "EN",
+			expectedLanguage: "en",
+		},
+		{
+			name:             "uppercase_RU_normalized_to_lowercase",
+			defaultLanguage:  "RU",
+			expectedLanguage: "ru",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := &Config{}
+			cfg.UI.DefaultLanguage = tt.defaultLanguage
+
+			normalizeConfigValues(cfg)
+
+			assert.Equal(t, tt.expectedLanguage, cfg.UI.DefaultLanguage)
+		})
+	}
+}
+
 func generateTestCertificate(t *testing.T) (certPEM []byte, keyPEM []byte) {
 	t.Helper()
 

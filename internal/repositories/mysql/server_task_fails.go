@@ -124,9 +124,7 @@ func (r *ServerTaskFailRepository) find(
 }
 
 func (r *ServerTaskFailRepository) Save(ctx context.Context, taskFail *domain.ServerTaskFail) error {
-	if taskFail.UpdatedAt == nil || taskFail.UpdatedAt.IsZero() {
-		taskFail.UpdatedAt = lo.ToPtr(time.Now())
-	}
+	taskFail.UpdatedAt = lo.ToPtr(time.Now())
 
 	if taskFail.ID == 0 && (taskFail.CreatedAt == nil || taskFail.CreatedAt.IsZero()) {
 		taskFail.CreatedAt = lo.ToPtr(time.Now())

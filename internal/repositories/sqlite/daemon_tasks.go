@@ -135,9 +135,7 @@ func (r *DaemonTaskRepository) find(
 }
 
 func (r *DaemonTaskRepository) Save(ctx context.Context, task *domain.DaemonTask) error {
-	if task.UpdatedAt == nil || task.UpdatedAt.IsZero() {
-		task.UpdatedAt = lo.ToPtr(time.Now())
-	}
+	task.UpdatedAt = lo.ToPtr(time.Now())
 
 	if task.ID == 0 && (task.CreatedAt == nil || task.CreatedAt.IsZero()) {
 		task.CreatedAt = lo.ToPtr(time.Now())

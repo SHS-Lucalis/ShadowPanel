@@ -111,9 +111,7 @@ func (r *UserRepository) find(
 }
 
 func (r *UserRepository) Save(ctx context.Context, user *domain.User) error {
-	if user.UpdatedAt == nil || user.UpdatedAt.IsZero() {
-		user.UpdatedAt = lo.ToPtr(time.Now())
-	}
+	user.UpdatedAt = lo.ToPtr(time.Now())
 
 	if user.ID == 0 && (user.CreatedAt == nil || user.CreatedAt.IsZero()) {
 		user.CreatedAt = lo.ToPtr(time.Now())

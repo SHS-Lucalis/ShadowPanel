@@ -134,9 +134,7 @@ func (r *ServerRepository) find(
 
 //nolint:funlen
 func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) error {
-	if server.UpdatedAt == nil || server.UpdatedAt.IsZero() {
-		server.UpdatedAt = lo.ToPtr(time.Now())
-	}
+	server.UpdatedAt = lo.ToPtr(time.Now())
 
 	if server.ID == 0 && (server.CreatedAt == nil || server.CreatedAt.IsZero()) {
 		server.CreatedAt = lo.ToPtr(time.Now())

@@ -74,6 +74,9 @@ func (s *ServerRepositorySuite) TestServerRepositorySave() {
 		err := s.repo.Save(ctx, server)
 		require.NoError(t, err)
 		originalID := server.ID
+		originalUpdatedAt := server.UpdatedAt
+
+		time.Sleep(10 * time.Millisecond)
 
 		server.Name = "Updated Server"
 		server.Installed = domain.ServerInstalledStatusInstalled
@@ -82,6 +85,7 @@ func (s *ServerRepositorySuite) TestServerRepositorySave() {
 		assert.Equal(t, originalID, server.ID)
 		assert.Equal(t, "Updated Server", server.Name)
 		assert.Equal(t, domain.ServerInstalledStatusInstalled, server.Installed)
+		assert.True(t, server.UpdatedAt.After(*originalUpdatedAt))
 	})
 }
 

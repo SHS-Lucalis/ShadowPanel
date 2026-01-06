@@ -82,9 +82,7 @@ func (r *NodeRepository) Save(_ context.Context, node *domain.Node) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if node.UpdatedAt == nil || node.UpdatedAt.IsZero() {
-		node.UpdatedAt = lo.ToPtr(time.Now())
-	}
+	node.UpdatedAt = lo.ToPtr(time.Now())
 
 	if node.ID == 0 && (node.CreatedAt == nil || node.CreatedAt.IsZero()) {
 		node.CreatedAt = lo.ToPtr(time.Now())

@@ -79,7 +79,7 @@ func (s *PersonalAccessTokenRepositorySuite) TestPersonalAccessTokenRepositorySa
 		err = s.repo.Save(ctx, token)
 		require.NoError(t, err)
 		assert.Equal(t, originalID, token.ID)
-		assert.True(t, token.UpdatedAt.After(*originalUpdatedAt) || token.UpdatedAt.Equal(*originalUpdatedAt))
+		assert.True(t, token.UpdatedAt.After(*originalUpdatedAt))
 
 		filter := &filters.FindPersonalAccessToken{IDs: []uint{token.ID}}
 		results, err := s.repo.Find(ctx, filter, nil, nil)

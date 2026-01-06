@@ -1,3 +1,5 @@
+[![GameAP Logo](web/frontend/public/gameap_full.svg)](https://gameap.com)
+
 # GameAP
 
 [![Coverage Status](https://coveralls.io/repos/github/gameap/gameap/badge.svg?branch=main)](https://coveralls.io/github/gameap/gameap?branch=main)
@@ -7,7 +9,7 @@
 GameAP is a free and open-source game server management panel that allows you to easily manage and deploy game servers.
 It provides a user-friendly web interface for managing game servers, users, and configurations.
 
-This repository is under active development.
+Demo: https://demo.gameap.com
 
 ## Requirements
 
@@ -63,7 +65,16 @@ GameAP is configured via environment variables. Below are the available configur
 ### Server Configuration
 
 - `HTTP_HOST` - HTTP server host (default: `0.0.0.0`)
-- `HTTP_PORT` - HTTP server port (default: `8000`)
+- `HTTP_PORT` - HTTP server port (default: `8025`)
+- `HTTPS_PORT` - HTTPS server port (default: `443`)
+
+### TLS Configuration
+
+- `TLS_CERT_FILE` - Path to TLS certificate file
+- `TLS_KEY_FILE` - Path to TLS private key file
+- `TLS_CERT` - TLS certificate content (PEM or base64 encoded)
+- `TLS_KEY` - TLS private key content (PEM or base64 encoded)
+- `TLS_FORCE_HTTPS` - Force redirect HTTP to HTTPS (default: `false`)
 
 ### Database Configuration
 
@@ -86,7 +97,24 @@ GameAP is configured via environment variables. Below are the available configur
 
 ### Cache Configuration
 
-- `CACHE_DRIVER` - Cache driver (default: `memory`)
+- `CACHE_DRIVER` - Cache driver (options: `memory`, `redis`, `postgres`, default: `memory`)
+
+#### Redis Cache
+
+Used when `CACHE_DRIVER` is set to `redis`.
+
+- `CACHE_REDIS_ADDR` - Redis server address (default: `localhost:6379`)
+- `CACHE_REDIS_PASSWORD` - Redis password
+- `CACHE_REDIS_DB` - Redis database number (default: `0`)
+
+#### Cache TTL
+
+- `CACHE_TTL_RBAC` - Cache TTL for RBAC data (default: `24h`)
+- `CACHE_TTL_GAMES` - Cache TTL for games (default: `48h`)
+- `CACHE_TTL_NODES` - Cache TTL for nodes (default: `24h`)
+- `CACHE_TTL_USERS` - Cache TTL for users (default: `6h`)
+- `CACHE_TTL_PERSONAL_TOKENS` - Cache TTL for personal tokens (default: `24h`)
+- `CACHE_TTL_SERVER_SETTINGS` - Cache TTL for server settings (default: `12h`)
 
 ### File Storage Configuration
 
@@ -111,17 +139,32 @@ Used when `FILES_DRIVER` is set to `s3`.
 ### Legacy Configuration
 
 - `LEGACY_PATH` - Path to legacy GameAP installation (default: `/var/www/gameap/`)
+- `LEGACY_ENV_PATH` - Path to legacy .env file (default: `/var/www/gameap/.env`)
 
 ### Global API Configuration
 
 - `GLOBAL_API_URL` - Global GameAP API URL for game updates (default: `https://api.gameap.com`)
+
+### Logger Configuration
+
+- `LOGGER_LEVEL` - Log level (options: `debug`, `info`, `warn`, `error`, default: `info`)
+- `LOGGER_LOG_DB_QUERIES` - Enable database query logging (default: `false`)
+
+### UI Configuration
+
+- `DEFAULT_LANGUAGE` - Default UI language code
 
 ### Example Configuration
 
 ```bash
 # Server
 HTTP_HOST=0.0.0.0
-HTTP_PORT=8000
+HTTP_PORT=8025
+
+# TLS (optional)
+# TLS_CERT_FILE=/path/to/cert.pem
+# TLS_KEY_FILE=/path/to/key.pem
+# TLS_FORCE_HTTPS=true
 
 # Database
 DATABASE_DRIVER=mysql
@@ -134,6 +177,9 @@ AUTH_SERVICE=paseto
 
 # Cache
 CACHE_DRIVER=memory
+# For Redis cache:
+# CACHE_DRIVER=redis
+# CACHE_REDIS_ADDR=localhost:6379
 
 # File Storage
 FILES_DRIVER=local
@@ -144,4 +190,7 @@ LEGACY_PATH=/var/www/gameap/
 
 # Global API
 GLOBAL_API_URL=https://api.gameap.com
+
+# Logger
+LOGGER_LEVEL=info
 ```

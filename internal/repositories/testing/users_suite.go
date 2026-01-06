@@ -166,7 +166,7 @@ func (s *UserRepositorySuite) TestUserRepositorySaveWithTimestamps() {
 		user.Name = lo.ToPtr("Updated Name")
 		require.NoError(t, s.repo.Save(ctx, user))
 
-		assert.True(t, user.UpdatedAt.After(originalUpdatedAt) || user.UpdatedAt.Equal(originalUpdatedAt))
+		assert.True(t, user.UpdatedAt.After(originalUpdatedAt))
 	})
 
 	s.T().Run("preserve_custom_timestamps", func(t *testing.T) {

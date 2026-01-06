@@ -55,12 +55,16 @@ func (s *ServerTaskFailRepositorySuite) TestServerTaskFailRepositorySave() {
 		err := s.repo.Save(ctx, taskFail)
 		require.NoError(t, err)
 		originalID := taskFail.ID
+		originalUpdatedAt := taskFail.UpdatedAt
+
+		time.Sleep(10 * time.Millisecond)
 
 		taskFail.Output = "Updated output"
 
 		err = s.repo.Save(ctx, taskFail)
 		require.NoError(t, err)
 		assert.Equal(t, originalID, taskFail.ID)
+		assert.True(t, taskFail.UpdatedAt.After(*originalUpdatedAt))
 
 		filter := &filters.FindServerTaskFail{IDs: []uint{taskFail.ID}}
 		results, err := s.repo.Find(ctx, filter, nil, nil)

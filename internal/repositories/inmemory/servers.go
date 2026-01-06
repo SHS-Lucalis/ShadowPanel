@@ -254,9 +254,7 @@ func (r *ServerRepository) Save(_ context.Context, server *domain.Server) error 
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if server.UpdatedAt == nil || server.UpdatedAt.IsZero() {
-		server.UpdatedAt = lo.ToPtr(time.Now())
-	}
+	server.UpdatedAt = lo.ToPtr(time.Now())
 
 	if server.ID == 0 && (server.CreatedAt == nil || server.CreatedAt.IsZero()) {
 		server.CreatedAt = lo.ToPtr(time.Now())

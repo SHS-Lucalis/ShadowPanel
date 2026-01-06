@@ -15,7 +15,7 @@
     </GButton>
   </div>
 
-  <div class="w-1/4 mb-1">
+  <div class="w-1/3 mb-1">
     <n-input-group>
       <n-input-group-label>
         <i class="fa-solid fa-magnifying-glass"></i>
@@ -25,6 +25,9 @@
           type="text"
           :placeholder="trans('main.search')"
       />
+      <n-button @click="clearSearch" type="error" :disabled="!searchGames" ghost>
+        <i class="fa fa-eraser"></i>
+      </n-button>
     </n-input-group>
   </div>
 
@@ -85,6 +88,7 @@ import GameIcon from "../../components/GameIcon.vue"
 import {useGameListStore} from "../../store/gameList"
 import {errorNotification, notification} from "../../parts/dialogs"
 import {
+  NButton,
   NEmpty,
   NDataTable,
   NModal,
@@ -222,7 +226,20 @@ const pagination = {
   pageSize: 50,
 };
 
-const searchGames = ref('')
+const SEARCH_STORAGE_KEY = 'gameap_games_search'
+const searchGames = ref(sessionStorage.getItem(SEARCH_STORAGE_KEY) || '')
+
+watch(searchGames, (newValue) => {
+  if (newValue) {
+    sessionStorage.setItem(SEARCH_STORAGE_KEY, newValue)
+  } else {
+    sessionStorage.removeItem(SEARCH_STORAGE_KEY)
+  }
+})
+
+const clearSearch = () => {
+  searchGames.value = ''
+}
 
 const gamesData = computed(() => {
   let result = []
