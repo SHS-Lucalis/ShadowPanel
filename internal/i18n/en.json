@@ -361,6 +361,16 @@
     "disable_success_msg": "Module disabled successfully",
     "remove_success_msg": "Module removed successfully"
   },
+  "plugins": {
+    "plugins": "Plugins",
+    "title_list": "Plugin List",
+    "installed": "Installed",
+    "name": "Plugin name",
+    "install": "Install",
+    "update": "Update",
+    "install_success_msg": "Plugin installed successfully",
+    "remove_success_msg": "Plugin removed successfully"
+  },
   "navbar": {
     "main": "Home",
     "logs": "Logs",

@@ -34,6 +34,11 @@ const adminLinks = [
         text: trans('sidebar.users'),
         route: {name: 'admin.users.index'}
     },
+    {
+        icon: 'fas fa-plug',
+        text: trans('plugins.plugins'),
+        route: {name: 'admin.plugins.index'}
+    }
 ]
 
 export { serversLinks, adminLinks }
