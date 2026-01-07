@@ -198,78 +198,43 @@ func (r *PluginRepository) insert(
 	plugin *domain.Plugin,
 	jsonFields *pluginJSONFields,
 ) error {
-	builder := sq.Insert(base.PluginsTable)
-
-	if plugin.ID != 0 {
-		builder = builder.Columns(pluginFields...).
-			Values(
-				plugin.ID,
-				plugin.Name,
-				plugin.Version,
-				plugin.Description,
-				plugin.Author,
-				plugin.APIVersion,
-				plugin.Filename,
-				plugin.Source,
-				plugin.Homepage,
-				jsonFields.requiredPermissions,
-				jsonFields.allowedPermissions,
-				plugin.Status,
-				plugin.Priority,
-				plugin.Category,
-				jsonFields.dependencies,
-				jsonFields.config,
-				plugin.InstalledAt,
-				plugin.LastLoadedAt,
-				plugin.CreatedAt,
-				plugin.UpdatedAt,
-			)
-	} else {
-		builder = builder.Columns(pluginFields[1:]...).
-			Values(
-				plugin.Name,
-				plugin.Version,
-				plugin.Description,
-				plugin.Author,
-				plugin.APIVersion,
-				plugin.Filename,
-				plugin.Source,
-				plugin.Homepage,
-				jsonFields.requiredPermissions,
-				jsonFields.allowedPermissions,
-				plugin.Status,
-				plugin.Priority,
-				plugin.Category,
-				jsonFields.dependencies,
-				jsonFields.config,
-				plugin.InstalledAt,
-				plugin.LastLoadedAt,
-				plugin.CreatedAt,
-				plugin.UpdatedAt,
-			)
+	if plugin.ID == 0 {
+		return errors.New("plugin ID is required")
 	}
 
-	query, args, err := builder.PlaceholderFormat(sq.Question).ToSql()
+	query, args, err := sq.Insert(base.PluginsTable).
+		Columns(pluginFields...).
+		Values(
+			plugin.ID,
+			plugin.Name,
+			plugin.Version,
+			plugin.Description,
+			plugin.Author,
+			plugin.APIVersion,
+			plugin.Filename,
+			plugin.Source,
+			plugin.Homepage,
+			jsonFields.requiredPermissions,
+			jsonFields.allowedPermissions,
+			plugin.Status,
+			plugin.Priority,
+			plugin.Category,
+			jsonFields.dependencies,
+			jsonFields.config,
+			plugin.InstalledAt,
+			plugin.LastLoadedAt,
+			plugin.CreatedAt,
+			plugin.UpdatedAt,
+		).
+		PlaceholderFormat(sq.Question).
+		ToSql()
 	if err != nil {
 		return errors.WithMessage(err, "failed to build query")
 	}
 
-	result, err := r.db.ExecContext(ctx, query, args...)
+	_, err = r.db.ExecContext(ctx, query, args...)
 	if err != nil {
 		return errors.WithMessage(err, "failed to execute query")
-	}
-
-	if plugin.ID == 0 {
-		lastID, err := result.LastInsertId()
-		if err != nil {
-			return errors.WithMessage(err, "failed to get last insert ID")
-		}
-
-		if lastID < 0 {
-			return errors.New("invalid last insert ID")
-		}
-
-		plugin.ID = uint(lastID)
 	}
 
 	return nil
