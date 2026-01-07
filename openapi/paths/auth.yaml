@@ -1,0 +1,183 @@
+/api/auth/login:
+  post:
+    tags:
+      - Auth
+    summary: Login
+    description: Authenticate user and get JWT token
+    operationId: login
+    security: []
+    x-codeSamples:
+      - lang: cURL
+        label: CLI
+        source: |
+          curl -s -X POST "https://demo.gameap.com/api/auth/login" \
+            -H "Content-Type: application/json" \
+            -d '{"login": "admin", "password": "password"}' \
+            -w "\nHTTP Status: %{http_code}\n"
+
+      - lang: PHP
+        source: |
+          <?php
+
+          $url = 'https://demo.gameap.com/api/auth/login';
+
+          $data = [
+              'login'    => 'admin',
+              'password' => 'password',
+          ];
+
+          $curl = curl_init();
+
+          curl_setopt_array($curl, [
+              CURLOPT_URL            => $url,
+              CURLOPT_POST           => true,
+              CURLOPT_RETURNTRANSFER => true,
+              CURLOPT_TIMEOUT        => 30,
+              CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+              CURLOPT_POSTFIELDS     => json_encode($data),
+              CURLOPT_HTTPHEADER     => [
+                  'Content-Type: application/json',
+              ],
+          ]);
+
+          $response = curl_exec($curl);
+          $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+          if (curl_errno($curl)) {
+              echo 'Curl error: ' . curl_error($curl);
+              curl_close($curl);
+              exit(1);
+          }
+
+          curl_close($curl);
+
+          if ($httpCode >= 400) {
+              echo "HTTP Error: {$httpCode}\n";
+              echo $response;
+              exit(1);
+          }
+
+          $result = json_decode($response, true);
+
+          if (json_last_error() !== JSON_ERROR_NONE) {
+              echo 'JSON decode error: ' . json_last_error_msg();
+              exit(1);
+          }
+
+          // Store token for subsequent requests
+          $token = $result['token'];
+          echo "Token: {$token}\n";
+
+      - lang: Go
+        source: |
+          package main
+
+          import (
+              "bytes"
+              "context"
+              "encoding/json"
+              "fmt"
+              "io"
+              "log"
+              "net/http"
+              "time"
+          )
+
+          func main() {
+              url := "https://demo.gameap.com/api/auth/login"
+
+              payload := map[string]string{
+                  "login":    "admin",
+                  "password": "password",
+              }
+
+              body, err := json.Marshal(payload)
+              if err != nil {
+                  log.Fatalf("Failed to marshal payload: %v", err)
+              }
+
+              ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+              defer cancel()
+
+              req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
+              if err != nil {
+                  log.Fatalf("Failed to create request: %v", err)
+              }
+
+              req.Header.Set("Content-Type", "application/json")
+
+              client := &http.Client{Timeout: 30 * time.Second}
+
+              resp, err := client.Do(req)
+              if err != nil {
+                  log.Fatalf("Request failed: %v", err)
+              }
+              defer resp.Body.Close()
+
+              respBody, err := io.ReadAll(resp.Body)
+              if err != nil {
+                  log.Fatalf("Failed to read response: %v", err)
+              }
+
+              if resp.StatusCode >= 400 {
+                  log.Fatalf("HTTP Error %d: %s", resp.StatusCode, string(respBody))
+              }
+
+              var result map[string]interface{}
+              if err := json.Unmarshal(respBody, &result); err != nil {
+                  log.Fatalf("Failed to parse JSON: %v", err)
+              }
+
+              fmt.Printf("Token: %s\n", result["token"])
+          }
+
+      - lang: NodeJS
+        source: |
+          const url = 'https://demo.gameap.com/api/auth/login';
+
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              login: 'admin',
+              password: 'password',
+            }),
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP Error ${response.status}: ${errorText}`);
+          }
+
+          const data = await response.json();
+
+          // Store token for subsequent requests
+          const token = data.token;
+          console.log('Token:', token);
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/requests/LoginRequest.yaml'
+    responses:
+      '200':
+        description: Login successful
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/responses/LoginResponse.yaml'
+      '401':
+        description: Invalid credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '422':
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'

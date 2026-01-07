@@ -1,0 +1,65 @@
+type: object
+description: Create game request
+properties:
+  code:
+    type: string
+    description: Game code (unique slug)
+    pattern: '^[a-z0-9_-]+$'
+    minLength: 2
+    maxLength: 16
+    example: "newgame"
+  name:
+    type: string
+    description: Game name
+    minLength: 2
+    maxLength: 128
+    example: "New Game"
+  engine:
+    type: string
+    description: Game engine
+    maxLength: 128
+    example: "Source"
+  engine_version:
+    type: string
+    description: Engine version
+    maxLength: 128
+    example: "2.0"
+  steam_app_id_linux:
+    type:
+      - integer
+      - "null"
+    description: Steam app ID for Linux
+  steam_app_id_windows:
+    type:
+      - integer
+      - "null"
+    description: Steam app ID for Windows
+  steam_app_set_config:
+    type:
+      - string
+      - "null"
+    description: Steam app set config
+  remote_repository_linux:
+    type:
+      - string
+      - "null"
+    description: Remote repository URL for Linux
+  remote_repository_windows:
+    type:
+      - string
+      - "null"
+    description: Remote repository URL for Windows
+  local_repository_linux:
+    type:
+      - string
+      - "null"
+    description: Local repository path for Linux
+  local_repository_windows:
+    type:
+      - string
+      - "null"
+    description: Local repository path for Windows
+required:
+  - code
+  - name
+  - engine

@@ -1,0 +1,129 @@
+type: object
+description: Game modification entity
+properties:
+  id:
+    type: integer
+    description: Game mod ID
+    example: 1
+  game_code:
+    type: string
+    description: Game code
+    example: "cstrike"
+  name:
+    type: string
+    description: Mod name
+    example: "Classic"
+  fast_rcon:
+    type:
+      - array
+      - "null"
+    description: Fast RCON commands
+    items:
+      type: object
+      properties:
+        info:
+          type: string
+          description: Command description
+          example: "Restart Map"
+        command:
+          type: string
+          description: RCON command
+          example: "changelevel {map}"
+      required:
+        - info
+        - command
+  vars:
+    type:
+      - array
+      - "null"
+    description: Mod variables
+    items:
+      type: object
+      properties:
+        var:
+          type: string
+          description: Variable name
+          example: "maxplayers"
+        default:
+          type: string
+          description: Default value
+          example: "32"
+        info:
+          type: string
+          description: Variable description
+          example: "Maximum number of players"
+        admin_var:
+          type: boolean
+          description: Whether variable is admin-only
+          example: false
+      required:
+        - var
+  remote_repository_linux:
+    type:
+      - string
+      - "null"
+    description: Remote repository URL for Linux
+  remote_repository_windows:
+    type:
+      - string
+      - "null"
+    description: Remote repository URL for Windows
+  local_repository_linux:
+    type:
+      - string
+      - "null"
+    description: Local repository path for Linux
+  local_repository_windows:
+    type:
+      - string
+      - "null"
+    description: Local repository path for Windows
+  start_cmd_linux:
+    type:
+      - string
+      - "null"
+    description: Start command for Linux
+  start_cmd_windows:
+    type:
+      - string
+      - "null"
+    description: Start command for Windows
+  kick_cmd:
+    type:
+      - string
+      - "null"
+    description: RCON kick player command
+  ban_cmd:
+    type:
+      - string
+      - "null"
+    description: RCON ban player command
+  chname_cmd:
+    type:
+      - string
+      - "null"
+    description: RCON change name command
+  srestart_cmd:
+    type:
+      - string
+      - "null"
+    description: RCON restart command
+  chmap_cmd:
+    type:
+      - string
+      - "null"
+    description: RCON change map command
+  sendmsg_cmd:
+    type:
+      - string
+      - "null"
+    description: RCON send message command
+  passwd_cmd:
+    type:
+      - string
+      - "null"
+    description: RCON password command
+required:
+  - id
+  - game_code
+  - name

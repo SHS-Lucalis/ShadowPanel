@@ -1,0 +1,59 @@
+type: object
+description: Daemon task entity
+properties:
+  id:
+    type: integer
+    description: Task ID
+    example: 1
+  run_aft_id:
+    type:
+      - integer
+      - "null"
+    description: Run after task ID
+    example: null
+  dedicated_server_id:
+    type: integer
+    description: Node ID
+    example: 1
+  server_id:
+    type:
+      - integer
+      - "null"
+    description: Server ID
+    example: 1
+  task:
+    $ref: './common/DaemonTaskType.yaml'
+  data:
+    type:
+      - string
+      - "null"
+    description: Task data (JSON)
+  cmd:
+    type:
+      - string
+      - "null"
+    description: Command to execute
+  output:
+    type:
+      - string
+      - "null"
+    description: Task output
+  status:
+    $ref: './common/DaemonTaskStatus.yaml'
+  created_at:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: Creation timestamp
+  updated_at:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: Last update timestamp
+required:
+  - id
+  - dedicated_server_id
+  - task
+  - status

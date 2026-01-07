@@ -1,0 +1,54 @@
+type: object
+description: Scheduled server task entity
+properties:
+  id:
+    type: integer
+    description: Task ID
+    example: 1
+  command:
+    $ref: './common/ServerTaskCommand.yaml'
+  server_id:
+    type: integer
+    description: Server ID
+    example: 1
+  repeat:
+    type: integer
+    description: Repeat count (0 = no repeat, 1+ = repeat N times)
+    minimum: 0
+    maximum: 255
+    example: 0
+  repeat_period:
+    type: integer
+    description: Repeat period in seconds
+    example: 3600
+  counter:
+    type: integer
+    description: Execution counter
+    example: 0
+  execute_date:
+    type: string
+    format: date-time
+    description: Scheduled execution time
+    example: "2024-01-15T10:00:00Z"
+  payload:
+    type:
+      - string
+      - "null"
+    description: Additional payload (JSON)
+  created_at:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: Creation timestamp
+  updated_at:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: Last update timestamp
+required:
+  - id
+  - command
+  - server_id
+  - execute_date

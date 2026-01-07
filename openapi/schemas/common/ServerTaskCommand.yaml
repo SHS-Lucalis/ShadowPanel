@@ -1,0 +1,9 @@
+type: string
+description: Server task command
+enum:
+  - start
+  - stop
+  - restart
+  - update
+  - reinstall
+example: restart

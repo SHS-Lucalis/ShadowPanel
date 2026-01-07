@@ -1,0 +1,378 @@
+openapi: 3.1.0
+info:
+  title: GameAP API
+  version: v4
+  description: |
+    GameAP v4 API for game server management.
+
+    ## Authentication
+
+    The API supports three authentication methods:
+
+    ### Bearer Token (JWT/PASETO)
+    Obtained from `POST /api/auth/login`. Valid for 24 hours (or 30 days with `remember_me`).
+    ```
+    Authorization: Bearer eyJhbG...
+    ```
+
+    ### Personal Access Token (PAT)
+    Created via `POST /api/tokens`. Format: `{token_id}|{token_secret}`.
+    PATs can have limited abilities (permissions).
+    ```
+    Authorization: Bearer 42|abc123...xyz
+    ```
+
+    ### Daemon Token
+    For `/gdaemon_api/*` endpoints. Assigned to each node for daemon-to-API communication.
+    ```
+    X-Auth-Token: daemon-api-token-here
+    ```
+
+    ## Response Format
+
+    ### Success Response
+    ```json
+    {
+      "status": "ok"
+    }
+    ```
+
+    ### Error Response
+    ```json
+    {
+      "status": "error",
+      "error": "Error message",
+      "message": "Error message",
+      "http_code": 422
+    }
+    ```
+
+    ### Paginated Response
+    ```json
+    {
+      "current_page": 1,
+      "data": [...],
+      "from": 1,
+      "last_page": 5,
+      "per_page": 15,
+      "total": 75
+    }
+    ```
+  contact:
+    name: GameAP
+    url: https://gameap.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: /
+    description: Relative URL
+
+tags:
+  - name: Health
+    description: Health check and status
+  - name: Config
+    description: Public configuration
+  - name: Auth
+    description: Authentication
+  - name: User
+    description: Current user information
+  - name: Profile
+    description: User profile management
+  - name: Tokens
+    description: Personal Access Tokens management
+  - name: Servers
+    description: Game server management
+  - name: ServerControl
+    description: Server start/stop/restart/update operations
+  - name: ServerConsole
+    description: Server console access
+  - name: ServerRcon
+    description: RCON commands and player management
+  - name: ServerTasks
+    description: Scheduled server tasks
+  - name: ServerSettings
+    description: Server settings management
+  - name: FileManager
+    description: Server file operations
+  - name: Users
+    description: User management (Admin)
+  - name: Nodes
+    description: Node/Dedicated server management (Admin)
+  - name: Games
+    description: Game management (Admin)
+  - name: GameMods
+    description: Game modification management (Admin)
+  - name: DaemonTasks
+    description: Daemon task monitoring (Admin)
+  - name: ClientCertificates
+    description: Client certificate management (Admin)
+  - name: PluginStore
+    description: Plugin store (Admin)
+  - name: DaemonSetup
+    description: Daemon node setup
+  - name: DaemonAPI
+    description: Daemon-to-API communication
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT or PASETO token obtained from /api/auth/login
+
+    personalAccessToken:
+      type: http
+      scheme: bearer
+      description: Personal Access Token in format {id}|{token}
+
+    daemonToken:
+      type: apiKey
+      in: header
+      name: X-Auth-Token
+      description: Daemon authentication token for /gdaemon_api/* endpoints
+
+  schemas:
+    $ref: './schemas/_index.yaml'
+
+  parameters:
+    $ref: './parameters/_index.yaml'
+
+security:
+  - bearerAuth: []
+  - personalAccessToken: []
+
+paths:
+  # Health & Config
+  /api/health:
+    $ref: './paths/health.yaml#/~1api~1health'
+  /api/config/public:
+    $ref: './paths/config.yaml#/~1api~1config~1public'
+
+  # Auth
+  /api/auth/login:
+    $ref: './paths/auth.yaml#/~1api~1auth~1login'
+
+  # User & Profile
+  /api/user:
+    $ref: './paths/user.yaml#/~1api~1user'
+  /api/profile:
+    $ref: './paths/profile.yaml#/~1api~1profile'
+
+  # Tokens
+  /api/tokens:
+    $ref: './paths/tokens.yaml#/~1api~1tokens'
+  /api/tokens/{id}:
+    $ref: './paths/tokens.yaml#/~1api~1tokens~1{id}'
+  /api/tokens/abilities:
+    $ref: './paths/tokens.yaml#/~1api~1tokens~1abilities'
+
+  # Servers
+  /api/servers:
+    $ref: './paths/servers.yaml#/~1api~1servers'
+  /api/servers/summary:
+    $ref: './paths/servers.yaml#/~1api~1servers~1summary'
+  /api/servers/search:
+    $ref: './paths/servers.yaml#/~1api~1servers~1search'
+  /api/servers/{id}:
+    $ref: './paths/servers.yaml#/~1api~1servers~1{id}'
+  /api/servers/{server}/abilities:
+    $ref: './paths/servers-abilities.yaml#/~1api~1servers~1{server}~1abilities'
+  /api/servers/{server}/status:
+    $ref: './paths/servers.yaml#/~1api~1servers~1{server}~1status'
+  /api/servers/{server}/query:
+    $ref: './paths/servers.yaml#/~1api~1servers~1{server}~1query'
+  /api/user/servers_abilities:
+    $ref: './paths/servers-abilities.yaml#/~1api~1user~1servers_abilities'
+
+  # Server Control
+  /api/servers/{server}/start:
+    $ref: './paths/servers-control.yaml#/~1api~1servers~1{server}~1start'
+  /api/servers/{server}/stop:
+    $ref: './paths/servers-control.yaml#/~1api~1servers~1{server}~1stop'
+  /api/servers/{server}/restart:
+    $ref: './paths/servers-control.yaml#/~1api~1servers~1{server}~1restart'
+  /api/servers/{server}/update:
+    $ref: './paths/servers-control.yaml#/~1api~1servers~1{server}~1update'
+  /api/servers/{server}/install:
+    $ref: './paths/servers-control.yaml#/~1api~1servers~1{server}~1install'
+  /api/servers/{server}/reinstall:
+    $ref: './paths/servers-control.yaml#/~1api~1servers~1{server}~1reinstall'
+
+  # Server Console
+  /api/servers/{server}/console:
+    $ref: './paths/servers-console.yaml#/~1api~1servers~1{server}~1console'
+
+  # Server RCON
+  /api/servers/{server}/rcon:
+    $ref: './paths/servers-rcon.yaml#/~1api~1servers~1{server}~1rcon'
+  /api/servers/{server}/rcon/features:
+    $ref: './paths/servers-rcon.yaml#/~1api~1servers~1{server}~1rcon~1features'
+  /api/servers/{server}/rcon/fast_rcon:
+    $ref: './paths/servers-rcon.yaml#/~1api~1servers~1{server}~1rcon~1fast_rcon'
+  /api/servers/{server}/rcon/players:
+    $ref: './paths/servers-rcon.yaml#/~1api~1servers~1{server}~1rcon~1players'
+  /api/servers/{server}/rcon/players/message:
+    $ref: './paths/servers-rcon.yaml#/~1api~1servers~1{server}~1rcon~1players~1message'
+  /api/servers/{server}/rcon/players/{command}:
+    $ref: './paths/servers-rcon.yaml#/~1api~1servers~1{server}~1rcon~1players~1{command}'
+
+  # Server Tasks
+  /api/servers/{server}/tasks:
+    $ref: './paths/servers-tasks.yaml#/~1api~1servers~1{server}~1tasks'
+  /api/servers/{server}/tasks/{id}:
+    $ref: './paths/servers-tasks.yaml#/~1api~1servers~1{server}~1tasks~1{id}'
+
+  # Server Settings
+  /api/servers/{server}/settings:
+    $ref: './paths/servers-settings.yaml#/~1api~1servers~1{server}~1settings'
+
+  # File Manager
+  /api/file-manager/{server}/initialize:
+    $ref: './paths/file-manager.yaml#/~1api~1file-manager~1{server}~1initialize'
+  /api/file-manager/{server}/content:
+    $ref: './paths/file-manager.yaml#/~1api~1file-manager~1{server}~1content'
+  /api/file-manager/{server}/tree:
+    $ref: './paths/file-manager.yaml#/~1api~1file-manager~1{server}~1tree'
+  /api/file-manager/{server}/delete:
+    $ref: './paths/file-manager.yaml#/~1api~1file-manager~1{server}~1delete'
+  /api/file-manager/{server}/upload:
+    $ref: './paths/file-manager.yaml#/~1api~1file-manager~1{server}~1upload'
+  /api/file-manager/{server}/update-file:
+    $ref: './paths/file-manager.yaml#/~1api~1file-manager~1{server}~1update-file'
+  /api/file-manager/{server}/download:
+    $ref: './paths/file-manager.yaml#/~1api~1file-manager~1{server}~1download'
+  /api/file-manager/{server}/rename:
+    $ref: './paths/file-manager.yaml#/~1api~1file-manager~1{server}~1rename'
+  /api/file-manager/{server}/create-directory:
+    $ref: './paths/file-manager.yaml#/~1api~1file-manager~1{server}~1create-directory'
+  /api/file-manager/{server}/create-file:
+    $ref: './paths/file-manager.yaml#/~1api~1file-manager~1{server}~1create-file'
+  /api/file-manager/{server}/stream-file:
+    $ref: './paths/file-manager.yaml#/~1api~1file-manager~1{server}~1stream-file'
+  /api/file-manager/{server}/paste:
+    $ref: './paths/file-manager.yaml#/~1api~1file-manager~1{server}~1paste'
+
+  # Users (Admin)
+  /api/users:
+    $ref: './paths/users.yaml#/~1api~1users'
+  /api/users/{id}:
+    $ref: './paths/users.yaml#/~1api~1users~1{id}'
+  /api/users/{id}/servers:
+    $ref: './paths/users.yaml#/~1api~1users~1{id}~1servers'
+  /api/users/{id}/servers/{server}/permissions:
+    $ref: './paths/users.yaml#/~1api~1users~1{id}~1servers~1{server}~1permissions'
+
+  # Nodes / Dedicated Servers (Admin)
+  /api/nodes:
+    $ref: './paths/nodes.yaml#/~1api~1nodes'
+  /api/nodes/summary:
+    $ref: './paths/nodes.yaml#/~1api~1nodes~1summary'
+  /api/nodes/setup:
+    $ref: './paths/nodes.yaml#/~1api~1nodes~1setup'
+  /api/nodes/certificates.zip:
+    $ref: './paths/nodes.yaml#/~1api~1nodes~1certificates.zip'
+  /api/nodes/{id}:
+    $ref: './paths/nodes.yaml#/~1api~1nodes~1{id}'
+  /api/nodes/{node}/busy_ports:
+    $ref: './paths/nodes.yaml#/~1api~1nodes~1{node}~1busy_ports'
+  /api/nodes/{node}/ip_list:
+    $ref: './paths/nodes.yaml#/~1api~1nodes~1{node}~1ip_list'
+  /api/nodes/{id}/daemon:
+    $ref: './paths/nodes.yaml#/~1api~1nodes~1{id}~1daemon'
+  /api/nodes/{id}/logs.zip:
+    $ref: './paths/nodes.yaml#/~1api~1nodes~1{id}~1logs.zip'
+  /api/dedicated_servers:
+    $ref: './paths/nodes.yaml#/~1api~1dedicated_servers'
+  /api/dedicated_servers/summary:
+    $ref: './paths/nodes.yaml#/~1api~1dedicated_servers~1summary'
+  /api/dedicated_servers/setup:
+    $ref: './paths/nodes.yaml#/~1api~1dedicated_servers~1setup'
+  /api/dedicated_servers/certificates.zip:
+    $ref: './paths/nodes.yaml#/~1api~1dedicated_servers~1certificates.zip'
+  /api/dedicated_servers/{id}:
+    $ref: './paths/nodes.yaml#/~1api~1dedicated_servers~1{id}'
+  /api/dedicated_servers/{node}/busy_ports:
+    $ref: './paths/nodes.yaml#/~1api~1dedicated_servers~1{node}~1busy_ports'
+  /api/dedicated_servers/{node}/ip_list:
+    $ref: './paths/nodes.yaml#/~1api~1dedicated_servers~1{node}~1ip_list'
+  /api/dedicated_servers/{id}/daemon:
+    $ref: './paths/nodes.yaml#/~1api~1dedicated_servers~1{id}~1daemon'
+  /api/dedicated_servers/{id}/logs.zip:
+    $ref: './paths/nodes.yaml#/~1api~1dedicated_servers~1{id}~1logs.zip'
+
+  # Games (Admin)
+  /api/games:
+    $ref: './paths/games.yaml#/~1api~1games'
+  /api/games/upgrade:
+    $ref: './paths/games.yaml#/~1api~1games~1upgrade'
+  /api/games/{code}:
+    $ref: './paths/games.yaml#/~1api~1games~1{code}'
+  /api/games/{code}/mods:
+    $ref: './paths/games.yaml#/~1api~1games~1{code}~1mods'
+
+  # Game Mods (Admin)
+  /api/game_mods:
+    $ref: './paths/game-mods.yaml#/~1api~1game_mods'
+  /api/game_mods/get_list_for_game/{game}:
+    $ref: './paths/game-mods.yaml#/~1api~1game_mods~1get_list_for_game~1{game}'
+  /api/game_mods/{id}:
+    $ref: './paths/game-mods.yaml#/~1api~1game_mods~1{id}'
+
+  # Daemon Tasks (Admin)
+  /api/gdaemon_tasks:
+    $ref: './paths/daemon-tasks.yaml#/~1api~1gdaemon_tasks'
+  /api/gdaemon_tasks/{id}:
+    $ref: './paths/daemon-tasks.yaml#/~1api~1gdaemon_tasks~1{id}'
+  /api/gdaemon_tasks/{id}/output:
+    $ref: './paths/daemon-tasks.yaml#/~1api~1gdaemon_tasks~1{id}~1output'
+
+  # Client Certificates (Admin)
+  /api/client_certificates:
+    $ref: './paths/client-certificates.yaml#/~1api~1client_certificates'
+  /api/client_certificates/{id}:
+    $ref: './paths/client-certificates.yaml#/~1api~1client_certificates~1{id}'
+
+  # Plugin Store (Admin)
+  /api/plugin-store/categories:
+    $ref: './paths/plugin-store.yaml#/~1api~1plugin-store~1categories'
+  /api/plugin-store/labels:
+    $ref: './paths/plugin-store.yaml#/~1api~1plugin-store~1labels'
+  /api/plugin-store/plugins:
+    $ref: './paths/plugin-store.yaml#/~1api~1plugin-store~1plugins'
+  /api/plugin-store/plugins/{id}:
+    $ref: './paths/plugin-store.yaml#/~1api~1plugin-store~1plugins~1{id}'
+  /api/plugin-store/plugins/{id}/versions:
+    $ref: './paths/plugin-store.yaml#/~1api~1plugin-store~1plugins~1{id}~1versions'
+  /api/plugin-store/plugins/{id}/install:
+    $ref: './paths/plugin-store.yaml#/~1api~1plugin-store~1plugins~1{id}~1install'
+  /api/plugin-store/plugins/{id}/update:
+    $ref: './paths/plugin-store.yaml#/~1api~1plugin-store~1plugins~1{id}~1update'
+
+  # Daemon Setup
+  /gdaemon/setup/{token}:
+    $ref: './paths/gdaemon-setup.yaml#/~1gdaemon~1setup~1{token}'
+  /gdaemon/create/{token}:
+    $ref: './paths/gdaemon-setup.yaml#/~1gdaemon~1create~1{token}'
+
+  # Daemon API
+  /gdaemon_api/get_token:
+    $ref: './paths/gdaemon-api-init.yaml#/~1gdaemon_api~1get_token'
+  /gdaemon_api/dedicated_servers/get_init_data/{node}:
+    $ref: './paths/gdaemon-api-init.yaml#/~1gdaemon_api~1dedicated_servers~1get_init_data~1{node}'
+  /gdaemon_api/servers:
+    $ref: './paths/gdaemon-api-servers.yaml#/~1gdaemon_api~1servers'
+  /gdaemon_api/servers/{server}:
+    $ref: './paths/gdaemon-api-servers.yaml#/~1gdaemon_api~1servers~1{server}'
+  /gdaemon_api/tasks:
+    $ref: './paths/gdaemon-api-tasks.yaml#/~1gdaemon_api~1tasks'
+  /gdaemon_api/tasks/{gdaemon_task}:
+    $ref: './paths/gdaemon-api-tasks.yaml#/~1gdaemon_api~1tasks~1{gdaemon_task}'
+  /gdaemon_api/tasks/{gdaemon_task}/output:
+    $ref: './paths/gdaemon-api-tasks.yaml#/~1gdaemon_api~1tasks~1{gdaemon_task}~1output'
+  /gdaemon_api/servers_tasks:
+    $ref: './paths/gdaemon-api-servers-tasks.yaml#/~1gdaemon_api~1servers_tasks'
+  /gdaemon_api/servers_tasks/{server_task}:
+    $ref: './paths/gdaemon-api-servers-tasks.yaml#/~1gdaemon_api~1servers_tasks~1{server_task}'

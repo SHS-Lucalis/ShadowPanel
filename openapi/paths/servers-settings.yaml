@@ -1,0 +1,80 @@
+/api/servers/{server}/settings:
+  get:
+    tags:
+      - ServerSettings
+    summary: Get server settings
+    description: Returns the server settings (vars)
+    operationId: getServerSettings
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Server settings
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../schemas/ServerSetting.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Server not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+  put:
+    tags:
+      - ServerSettings
+    summary: Update server settings
+    description: Updates the server settings (vars)
+    operationId: updateServerSettings
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/requests/UpdateServerSettingsRequest.yaml'
+    responses:
+      '200':
+        description: Settings updated
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/SuccessResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Server not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '422':
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'

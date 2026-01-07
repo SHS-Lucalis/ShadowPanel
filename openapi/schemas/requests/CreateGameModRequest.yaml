@@ -1,0 +1,118 @@
+type: object
+description: Create game mod request
+properties:
+  game_code:
+    type: string
+    description: Game code
+    example: "cstrike"
+  name:
+    type: string
+    description: Mod name
+    example: "Classic"
+  fast_rcon:
+    type:
+      - array
+      - "null"
+    description: Fast RCON commands
+    items:
+      type: object
+      properties:
+        info:
+          type: string
+          description: Command description
+        command:
+          type: string
+          description: RCON command
+      required:
+        - info
+        - command
+  vars:
+    type:
+      - array
+      - "null"
+    description: Mod variables
+    items:
+      type: object
+      properties:
+        var:
+          type: string
+          description: Variable name
+        default:
+          type: string
+          description: Default value
+        info:
+          type: string
+          description: Description
+        admin_var:
+          type: boolean
+          description: Admin-only variable
+      required:
+        - var
+  remote_repository_linux:
+    type:
+      - string
+      - "null"
+    description: Remote repository for Linux
+  remote_repository_windows:
+    type:
+      - string
+      - "null"
+    description: Remote repository for Windows
+  local_repository_linux:
+    type:
+      - string
+      - "null"
+    description: Local repository for Linux
+  local_repository_windows:
+    type:
+      - string
+      - "null"
+    description: Local repository for Windows
+  start_cmd_linux:
+    type:
+      - string
+      - "null"
+    description: Start command for Linux
+  start_cmd_windows:
+    type:
+      - string
+      - "null"
+    description: Start command for Windows
+  kick_cmd:
+    type:
+      - string
+      - "null"
+    description: Kick player command
+  ban_cmd:
+    type:
+      - string
+      - "null"
+    description: Ban player command
+  chname_cmd:
+    type:
+      - string
+      - "null"
+    description: Change name command
+  srestart_cmd:
+    type:
+      - string
+      - "null"
+    description: Server restart command
+  chmap_cmd:
+    type:
+      - string
+      - "null"
+    description: Change map command
+  sendmsg_cmd:
+    type:
+      - string
+      - "null"
+    description: Send message command
+  passwd_cmd:
+    type:
+      - string
+      - "null"
+    description: Password command
+required:
+  - game_code
+  - name

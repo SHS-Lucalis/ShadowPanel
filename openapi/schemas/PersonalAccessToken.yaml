@@ -1,0 +1,40 @@
+type: object
+description: Personal Access Token entity
+properties:
+  id:
+    type: integer
+    description: Token ID
+    example: 1
+  name:
+    type: string
+    description: Token name
+    example: "API Integration"
+  abilities:
+    type:
+      - array
+      - "null"
+    description: Token abilities (permissions)
+    items:
+      $ref: './common/PATAbility.yaml'
+    example: ["server:list", "server:start", "server:stop"]
+  last_used_at:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: Last usage timestamp
+  created_at:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: Creation timestamp
+  updated_at:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: Last update timestamp
+required:
+  - id
+  - name

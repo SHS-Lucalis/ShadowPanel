@@ -1,0 +1,103 @@
+/gdaemon/setup/{token}:
+  get:
+    tags:
+      - DaemonSetup
+    summary: Get daemon setup data
+    description: Returns setup data for daemon initialization
+    operationId: getDaemonSetup
+    security: []
+    parameters:
+      - $ref: '../parameters/PathToken.yaml'
+    responses:
+      '200':
+        description: Setup data
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                panel_host:
+                  type: string
+                  description: Panel host URL
+                certificate:
+                  type: string
+                  description: Client certificate (PEM)
+                private_key:
+                  type: string
+                  description: Private key (PEM)
+      '401':
+        description: Invalid token
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/gdaemon/create/{token}:
+  post:
+    tags:
+      - DaemonSetup
+    summary: Create daemon node
+    description: Creates a new daemon node from setup token
+    operationId: createDaemonNode
+    security: []
+    parameters:
+      - $ref: '../parameters/PathToken.yaml'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                description: Node name
+              os:
+                type: string
+                description: Operating system
+              work_path:
+                type: string
+                description: Working directory
+              gdaemon_host:
+                type: string
+                description: GDaemon hostname
+              gdaemon_port:
+                type: integer
+                description: GDaemon port
+              ip:
+                type: array
+                description: IP addresses
+                items:
+                  type: string
+            required:
+              - name
+              - os
+              - work_path
+              - gdaemon_host
+              - gdaemon_port
+    responses:
+      '200':
+        description: Node created
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  description: Node ID
+                api_token:
+                  type: string
+                  description: API token for daemon
+      '401':
+        description: Invalid token
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '422':
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'

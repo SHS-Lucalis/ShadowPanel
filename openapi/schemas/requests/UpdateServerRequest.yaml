@@ -1,0 +1,98 @@
+type: object
+description: Update server request
+properties:
+  name:
+    type: string
+    description: Server name
+    maxLength: 128
+    example: "My CS Server"
+  enabled:
+    oneOf:
+      - type: boolean
+      - type: string
+    description: Enable/disable server
+    example: true
+  blocked:
+    oneOf:
+      - type: boolean
+      - type: string
+    description: Block/unblock server
+    example: false
+  ds_id:
+    oneOf:
+      - type: integer
+      - type: string
+    description: Node ID
+    example: 1
+  game_id:
+    type: string
+    description: Game code
+    example: "cstrike"
+  game_mod_id:
+    oneOf:
+      - type: integer
+      - type: string
+    description: Game mod ID
+    example: 1
+  server_ip:
+    type: string
+    description: Server IP address
+    example: "192.168.1.100"
+  server_port:
+    oneOf:
+      - type: integer
+      - type: string
+    description: Server port
+    example: 27015
+  query_port:
+    oneOf:
+      - type: integer
+      - type: string
+    description: Query port
+    example: 27016
+  rcon_port:
+    oneOf:
+      - type: integer
+      - type: string
+    description: RCON port
+    example: 27017
+  rcon:
+    type: string
+    description: RCON password
+  dir:
+    type: string
+    description: Server directory
+  start_command:
+    type: string
+    description: Custom start command
+  stop_command:
+    type: string
+    description: Custom stop command
+  force_stop_command:
+    type: string
+    description: Force stop command
+  restart_command:
+    type: string
+    description: Custom restart command
+  su_user:
+    type: string
+    description: System user
+  cpu_limit:
+    oneOf:
+      - type: integer
+      - type: string
+    description: CPU limit percentage
+  ram_limit:
+    oneOf:
+      - type: integer
+      - type: string
+    description: RAM limit in MB
+  net_limit:
+    oneOf:
+      - type: integer
+      - type: string
+    description: Network limit
+  expires:
+    type: string
+    format: date-time
+    description: Expiration date

@@ -1,0 +1,20 @@
+/api/user:
+  get:
+    tags:
+      - User
+    summary: Get current user
+    description: Returns the currently authenticated user
+    operationId: getCurrentUser
+    responses:
+      '200':
+        description: Current user
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/User.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'

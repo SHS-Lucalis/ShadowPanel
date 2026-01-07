@@ -1,0 +1,28 @@
+type: object
+description: Create server task request
+properties:
+  command:
+    $ref: '../common/ServerTaskCommand.yaml'
+  execute_date:
+    type: string
+    format: date-time
+    description: Scheduled execution time
+    example: "2024-01-15T10:00:00Z"
+  repeat:
+    type: integer
+    description: Repeat count (0 = no repeat)
+    minimum: 0
+    maximum: 255
+    example: 0
+  repeat_period:
+    type: integer
+    description: Repeat period in seconds
+    example: 3600
+  payload:
+    type:
+      - string
+      - "null"
+    description: Additional payload
+required:
+  - command
+  - execute_date

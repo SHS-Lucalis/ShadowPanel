@@ -1,0 +1,7 @@
+type: string
+description: Node operating system
+enum:
+  - linux
+  - windows
+  - other
+example: linux

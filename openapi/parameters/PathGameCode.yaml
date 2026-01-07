@@ -1,0 +1,8 @@
+name: code
+in: path
+required: true
+description: Game code (slug)
+schema:
+  type: string
+  pattern: '^[a-z0-9_-]+$'
+example: cstrike

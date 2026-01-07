@@ -1,0 +1,41 @@
+type: object
+description: Nodes summary response
+properties:
+  total:
+    type: integer
+    description: Total nodes count
+    example: 5
+  enabled:
+    type: integer
+    description: Enabled nodes count
+    example: 4
+  disabled:
+    type: integer
+    description: Disabled nodes count
+    example: 1
+  online:
+    type: integer
+    description: Online nodes count
+    example: 4
+  offline:
+    type: integer
+    description: Offline nodes count
+    example: 1
+  onlineNodes:
+    type: array
+    description: List of online nodes
+    items:
+      $ref: '../common/NodeSummaryItem.yaml'
+  offlineNodes:
+    type: array
+    description: List of offline nodes
+    items:
+      $ref: '../common/NodeSummaryItem.yaml'
+required:
+  - total
+  - enabled
+  - disabled
+  - online
+  - offline
+  - onlineNodes
+  - offlineNodes

@@ -1,0 +1,14 @@
+type: object
+description: Server setting key-value pair
+properties:
+  name:
+    type: string
+    description: Setting name
+    example: "maxplayers"
+  value:
+    type: string
+    description: Setting value
+    example: "32"
+required:
+  - name
+  - value

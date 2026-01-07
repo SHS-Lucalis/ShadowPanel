@@ -1,0 +1,7 @@
+name: search
+in: query
+required: false
+description: Search query
+schema:
+  type: string
+example: my server

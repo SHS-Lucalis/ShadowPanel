@@ -1,0 +1,519 @@
+/api/file-manager/{server}/initialize:
+  get:
+    tags:
+      - FileManager
+    summary: Initialize file manager
+    description: Initializes the file manager for a server
+    operationId: initializeFileManager
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: File manager initialized
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                path:
+                  type: string
+                  description: Base path
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/file-manager/{server}/content:
+  get:
+    tags:
+      - FileManager
+    summary: Get file/directory content
+    description: Returns the content of a file or directory listing
+    operationId: getFileContent
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+      - name: path
+        in: query
+        required: true
+        description: File or directory path
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Content
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  description: Directory listing
+                  properties:
+                    type:
+                      type: string
+                      enum: [directory]
+                    items:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                          type:
+                            type: string
+                            enum: [file, directory]
+                          size:
+                            type: integer
+                          modified:
+                            type: string
+                            format: date-time
+                - type: object
+                  description: File content
+                  properties:
+                    type:
+                      type: string
+                      enum: [file]
+                    content:
+                      type: string
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/file-manager/{server}/tree:
+  get:
+    tags:
+      - FileManager
+    summary: Get directory tree
+    description: Returns the directory tree structure
+    operationId: getDirectoryTree
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+      - name: path
+        in: query
+        required: false
+        description: Base path
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Directory tree
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  path:
+                    type: string
+                  type:
+                    type: string
+                  children:
+                    type: array
+                    items: {}
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/file-manager/{server}/delete:
+  post:
+    tags:
+      - FileManager
+    summary: Delete files/directories
+    description: Deletes files or directories
+    operationId: deleteFiles
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                description: Paths to delete
+                items:
+                  type: string
+            required:
+              - items
+    responses:
+      '200':
+        description: Files deleted
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/SuccessResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/file-manager/{server}/upload:
+  post:
+    tags:
+      - FileManager
+    summary: Upload file
+    description: Uploads a file to the server
+    operationId: uploadFile
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              file:
+                type: string
+                format: binary
+                description: File to upload
+              path:
+                type: string
+                description: Destination path
+            required:
+              - file
+              - path
+    responses:
+      '200':
+        description: File uploaded
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/SuccessResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/file-manager/{server}/update-file:
+  post:
+    tags:
+      - FileManager
+    summary: Update file content
+    description: Updates the content of a file
+    operationId: updateFile
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              path:
+                type: string
+                description: File path
+              content:
+                type: string
+                description: New file content
+            required:
+              - path
+              - content
+    responses:
+      '200':
+        description: File updated
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/SuccessResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/file-manager/{server}/download:
+  get:
+    tags:
+      - FileManager
+    summary: Download file
+    description: Downloads a file from the server
+    operationId: downloadFile
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+      - name: path
+        in: query
+        required: true
+        description: File path
+        schema:
+          type: string
+    responses:
+      '200':
+        description: File content
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/file-manager/{server}/rename:
+  post:
+    tags:
+      - FileManager
+    summary: Rename file/directory
+    description: Renames a file or directory
+    operationId: renameFile
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              old_path:
+                type: string
+                description: Current path
+              new_path:
+                type: string
+                description: New path
+            required:
+              - old_path
+              - new_path
+    responses:
+      '200':
+        description: File renamed
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/SuccessResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/file-manager/{server}/create-directory:
+  post:
+    tags:
+      - FileManager
+    summary: Create directory
+    description: Creates a new directory
+    operationId: createDirectory
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              path:
+                type: string
+                description: Directory path
+            required:
+              - path
+    responses:
+      '200':
+        description: Directory created
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/SuccessResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/file-manager/{server}/create-file:
+  post:
+    tags:
+      - FileManager
+    summary: Create file
+    description: Creates a new file
+    operationId: createFile
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              path:
+                type: string
+                description: File path
+              content:
+                type: string
+                description: File content
+            required:
+              - path
+    responses:
+      '200':
+        description: File created
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/SuccessResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/file-manager/{server}/stream-file:
+  get:
+    tags:
+      - FileManager
+    summary: Stream file
+    description: Streams file content (for large files)
+    operationId: streamFile
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+      - name: path
+        in: query
+        required: true
+        description: File path
+        schema:
+          type: string
+    responses:
+      '200':
+        description: File stream
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/file-manager/{server}/paste:
+  post:
+    tags:
+      - FileManager
+    summary: Copy/move files
+    description: Copies or moves files/directories
+    operationId: pasteFiles
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                description: Source paths
+                items:
+                  type: string
+              destination:
+                type: string
+                description: Destination directory
+              operation:
+                type: string
+                enum: [copy, move]
+                description: Operation type
+            required:
+              - items
+              - destination
+              - operation
+    responses:
+      '200':
+        description: Operation completed
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/SuccessResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'

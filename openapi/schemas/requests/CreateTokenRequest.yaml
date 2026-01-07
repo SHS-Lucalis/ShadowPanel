@@ -1,0 +1,16 @@
+type: object
+description: Create personal access token request
+properties:
+  name:
+    type: string
+    description: Token name
+    example: "API Integration"
+  abilities:
+    type: array
+    description: Token abilities (permissions)
+    items:
+      $ref: '../common/PATAbility.yaml'
+    example: ["server:list", "server:start", "server:stop"]
+required:
+  - name
+  - abilities

@@ -1,0 +1,11 @@
+type: integer
+description: Server installation status
+enum:
+  - 0
+  - 1
+  - 2
+x-enum-descriptions:
+  - Not installed
+  - Installed
+  - Installation in progress
+example: 1

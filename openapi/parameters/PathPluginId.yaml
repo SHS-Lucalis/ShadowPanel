@@ -1,0 +1,8 @@
+name: id
+in: path
+required: true
+description: Plugin ID
+schema:
+  type: integer
+  minimum: 1
+example: 1

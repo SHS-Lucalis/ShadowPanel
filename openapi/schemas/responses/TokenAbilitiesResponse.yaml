@@ -1,0 +1,14 @@
+type: object
+description: Token abilities grouped by category
+additionalProperties:
+  type: object
+  description: Group of abilities (key = ability name, value = description)
+  additionalProperties:
+    type: string
+example:
+  server:
+    "server:list": "List game servers"
+    "server:start": "Start game server"
+    "server:stop": "Stop game server"
+  gdaemon_task:
+    "gdaemon_task:list": "List daemon tasks"

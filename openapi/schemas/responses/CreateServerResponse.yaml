@@ -1,0 +1,24 @@
+type: object
+description: Create server response
+properties:
+  message:
+    type: string
+    description: Success message
+    example: "Server created successfully"
+  result:
+    type: object
+    properties:
+      taskId:
+        type: integer
+        description: Installation task ID
+        example: 1
+      serverId:
+        type: integer
+        description: Created server ID
+        example: 1
+    required:
+      - taskId
+      - serverId
+required:
+  - message
+  - result

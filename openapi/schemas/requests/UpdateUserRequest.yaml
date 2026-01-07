@@ -1,0 +1,32 @@
+type: object
+description: Update user request
+properties:
+  login:
+    type: string
+    description: Username
+    maxLength: 255
+    example: "newuser"
+  email:
+    type: string
+    format: email
+    description: Email address
+    maxLength: 255
+    example: "user@example.com"
+  password:
+    type: string
+    description: New password (leave empty to keep current)
+    minLength: 6
+    example: "newsecret123"
+  name:
+    type:
+      - string
+      - "null"
+    description: Display name
+    maxLength: 255
+    example: "John Doe"
+  roles:
+    type: array
+    description: User roles
+    items:
+      type: string
+    example: ["user"]

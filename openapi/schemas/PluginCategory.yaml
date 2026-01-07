@@ -1,0 +1,24 @@
+type: object
+description: Plugin store category
+properties:
+  id:
+    type: integer
+    description: Category ID
+    example: 1
+  name:
+    type: string
+    description: Category name
+    example: "Monitoring"
+  slug:
+    type: string
+    description: Category slug
+    example: "monitoring"
+  description:
+    type:
+      - string
+      - "null"
+    description: Category description
+required:
+  - id
+  - name
+  - slug

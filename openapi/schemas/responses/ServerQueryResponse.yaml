@@ -1,0 +1,45 @@
+type: object
+description: Server query response
+properties:
+  status:
+    type: string
+    description: Query status
+    example: "online"
+  hostname:
+    type:
+      - string
+      - "null"
+    description: Server hostname
+    example: "My Game Server"
+  map:
+    type:
+      - string
+      - "null"
+    description: Current map
+    example: "de_dust2"
+  players:
+    type:
+      - string
+      - "null"
+    description: Player count info
+    example: "12/32"
+  version:
+    type:
+      - string
+      - "null"
+    description: Server version
+    example: "1.0.0"
+  password:
+    type:
+      - string
+      - "null"
+    description: Password protected status
+    example: "yes"
+  joinlink:
+    type:
+      - string
+      - "null"
+    description: Join link
+    example: "steam://connect/192.168.1.1:27015"
+required:
+  - status

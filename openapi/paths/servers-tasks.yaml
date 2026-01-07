@@ -1,0 +1,171 @@
+/api/servers/{server}/tasks:
+  get:
+    tags:
+      - ServerTasks
+    summary: List server tasks
+    description: Returns scheduled tasks for a server
+    operationId: listServerTasks
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: List of tasks
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../schemas/ServerTask.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Server not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+  post:
+    tags:
+      - ServerTasks
+    summary: Create server task
+    description: Creates a new scheduled task for a server
+    operationId: createServerTask
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/requests/CreateServerTaskRequest.yaml'
+    responses:
+      '200':
+        description: Task created
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ServerTask.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Server not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '422':
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/servers/{server}/tasks/{id}:
+  put:
+    tags:
+      - ServerTasks
+    summary: Update server task
+    description: Updates a scheduled task
+    operationId: updateServerTask
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+      - name: id
+        in: path
+        required: true
+        description: Task ID
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/requests/UpdateServerTaskRequest.yaml'
+    responses:
+      '200':
+        description: Task updated
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ServerTask.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Task not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '422':
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+  delete:
+    tags:
+      - ServerTasks
+    summary: Delete server task
+    description: Deletes a scheduled task
+    operationId: deleteServerTask
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+      - name: id
+        in: path
+        required: true
+        description: Task ID
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Task deleted
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/SuccessResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Task not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'

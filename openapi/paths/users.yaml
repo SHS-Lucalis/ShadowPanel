@@ -1,0 +1,333 @@
+/api/users:
+  get:
+    tags:
+      - Users
+    summary: List users
+    description: Returns a paginated list of users (Admin only)
+    operationId: listUsers
+    parameters:
+      - $ref: '../parameters/QueryPage.yaml'
+      - $ref: '../parameters/QueryPerPage.yaml'
+      - $ref: '../parameters/QuerySort.yaml'
+      - $ref: '../parameters/QuerySearch.yaml'
+    responses:
+      '200':
+        description: List of users
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../schemas/User.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+  post:
+    tags:
+      - Users
+    summary: Create user
+    description: Creates a new user (Admin only)
+    operationId: createUser
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/requests/CreateUserRequest.yaml'
+    responses:
+      '200':
+        description: User created
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/User.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '422':
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/users/{id}:
+  get:
+    tags:
+      - Users
+    summary: Get user
+    description: Returns a single user by ID (Admin only)
+    operationId: getUser
+    parameters:
+      - $ref: '../parameters/PathUserId.yaml'
+    responses:
+      '200':
+        description: User details
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/User.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: User not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+  put:
+    tags:
+      - Users
+    summary: Update user
+    description: Updates a user (Admin only)
+    operationId: updateUser
+    parameters:
+      - $ref: '../parameters/PathUserId.yaml'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/requests/UpdateUserRequest.yaml'
+    responses:
+      '200':
+        description: User updated
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/User.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: User not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '422':
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+  delete:
+    tags:
+      - Users
+    summary: Delete user
+    description: Deletes a user (Admin only)
+    operationId: deleteUser
+    parameters:
+      - $ref: '../parameters/PathUserId.yaml'
+    responses:
+      '200':
+        description: User deleted
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/SuccessResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: User not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/users/{id}/servers:
+  get:
+    tags:
+      - Users
+    summary: Get user servers
+    description: Returns servers assigned to a user (Admin only)
+    operationId: getUserServers
+    parameters:
+      - $ref: '../parameters/PathUserId.yaml'
+    responses:
+      '200':
+        description: User servers
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../schemas/Server.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: User not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/users/{id}/servers/{server}/permissions:
+  get:
+    tags:
+      - Users
+    summary: Get user server permissions
+    description: Returns user permissions for a server (Admin only)
+    operationId: getUserServerPermissions
+    parameters:
+      - $ref: '../parameters/PathUserId.yaml'
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: User permissions
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                console:
+                  type: boolean
+                rcon:
+                  type: boolean
+                tasks:
+                  type: boolean
+                settings:
+                  type: boolean
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+  put:
+    tags:
+      - Users
+    summary: Update user server permissions
+    description: Updates user permissions for a server (Admin only)
+    operationId: updateUserServerPermissions
+    parameters:
+      - $ref: '../parameters/PathUserId.yaml'
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              console:
+                type: boolean
+              rcon:
+                type: boolean
+              tasks:
+                type: boolean
+              settings:
+                type: boolean
+    responses:
+      '200':
+        description: Permissions updated
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/SuccessResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'

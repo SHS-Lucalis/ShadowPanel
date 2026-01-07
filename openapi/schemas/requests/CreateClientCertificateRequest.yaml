@@ -1,0 +1,18 @@
+type: object
+description: Create client certificate request (auto-generated if empty)
+properties:
+  certificate:
+    type:
+      - string
+      - "null"
+    description: Certificate content (PEM format, auto-generated if not provided)
+  private_key:
+    type:
+      - string
+      - "null"
+    description: Private key content (PEM format, auto-generated if not provided)
+  private_key_pass:
+    type:
+      - string
+      - "null"
+    description: Private key password

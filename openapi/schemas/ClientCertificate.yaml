@@ -1,0 +1,38 @@
+type: object
+description: Client certificate entity
+properties:
+  id:
+    type: integer
+    description: Certificate ID
+    example: 1
+  fingerprint:
+    type: string
+    description: Certificate fingerprint
+    example: "AB:CD:EF:12:34:56:78:90"
+  certificate:
+    type: string
+    description: Certificate content (PEM format)
+  private_key:
+    type: string
+    description: Private key content (PEM format)
+  private_key_pass:
+    type:
+      - string
+      - "null"
+    description: Private key password
+  created_at:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: Creation timestamp
+  updated_at:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: Last update timestamp
+required:
+  - id
+  - fingerprint
+  - certificate

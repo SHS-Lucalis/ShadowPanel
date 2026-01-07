@@ -1,0 +1,19 @@
+type: object
+description: Servers summary response
+properties:
+  total:
+    type: integer
+    description: Total servers count
+    example: 50
+  online:
+    type: integer
+    description: Online servers count
+    example: 35
+  offline:
+    type: integer
+    description: Offline servers count
+    example: 15
+required:
+  - total
+  - online
+  - offline

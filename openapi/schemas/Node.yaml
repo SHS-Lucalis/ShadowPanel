@@ -1,0 +1,180 @@
+type: object
+description: Node (dedicated server) entity
+properties:
+  id:
+    type: integer
+    description: Node ID
+    example: 1
+  enabled:
+    type: boolean
+    description: Whether node is enabled
+    example: true
+  name:
+    type: string
+    description: Node name
+    example: "Main Server"
+  os:
+    $ref: './common/NodeOS.yaml'
+  location:
+    type: string
+    description: Physical location
+    example: "Frankfurt, DE"
+  provider:
+    type:
+      - string
+      - "null"
+    description: Hosting provider
+    example: "Hetzner"
+  ip:
+    type: array
+    description: List of IP addresses
+    items:
+      type: string
+    example: ["192.168.1.100", "10.0.0.1"]
+  ram:
+    type:
+      - string
+      - "null"
+    description: RAM information
+    example: "32GB"
+  cpu:
+    type:
+      - string
+      - "null"
+    description: CPU information
+    example: "Intel Xeon E5-2680"
+  work_path:
+    type: string
+    description: Working directory path
+    example: "/home/gameap"
+  steamcmd_path:
+    type:
+      - string
+      - "null"
+    description: SteamCMD path
+    example: "/home/gameap/steamcmd"
+  gdaemon_host:
+    type: string
+    description: GDaemon hostname
+    example: "192.168.1.100"
+  gdaemon_port:
+    type: integer
+    description: GDaemon port
+    example: 31717
+  gdaemon_api_key:
+    type: string
+    description: GDaemon API key
+  gdaemon_api_token:
+    type:
+      - string
+      - "null"
+    description: GDaemon API token
+  gdaemon_login:
+    type:
+      - string
+      - "null"
+    description: GDaemon login
+  gdaemon_password:
+    type:
+      - string
+      - "null"
+    description: GDaemon password
+  gdaemon_server_cert:
+    type: string
+    description: GDaemon server certificate
+  client_certificate_id:
+    type: integer
+    description: Client certificate ID
+    example: 1
+  prefer_install_method:
+    $ref: './common/NodePreferInstallMethod.yaml'
+  script_install:
+    type:
+      - string
+      - "null"
+    description: Custom install script
+  script_reinstall:
+    type:
+      - string
+      - "null"
+    description: Custom reinstall script
+  script_update:
+    type:
+      - string
+      - "null"
+    description: Custom update script
+  script_start:
+    type:
+      - string
+      - "null"
+    description: Custom start script
+  script_pause:
+    type:
+      - string
+      - "null"
+    description: Custom pause script
+  script_unpause:
+    type:
+      - string
+      - "null"
+    description: Custom unpause script
+  script_stop:
+    type:
+      - string
+      - "null"
+    description: Custom stop script
+  script_kill:
+    type:
+      - string
+      - "null"
+    description: Custom kill script
+  script_restart:
+    type:
+      - string
+      - "null"
+    description: Custom restart script
+  script_status:
+    type:
+      - string
+      - "null"
+    description: Custom status script
+  script_stats:
+    type:
+      - string
+      - "null"
+    description: Custom stats script
+  script_get_console:
+    type:
+      - string
+      - "null"
+    description: Custom get console script
+  script_send_command:
+    type:
+      - string
+      - "null"
+    description: Custom send command script
+  script_delete:
+    type:
+      - string
+      - "null"
+    description: Custom delete script
+  created_at:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: Creation timestamp
+  updated_at:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: Last update timestamp
+required:
+  - id
+  - name
+  - os
+  - location
+  - work_path
+  - gdaemon_host
+  - gdaemon_port

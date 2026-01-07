@@ -1,0 +1,9 @@
+type: object
+description: Server status response
+properties:
+  processActive:
+    type: boolean
+    description: Whether server process is active
+    example: true
+required:
+  - processActive

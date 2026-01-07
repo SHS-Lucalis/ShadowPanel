@@ -1,0 +1,14 @@
+type: object
+description: RCON features response
+properties:
+  rcon:
+    type: boolean
+    description: RCON supported
+    example: true
+  playersManage:
+    type: boolean
+    description: Players management supported
+    example: true
+required:
+  - rcon
+  - playersManage

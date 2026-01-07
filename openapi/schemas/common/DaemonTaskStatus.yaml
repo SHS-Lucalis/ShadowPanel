@@ -1,0 +1,9 @@
+type: string
+description: Daemon task execution status
+enum:
+  - waiting
+  - working
+  - error
+  - success
+  - canceled
+example: success

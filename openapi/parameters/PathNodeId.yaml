@@ -1,0 +1,8 @@
+name: id
+in: path
+required: true
+description: Node ID
+schema:
+  type: integer
+  minimum: 1
+example: 1
