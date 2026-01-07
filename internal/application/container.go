@@ -32,6 +32,7 @@ import (
 	"github.com/gameap/gameap/internal/repositories/postgres"
 	"github.com/gameap/gameap/internal/repositories/sqlite"
 	"github.com/gameap/gameap/internal/services"
+	"github.com/gameap/gameap/internal/services/pluginstore"
 	"github.com/gameap/gameap/internal/services/servercontrol"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
@@ -87,6 +88,7 @@ type Container struct {
 	userService          *services.UserService
 	serverControlService *servercontrol.Service
 	globalAPIService     *services.GlobalAPIService
+	pluginStoreService   *pluginstore.Service
 	gameUpgrader         *services.GameUpgradeService
 	rbac                 *rbac.RBAC
 	cache                cache.Cache
@@ -865,6 +867,14 @@ func (c *Container) createGlobalAPIService() *services.GlobalAPIService {
 	return services.NewGlobalAPIService(c.Config())
 }
 
+func (c *Container) PluginStoreService() *pluginstore.Service {
+	if c.pluginStoreService == nil {
+		c.pluginStoreService = pluginstore.NewService(c.config.PluginStore.URL, c.Cache())
+	}
+
+	return c.pluginStoreService
+}
+
 func (c *Container) GameUpgradeService() *services.GameUpgradeService {
 	if c.gameUpgrader == nil {
 		c.gameUpgrader = c.createGameUpgradeService()
@@ -1017,9 +1027,13 @@ func (c *Container) PluginLoader() *internalplugin.Loader {
 			c.FileManager(),
 			c.PluginRepository(),
 			c.config.Plugins.AutoLoad,
-			"plugins",
+			c.PluginsDir(),
 		)
 	}
 
 	return c.pluginLoader
+}
+
+func (c *Container) PluginsDir() string {
+	return "plugins"
 }

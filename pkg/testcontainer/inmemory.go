@@ -12,11 +12,13 @@ import (
 	"github.com/gameap/gameap/internal/daemon"
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/files"
+	internalplugin "github.com/gameap/gameap/internal/plugin"
 	"github.com/gameap/gameap/internal/rbac"
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/internal/repositories/base"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/internal/services"
+	"github.com/gameap/gameap/internal/services/pluginstore"
 	"github.com/gameap/gameap/internal/services/servercontrol"
 	pkgapi "github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
@@ -98,6 +100,12 @@ func (c *InmemoryContainer) DaemonStatus() *daemon.StatusService          { retu
 func (c *InmemoryContainer) DaemonFiles() *daemon.FileService             { return c.daemonFilesService }
 func (c *InmemoryContainer) DaemonCommands() *daemon.CommandService       { return c.daemonCommandsService }
 func (c *InmemoryContainer) PluginManager() *plugin.Manager               { return nil }
+func (c *InmemoryContainer) PluginRepository() repositories.PluginRepository {
+	return inmemory.NewPluginRepository()
+}
+func (c *InmemoryContainer) PluginLoader() *internalplugin.Loader     { return nil }
+func (c *InmemoryContainer) PluginStoreService() *pluginstore.Service { return nil }
+func (c *InmemoryContainer) PluginsDir() string                       { return "plugins" }
 
 func LoadInmemoryContainer() (*InmemoryContainer, error) {
 	c := buildInmemoryTestContainer()

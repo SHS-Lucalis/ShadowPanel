@@ -1,4 +1,4 @@
-package api //nolint:revive
+package api //nolint:revive,nolintlint
 
 import (
 	"database/sql"
@@ -117,10 +117,20 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/files"
 	"github.com/gameap/gameap/internal/i18n"
+	internalplugin "github.com/gameap/gameap/internal/plugin"
+	"github.com/gameap/gameap/internal/pluginstore/store/getcategories"
+	"github.com/gameap/gameap/internal/pluginstore/store/getlabels"
+	"github.com/gameap/gameap/internal/pluginstore/store/getplugin"
+	"github.com/gameap/gameap/internal/pluginstore/store/getplugins"
+	"github.com/gameap/gameap/internal/pluginstore/store/getpluginversions"
+	"github.com/gameap/gameap/internal/pluginstore/store/installplugin"
+	"github.com/gameap/gameap/internal/pluginstore/store/uninstallplugin"
+	"github.com/gameap/gameap/internal/pluginstore/store/updateplugin"
 	"github.com/gameap/gameap/internal/rbac"
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/internal/repositories/base"
 	"github.com/gameap/gameap/internal/services"
+	"github.com/gameap/gameap/internal/services/pluginstore"
 	"github.com/gameap/gameap/internal/services/servercontrol"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
@@ -160,6 +170,10 @@ type container interface {
 	DaemonFiles() *daemon.FileService
 	DaemonCommands() *daemon.CommandService
 	PluginManager() *plugin.Manager
+	PluginRepository() repositories.PluginRepository
+	PluginLoader() *internalplugin.Loader
+	PluginStoreService() *pluginstore.Service
+	PluginsDir() string
 }
 
 func CreateRouter(c container) *http.ServeMux {
@@ -1347,6 +1361,84 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 			Handler: deleteclientcertificates.NewHandler(
 				c.ClientCertificateRepository(),
 				c.FileManager(),
+				c.Responder(),
+			),
+			AdminOnly: true,
+		},
+
+		// Plugin Store
+		{
+			Method:    http.MethodGet,
+			Path:      "/api/plugin-store/categories",
+			Handler:   getcategories.NewHandler(c.PluginStoreService(), c.Responder()),
+			AdminOnly: true,
+		},
+		{
+			Method:    http.MethodGet,
+			Path:      "/api/plugin-store/labels",
+			Handler:   getlabels.NewHandler(c.PluginStoreService(), c.Responder()),
+			AdminOnly: true,
+		},
+		{
+			Method: http.MethodGet,
+			Path:   "/api/plugin-store/plugins",
+			Handler: getplugins.NewHandler(
+				c.PluginStoreService(),
+				c.PluginRepository(),
+				c.Responder(),
+			),
+			AdminOnly: true,
+		},
+		{
+			Method: http.MethodGet,
+			Path:   "/api/plugin-store/plugins/{id}",
+			Handler: getplugin.NewHandler(
+				c.PluginStoreService(),
+				c.PluginRepository(),
+				c.Responder(),
+			),
+			AdminOnly: true,
+		},
+		{
+			Method:    http.MethodGet,
+			Path:      "/api/plugin-store/plugins/{id}/versions",
+			Handler:   getpluginversions.NewHandler(c.PluginStoreService(), c.Responder()),
+			AdminOnly: true,
+		},
+		{
+			Method: http.MethodPost,
+			Path:   "/api/plugin-store/plugins/{id}/install",
+			Handler: installplugin.NewHandler(
+				c.PluginStoreService(),
+				c.PluginRepository(),
+				c.FileManager(),
+				c.PluginLoader(),
+				c.PluginsDir(),
+				c.Responder(),
+			),
+			AdminOnly: true,
+		},
+		{
+			Method: http.MethodPost,
+			Path:   "/api/plugin-store/plugins/{id}/update",
+			Handler: updateplugin.NewHandler(
+				c.PluginStoreService(),
+				c.PluginRepository(),
+				c.FileManager(),
+				c.PluginLoader(),
+				c.PluginsDir(),
+				c.Responder(),
+			),
+			AdminOnly: true,
+		},
+		{
+			Method: http.MethodDelete,
+			Path:   "/api/plugin-store/plugins/{id}",
+			Handler: uninstallplugin.NewHandler(
+				c.PluginRepository(),
+				c.FileManager(),
+				c.PluginLoader(),
+				c.PluginsDir(),
 				c.Responder(),
 			),
 			AdminOnly: true,
