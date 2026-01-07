@@ -156,6 +156,10 @@ func (r *PluginRepository) Save(ctx context.Context, plugin *domain.Plugin) erro
 }
 
 func (r *PluginRepository) insert(ctx context.Context, plugin *domain.Plugin) error {
+	if plugin.ID == 0 {
+		return errors.New("plugin ID is required")
+	}
+
 	requiredPermissions := permissionsToPostgresArray(plugin.RequiredPermissions)
 	allowedPermissions := permissionsToPostgresArray(plugin.AllowedPermissions)
 	dependencies := stringsToPostgresArray(plugin.Dependencies)
@@ -165,79 +169,40 @@ func (r *PluginRepository) insert(ctx context.Context, plugin *domain.Plugin) er
 		return errors.WithMessage(err, "failed to marshal config")
 	}
 
-	builder := sq.Insert(base.PluginsTable)
-
-	if plugin.ID != 0 {
-		builder = builder.Columns(pluginFields...).
-			Values(
-				plugin.ID,
-				plugin.Name,
-				plugin.Version,
-				plugin.Description,
-				plugin.Author,
-				plugin.APIVersion,
-				plugin.Filename,
-				plugin.Source,
-				plugin.Homepage,
-				requiredPermissions,
-				allowedPermissions,
-				plugin.Status,
-				plugin.Priority,
-				plugin.Category,
-				dependencies,
-				configJSON,
-				plugin.InstalledAt,
-				plugin.LastLoadedAt,
-				plugin.CreatedAt,
-				plugin.UpdatedAt,
-			)
-	} else {
-		builder = builder.Columns(pluginFields[1:]...).
-			Values(
-				plugin.Name,
-				plugin.Version,
-				plugin.Description,
-				plugin.Author,
-				plugin.APIVersion,
-				plugin.Filename,
-				plugin.Source,
-				plugin.Homepage,
-				requiredPermissions,
-				allowedPermissions,
-				plugin.Status,
-				plugin.Priority,
-				plugin.Category,
-				dependencies,
-				configJSON,
-				plugin.InstalledAt,
-				plugin.LastLoadedAt,
-				plugin.CreatedAt,
-				plugin.UpdatedAt,
-			).
-			Suffix("RETURNING id")
-	}
-
-	query, args, err := builder.PlaceholderFormat(sq.Dollar).ToSql()
+	query, args, err := sq.Insert(base.PluginsTable).
+		Columns(pluginFields...).
+		Values(
+			plugin.ID,
+			plugin.Name,
+			plugin.Version,
+			plugin.Description,
+			plugin.Author,
+			plugin.APIVersion,
+			plugin.Filename,
+			plugin.Source,
+			plugin.Homepage,
+			requiredPermissions,
+			allowedPermissions,
+			plugin.Status,
+			plugin.Priority,
+			plugin.Category,
+			dependencies,
+			configJSON,
+			plugin.InstalledAt,
+			plugin.LastLoadedAt,
+			plugin.CreatedAt,
+			plugin.UpdatedAt,
+		).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
 	if err != nil {
 		return errors.WithMessage(err, "failed to build query")
 	}
 
-	if plugin.ID != 0 {
-		_, err = r.db.ExecContext(ctx, query, args...)
-		if err != nil {
-			return errors.WithMessage(err, "failed to execute query")
-		}
-
-		return nil
-	}
-
-	var insertedID uint
-	err = r.db.QueryRowContext(ctx, query, args...).Scan(&insertedID)
+	_, err = r.db.ExecContext(ctx, query, args...)
 	if err != nil {
 		return errors.WithMessage(err, "failed to execute query")
 	}
-
-	plugin.ID = insertedID
 
 	return nil
 }

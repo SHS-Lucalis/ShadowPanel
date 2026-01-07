@@ -8,18 +8,17 @@ import (
 	"sort"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
+	"github.com/pkg/errors"
 	"github.com/samber/lo"
 )
 
 type PluginRepository struct {
 	mu      sync.RWMutex
 	plugins map[uint]*domain.Plugin
-	nextID  uint32
 }
 
 func NewPluginRepository() *PluginRepository {
@@ -69,6 +68,10 @@ func (r *PluginRepository) Find(
 }
 
 func (r *PluginRepository) Save(_ context.Context, plugin *domain.Plugin) error {
+	if plugin.ID == 0 {
+		return errors.New("plugin ID is required")
+	}
+
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -78,10 +81,6 @@ func (r *PluginRepository) Save(_ context.Context, plugin *domain.Plugin) error 
 
 	_, exists := r.plugins[plugin.ID]
 	if !exists {
-		if plugin.ID == 0 {
-			plugin.ID = uint(atomic.AddUint32(&r.nextID, 1))
-		}
-
 		if plugin.CreatedAt == nil || plugin.CreatedAt.IsZero() {
 			plugin.CreatedAt = lo.ToPtr(now)
 		}

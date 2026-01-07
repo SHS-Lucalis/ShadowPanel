@@ -36,6 +36,7 @@ func (s *PluginRepositorySuite) TestPluginRepositorySave() {
 
 	s.T().Run("insert_new_plugin", func(t *testing.T) {
 		plugin := &domain.Plugin{
+			ID:          1001,
 			Name:        "test-plugin",
 			Version:     "1.0.0",
 			Description: "A test plugin",
@@ -47,7 +48,7 @@ func (s *PluginRepositorySuite) TestPluginRepositorySave() {
 
 		err := s.repo.Save(ctx, plugin)
 		require.NoError(t, err)
-		assert.NotZero(t, plugin.ID)
+		assert.Equal(t, uint(1001), plugin.ID)
 		assert.NotNil(t, plugin.CreatedAt)
 		assert.NotNil(t, plugin.UpdatedAt)
 
@@ -67,6 +68,7 @@ func (s *PluginRepositorySuite) TestPluginRepositorySave() {
 	s.T().Run("insert_plugin_with_all_fields", func(t *testing.T) {
 		now := time.Now().Truncate(time.Second)
 		plugin := &domain.Plugin{
+			ID:          1002,
 			Name:        "full-plugin",
 			Version:     "2.0.0",
 			Description: "A plugin with all fields",
@@ -98,7 +100,7 @@ func (s *PluginRepositorySuite) TestPluginRepositorySave() {
 
 		err := s.repo.Save(ctx, plugin)
 		require.NoError(t, err)
-		assert.NotZero(t, plugin.ID)
+		assert.Equal(t, uint(1002), plugin.ID)
 
 		result, err := s.repo.Find(ctx, &filters.FindPlugin{IDs: []uint{plugin.ID}}, nil, nil)
 		require.NoError(t, err)
@@ -141,6 +143,7 @@ func (s *PluginRepositorySuite) TestPluginRepositorySave() {
 
 	s.T().Run("update_existing_plugin", func(t *testing.T) {
 		plugin := &domain.Plugin{
+			ID:          1003,
 			Name:        "update-plugin",
 			Version:     "1.0.0",
 			Description: "Original description",
@@ -185,6 +188,7 @@ func (s *PluginRepositorySuite) TestPluginRepositorySave() {
 
 	s.T().Run("updated_at_changes_on_each_save", func(t *testing.T) {
 		plugin := &domain.Plugin{
+			ID:          1004,
 			Name:        "updated-at-test-plugin",
 			Version:     "1.0.0",
 			Description: "Test UpdatedAt changes",
@@ -225,6 +229,7 @@ func (s *PluginRepositorySuite) TestPluginRepositorySave() {
 
 	s.T().Run("insert_plugin_with_nil_optional_fields", func(t *testing.T) {
 		plugin := &domain.Plugin{
+			ID:          1005,
 			Name:        "minimal-plugin",
 			Version:     "1.0.0",
 			Description: "A minimal plugin",
@@ -255,6 +260,7 @@ func (s *PluginRepositorySuite) TestPluginRepositorySave() {
 
 	s.T().Run("insert_plugin_with_empty_slices_and_maps", func(t *testing.T) {
 		plugin := &domain.Plugin{
+			ID:                  1006,
 			Name:                "empty-slices-plugin",
 			Version:             "1.0.0",
 			Description:         "Plugin with empty slices",
@@ -358,15 +364,15 @@ func (s *PluginRepositorySuite) TestPluginRepositoryFindAll() {
 
 	plugins := []*domain.Plugin{
 		{
-			Name: "plugin-a", Version: "1.0.0", Description: "Plugin A",
+			ID: 2001, Name: "plugin-a", Version: "1.0.0", Description: "Plugin A",
 			Author: "Author", APIVersion: "v1", Status: domain.PluginStatusActive, Priority: 30,
 		},
 		{
-			Name: "plugin-b", Version: "1.0.0", Description: "Plugin B",
+			ID: 2002, Name: "plugin-b", Version: "1.0.0", Description: "Plugin B",
 			Author: "Author", APIVersion: "v1", Status: domain.PluginStatusDisabled, Priority: 10,
 		},
 		{
-			Name: "plugin-c", Version: "1.0.0", Description: "Plugin C",
+			ID: 2003, Name: "plugin-c", Version: "1.0.0", Description: "Plugin C",
 			Author: "Author", APIVersion: "v1", Status: domain.PluginStatusActive, Priority: 20,
 		},
 	}
@@ -431,22 +437,22 @@ func (s *PluginRepositorySuite) TestPluginRepositoryFind() {
 
 	plugins := []*domain.Plugin{
 		{
-			Name: "find-plugin-1", Version: "1.0.0", Description: "Plugin 1",
+			ID: 3001, Name: "find-plugin-1", Version: "1.0.0", Description: "Plugin 1",
 			Author: "Author", APIVersion: "v1", Status: domain.PluginStatusActive, Priority: 10,
 			Category: lo.ToPtr("monitoring"),
 		},
 		{
-			Name: "find-plugin-2", Version: "2.0.0", Description: "Plugin 2",
+			ID: 3002, Name: "find-plugin-2", Version: "2.0.0", Description: "Plugin 2",
 			Author: "Author", APIVersion: "v1", Status: domain.PluginStatusDisabled, Priority: 20,
 			Category: lo.ToPtr("monitoring"),
 		},
 		{
-			Name: "find-plugin-3", Version: "3.0.0", Description: "Plugin 3",
+			ID: 3003, Name: "find-plugin-3", Version: "3.0.0", Description: "Plugin 3",
 			Author: "Author", APIVersion: "v1", Status: domain.PluginStatusActive, Priority: 30,
 			Category: lo.ToPtr("backup"),
 		},
 		{
-			Name: "find-plugin-4", Version: "4.0.0", Description: "Plugin 4",
+			ID: 3004, Name: "find-plugin-4", Version: "4.0.0", Description: "Plugin 4",
 			Author: "Author", APIVersion: "v1", Status: domain.PluginStatusError, Priority: 40,
 		},
 	}
@@ -563,6 +569,7 @@ func (s *PluginRepositorySuite) TestPluginRepositoryDelete() {
 
 	s.T().Run("delete_existing_plugin", func(t *testing.T) {
 		plugin := &domain.Plugin{
+			ID:          4001,
 			Name:        "delete-me-plugin",
 			Version:     "1.0.0",
 			Description: "Delete me",
@@ -589,6 +596,7 @@ func (s *PluginRepositorySuite) TestPluginRepositoryDelete() {
 
 	s.T().Run("delete_already_deleted_plugin", func(t *testing.T) {
 		plugin := &domain.Plugin{
+			ID:          4002,
 			Name:        "double-delete-plugin",
 			Version:     "1.0.0",
 			Description: "Double delete",
@@ -615,6 +623,7 @@ func (s *PluginRepositorySuite) TestPluginRepositoryCompletePluginData() {
 		now := time.Now().Truncate(time.Second)
 
 		plugin := &domain.Plugin{
+			ID:          5001,
 			Name:        "complete-data-plugin",
 			Version:     "3.2.1",
 			Description: "A complete plugin for testing all fields",
@@ -706,12 +715,12 @@ func (s *PluginRepositorySuite) TestPluginRepositoryExists() {
 
 	plugins := []*domain.Plugin{
 		{
-			Name: "exists-plugin-1", Version: "1.0.0", Description: "Plugin 1",
+			ID: 6001, Name: "exists-plugin-1", Version: "1.0.0", Description: "Plugin 1",
 			Author: "Author", APIVersion: "v1", Status: domain.PluginStatusActive, Priority: 10,
 			Category: lo.ToPtr("monitoring"),
 		},
 		{
-			Name: "exists-plugin-2", Version: "2.0.0", Description: "Plugin 2",
+			ID: 6002, Name: "exists-plugin-2", Version: "2.0.0", Description: "Plugin 2",
 			Author: "Author", APIVersion: "v1", Status: domain.PluginStatusDisabled, Priority: 20,
 			Category: lo.ToPtr("backup"),
 		},
@@ -789,7 +798,7 @@ func (s *PluginRepositorySuite) TestPluginRepositoryExists() {
 
 	s.T().Run("exists_after_delete_returns_false", func(t *testing.T) {
 		plugin := &domain.Plugin{
-			Name: "delete-exists-plugin", Version: "1.0.0", Description: "Delete exists plugin",
+			ID: 6003, Name: "delete-exists-plugin", Version: "1.0.0", Description: "Delete exists plugin",
 			Author: "Author", APIVersion: "v1", Status: domain.PluginStatusActive,
 		}
 		require.NoError(t, s.repo.Save(ctx, plugin))
@@ -811,6 +820,7 @@ func (s *PluginRepositorySuite) TestPluginRepositoryIntegration() {
 
 	s.T().Run("full_lifecycle", func(t *testing.T) {
 		plugin := &domain.Plugin{
+			ID:          7001,
 			Name:        "lifecycle-plugin",
 			Version:     "1.0.0",
 			Description: "Lifecycle test plugin",
@@ -860,6 +870,7 @@ func (s *PluginRepositorySuite) TestPluginRepositoryIntegration() {
 
 		for i := range 5 {
 			plugin := &domain.Plugin{
+				ID:          uint(7100 + i),
 				Name:        "multi-plugin-" + string(rune('A'+i)),
 				Version:     "1.0.0",
 				Description: "Multi plugin " + string(rune('A'+i)),
@@ -888,6 +899,7 @@ func (s *PluginRepositorySuite) TestPluginRepositoryIntegration() {
 
 	s.T().Run("status_transitions", func(t *testing.T) {
 		plugin := &domain.Plugin{
+			ID:          7200,
 			Name:        "status-transition-plugin",
 			Version:     "1.0.0",
 			Description: "Status transition test",
@@ -920,6 +932,7 @@ func (s *PluginRepositorySuite) TestPluginRepositoryIntegration() {
 	s.T().Run("priority_ordering", func(t *testing.T) {
 		for i := range 3 {
 			plugin := &domain.Plugin{
+				ID:          uint(7300 + i),
 				Name:        "priority-plugin-" + string(rune('A'+i)),
 				Version:     "1.0.0",
 				Description: "Priority plugin",
