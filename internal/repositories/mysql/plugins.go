@@ -141,7 +141,7 @@ func (r *PluginRepository) Save(ctx context.Context, plugin *domain.Plugin) erro
 		return err
 	}
 
-	exists, err := r.Exists(ctx, &filters.FindPlugin{IDs: []uint{plugin.ID}})
+	exists, err := r.Exists(ctx, &filters.FindPlugin{IDs: []domain.Uint64ID{plugin.ID}})
 	if err != nil {
 		return errors.WithMessage(err, "failed to check plugin existence")
 	}
@@ -279,7 +279,7 @@ func (r *PluginRepository) update(
 	return nil
 }
 
-func (r *PluginRepository) Delete(ctx context.Context, id uint) error {
+func (r *PluginRepository) Delete(ctx context.Context, id domain.Uint64ID) error {
 	query, args, err := sq.Delete(base.PluginsTable).
 		Where(sq.Eq{"id": id}).
 		PlaceholderFormat(sq.Question).

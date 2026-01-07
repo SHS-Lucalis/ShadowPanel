@@ -12,7 +12,7 @@ const (
 )
 
 type Plugin struct {
-	ID                  uint               `db:"id"`
+	ID                  Uint64ID           `db:"id"`
 	Name                string             `db:"name"`
 	Version             string             `db:"version"`
 	Description         string             `db:"description"`

@@ -1,7 +1,7 @@
 -- +goose Up
 
 CREATE TABLE plugins (
-    id INT UNSIGNED NOT NULL PRIMARY KEY,
+    id BIGINT UNSIGNED NOT NULL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     version VARCHAR(64) NOT NULL,
     description TEXT NOT NULL,

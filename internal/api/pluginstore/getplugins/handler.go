@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gameap/gameap/internal/api/base"
+	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/internal/services/pluginstore"
 	pkgplugin "github.com/gameap/gameap/pkg/plugin"
@@ -50,7 +51,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	installedMap := make(map[uint]string)
+	installedMap := make(map[domain.Uint64ID]string)
 	for _, p := range installedPlugins {
 		installedMap[p.ID] = p.Version
 	}
@@ -96,7 +97,7 @@ func (h *Handler) parseParams(r *http.Request) pluginstore.GetPluginsParams {
 	return params
 }
 
-func getInstalledVersion(storeID string, installedMap map[uint]string) *string {
+func getInstalledVersion(storeID string, installedMap map[domain.Uint64ID]string) *string {
 	dbID := pkgplugin.ParsePluginID(storeID)
 	if version, ok := installedMap[dbID]; ok {
 		return &version
@@ -105,7 +106,7 @@ func getInstalledVersion(storeID string, installedMap map[uint]string) *string {
 	return nil
 }
 
-func isInstalled(storeID string, installedMap map[uint]string) bool {
+func isInstalled(storeID string, installedMap map[domain.Uint64ID]string) bool {
 	dbID := pkgplugin.ParsePluginID(storeID)
 	_, ok := installedMap[dbID]
 

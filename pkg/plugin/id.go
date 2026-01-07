@@ -5,29 +5,31 @@ import (
 	"encoding/binary"
 	"hash/fnv"
 	"strconv"
+
+	"github.com/gameap/gameap/internal/domain"
 )
 
 var IDEncoding = base32.NewEncoding("abcdefghijklmnopqrstuvwxyz234567").WithPadding(base32.NoPadding)
 
-func ParsePluginID(idStr string) uint {
+func ParsePluginID(idStr string) domain.Uint64ID {
 	if id, err := strconv.ParseUint(idStr, 10, 64); err == nil {
-		return uint(id)
+		return domain.Uint64ID(id)
 	}
 
 	if decoded, err := IDEncoding.DecodeString(idStr); err == nil && len(decoded) <= 8 {
 		buf := make([]byte, 8)
 		copy(buf[8-len(decoded):], decoded)
 
-		return uint(binary.BigEndian.Uint64(buf))
+		return domain.Uint64ID(binary.BigEndian.Uint64(buf))
 	}
 
 	h := fnv.New64a()
 	_, _ = h.Write([]byte(idStr))
 
-	return uint(h.Sum64())
+	return domain.Uint64ID(h.Sum64())
 }
 
-func CompactPluginID(id uint) string {
+func CompactPluginID(id domain.Uint64ID) string {
 	buf := make([]byte, 8)
 	binary.BigEndian.PutUint64(buf, uint64(id))
 

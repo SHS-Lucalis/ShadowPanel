@@ -7,11 +7,11 @@ import (
 )
 
 type updateResponse struct {
-	ID        uint      `json:"id"`
-	Name      string    `json:"name"`
-	Version   string    `json:"version"`
-	Status    string    `json:"status"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        domain.Uint64ID `json:"id"`
+	Name      string          `json:"name"`
+	Version   string          `json:"version"`
+	Status    string          `json:"status"`
+	UpdatedAt time.Time       `json:"updated_at"`
 }
 
 func newUpdateResponse(plugin *domain.Plugin) *updateResponse {

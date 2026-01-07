@@ -18,12 +18,12 @@ import (
 
 type PluginRepository struct {
 	mu      sync.RWMutex
-	plugins map[uint]*domain.Plugin
+	plugins map[domain.Uint64ID]*domain.Plugin
 }
 
 func NewPluginRepository() *PluginRepository {
 	return &PluginRepository{
-		plugins: make(map[uint]*domain.Plugin),
+		plugins: make(map[domain.Uint64ID]*domain.Plugin),
 	}
 }
 
@@ -112,7 +112,7 @@ func (r *PluginRepository) Save(_ context.Context, plugin *domain.Plugin) error 
 	return nil
 }
 
-func (r *PluginRepository) Delete(_ context.Context, id uint) error {
+func (r *PluginRepository) Delete(_ context.Context, id domain.Uint64ID) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 

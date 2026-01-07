@@ -3,6 +3,7 @@ package getplugins
 import (
 	"time"
 
+	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/services/pluginstore"
 )
 
@@ -47,7 +48,7 @@ type paginatedPluginsResponse struct {
 
 func newPluginsResponse(
 	storePlugins *pluginstore.PaginatedResponse[pluginstore.Plugin],
-	installedMap map[uint]string,
+	installedMap map[domain.Uint64ID]string,
 ) *paginatedPluginsResponse {
 	data := make([]pluginResponse, 0, len(storePlugins.Data))
 
