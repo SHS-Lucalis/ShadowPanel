@@ -1,0 +1,15 @@
+/api/config/public:
+  get:
+    tags:
+      - Config
+    summary: Get public configuration
+    description: Returns public configuration settings
+    operationId: getPublicConfig
+    security: []
+    responses:
+      '200':
+        description: Public configuration
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/responses/PublicConfigResponse.yaml'

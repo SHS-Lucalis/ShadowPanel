@@ -1,0 +1,50 @@
+type: object
+description: User profile with roles and permissions
+properties:
+  id:
+    type: integer
+    description: User ID
+    example: 1
+  login:
+    type: string
+    description: Username
+    example: "admin"
+  email:
+    type: string
+    format: email
+    description: Email address
+    example: "admin@example.com"
+  name:
+    type:
+      - string
+      - "null"
+    description: Display name
+    example: "Administrator"
+  roles:
+    type: array
+    description: User roles
+    items:
+      type: string
+    example: ["admin"]
+  permissions:
+    type: array
+    description: User permissions
+    items:
+      type: string
+    example: ["admin.servers.create", "admin.users.manage"]
+  created_at:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: Creation timestamp
+  updated_at:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: Last update timestamp
+required:
+  - id
+  - login
+  - email

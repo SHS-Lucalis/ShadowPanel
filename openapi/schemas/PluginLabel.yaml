@@ -1,0 +1,25 @@
+type: object
+description: Plugin store label
+properties:
+  id:
+    type: integer
+    description: Label ID
+    example: 1
+  name:
+    type: string
+    description: Label name
+    example: "Official"
+  slug:
+    type: string
+    description: Label slug
+    example: "official"
+  color:
+    type:
+      - string
+      - "null"
+    description: Label color (hex)
+    example: "#4CAF50"
+required:
+  - id
+  - name
+  - slug

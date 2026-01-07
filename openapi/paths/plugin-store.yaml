@@ -1,0 +1,301 @@
+/api/plugin-store/categories:
+  get:
+    tags:
+      - PluginStore
+    summary: List plugin categories
+    description: Returns plugin store categories (Admin only)
+    operationId: listPluginCategories
+    responses:
+      '200':
+        description: List of categories
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../schemas/PluginCategory.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/plugin-store/labels:
+  get:
+    tags:
+      - PluginStore
+    summary: List plugin labels
+    description: Returns plugin store labels (Admin only)
+    operationId: listPluginLabels
+    responses:
+      '200':
+        description: List of labels
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../schemas/PluginLabel.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/plugin-store/plugins:
+  get:
+    tags:
+      - PluginStore
+    summary: List plugins
+    description: Returns available plugins from the store (Admin only)
+    operationId: listStorePlugins
+    parameters:
+      - name: category
+        in: query
+        description: Filter by category
+        schema:
+          type: string
+      - name: label
+        in: query
+        description: Filter by label
+        schema:
+          type: string
+      - $ref: '../parameters/QuerySearch.yaml'
+      - $ref: '../parameters/QueryPage.yaml'
+      - $ref: '../parameters/QueryPerPage.yaml'
+    responses:
+      '200':
+        description: List of plugins
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../schemas/Plugin.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/plugin-store/plugins/{id}:
+  get:
+    tags:
+      - PluginStore
+    summary: Get plugin details
+    description: Returns plugin details from the store (Admin only)
+    operationId: getStorePlugin
+    parameters:
+      - $ref: '../parameters/PathPluginId.yaml'
+    responses:
+      '200':
+        description: Plugin details
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/Plugin.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Plugin not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+  delete:
+    tags:
+      - PluginStore
+    summary: Uninstall plugin
+    description: Uninstalls a plugin (Admin only)
+    operationId: uninstallPlugin
+    parameters:
+      - $ref: '../parameters/PathPluginId.yaml'
+    responses:
+      '200':
+        description: Plugin uninstalled
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/SuccessResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Plugin not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/plugin-store/plugins/{id}/versions:
+  get:
+    tags:
+      - PluginStore
+    summary: Get plugin versions
+    description: Returns available versions for a plugin (Admin only)
+    operationId: getPluginVersions
+    parameters:
+      - $ref: '../parameters/PathPluginId.yaml'
+    responses:
+      '200':
+        description: Plugin versions
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../schemas/PluginVersion.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Plugin not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/plugin-store/plugins/{id}/install:
+  post:
+    tags:
+      - PluginStore
+    summary: Install plugin
+    description: Installs a plugin from the store (Admin only)
+    operationId: installPlugin
+    parameters:
+      - $ref: '../parameters/PathPluginId.yaml'
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              version:
+                type: string
+                description: Version to install (latest if not specified)
+    responses:
+      '200':
+        description: Plugin installed
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/SuccessResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Plugin not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/plugin-store/plugins/{id}/update:
+  post:
+    tags:
+      - PluginStore
+    summary: Update plugin
+    description: Updates an installed plugin (Admin only)
+    operationId: updatePlugin
+    parameters:
+      - $ref: '../parameters/PathPluginId.yaml'
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              version:
+                type: string
+                description: Version to update to (latest if not specified)
+    responses:
+      '200':
+        description: Plugin updated
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/SuccessResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Plugin not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'

@@ -1,0 +1,37 @@
+type: object
+description: Node summary item
+properties:
+  id:
+    type: integer
+    description: Node ID
+    example: 1
+  name:
+    type: string
+    description: Node name
+    example: "Node 1"
+  location:
+    type: string
+    description: Node location
+    example: "US East"
+  enabled:
+    type: boolean
+    description: Whether node is enabled
+    example: true
+  online:
+    type: boolean
+    description: Whether node is online
+    example: true
+  version:
+    type: string
+    description: Daemon version
+    example: "3.0.0"
+  buildDate:
+    type: string
+    description: Daemon build date
+    example: "2024-01-15"
+required:
+  - id
+  - name
+  - location
+  - enabled
+  - online

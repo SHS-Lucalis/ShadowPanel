@@ -1,0 +1,76 @@
+type: object
+description: Game entity
+properties:
+  code:
+    type: string
+    description: Game code (unique slug)
+    minLength: 2
+    maxLength: 16
+    pattern: '^[a-z0-9_-]+$'
+    example: "cstrike"
+  name:
+    type: string
+    description: Game name
+    minLength: 2
+    maxLength: 128
+    example: "Counter-Strike 1.6"
+  engine:
+    type: string
+    description: Game engine
+    maxLength: 128
+    example: "GoldSource"
+  engine_version:
+    type: string
+    description: Engine version
+    maxLength: 128
+    example: "1.0"
+  steam_app_id_linux:
+    type:
+      - integer
+      - "null"
+    description: Steam app ID for Linux
+    example: 90
+  steam_app_id_windows:
+    type:
+      - integer
+      - "null"
+    description: Steam app ID for Windows
+    example: 90
+  steam_app_set_config:
+    type:
+      - string
+      - "null"
+    description: Steam app set config
+    maxLength: 128
+  remote_repository_linux:
+    type:
+      - string
+      - "null"
+    description: Remote repository URL for Linux
+    maxLength: 128
+  remote_repository_windows:
+    type:
+      - string
+      - "null"
+    description: Remote repository URL for Windows
+    maxLength: 128
+  local_repository_linux:
+    type:
+      - string
+      - "null"
+    description: Local repository path for Linux
+    maxLength: 128
+  local_repository_windows:
+    type:
+      - string
+      - "null"
+    description: Local repository path for Windows
+    maxLength: 128
+  enabled:
+    type: integer
+    description: Whether game is enabled (1 or 0)
+    example: 1
+required:
+  - code
+  - name
+  - engine

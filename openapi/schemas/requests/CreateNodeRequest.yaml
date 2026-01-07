@@ -1,0 +1,59 @@
+type: object
+description: Create node request
+properties:
+  name:
+    type: string
+    description: Node name
+    example: "Main Server"
+  enabled:
+    type: boolean
+    description: Enable node
+    example: true
+  os:
+    $ref: '../common/NodeOS.yaml'
+  location:
+    type: string
+    description: Physical location
+    example: "Frankfurt, DE"
+  provider:
+    type:
+      - string
+      - "null"
+    description: Hosting provider
+    example: "Hetzner"
+  ip:
+    type: array
+    description: IP addresses
+    items:
+      type: string
+    example: ["192.168.1.100"]
+  work_path:
+    type: string
+    description: Working directory
+    example: "/home/gameap"
+  steamcmd_path:
+    type:
+      - string
+      - "null"
+    description: SteamCMD path
+  gdaemon_host:
+    type: string
+    description: GDaemon hostname
+    example: "192.168.1.100"
+  gdaemon_port:
+    type: integer
+    description: GDaemon port
+    example: 31717
+  client_certificate_id:
+    type: integer
+    description: Client certificate ID
+    example: 1
+  prefer_install_method:
+    $ref: '../common/NodePreferInstallMethod.yaml'
+required:
+  - name
+  - os
+  - location
+  - work_path
+  - gdaemon_host
+  - gdaemon_port

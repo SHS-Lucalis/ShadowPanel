@@ -1,0 +1,59 @@
+type: object
+description: Node daemon status response
+properties:
+  id:
+    type: integer
+    description: Node ID
+    example: 1
+  name:
+    type: string
+    description: Node name
+    example: "Node 1"
+  api_key:
+    type: string
+    description: API key
+    example: "abc123"
+  version:
+    type: object
+    properties:
+      version:
+        type: string
+        description: Daemon version
+        example: "3.0.0"
+      compile_date:
+        type: string
+        description: Compile date
+        example: "2024-01-15"
+    required:
+      - version
+      - compile_date
+  base_info:
+    type: object
+    properties:
+      uptime:
+        type: string
+        description: Daemon uptime
+        example: "2d 5h 30m"
+      working_tasks_count:
+        type: string
+        description: Working tasks count
+        example: "5"
+      waiting_tasks_count:
+        type: string
+        description: Waiting tasks count
+        example: "3"
+      online_servers_count:
+        type: string
+        description: Online servers count
+        example: "10"
+    required:
+      - uptime
+      - working_tasks_count
+      - waiting_tasks_count
+      - online_servers_count
+required:
+  - id
+  - name
+  - api_key
+  - version
+  - base_info

@@ -1,0 +1,8 @@
+type: object
+description: Update server settings request
+additionalProperties:
+  type: string
+example:
+  maxplayers: "32"
+  hostname: "My Server"
+  map: "de_dust2"

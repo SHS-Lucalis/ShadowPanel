@@ -1,0 +1,353 @@
+/api/servers/{server}/console:
+  get:
+    tags:
+      - ServerConsole
+    summary: Get console output
+    description: Returns the server console output
+    operationId: getConsole
+    x-codeSamples:
+      - lang: cURL
+        label: CLI
+        source: |
+          curl -s -X GET "https://demo.gameap.com/api/servers/6/console" \
+            -H "Authorization: Bearer YOUR_API_KEY" \
+            -w "\nHTTP Status: %{http_code}\n"
+
+      - lang: PHP
+        source: |
+          <?php
+
+          $serverId = 6;
+          $url = "https://demo.gameap.com/api/servers/{$serverId}/console";
+          $apiKey = 'YOUR_API_KEY';
+
+          $curl = curl_init();
+
+          curl_setopt_array($curl, [
+              CURLOPT_URL            => $url,
+              CURLOPT_RETURNTRANSFER => true,
+              CURLOPT_TIMEOUT        => 30,
+              CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+              CURLOPT_HTTPHEADER     => [
+                  'Authorization: Bearer ' . $apiKey,
+              ],
+          ]);
+
+          $response = curl_exec($curl);
+          $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+          if (curl_errno($curl)) {
+              echo 'Curl error: ' . curl_error($curl);
+              curl_close($curl);
+              exit(1);
+          }
+
+          curl_close($curl);
+
+          if ($httpCode >= 400) {
+              echo "HTTP Error: {$httpCode}\n";
+              echo $response;
+              exit(1);
+          }
+
+          $result = json_decode($response, true);
+
+          if (json_last_error() !== JSON_ERROR_NONE) {
+              echo 'JSON decode error: ' . json_last_error_msg();
+              exit(1);
+          }
+
+          echo "Console Output:\n{$result['output']}\n";
+
+      - lang: Go
+        source: |
+          package main
+
+          import (
+              "context"
+              "encoding/json"
+              "fmt"
+              "io"
+              "log"
+              "net/http"
+              "time"
+          )
+
+          func main() {
+              serverID := 6
+              url := fmt.Sprintf("https://demo.gameap.com/api/servers/%d/console", serverID)
+              apiKey := "YOUR_API_KEY"
+
+              ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+              defer cancel()
+
+              req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+              if err != nil {
+                  log.Fatalf("Failed to create request: %v", err)
+              }
+
+              req.Header.Set("Authorization", "Bearer "+apiKey)
+
+              client := &http.Client{Timeout: 30 * time.Second}
+
+              resp, err := client.Do(req)
+              if err != nil {
+                  log.Fatalf("Request failed: %v", err)
+              }
+              defer resp.Body.Close()
+
+              body, err := io.ReadAll(resp.Body)
+              if err != nil {
+                  log.Fatalf("Failed to read response: %v", err)
+              }
+
+              if resp.StatusCode >= 400 {
+                  log.Fatalf("HTTP Error %d: %s", resp.StatusCode, string(body))
+              }
+
+              var result map[string]interface{}
+              if err := json.Unmarshal(body, &result); err != nil {
+                  log.Fatalf("Failed to parse JSON: %v", err)
+              }
+
+              fmt.Printf("Console Output:\n%s\n", result["output"])
+          }
+
+      - lang: NodeJS
+        source: |
+          const apiKey = 'YOUR_API_KEY';
+          const serverId = 6;
+          const url = `https://demo.gameap.com/api/servers/${serverId}/console`;
+
+          const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+            },
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP Error ${response.status}: ${errorText}`);
+          }
+
+          const result = await response.json();
+          console.log('Console Output:');
+          console.log(result.output);
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Console output
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/responses/ConsoleResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Server not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+  post:
+    tags:
+      - ServerConsole
+    summary: Send console command
+    description: Sends a command to the server console
+    operationId: sendConsoleCommand
+    x-codeSamples:
+      - lang: cURL
+        label: CLI
+        source: |
+          curl -s -X POST "https://demo.gameap.com/api/servers/6/console" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer YOUR_API_KEY" \
+            -d '{"command": "status"}' \
+            -w "\nHTTP Status: %{http_code}\n"
+
+      - lang: PHP
+        source: |
+          <?php
+
+          $serverId = 6;
+          $url = "https://demo.gameap.com/api/servers/{$serverId}/console";
+          $apiKey = 'YOUR_API_KEY';
+
+          $data = [
+              'command' => 'status',
+          ];
+
+          $curl = curl_init();
+
+          curl_setopt_array($curl, [
+              CURLOPT_URL            => $url,
+              CURLOPT_POST           => true,
+              CURLOPT_RETURNTRANSFER => true,
+              CURLOPT_TIMEOUT        => 30,
+              CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+              CURLOPT_POSTFIELDS     => json_encode($data),
+              CURLOPT_HTTPHEADER     => [
+                  'Content-Type: application/json',
+                  'Authorization: Bearer ' . $apiKey,
+              ],
+          ]);
+
+          $response = curl_exec($curl);
+          $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+          if (curl_errno($curl)) {
+              echo 'Curl error: ' . curl_error($curl);
+              curl_close($curl);
+              exit(1);
+          }
+
+          curl_close($curl);
+
+          if ($httpCode >= 400) {
+              echo "HTTP Error: {$httpCode}\n";
+              echo $response;
+              exit(1);
+          }
+
+          $result = json_decode($response, true);
+
+          if (json_last_error() !== JSON_ERROR_NONE) {
+              echo 'JSON decode error: ' . json_last_error_msg();
+              exit(1);
+          }
+
+          echo "Command sent successfully\n";
+
+      - lang: Go
+        source: |
+          package main
+
+          import (
+              "bytes"
+              "context"
+              "encoding/json"
+              "fmt"
+              "io"
+              "log"
+              "net/http"
+              "time"
+          )
+
+          func main() {
+              serverID := 6
+              url := fmt.Sprintf("https://demo.gameap.com/api/servers/%d/console", serverID)
+              apiKey := "YOUR_API_KEY"
+
+              payload := map[string]string{
+                  "command": "status",
+              }
+
+              body, err := json.Marshal(payload)
+              if err != nil {
+                  log.Fatalf("Failed to marshal payload: %v", err)
+              }
+
+              ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+              defer cancel()
+
+              req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
+              if err != nil {
+                  log.Fatalf("Failed to create request: %v", err)
+              }
+
+              req.Header.Set("Content-Type", "application/json")
+              req.Header.Set("Authorization", "Bearer "+apiKey)
+
+              client := &http.Client{Timeout: 30 * time.Second}
+
+              resp, err := client.Do(req)
+              if err != nil {
+                  log.Fatalf("Request failed: %v", err)
+              }
+              defer resp.Body.Close()
+
+              respBody, err := io.ReadAll(resp.Body)
+              if err != nil {
+                  log.Fatalf("Failed to read response: %v", err)
+              }
+
+              if resp.StatusCode >= 400 {
+                  log.Fatalf("HTTP Error %d: %s", resp.StatusCode, string(respBody))
+              }
+
+              fmt.Println("Command sent successfully")
+          }
+
+      - lang: NodeJS
+        source: |
+          const apiKey = 'YOUR_API_KEY';
+          const serverId = 6;
+          const url = `https://demo.gameap.com/api/servers/${serverId}/console`;
+
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({
+              command: 'status',
+            }),
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP Error ${response.status}: ${errorText}`);
+          }
+
+          console.log('Command sent successfully');
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/requests/ConsoleCommandRequest.yaml'
+    responses:
+      '200':
+        description: Command sent
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/SuccessResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Server not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '422':
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'

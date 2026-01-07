@@ -1,0 +1,35 @@
+# Path parameters
+PathServerId:
+  $ref: './PathServerId.yaml'
+PathUserId:
+  $ref: './PathUserId.yaml'
+PathNodeId:
+  $ref: './PathNodeId.yaml'
+PathGameCode:
+  $ref: './PathGameCode.yaml'
+PathGameModId:
+  $ref: './PathGameModId.yaml'
+PathTaskId:
+  $ref: './PathTaskId.yaml'
+PathToken:
+  $ref: './PathToken.yaml'
+PathPluginId:
+  $ref: './PathPluginId.yaml'
+PathCertificateId:
+  $ref: './PathCertificateId.yaml'
+PathDaemonTaskId:
+  $ref: './PathDaemonTaskId.yaml'
+PathServerTaskId:
+  $ref: './PathServerTaskId.yaml'
+
+# Query parameters
+QueryPage:
+  $ref: './QueryPage.yaml'
+QueryPerPage:
+  $ref: './QueryPerPage.yaml'
+QuerySort:
+  $ref: './QuerySort.yaml'
+QuerySearch:
+  $ref: './QuerySearch.yaml'
+QueryIds:
+  $ref: './QueryIds.yaml'

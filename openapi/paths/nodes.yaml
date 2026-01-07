@@ -1,0 +1,733 @@
+/api/nodes:
+  get:
+    tags:
+      - Nodes
+    summary: List nodes
+    description: Returns a paginated list of nodes (Admin only)
+    operationId: listNodes
+    parameters:
+      - $ref: '../parameters/QueryPage.yaml'
+      - $ref: '../parameters/QueryPerPage.yaml'
+      - $ref: '../parameters/QuerySort.yaml'
+    responses:
+      '200':
+        description: List of nodes
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../schemas/Node.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/dedicated_servers:
+  get:
+    tags:
+      - Nodes
+    summary: List dedicated servers (alias)
+    description: Alias for /api/nodes (Admin only)
+    operationId: listDedicatedServers
+    parameters:
+      - $ref: '../parameters/QueryPage.yaml'
+      - $ref: '../parameters/QueryPerPage.yaml'
+      - $ref: '../parameters/QuerySort.yaml'
+    responses:
+      '200':
+        description: List of nodes
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../schemas/Node.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+  post:
+    tags:
+      - Nodes
+    summary: Create node
+    description: Creates a new node (Admin only)
+    operationId: createNode
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/requests/CreateNodeRequest.yaml'
+    responses:
+      '200':
+        description: Node created
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/Node.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '422':
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/nodes/summary:
+  get:
+    tags:
+      - Nodes
+    summary: Get nodes summary
+    description: Returns summary statistics for nodes (Admin only)
+    operationId: getNodesSummary
+    responses:
+      '200':
+        description: Nodes summary
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/responses/NodesSummaryResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/dedicated_servers/summary:
+  get:
+    tags:
+      - Nodes
+    summary: Get dedicated servers summary (alias)
+    description: Alias for /api/nodes/summary (Admin only)
+    operationId: getDedicatedServersSummary
+    responses:
+      '200':
+        description: Nodes summary
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/responses/NodesSummaryResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/nodes/setup:
+  get:
+    tags:
+      - Nodes
+    summary: Get daemon setup script
+    description: Returns daemon setup script/instructions (Admin only)
+    operationId: getNodesSetup
+    responses:
+      '200':
+        description: Setup instructions
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                script:
+                  type: string
+                  description: Setup script
+                token:
+                  type: string
+                  description: Setup token
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/dedicated_servers/setup:
+  get:
+    tags:
+      - Nodes
+    summary: Get daemon setup script (alias)
+    description: Alias for /api/nodes/setup (Admin only)
+    operationId: getDedicatedServersSetup
+    responses:
+      '200':
+        description: Setup instructions
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                script:
+                  type: string
+                token:
+                  type: string
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/nodes/certificates.zip:
+  get:
+    tags:
+      - Nodes
+    summary: Download certificates
+    description: Downloads client certificates as ZIP (Admin only)
+    operationId: downloadNodesCertificates
+    responses:
+      '200':
+        description: Certificates ZIP file
+        content:
+          application/zip:
+            schema:
+              type: string
+              format: binary
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/dedicated_servers/certificates.zip:
+  get:
+    tags:
+      - Nodes
+    summary: Download certificates (alias)
+    description: Alias for /api/nodes/certificates.zip (Admin only)
+    operationId: downloadDedicatedServersCertificates
+    responses:
+      '200':
+        description: Certificates ZIP file
+        content:
+          application/zip:
+            schema:
+              type: string
+              format: binary
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/nodes/{id}:
+  get:
+    tags:
+      - Nodes
+    summary: Get node
+    description: Returns a single node by ID (Admin only)
+    operationId: getNode
+    parameters:
+      - $ref: '../parameters/PathNodeId.yaml'
+    responses:
+      '200':
+        description: Node details
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/Node.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Node not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+  put:
+    tags:
+      - Nodes
+    summary: Update node
+    description: Updates a node (Admin only)
+    operationId: updateNode
+    parameters:
+      - $ref: '../parameters/PathNodeId.yaml'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/requests/UpdateNodeRequest.yaml'
+    responses:
+      '200':
+        description: Node updated
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/Node.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Node not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '422':
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+  delete:
+    tags:
+      - Nodes
+    summary: Delete node
+    description: Deletes a node (Admin only)
+    operationId: deleteNode
+    parameters:
+      - $ref: '../parameters/PathNodeId.yaml'
+    responses:
+      '200':
+        description: Node deleted
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/SuccessResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Node not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/dedicated_servers/{id}:
+  get:
+    tags:
+      - Nodes
+    summary: Get dedicated server (alias)
+    description: Alias for /api/nodes/{id} (Admin only)
+    operationId: getDedicatedServer
+    parameters:
+      - $ref: '../parameters/PathNodeId.yaml'
+    responses:
+      '200':
+        description: Node details
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/Node.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+  put:
+    tags:
+      - Nodes
+    summary: Update dedicated server (alias)
+    description: Alias for PUT /api/nodes/{id} (Admin only)
+    operationId: updateDedicatedServer
+    parameters:
+      - $ref: '../parameters/PathNodeId.yaml'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/requests/UpdateNodeRequest.yaml'
+    responses:
+      '200':
+        description: Node updated
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/Node.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+  delete:
+    tags:
+      - Nodes
+    summary: Delete dedicated server (alias)
+    description: Alias for DELETE /api/nodes/{id} (Admin only)
+    operationId: deleteDedicatedServer
+    parameters:
+      - $ref: '../parameters/PathNodeId.yaml'
+    responses:
+      '200':
+        description: Node deleted
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/SuccessResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/nodes/{node}/busy_ports:
+  get:
+    tags:
+      - Nodes
+    summary: Get busy ports
+    description: Returns ports in use on a node (Admin only)
+    operationId: getNodeBusyPorts
+    parameters:
+      - name: node
+        in: path
+        required: true
+        description: Node ID
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Busy ports
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: integer
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/dedicated_servers/{node}/busy_ports:
+  get:
+    tags:
+      - Nodes
+    summary: Get busy ports (alias)
+    description: Alias for /api/nodes/{node}/busy_ports (Admin only)
+    operationId: getDedicatedServerBusyPorts
+    parameters:
+      - name: node
+        in: path
+        required: true
+        description: Node ID
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Busy ports
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: integer
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/nodes/{node}/ip_list:
+  get:
+    tags:
+      - Nodes
+    summary: Get IP list
+    description: Returns IP addresses of a node (Admin only)
+    operationId: getNodeIPList
+    parameters:
+      - name: node
+        in: path
+        required: true
+        description: Node ID
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: IP addresses
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/dedicated_servers/{node}/ip_list:
+  get:
+    tags:
+      - Nodes
+    summary: Get IP list (alias)
+    description: Alias for /api/nodes/{node}/ip_list (Admin only)
+    operationId: getDedicatedServerIPList
+    parameters:
+      - name: node
+        in: path
+        required: true
+        description: Node ID
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: IP addresses
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/nodes/{id}/daemon:
+  get:
+    tags:
+      - Nodes
+    summary: Get daemon status
+    description: Returns daemon status for a node (Admin only)
+    operationId: getNodeDaemonStatus
+    parameters:
+      - $ref: '../parameters/PathNodeId.yaml'
+    responses:
+      '200':
+        description: Daemon status
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/responses/NodeDaemonStatusResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/dedicated_servers/{id}/daemon:
+  get:
+    tags:
+      - Nodes
+    summary: Get daemon status (alias)
+    description: Alias for /api/nodes/{id}/daemon (Admin only)
+    operationId: getDedicatedServerDaemonStatus
+    parameters:
+      - $ref: '../parameters/PathNodeId.yaml'
+    responses:
+      '200':
+        description: Daemon status
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/responses/NodeDaemonStatusResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/nodes/{id}/logs.zip:
+  get:
+    tags:
+      - Nodes
+    summary: Download daemon logs
+    description: Downloads daemon logs as ZIP (Admin only)
+    operationId: downloadNodeLogs
+    parameters:
+      - $ref: '../parameters/PathNodeId.yaml'
+    responses:
+      '200':
+        description: Logs ZIP file
+        content:
+          application/zip:
+            schema:
+              type: string
+              format: binary
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/dedicated_servers/{id}/logs.zip:
+  get:
+    tags:
+      - Nodes
+    summary: Download daemon logs (alias)
+    description: Alias for /api/nodes/{id}/logs.zip (Admin only)
+    operationId: downloadDedicatedServerLogs
+    parameters:
+      - $ref: '../parameters/PathNodeId.yaml'
+    responses:
+      '200':
+        description: Logs ZIP file
+        content:
+          application/zip:
+            schema:
+              type: string
+              format: binary
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'

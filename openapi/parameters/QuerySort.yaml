@@ -1,0 +1,7 @@
+name: sort
+in: query
+required: false
+description: Sort field and direction (prefix with - for descending)
+schema:
+  type: string
+example: -id

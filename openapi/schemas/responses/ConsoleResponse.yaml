@@ -1,0 +1,9 @@
+type: object
+description: Console output response
+properties:
+  console:
+    type: string
+    description: Console output
+    example: "Server started successfully"
+required:
+  - console

@@ -1,0 +1,91 @@
+type: object
+description: Update game mod request
+properties:
+  name:
+    type: string
+    description: Mod name
+  fast_rcon:
+    type:
+      - array
+      - "null"
+    description: Fast RCON commands
+    items:
+      type: object
+      properties:
+        info:
+          type: string
+        command:
+          type: string
+      required:
+        - info
+        - command
+  vars:
+    type:
+      - array
+      - "null"
+    description: Mod variables
+    items:
+      type: object
+      properties:
+        var:
+          type: string
+        default:
+          type: string
+        info:
+          type: string
+        admin_var:
+          type: boolean
+      required:
+        - var
+  remote_repository_linux:
+    type:
+      - string
+      - "null"
+  remote_repository_windows:
+    type:
+      - string
+      - "null"
+  local_repository_linux:
+    type:
+      - string
+      - "null"
+  local_repository_windows:
+    type:
+      - string
+      - "null"
+  start_cmd_linux:
+    type:
+      - string
+      - "null"
+  start_cmd_windows:
+    type:
+      - string
+      - "null"
+  kick_cmd:
+    type:
+      - string
+      - "null"
+  ban_cmd:
+    type:
+      - string
+      - "null"
+  chname_cmd:
+    type:
+      - string
+      - "null"
+  srestart_cmd:
+    type:
+      - string
+      - "null"
+  chmap_cmd:
+    type:
+      - string
+      - "null"
+  sendmsg_cmd:
+    type:
+      - string
+      - "null"
+  passwd_cmd:
+    type:
+      - string
+      - "null"

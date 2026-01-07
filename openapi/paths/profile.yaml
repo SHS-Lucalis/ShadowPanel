@@ -1,0 +1,52 @@
+/api/profile:
+  get:
+    tags:
+      - Profile
+    summary: Get user profile
+    description: Returns the current user's profile with roles and permissions
+    operationId: getProfile
+    responses:
+      '200':
+        description: User profile
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/Profile.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+  put:
+    tags:
+      - Profile
+    summary: Update user profile
+    description: Updates the current user's profile
+    operationId: updateProfile
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/requests/UpdateProfileRequest.yaml'
+    responses:
+      '200':
+        description: Profile updated
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/Profile.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '422':
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'

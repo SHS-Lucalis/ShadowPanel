@@ -1,0 +1,9 @@
+type: object
+properties:
+  status:
+    type: string
+    enum:
+      - ok
+    example: ok
+required:
+  - status

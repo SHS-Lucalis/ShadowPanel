@@ -1,0 +1,217 @@
+/api/game_mods:
+  get:
+    tags:
+      - GameMods
+    summary: List game mods
+    description: Returns a list of all game mods (Admin only)
+    operationId: listGameMods
+    responses:
+      '200':
+        description: List of game mods
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../schemas/GameMod.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+  post:
+    tags:
+      - GameMods
+    summary: Create game mod
+    description: Creates a new game mod (Admin only)
+    operationId: createGameMod
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/requests/CreateGameModRequest.yaml'
+    responses:
+      '200':
+        description: Game mod created
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/GameMod.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '422':
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/game_mods/get_list_for_game/{game}:
+  get:
+    tags:
+      - GameMods
+    summary: Get mods for game
+    description: Returns mods for a specific game (Admin only)
+    operationId: getModsForGame
+    parameters:
+      - name: game
+        in: path
+        required: true
+        description: Game code
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Game mods
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../schemas/GameMod.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/game_mods/{id}:
+  get:
+    tags:
+      - GameMods
+    summary: Get game mod
+    description: Returns a single game mod by ID (Admin only)
+    operationId: getGameMod
+    parameters:
+      - $ref: '../parameters/PathGameModId.yaml'
+    responses:
+      '200':
+        description: Game mod details
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/GameMod.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Game mod not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+  put:
+    tags:
+      - GameMods
+    summary: Update game mod
+    description: Updates a game mod (Admin only)
+    operationId: updateGameMod
+    parameters:
+      - $ref: '../parameters/PathGameModId.yaml'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/requests/UpdateGameModRequest.yaml'
+    responses:
+      '200':
+        description: Game mod updated
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/GameMod.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Game mod not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '422':
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+  delete:
+    tags:
+      - GameMods
+    summary: Delete game mod
+    description: Deletes a game mod (Admin only)
+    operationId: deleteGameMod
+    parameters:
+      - $ref: '../parameters/PathGameModId.yaml'
+    responses:
+      '200':
+        description: Game mod deleted
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/SuccessResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Game mod not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'

@@ -1,0 +1,10 @@
+type: string
+description: Preferred game server installation method
+enum:
+  - auto
+  - copy
+  - download
+  - script
+  - steam
+  - none
+example: auto

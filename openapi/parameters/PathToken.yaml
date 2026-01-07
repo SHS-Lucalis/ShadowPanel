@@ -1,0 +1,7 @@
+name: token
+in: path
+required: true
+description: Setup token
+schema:
+  type: string
+example: abc123def456

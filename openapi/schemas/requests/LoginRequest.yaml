@@ -1,0 +1,22 @@
+type: object
+description: Login request
+properties:
+  login:
+    type: string
+    description: Username (required if email not provided)
+    example: "admin"
+  email:
+    type: string
+    format: email
+    description: Email address (required if login not provided)
+    example: "admin@example.com"
+  password:
+    type: string
+    description: Password
+    example: "secret123"
+  remember:
+    type: string
+    description: Remember me flag ("on" or "true" for 30-day token)
+    example: "on"
+required:
+  - password

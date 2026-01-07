@@ -1,0 +1,412 @@
+/api/tokens:
+  get:
+    tags:
+      - Tokens
+    summary: List personal access tokens
+    description: Returns all personal access tokens for the current user
+    operationId: listTokens
+    x-codeSamples:
+      - lang: cURL
+        label: CLI
+        source: |
+          curl -s -X GET "https://demo.gameap.com/api/tokens" \
+            -H "Authorization: Bearer YOUR_API_KEY" \
+            -w "\nHTTP Status: %{http_code}\n"
+
+      - lang: PHP
+        source: |
+          <?php
+
+          $url = 'https://demo.gameap.com/api/tokens';
+          $apiKey = 'YOUR_API_KEY';
+
+          $curl = curl_init();
+
+          curl_setopt_array($curl, [
+              CURLOPT_URL            => $url,
+              CURLOPT_RETURNTRANSFER => true,
+              CURLOPT_TIMEOUT        => 30,
+              CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+              CURLOPT_HTTPHEADER     => [
+                  'Authorization: Bearer ' . $apiKey,
+              ],
+          ]);
+
+          $response = curl_exec($curl);
+          $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+          if (curl_errno($curl)) {
+              echo 'Curl error: ' . curl_error($curl);
+              curl_close($curl);
+              exit(1);
+          }
+
+          curl_close($curl);
+
+          if ($httpCode >= 400) {
+              echo "HTTP Error: {$httpCode}\n";
+              echo $response;
+              exit(1);
+          }
+
+          $result = json_decode($response, true);
+
+          if (json_last_error() !== JSON_ERROR_NONE) {
+              echo 'JSON decode error: ' . json_last_error_msg();
+              exit(1);
+          }
+
+          foreach ($result as $token) {
+              echo "Token #{$token['id']}: {$token['name']}\n";
+          }
+
+      - lang: Go
+        source: |
+          package main
+
+          import (
+              "context"
+              "encoding/json"
+              "fmt"
+              "io"
+              "log"
+              "net/http"
+              "time"
+          )
+
+          func main() {
+              url := "https://demo.gameap.com/api/tokens"
+              apiKey := "YOUR_API_KEY"
+
+              ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+              defer cancel()
+
+              req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+              if err != nil {
+                  log.Fatalf("Failed to create request: %v", err)
+              }
+
+              req.Header.Set("Authorization", "Bearer "+apiKey)
+
+              client := &http.Client{Timeout: 30 * time.Second}
+
+              resp, err := client.Do(req)
+              if err != nil {
+                  log.Fatalf("Request failed: %v", err)
+              }
+              defer resp.Body.Close()
+
+              body, err := io.ReadAll(resp.Body)
+              if err != nil {
+                  log.Fatalf("Failed to read response: %v", err)
+              }
+
+              if resp.StatusCode >= 400 {
+                  log.Fatalf("HTTP Error %d: %s", resp.StatusCode, string(body))
+              }
+
+              var tokens []map[string]interface{}
+              if err := json.Unmarshal(body, &tokens); err != nil {
+                  log.Fatalf("Failed to parse JSON: %v", err)
+              }
+
+              for _, token := range tokens {
+                  fmt.Printf("Token #%.0f: %s\n", token["id"], token["name"])
+              }
+          }
+
+      - lang: NodeJS
+        source: |
+          const apiKey = 'YOUR_API_KEY';
+          const url = 'https://demo.gameap.com/api/tokens';
+
+          const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+            },
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP Error ${response.status}: ${errorText}`);
+          }
+
+          const tokens = await response.json();
+
+          for (const token of tokens) {
+            console.log(`Token #${token.id}: ${token.name}`);
+          }
+    responses:
+      '200':
+        description: List of tokens
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../schemas/PersonalAccessToken.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+  post:
+    tags:
+      - Tokens
+    summary: Create personal access token
+    description: Creates a new personal access token
+    operationId: createToken
+    x-codeSamples:
+      - lang: cURL
+        label: CLI
+        source: |
+          curl -s -X POST "https://demo.gameap.com/api/tokens" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer YOUR_API_KEY" \
+            -d '{"name": "My API Token", "abilities": ["server:list", "server:start", "server:stop"]}' \
+            -w "\nHTTP Status: %{http_code}\n"
+
+      - lang: PHP
+        source: |
+          <?php
+
+          $url = 'https://demo.gameap.com/api/tokens';
+          $apiKey = 'YOUR_API_KEY';
+
+          $data = [
+              'name'      => 'My API Token',
+              'abilities' => ['server:list', 'server:start', 'server:stop'],
+          ];
+
+          $curl = curl_init();
+
+          curl_setopt_array($curl, [
+              CURLOPT_URL            => $url,
+              CURLOPT_POST           => true,
+              CURLOPT_RETURNTRANSFER => true,
+              CURLOPT_TIMEOUT        => 30,
+              CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+              CURLOPT_POSTFIELDS     => json_encode($data),
+              CURLOPT_HTTPHEADER     => [
+                  'Content-Type: application/json',
+                  'Authorization: Bearer ' . $apiKey,
+              ],
+          ]);
+
+          $response = curl_exec($curl);
+          $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+          if (curl_errno($curl)) {
+              echo 'Curl error: ' . curl_error($curl);
+              curl_close($curl);
+              exit(1);
+          }
+
+          curl_close($curl);
+
+          if ($httpCode >= 400) {
+              echo "HTTP Error: {$httpCode}\n";
+              echo $response;
+              exit(1);
+          }
+
+          $result = json_decode($response, true);
+
+          if (json_last_error() !== JSON_ERROR_NONE) {
+              echo 'JSON decode error: ' . json_last_error_msg();
+              exit(1);
+          }
+
+          // IMPORTANT: Store this token securely, it won't be shown again!
+          echo "Token ID: {$result['id']}\n";
+          echo "Token: {$result['token']}\n";
+
+      - lang: Go
+        source: |
+          package main
+
+          import (
+              "bytes"
+              "context"
+              "encoding/json"
+              "fmt"
+              "io"
+              "log"
+              "net/http"
+              "time"
+          )
+
+          func main() {
+              url := "https://demo.gameap.com/api/tokens"
+              apiKey := "YOUR_API_KEY"
+
+              payload := map[string]interface{}{
+                  "name":      "My API Token",
+                  "abilities": []string{"server:list", "server:start", "server:stop"},
+              }
+
+              body, err := json.Marshal(payload)
+              if err != nil {
+                  log.Fatalf("Failed to marshal payload: %v", err)
+              }
+
+              ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+              defer cancel()
+
+              req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
+              if err != nil {
+                  log.Fatalf("Failed to create request: %v", err)
+              }
+
+              req.Header.Set("Content-Type", "application/json")
+              req.Header.Set("Authorization", "Bearer "+apiKey)
+
+              client := &http.Client{Timeout: 30 * time.Second}
+
+              resp, err := client.Do(req)
+              if err != nil {
+                  log.Fatalf("Request failed: %v", err)
+              }
+              defer resp.Body.Close()
+
+              respBody, err := io.ReadAll(resp.Body)
+              if err != nil {
+                  log.Fatalf("Failed to read response: %v", err)
+              }
+
+              if resp.StatusCode >= 400 {
+                  log.Fatalf("HTTP Error %d: %s", resp.StatusCode, string(respBody))
+              }
+
+              var result map[string]interface{}
+              if err := json.Unmarshal(respBody, &result); err != nil {
+                  log.Fatalf("Failed to parse JSON: %v", err)
+              }
+
+              // IMPORTANT: Store this token securely, it won't be shown again!
+              fmt.Printf("Token ID: %.0f\n", result["id"])
+              fmt.Printf("Token: %s\n", result["token"])
+          }
+
+      - lang: NodeJS
+        source: |
+          const apiKey = 'YOUR_API_KEY';
+          const url = 'https://demo.gameap.com/api/tokens';
+
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({
+              name: 'My API Token',
+              abilities: ['server:list', 'server:start', 'server:stop'],
+            }),
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP Error ${response.status}: ${errorText}`);
+          }
+
+          const result = await response.json();
+
+          // IMPORTANT: Store this token securely, it won't be shown again!
+          console.log('Token ID:', result.id);
+          console.log('Token:', result.token);
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/requests/CreateTokenRequest.yaml'
+    responses:
+      '200':
+        description: Token created
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: Full token string (only shown once)
+                  example: "1|abc123def456..."
+                id:
+                  type: integer
+                  description: Token ID
+                  example: 1
+              required:
+                - token
+                - id
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '422':
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/tokens/{id}:
+  delete:
+    tags:
+      - Tokens
+    summary: Delete personal access token
+    description: Deletes a personal access token
+    operationId: deleteToken
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Token ID
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Token deleted
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/SuccessResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Token not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/tokens/abilities:
+  get:
+    tags:
+      - Tokens
+    summary: Get available token abilities
+    description: Returns all available abilities for personal access tokens
+    operationId: getTokenAbilities
+    responses:
+      '200':
+        description: Available abilities grouped by category
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/responses/TokenAbilitiesResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'

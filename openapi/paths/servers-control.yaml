@@ -1,0 +1,627 @@
+/api/servers/{server}/start:
+  post:
+    tags:
+      - ServerControl
+    summary: Start server
+    description: Starts the game server
+    operationId: startServer
+    x-codeSamples:
+      - lang: cURL
+        label: CLI
+        source: |
+          curl -s -X POST "https://demo.gameap.com/api/servers/6/start" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer YOUR_API_KEY" \
+            -w "\nHTTP Status: %{http_code}\n"
+
+      - lang: PHP
+        source: |
+          <?php
+
+          $serverId = 6;
+          $url = "https://demo.gameap.com/api/servers/{$serverId}/start";
+          $apiKey = 'YOUR_API_KEY';
+
+          $curl = curl_init();
+
+          curl_setopt_array($curl, [
+              CURLOPT_URL            => $url,
+              CURLOPT_POST           => true,
+              CURLOPT_RETURNTRANSFER => true,
+              CURLOPT_TIMEOUT        => 30,
+              CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+              CURLOPT_HTTPHEADER     => [
+                  'Content-Type: application/json',
+                  'Authorization: Bearer ' . $apiKey,
+              ],
+          ]);
+
+          $response = curl_exec($curl);
+          $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+          if (curl_errno($curl)) {
+              echo 'Curl error: ' . curl_error($curl);
+              curl_close($curl);
+              exit(1);
+          }
+
+          curl_close($curl);
+
+          if ($httpCode >= 400) {
+              echo "HTTP Error: {$httpCode}\n";
+              echo $response;
+              exit(1);
+          }
+
+          $result = json_decode($response, true);
+
+          if (json_last_error() !== JSON_ERROR_NONE) {
+              echo 'JSON decode error: ' . json_last_error_msg();
+              exit(1);
+          }
+
+          echo "Task ID: {$result['task_id']}\n";
+
+      - lang: Go
+        source: |
+          package main
+
+          import (
+              "context"
+              "encoding/json"
+              "fmt"
+              "io"
+              "log"
+              "net/http"
+              "time"
+          )
+
+          func main() {
+              serverID := 6
+              url := fmt.Sprintf("https://demo.gameap.com/api/servers/%d/start", serverID)
+              apiKey := "YOUR_API_KEY"
+
+              ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+              defer cancel()
+
+              req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
+              if err != nil {
+                  log.Fatalf("Failed to create request: %v", err)
+              }
+
+              req.Header.Set("Content-Type", "application/json")
+              req.Header.Set("Authorization", "Bearer "+apiKey)
+
+              client := &http.Client{Timeout: 30 * time.Second}
+
+              resp, err := client.Do(req)
+              if err != nil {
+                  log.Fatalf("Request failed: %v", err)
+              }
+              defer resp.Body.Close()
+
+              body, err := io.ReadAll(resp.Body)
+              if err != nil {
+                  log.Fatalf("Failed to read response: %v", err)
+              }
+
+              if resp.StatusCode >= 400 {
+                  log.Fatalf("HTTP Error %d: %s", resp.StatusCode, string(body))
+              }
+
+              var result map[string]interface{}
+              if err := json.Unmarshal(body, &result); err != nil {
+                  log.Fatalf("Failed to parse JSON: %v", err)
+              }
+
+              fmt.Printf("Task ID: %.0f\n", result["task_id"])
+          }
+
+      - lang: NodeJS
+        source: |
+          const apiKey = 'YOUR_API_KEY';
+          const serverId = 6;
+          const url = `https://demo.gameap.com/api/servers/${serverId}/start`;
+
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${apiKey}`,
+            },
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP Error ${response.status}: ${errorText}`);
+          }
+
+          const result = await response.json();
+          console.log('Task ID:', result.task_id);
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Start command sent
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                task_id:
+                  type: integer
+                  description: Daemon task ID
+                  example: 1
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Server not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/servers/{server}/stop:
+  post:
+    tags:
+      - ServerControl
+    summary: Stop server
+    description: Stops the game server
+    operationId: stopServer
+    x-codeSamples:
+      - lang: cURL
+        label: CLI
+        source: |
+          curl -s -X POST "https://demo.gameap.com/api/servers/6/stop" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer YOUR_API_KEY" \
+            -w "\nHTTP Status: %{http_code}\n"
+
+      - lang: PHP
+        source: |
+          <?php
+
+          $serverId = 6;
+          $url = "https://demo.gameap.com/api/servers/{$serverId}/stop";
+          $apiKey = 'YOUR_API_KEY';
+
+          $curl = curl_init();
+
+          curl_setopt_array($curl, [
+              CURLOPT_URL            => $url,
+              CURLOPT_POST           => true,
+              CURLOPT_RETURNTRANSFER => true,
+              CURLOPT_TIMEOUT        => 30,
+              CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+              CURLOPT_HTTPHEADER     => [
+                  'Content-Type: application/json',
+                  'Authorization: Bearer ' . $apiKey,
+              ],
+          ]);
+
+          $response = curl_exec($curl);
+          $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+          if (curl_errno($curl)) {
+              echo 'Curl error: ' . curl_error($curl);
+              curl_close($curl);
+              exit(1);
+          }
+
+          curl_close($curl);
+
+          if ($httpCode >= 400) {
+              echo "HTTP Error: {$httpCode}\n";
+              echo $response;
+              exit(1);
+          }
+
+          $result = json_decode($response, true);
+
+          if (json_last_error() !== JSON_ERROR_NONE) {
+              echo 'JSON decode error: ' . json_last_error_msg();
+              exit(1);
+          }
+
+          echo "Task ID: {$result['task_id']}\n";
+
+      - lang: Go
+        source: |
+          package main
+
+          import (
+              "context"
+              "encoding/json"
+              "fmt"
+              "io"
+              "log"
+              "net/http"
+              "time"
+          )
+
+          func main() {
+              serverID := 6
+              url := fmt.Sprintf("https://demo.gameap.com/api/servers/%d/stop", serverID)
+              apiKey := "YOUR_API_KEY"
+
+              ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+              defer cancel()
+
+              req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
+              if err != nil {
+                  log.Fatalf("Failed to create request: %v", err)
+              }
+
+              req.Header.Set("Content-Type", "application/json")
+              req.Header.Set("Authorization", "Bearer "+apiKey)
+
+              client := &http.Client{Timeout: 30 * time.Second}
+
+              resp, err := client.Do(req)
+              if err != nil {
+                  log.Fatalf("Request failed: %v", err)
+              }
+              defer resp.Body.Close()
+
+              body, err := io.ReadAll(resp.Body)
+              if err != nil {
+                  log.Fatalf("Failed to read response: %v", err)
+              }
+
+              if resp.StatusCode >= 400 {
+                  log.Fatalf("HTTP Error %d: %s", resp.StatusCode, string(body))
+              }
+
+              var result map[string]interface{}
+              if err := json.Unmarshal(body, &result); err != nil {
+                  log.Fatalf("Failed to parse JSON: %v", err)
+              }
+
+              fmt.Printf("Task ID: %.0f\n", result["task_id"])
+          }
+
+      - lang: NodeJS
+        source: |
+          const apiKey = 'YOUR_API_KEY';
+          const serverId = 6;
+          const url = `https://demo.gameap.com/api/servers/${serverId}/stop`;
+
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${apiKey}`,
+            },
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP Error ${response.status}: ${errorText}`);
+          }
+
+          const result = await response.json();
+          console.log('Task ID:', result.task_id);
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Stop command sent
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                task_id:
+                  type: integer
+                  description: Daemon task ID
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Server not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/servers/{server}/restart:
+  post:
+    tags:
+      - ServerControl
+    summary: Restart server
+    description: Restarts the game server
+    operationId: restartServer
+    x-codeSamples:
+      - lang: cURL
+        label: CLI
+        source: |
+          curl -s -X POST "https://demo.gameap.com/api/servers/6/restart" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer YOUR_API_KEY" \
+            -w "\nHTTP Status: %{http_code}\n"
+
+      - lang: PHP
+        source: |
+          <?php
+
+          $serverId = 6;
+          $url = "https://demo.gameap.com/api/servers/{$serverId}/restart";
+          $apiKey = 'YOUR_API_KEY';
+
+          $curl = curl_init();
+
+          curl_setopt_array($curl, [
+              CURLOPT_URL            => $url,
+              CURLOPT_POST           => true,
+              CURLOPT_RETURNTRANSFER => true,
+              CURLOPT_TIMEOUT        => 30,
+              CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+              CURLOPT_HTTPHEADER     => [
+                  'Content-Type: application/json',
+                  'Authorization: Bearer ' . $apiKey,
+              ],
+          ]);
+
+          $response = curl_exec($curl);
+          $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+          if (curl_errno($curl)) {
+              echo 'Curl error: ' . curl_error($curl);
+              curl_close($curl);
+              exit(1);
+          }
+
+          curl_close($curl);
+
+          if ($httpCode >= 400) {
+              echo "HTTP Error: {$httpCode}\n";
+              echo $response;
+              exit(1);
+          }
+
+          $result = json_decode($response, true);
+
+          if (json_last_error() !== JSON_ERROR_NONE) {
+              echo 'JSON decode error: ' . json_last_error_msg();
+              exit(1);
+          }
+
+          echo "Task ID: {$result['task_id']}\n";
+
+      - lang: Go
+        source: |
+          package main
+
+          import (
+              "context"
+              "encoding/json"
+              "fmt"
+              "io"
+              "log"
+              "net/http"
+              "time"
+          )
+
+          func main() {
+              serverID := 6
+              url := fmt.Sprintf("https://demo.gameap.com/api/servers/%d/restart", serverID)
+              apiKey := "YOUR_API_KEY"
+
+              ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+              defer cancel()
+
+              req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
+              if err != nil {
+                  log.Fatalf("Failed to create request: %v", err)
+              }
+
+              req.Header.Set("Content-Type", "application/json")
+              req.Header.Set("Authorization", "Bearer "+apiKey)
+
+              client := &http.Client{Timeout: 30 * time.Second}
+
+              resp, err := client.Do(req)
+              if err != nil {
+                  log.Fatalf("Request failed: %v", err)
+              }
+              defer resp.Body.Close()
+
+              body, err := io.ReadAll(resp.Body)
+              if err != nil {
+                  log.Fatalf("Failed to read response: %v", err)
+              }
+
+              if resp.StatusCode >= 400 {
+                  log.Fatalf("HTTP Error %d: %s", resp.StatusCode, string(body))
+              }
+
+              var result map[string]interface{}
+              if err := json.Unmarshal(body, &result); err != nil {
+                  log.Fatalf("Failed to parse JSON: %v", err)
+              }
+
+              fmt.Printf("Task ID: %.0f\n", result["task_id"])
+          }
+
+      - lang: NodeJS
+        source: |
+          const apiKey = 'YOUR_API_KEY';
+          const serverId = 6;
+          const url = `https://demo.gameap.com/api/servers/${serverId}/restart`;
+
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${apiKey}`,
+            },
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP Error ${response.status}: ${errorText}`);
+          }
+
+          const result = await response.json();
+          console.log('Task ID:', result.task_id);
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Restart command sent
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                task_id:
+                  type: integer
+                  description: Daemon task ID
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Server not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/servers/{server}/update:
+  post:
+    tags:
+      - ServerControl
+    summary: Update server
+    description: Updates the game server files
+    operationId: updateServerFiles
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Update command sent
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                task_id:
+                  type: integer
+                  description: Daemon task ID
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Server not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/servers/{server}/install:
+  post:
+    tags:
+      - ServerControl
+    summary: Install server
+    description: Installs the game server
+    operationId: installServer
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Install command sent
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                task_id:
+                  type: integer
+                  description: Daemon task ID
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Server not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/servers/{server}/reinstall:
+  post:
+    tags:
+      - ServerControl
+    summary: Reinstall server
+    description: Reinstalls the game server (deletes and installs)
+    operationId: reinstallServer
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Reinstall command sent
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                task_id:
+                  type: integer
+                  description: Daemon task ID
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Server not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'

@@ -1,0 +1,30 @@
+type: object
+description: Plugin version info
+properties:
+  version:
+    type: string
+    description: Version number
+    example: "1.0.0"
+  api_version:
+    type: string
+    description: Required API version
+    example: "v4"
+  changelog:
+    type:
+      - string
+      - "null"
+    description: Version changelog
+  download_url:
+    type:
+      - string
+      - "null"
+    description: Download URL
+  release_date:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: Release date
+required:
+  - version
+  - api_version

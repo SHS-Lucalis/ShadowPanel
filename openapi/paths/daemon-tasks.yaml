@@ -1,0 +1,111 @@
+/api/gdaemon_tasks:
+  get:
+    tags:
+      - DaemonTasks
+    summary: List daemon tasks
+    description: Returns a paginated list of daemon tasks (Admin only)
+    operationId: listDaemonTasks
+    parameters:
+      - $ref: '../parameters/QueryPage.yaml'
+      - $ref: '../parameters/QueryPerPage.yaml'
+      - $ref: '../parameters/QuerySort.yaml'
+    responses:
+      '200':
+        description: List of daemon tasks
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../schemas/DaemonTask.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/gdaemon_tasks/{id}:
+  get:
+    tags:
+      - DaemonTasks
+    summary: Get daemon task
+    description: Returns a single daemon task by ID (Admin only)
+    operationId: getDaemonTask
+    parameters:
+      - $ref: '../parameters/PathDaemonTaskId.yaml'
+    responses:
+      '200':
+        description: Daemon task details
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/DaemonTask.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Task not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/gdaemon_tasks/{id}/output:
+  get:
+    tags:
+      - DaemonTasks
+    summary: Get daemon task output
+    description: Returns the output of a daemon task (Admin only)
+    operationId: getDaemonTaskOutput
+    parameters:
+      - $ref: '../parameters/PathDaemonTaskId.yaml'
+    responses:
+      '200':
+        description: Task output
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                output:
+                  type: string
+                  description: Task output
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Task not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'

@@ -1,0 +1,22 @@
+type: object
+properties:
+  status:
+    type: string
+    enum:
+      - error
+    example: error
+  error:
+    type: string
+    description: Error message
+    example: Invalid credentials
+  message:
+    type: string
+    description: Error message (backward compatibility)
+    example: Invalid credentials
+  http_code:
+    type: integer
+    description: HTTP status code (backward compatibility)
+    example: 422
+required:
+  - status
+  - error

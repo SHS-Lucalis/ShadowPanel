@@ -1,0 +1,17 @@
+type: object
+description: Update profile request
+properties:
+  name:
+    type:
+      - string
+      - "null"
+    description: Display name
+    maxLength: 255
+    example: "John Doe"
+  current_password:
+    type: string
+    description: Current password (required if changing password)
+  new_password:
+    type: string
+    description: New password
+    minLength: 6

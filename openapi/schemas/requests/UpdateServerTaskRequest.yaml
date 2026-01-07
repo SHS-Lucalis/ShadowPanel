@@ -1,0 +1,22 @@
+type: object
+description: Update server task request
+properties:
+  command:
+    $ref: '../common/ServerTaskCommand.yaml'
+  execute_date:
+    type: string
+    format: date-time
+    description: Scheduled execution time
+  repeat:
+    type: integer
+    description: Repeat count
+    minimum: 0
+    maximum: 255
+  repeat_period:
+    type: integer
+    description: Repeat period in seconds
+  payload:
+    type:
+      - string
+      - "null"
+    description: Additional payload

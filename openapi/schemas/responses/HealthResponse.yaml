@@ -1,0 +1,9 @@
+type: object
+description: Health check response
+properties:
+  status:
+    type: string
+    description: Health status
+    example: "ok"
+required:
+  - status

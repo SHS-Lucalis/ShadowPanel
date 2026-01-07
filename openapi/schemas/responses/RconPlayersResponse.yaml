@@ -1,0 +1,31 @@
+type: array
+description: RCON players list
+items:
+  type: object
+  properties:
+    id:
+      type: string
+      description: Player ID
+      example: "1"
+    name:
+      type: string
+      description: Player name
+      example: "Player1"
+    score:
+      type: string
+      description: Player score
+      example: "10"
+    ping:
+      type: string
+      description: Player ping
+      example: "50"
+    ip:
+      type: string
+      description: Player IP address
+      example: "192.168.1.50"
+  required:
+    - id
+    - name
+    - score
+    - ping
+    - ip

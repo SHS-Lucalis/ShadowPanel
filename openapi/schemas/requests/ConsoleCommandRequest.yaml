@@ -1,0 +1,9 @@
+type: object
+description: Console command request
+properties:
+  command:
+    type: string
+    description: Command to send to server console
+    example: "say Hello"
+required:
+  - command

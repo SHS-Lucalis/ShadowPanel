@@ -1,0 +1,101 @@
+/api/client_certificates:
+  get:
+    tags:
+      - ClientCertificates
+    summary: List client certificates
+    description: Returns a list of client certificates (Admin only)
+    operationId: listClientCertificates
+    responses:
+      '200':
+        description: List of certificates
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../schemas/ClientCertificate.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+  post:
+    tags:
+      - ClientCertificates
+    summary: Create client certificate
+    description: Creates a new client certificate (Admin only)
+    operationId: createClientCertificate
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/requests/CreateClientCertificateRequest.yaml'
+    responses:
+      '200':
+        description: Certificate created
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ClientCertificate.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '422':
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/client_certificates/{id}:
+  delete:
+    tags:
+      - ClientCertificates
+    summary: Delete client certificate
+    description: Deletes a client certificate (Admin only)
+    operationId: deleteClientCertificate
+    parameters:
+      - $ref: '../parameters/PathCertificateId.yaml'
+    responses:
+      '200':
+        description: Certificate deleted
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/SuccessResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Certificate not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'

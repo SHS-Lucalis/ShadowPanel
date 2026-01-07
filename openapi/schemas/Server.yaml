@@ -1,0 +1,171 @@
+type: object
+description: Game server entity
+properties:
+  id:
+    type: integer
+    description: Server ID
+    example: 1
+  uuid:
+    type: string
+    format: uuid
+    description: Server UUID
+    example: "550e8400-e29b-41d4-a716-446655440000"
+  uuid_short:
+    type: string
+    description: Short UUID (8 characters)
+    example: "550e8400"
+  enabled:
+    type: boolean
+    description: Whether server is enabled
+    example: true
+  installed:
+    $ref: './common/ServerInstalledStatus.yaml'
+  blocked:
+    type: boolean
+    description: Whether server is blocked
+    example: false
+  name:
+    type: string
+    description: Server name
+    example: "My CS Server"
+  game_id:
+    type: string
+    description: Game code
+    example: "cstrike"
+  ds_id:
+    type: integer
+    description: Node (dedicated server) ID
+    example: 1
+  game_mod_id:
+    type: integer
+    description: Game mod ID
+    example: 1
+  expires:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: Expiration date
+    example: "2024-12-31T23:59:59Z"
+  server_ip:
+    type: string
+    description: Server IP address
+    example: "192.168.1.100"
+  server_port:
+    type: integer
+    description: Server port
+    minimum: 1
+    maximum: 65535
+    example: 27015
+  query_port:
+    type:
+      - integer
+      - "null"
+    description: Query port
+    minimum: 1
+    maximum: 65535
+    example: 27016
+  rcon_port:
+    type:
+      - integer
+      - "null"
+    description: RCON port
+    minimum: 1
+    maximum: 65535
+    example: 27017
+  rcon:
+    type:
+      - string
+      - "null"
+    description: RCON password
+    example: "secret123"
+  dir:
+    type: string
+    description: Server directory path
+    example: "/home/servers/cs/server1"
+  su_user:
+    type:
+      - string
+      - "null"
+    description: System user for running server
+    example: "gameserver"
+  cpu_limit:
+    type:
+      - integer
+      - "null"
+    description: CPU limit percentage
+    example: 100
+  ram_limit:
+    type:
+      - integer
+      - "null"
+    description: RAM limit in MB
+    example: 2048
+  net_limit:
+    type:
+      - integer
+      - "null"
+    description: Network bandwidth limit
+    example: 100
+  start_command:
+    type:
+      - string
+      - "null"
+    description: Custom start command
+  stop_command:
+    type:
+      - string
+      - "null"
+    description: Custom stop command
+  force_stop_command:
+    type:
+      - string
+      - "null"
+    description: Force stop command
+  restart_command:
+    type:
+      - string
+      - "null"
+    description: Custom restart command
+  process_active:
+    type: boolean
+    description: Whether server process is active
+    example: true
+  last_process_check:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: Last process check timestamp
+  vars:
+    type:
+      - string
+      - "null"
+    description: Server variables (JSON)
+  created_at:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: Creation timestamp
+  updated_at:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: Last update timestamp
+  game:
+    $ref: './Game.yaml'
+  game_mod:
+    $ref: './GameMod.yaml'
+  node:
+    $ref: './Node.yaml'
+required:
+  - id
+  - uuid
+  - name
+  - game_id
+  - ds_id
+  - server_ip
+  - server_port
+  - dir

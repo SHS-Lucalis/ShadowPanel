@@ -1,0 +1,74 @@
+type: object
+description: Create server request
+properties:
+  name:
+    type: string
+    description: Server name
+    maxLength: 128
+    example: "My CS Server"
+  ds_id:
+    oneOf:
+      - type: integer
+      - type: string
+    description: Node (dedicated server) ID
+    example: 1
+  game_id:
+    type: string
+    description: Game code
+    example: "cstrike"
+  game_mod_id:
+    oneOf:
+      - type: integer
+      - type: string
+    description: Game mod ID
+    example: 1
+  server_ip:
+    type: string
+    description: Server IP address or hostname
+    example: "192.168.1.100"
+  server_port:
+    oneOf:
+      - type: integer
+      - type: string
+    description: Server port (1-65535)
+    example: 27015
+  query_port:
+    oneOf:
+      - type: integer
+      - type: string
+    description: Query port (1-65535), optional
+    example: 27016
+  rcon_port:
+    oneOf:
+      - type: integer
+      - type: string
+    description: RCON port (1-65535), optional
+    example: 27017
+  rcon:
+    type: string
+    description: RCON password
+    example: "secret"
+  dir:
+    type: string
+    description: Server directory path
+    example: "/home/servers/cs/server1"
+  start_command:
+    type: string
+    description: Custom start command
+  su_user:
+    type: string
+    description: System user for running server
+    example: "gameserver"
+  install:
+    oneOf:
+      - type: boolean
+      - type: string
+    description: Auto-install server after creation
+    example: true
+required:
+  - name
+  - ds_id
+  - game_id
+  - game_mod_id
+  - server_ip
+  - server_port

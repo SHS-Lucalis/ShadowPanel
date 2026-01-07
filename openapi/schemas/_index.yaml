@@ -1,0 +1,123 @@
+# Common types
+ServerInstalledStatus:
+  $ref: './common/ServerInstalledStatus.yaml'
+DaemonTaskStatus:
+  $ref: './common/DaemonTaskStatus.yaml'
+DaemonTaskType:
+  $ref: './common/DaemonTaskType.yaml'
+ServerTaskCommand:
+  $ref: './common/ServerTaskCommand.yaml'
+NodeOS:
+  $ref: './common/NodeOS.yaml'
+NodePreferInstallMethod:
+  $ref: './common/NodePreferInstallMethod.yaml'
+PATAbility:
+  $ref: './common/PATAbility.yaml'
+
+# Response wrappers
+SuccessResponse:
+  $ref: './SuccessResponse.yaml'
+ErrorResponse:
+  $ref: './ErrorResponse.yaml'
+PaginatedResponse:
+  $ref: './PaginatedResponse.yaml'
+
+# Domain models
+Server:
+  $ref: './Server.yaml'
+User:
+  $ref: './User.yaml'
+Profile:
+  $ref: './Profile.yaml'
+Game:
+  $ref: './Game.yaml'
+GameMod:
+  $ref: './GameMod.yaml'
+Node:
+  $ref: './Node.yaml'
+DaemonTask:
+  $ref: './DaemonTask.yaml'
+ServerTask:
+  $ref: './ServerTask.yaml'
+ServerSetting:
+  $ref: './ServerSetting.yaml'
+ClientCertificate:
+  $ref: './ClientCertificate.yaml'
+PersonalAccessToken:
+  $ref: './PersonalAccessToken.yaml'
+Plugin:
+  $ref: './Plugin.yaml'
+PluginCategory:
+  $ref: './PluginCategory.yaml'
+PluginLabel:
+  $ref: './PluginLabel.yaml'
+PluginVersion:
+  $ref: './PluginVersion.yaml'
+
+# Request schemas
+LoginRequest:
+  $ref: './requests/LoginRequest.yaml'
+CreateServerRequest:
+  $ref: './requests/CreateServerRequest.yaml'
+UpdateServerRequest:
+  $ref: './requests/UpdateServerRequest.yaml'
+CreateUserRequest:
+  $ref: './requests/CreateUserRequest.yaml'
+UpdateUserRequest:
+  $ref: './requests/UpdateUserRequest.yaml'
+UpdateProfileRequest:
+  $ref: './requests/UpdateProfileRequest.yaml'
+CreateTokenRequest:
+  $ref: './requests/CreateTokenRequest.yaml'
+CreateNodeRequest:
+  $ref: './requests/CreateNodeRequest.yaml'
+UpdateNodeRequest:
+  $ref: './requests/UpdateNodeRequest.yaml'
+CreateGameRequest:
+  $ref: './requests/CreateGameRequest.yaml'
+UpdateGameRequest:
+  $ref: './requests/UpdateGameRequest.yaml'
+CreateGameModRequest:
+  $ref: './requests/CreateGameModRequest.yaml'
+UpdateGameModRequest:
+  $ref: './requests/UpdateGameModRequest.yaml'
+CreateServerTaskRequest:
+  $ref: './requests/CreateServerTaskRequest.yaml'
+UpdateServerTaskRequest:
+  $ref: './requests/UpdateServerTaskRequest.yaml'
+UpdateServerSettingsRequest:
+  $ref: './requests/UpdateServerSettingsRequest.yaml'
+RconCommandRequest:
+  $ref: './requests/RconCommandRequest.yaml'
+ConsoleCommandRequest:
+  $ref: './requests/ConsoleCommandRequest.yaml'
+CreateClientCertificateRequest:
+  $ref: './requests/CreateClientCertificateRequest.yaml'
+
+# Response schemas
+LoginResponse:
+  $ref: './responses/LoginResponse.yaml'
+CreateServerResponse:
+  $ref: './responses/CreateServerResponse.yaml'
+ServerStatusResponse:
+  $ref: './responses/ServerStatusResponse.yaml'
+ServerQueryResponse:
+  $ref: './responses/ServerQueryResponse.yaml'
+ConsoleResponse:
+  $ref: './responses/ConsoleResponse.yaml'
+RconFeaturesResponse:
+  $ref: './responses/RconFeaturesResponse.yaml'
+RconPlayersResponse:
+  $ref: './responses/RconPlayersResponse.yaml'
+TokenAbilitiesResponse:
+  $ref: './responses/TokenAbilitiesResponse.yaml'
+NodeDaemonStatusResponse:
+  $ref: './responses/NodeDaemonStatusResponse.yaml'
+NodesSummaryResponse:
+  $ref: './responses/NodesSummaryResponse.yaml'
+ServersSummaryResponse:
+  $ref: './responses/ServersSummaryResponse.yaml'
+PublicConfigResponse:
+  $ref: './responses/PublicConfigResponse.yaml'
+HealthResponse:
+  $ref: './responses/HealthResponse.yaml'

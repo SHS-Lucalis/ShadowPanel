@@ -1,0 +1,7 @@
+type: object
+description: Public configuration response
+properties:
+  default_language:
+    type: string
+    description: Default language code
+    example: "en"

@@ -1,0 +1,111 @@
+type: object
+description: Plugin entity
+properties:
+  id:
+    type: integer
+    description: Plugin ID
+    example: 1
+  name:
+    type: string
+    description: Plugin name
+    example: "Auto Restart"
+  version:
+    type: string
+    description: Plugin version
+    example: "1.0.0"
+  description:
+    type: string
+    description: Plugin description
+    example: "Automatically restarts servers on crash"
+  author:
+    type: string
+    description: Plugin author
+    example: "GameAP Team"
+  api_version:
+    type: string
+    description: Required API version
+    example: "v4"
+  filename:
+    type:
+      - string
+      - "null"
+    description: Plugin filename
+    example: "auto-restart.so"
+  source:
+    type:
+      - string
+      - "null"
+    description: Plugin source URL
+  homepage:
+    type:
+      - string
+      - "null"
+    description: Plugin homepage URL
+  required_permissions:
+    type: array
+    description: Required permissions
+    items:
+      type: string
+    example: ["manage_servers"]
+  allowed_permissions:
+    type: array
+    description: Allowed permissions
+    items:
+      type: string
+  status:
+    type: string
+    description: Plugin status
+    enum:
+      - active
+      - disabled
+      - error
+      - updating
+    example: "active"
+  priority:
+    type: integer
+    description: Plugin loading priority
+    example: 100
+  category:
+    type:
+      - string
+      - "null"
+    description: Plugin category
+    example: "monitoring"
+  dependencies:
+    type: array
+    description: Plugin dependencies
+    items:
+      type: string
+  config:
+    type: object
+    description: Plugin configuration
+    additionalProperties: true
+  installed_at:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: Installation timestamp
+  last_loaded_at:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: Last load timestamp
+  created_at:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: Creation timestamp
+  updated_at:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: Last update timestamp
+required:
+  - id
+  - name
+  - version
+  - status

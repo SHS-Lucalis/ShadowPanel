@@ -1,0 +1,250 @@
+/api/servers/{server}/rcon:
+  post:
+    tags:
+      - ServerRcon
+    summary: Send RCON command
+    description: Sends a RCON command to the server
+    operationId: sendRconCommand
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/requests/RconCommandRequest.yaml'
+    responses:
+      '200':
+        description: Command response
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                output:
+                  type: string
+                  description: RCON command output
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Server not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/servers/{server}/rcon/features:
+  get:
+    tags:
+      - ServerRcon
+    summary: Get RCON features
+    description: Returns available RCON features for the server
+    operationId: getRconFeatures
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: RCON features
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/responses/RconFeaturesResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Server not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/servers/{server}/rcon/fast_rcon:
+  get:
+    tags:
+      - ServerRcon
+    summary: Get fast RCON commands
+    description: Returns predefined fast RCON commands for the server
+    operationId: getFastRcon
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Fast RCON commands
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  info:
+                    type: string
+                    description: Command description
+                  command:
+                    type: string
+                    description: RCON command
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Server not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/servers/{server}/rcon/players:
+  get:
+    tags:
+      - ServerRcon
+    summary: Get players list
+    description: Returns the list of players on the server
+    operationId: getRconPlayers
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Players list
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/responses/RconPlayersResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Server not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/servers/{server}/rcon/players/message:
+  post:
+    tags:
+      - ServerRcon
+    summary: Send message to players
+    description: Sends a message to all players (NOT IMPLEMENTED)
+    operationId: sendMessageToPlayers
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                description: Message to send
+            required:
+              - message
+    responses:
+      '501':
+        description: Not implemented
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/servers/{server}/rcon/players/{command}:
+  post:
+    tags:
+      - ServerRcon
+    summary: Execute player command
+    description: Executes a command on a player (kick, ban, etc.)
+    operationId: executePlayerCommand
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+      - name: command
+        in: path
+        required: true
+        description: Command to execute (kick, ban, chname)
+        schema:
+          type: string
+          enum:
+            - kick
+            - ban
+            - chname
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              player_id:
+                type: string
+                description: Player ID
+              reason:
+                type: string
+                description: Reason (for kick/ban)
+              name:
+                type: string
+                description: New name (for chname)
+            required:
+              - player_id
+    responses:
+      '200':
+        description: Command executed
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/SuccessResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Server not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'

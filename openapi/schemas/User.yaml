@@ -1,0 +1,41 @@
+type: object
+description: User entity
+properties:
+  id:
+    type: integer
+    description: User ID
+    example: 1
+  login:
+    type: string
+    description: Username
+    maxLength: 255
+    example: "admin"
+  email:
+    type: string
+    format: email
+    description: Email address
+    maxLength: 255
+    example: "admin@example.com"
+  name:
+    type:
+      - string
+      - "null"
+    description: Display name
+    maxLength: 255
+    example: "Administrator"
+  created_at:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: Creation timestamp
+  updated_at:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: Last update timestamp
+required:
+  - id
+  - login
+  - email

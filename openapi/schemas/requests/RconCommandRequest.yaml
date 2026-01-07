@@ -1,0 +1,9 @@
+type: object
+description: RCON command request
+properties:
+  command:
+    type: string
+    description: RCON command to execute
+    example: "status"
+required:
+  - command

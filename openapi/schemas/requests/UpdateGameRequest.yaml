@@ -1,0 +1,54 @@
+type: object
+description: Update game request
+properties:
+  name:
+    type: string
+    description: Game name
+    minLength: 2
+    maxLength: 128
+  engine:
+    type: string
+    description: Game engine
+    maxLength: 128
+  engine_version:
+    type: string
+    description: Engine version
+    maxLength: 128
+  steam_app_id_linux:
+    type:
+      - integer
+      - "null"
+    description: Steam app ID for Linux
+  steam_app_id_windows:
+    type:
+      - integer
+      - "null"
+    description: Steam app ID for Windows
+  steam_app_set_config:
+    type:
+      - string
+      - "null"
+    description: Steam app set config
+  remote_repository_linux:
+    type:
+      - string
+      - "null"
+    description: Remote repository URL for Linux
+  remote_repository_windows:
+    type:
+      - string
+      - "null"
+    description: Remote repository URL for Windows
+  local_repository_linux:
+    type:
+      - string
+      - "null"
+    description: Local repository path for Linux
+  local_repository_windows:
+    type:
+      - string
+      - "null"
+    description: Local repository path for Windows
+  enabled:
+    type: integer
+    description: Enable/disable game (1 or 0)

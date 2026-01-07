@@ -1,0 +1,245 @@
+/api/games:
+  get:
+    tags:
+      - Games
+    summary: List games
+    description: Returns a list of games (Admin only)
+    operationId: listGames
+    responses:
+      '200':
+        description: List of games
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../schemas/Game.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+  post:
+    tags:
+      - Games
+    summary: Create game
+    description: Creates a new game (Admin only)
+    operationId: createGame
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/requests/CreateGameRequest.yaml'
+    responses:
+      '200':
+        description: Game created
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/Game.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '422':
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/games/upgrade:
+  post:
+    tags:
+      - Games
+    summary: Upgrade games database
+    description: Upgrades games database from remote repository (Admin only)
+    operationId: upgradeGames
+    responses:
+      '200':
+        description: Games upgraded
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/SuccessResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/games/{code}:
+  get:
+    tags:
+      - Games
+    summary: Get game
+    description: Returns a single game by code (Admin only)
+    operationId: getGame
+    parameters:
+      - $ref: '../parameters/PathGameCode.yaml'
+    responses:
+      '200':
+        description: Game details
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/Game.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Game not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+  put:
+    tags:
+      - Games
+    summary: Update game
+    description: Updates a game (Admin only)
+    operationId: updateGame
+    parameters:
+      - $ref: '../parameters/PathGameCode.yaml'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/requests/UpdateGameRequest.yaml'
+    responses:
+      '200':
+        description: Game updated
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/Game.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Game not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '422':
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+  delete:
+    tags:
+      - Games
+    summary: Delete game
+    description: Deletes a game (Admin only)
+    operationId: deleteGame
+    parameters:
+      - $ref: '../parameters/PathGameCode.yaml'
+    responses:
+      '200':
+        description: Game deleted
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/SuccessResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Game not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/games/{code}/mods:
+  get:
+    tags:
+      - Games
+    summary: Get game mods
+    description: Returns mods for a game (Admin only)
+    operationId: getGameMods
+    parameters:
+      - $ref: '../parameters/PathGameCode.yaml'
+    responses:
+      '200':
+        description: Game mods
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../schemas/GameMod.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Game not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'

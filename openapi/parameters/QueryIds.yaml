@@ -1,0 +1,14 @@
+name: ids
+in: query
+required: false
+description: Filter by IDs (comma-separated or array notation)
+schema:
+  oneOf:
+    - type: string
+      description: Comma-separated IDs
+      example: "1,2,3"
+    - type: array
+      items:
+        type: integer
+      description: Array of IDs
+example: "1,2,3"

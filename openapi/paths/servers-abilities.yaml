@@ -1,0 +1,78 @@
+/api/servers/{server}/abilities:
+  get:
+    tags:
+      - Servers
+    summary: Get server abilities
+    description: Returns available abilities for a server
+    operationId: getServerAbilities
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Server abilities
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                console:
+                  type: boolean
+                  description: Console access available
+                rcon:
+                  type: boolean
+                  description: RCON available
+                tasks:
+                  type: boolean
+                  description: Task scheduling available
+                settings:
+                  type: boolean
+                  description: Settings management available
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Server not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/user/servers_abilities:
+  get:
+    tags:
+      - Servers
+    summary: Get user server abilities
+    description: Returns abilities for all servers the user has access to
+    operationId: getUserServerAbilities
+    responses:
+      '200':
+        description: User server abilities
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: object
+                properties:
+                  console:
+                    type: boolean
+                  rcon:
+                    type: boolean
+                  tasks:
+                    type: boolean
+                  settings:
+                    type: boolean
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'

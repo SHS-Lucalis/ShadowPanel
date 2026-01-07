@@ -1,0 +1,21 @@
+type: string
+description: Daemon task type
+enum:
+  - gsstart
+  - gsstop
+  - gsrest
+  - gsupd
+  - gsinst
+  - gsdel
+  - gsmove
+  - cmdexec
+x-enum-descriptions:
+  - Start game server
+  - Stop game server
+  - Restart game server
+  - Update game server
+  - Install game server
+  - Delete game server
+  - Move game server
+  - Execute command
+example: gsstart
