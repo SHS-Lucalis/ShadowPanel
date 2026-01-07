@@ -3,7 +3,7 @@ package filters
 import "github.com/gameap/gameap/internal/domain"
 
 type FindPlugin struct {
-	IDs        []uint
+	IDs        []domain.Uint64ID
 	Names      []string
 	Statuses   []domain.PluginStatus
 	Categories []string
@@ -27,7 +27,7 @@ func (f *FindPlugin) FilterCount() int {
 	return count
 }
 
-func FindPluginByIDs(ids ...uint) *FindPlugin {
+func FindPluginByIDs(ids ...domain.Uint64ID) *FindPlugin {
 	return &FindPlugin{
 		IDs: ids,
 	}

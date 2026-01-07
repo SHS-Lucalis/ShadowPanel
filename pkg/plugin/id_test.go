@@ -3,6 +3,7 @@ package plugin
 import (
 	"testing"
 
+	"github.com/gameap/gameap/internal/domain"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -10,7 +11,7 @@ func TestParsePluginID(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    string
-		expected uint
+		expected domain.Uint64ID
 	}{
 		{
 			name:     "decimal_number",
@@ -65,7 +66,7 @@ func TestParsePluginID(t *testing.T) {
 func TestCompactPluginID(t *testing.T) {
 	tests := []struct {
 		name     string
-		input    uint
+		input    domain.Uint64ID
 		expected string
 	}{
 		{
@@ -101,7 +102,7 @@ func TestCompactPluginID(t *testing.T) {
 func TestCompactPluginID_RoundTrip(t *testing.T) {
 	tests := []struct {
 		name string
-		id   uint
+		id   domain.Uint64ID
 	}{
 		{name: "zero", id: 0},
 		{name: "one", id: 1},

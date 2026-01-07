@@ -133,7 +133,7 @@ func (h *Handler) parseInput(r *http.Request) (input, error) {
 	return inp, nil
 }
 
-func (h *Handler) findInstalledPlugin(ctx context.Context, dbID uint) (*domain.Plugin, error) {
+func (h *Handler) findInstalledPlugin(ctx context.Context, dbID domain.Uint64ID) (*domain.Plugin, error) {
 	installedPlugins, err := h.pluginRepo.Find(ctx, filters.FindPluginByIDs(dbID), nil, nil)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to find installed plugin")
@@ -146,7 +146,7 @@ func (h *Handler) findInstalledPlugin(ctx context.Context, dbID uint) (*domain.P
 	return &installedPlugins[0], nil
 }
 
-func (h *Handler) unloadPlugin(ctx context.Context, dbID uint) error {
+func (h *Handler) unloadPlugin(ctx context.Context, dbID domain.Uint64ID) error {
 	if h.loader == nil {
 		return nil
 	}

@@ -48,11 +48,11 @@ func (s *PluginRepositorySuite) TestPluginRepositorySave() {
 
 		err := s.repo.Save(ctx, plugin)
 		require.NoError(t, err)
-		assert.Equal(t, uint(1001), plugin.ID)
+		assert.Equal(t, domain.Uint64ID(1001), plugin.ID)
 		assert.NotNil(t, plugin.CreatedAt)
 		assert.NotNil(t, plugin.UpdatedAt)
 
-		result, err := s.repo.Find(ctx, &filters.FindPlugin{IDs: []uint{plugin.ID}}, nil, nil)
+		result, err := s.repo.Find(ctx, &filters.FindPlugin{IDs: []domain.Uint64ID{plugin.ID}}, nil, nil)
 		require.NoError(t, err)
 		require.Len(t, result, 1)
 		assert.Equal(t, plugin.ID, result[0].ID)
@@ -100,9 +100,9 @@ func (s *PluginRepositorySuite) TestPluginRepositorySave() {
 
 		err := s.repo.Save(ctx, plugin)
 		require.NoError(t, err)
-		assert.Equal(t, uint(1002), plugin.ID)
+		assert.Equal(t, domain.Uint64ID(1002), plugin.ID)
 
-		result, err := s.repo.Find(ctx, &filters.FindPlugin{IDs: []uint{plugin.ID}}, nil, nil)
+		result, err := s.repo.Find(ctx, &filters.FindPlugin{IDs: []domain.Uint64ID{plugin.ID}}, nil, nil)
 		require.NoError(t, err)
 		require.Len(t, result, 1)
 
@@ -170,7 +170,7 @@ func (s *PluginRepositorySuite) TestPluginRepositorySave() {
 		require.NoError(t, err)
 		assert.Equal(t, originalID, plugin.ID)
 
-		result, err := s.repo.Find(ctx, &filters.FindPlugin{IDs: []uint{plugin.ID}}, nil, nil)
+		result, err := s.repo.Find(ctx, &filters.FindPlugin{IDs: []domain.Uint64ID{plugin.ID}}, nil, nil)
 		require.NoError(t, err)
 		require.Len(t, result, 1)
 
@@ -221,7 +221,7 @@ func (s *PluginRepositorySuite) TestPluginRepositorySave() {
 		require.NotNil(t, plugin.UpdatedAt)
 		assert.True(t, plugin.UpdatedAt.After(firstUpdateAt), "UpdatedAt should change after second update")
 
-		result, err := s.repo.Find(ctx, &filters.FindPlugin{IDs: []uint{plugin.ID}}, nil, nil)
+		result, err := s.repo.Find(ctx, &filters.FindPlugin{IDs: []domain.Uint64ID{plugin.ID}}, nil, nil)
 		require.NoError(t, err)
 		require.Len(t, result, 1)
 		assert.InDelta(t, plugin.UpdatedAt.Unix(), result[0].UpdatedAt.Unix(), 1.0)
@@ -242,7 +242,7 @@ func (s *PluginRepositorySuite) TestPluginRepositorySave() {
 		err := s.repo.Save(ctx, plugin)
 		require.NoError(t, err)
 
-		result, err := s.repo.Find(ctx, &filters.FindPlugin{IDs: []uint{plugin.ID}}, nil, nil)
+		result, err := s.repo.Find(ctx, &filters.FindPlugin{IDs: []domain.Uint64ID{plugin.ID}}, nil, nil)
 		require.NoError(t, err)
 		require.Len(t, result, 1)
 
@@ -276,7 +276,7 @@ func (s *PluginRepositorySuite) TestPluginRepositorySave() {
 		err := s.repo.Save(ctx, plugin)
 		require.NoError(t, err)
 
-		result, err := s.repo.Find(ctx, &filters.FindPlugin{IDs: []uint{plugin.ID}}, nil, nil)
+		result, err := s.repo.Find(ctx, &filters.FindPlugin{IDs: []domain.Uint64ID{plugin.ID}}, nil, nil)
 		require.NoError(t, err)
 		require.Len(t, result, 1)
 
@@ -288,7 +288,7 @@ func (s *PluginRepositorySuite) TestPluginRepositorySave() {
 	})
 
 	s.T().Run("insert_plugin_with_predefined_id", func(t *testing.T) {
-		predefinedID := uint(99999)
+		predefinedID := domain.Uint64ID(99999)
 
 		plugin := &domain.Plugin{
 			ID:          predefinedID,
@@ -305,7 +305,7 @@ func (s *PluginRepositorySuite) TestPluginRepositorySave() {
 		require.NoError(t, err)
 		assert.Equal(t, predefinedID, plugin.ID)
 
-		result, err := s.repo.Find(ctx, &filters.FindPlugin{IDs: []uint{predefinedID}}, nil, nil)
+		result, err := s.repo.Find(ctx, &filters.FindPlugin{IDs: []domain.Uint64ID{predefinedID}}, nil, nil)
 		require.NoError(t, err)
 		require.Len(t, result, 1)
 
@@ -322,7 +322,7 @@ func (s *PluginRepositorySuite) TestPluginRepositorySave() {
 	})
 
 	s.T().Run("update_plugin_with_predefined_id", func(t *testing.T) {
-		predefinedID := uint(88888)
+		predefinedID := domain.Uint64ID(88888)
 
 		plugin := &domain.Plugin{
 			ID:          predefinedID,
@@ -345,7 +345,7 @@ func (s *PluginRepositorySuite) TestPluginRepositorySave() {
 		require.NoError(t, err)
 		assert.Equal(t, predefinedID, plugin.ID)
 
-		result, err := s.repo.Find(ctx, &filters.FindPlugin{IDs: []uint{predefinedID}}, nil, nil)
+		result, err := s.repo.Find(ctx, &filters.FindPlugin{IDs: []domain.Uint64ID{predefinedID}}, nil, nil)
 		require.NoError(t, err)
 		require.Len(t, result, 1)
 
@@ -463,12 +463,12 @@ func (s *PluginRepositorySuite) TestPluginRepositoryFind() {
 
 	s.T().Run("filter_by_ids", func(t *testing.T) {
 		result, err := s.repo.Find(ctx, &filters.FindPlugin{
-			IDs: []uint{plugins[0].ID, plugins[2].ID},
+			IDs: []domain.Uint64ID{plugins[0].ID, plugins[2].ID},
 		}, nil, nil)
 		require.NoError(t, err)
 		assert.Len(t, result, 2)
 
-		ids := []uint{result[0].ID, result[1].ID}
+		ids := []domain.Uint64ID{result[0].ID, result[1].ID}
 		assert.Contains(t, ids, plugins[0].ID)
 		assert.Contains(t, ids, plugins[2].ID)
 	})
@@ -524,7 +524,7 @@ func (s *PluginRepositorySuite) TestPluginRepositoryFind() {
 
 	s.T().Run("filter_no_results", func(t *testing.T) {
 		result, err := s.repo.Find(ctx, &filters.FindPlugin{
-			IDs: []uint{99999},
+			IDs: []domain.Uint64ID{99999},
 		}, nil, nil)
 		require.NoError(t, err)
 		assert.Len(t, result, 0)
@@ -584,7 +584,7 @@ func (s *PluginRepositorySuite) TestPluginRepositoryDelete() {
 		err := s.repo.Delete(ctx, pluginID)
 		require.NoError(t, err)
 
-		result, err := s.repo.Find(ctx, &filters.FindPlugin{IDs: []uint{pluginID}}, nil, nil)
+		result, err := s.repo.Find(ctx, &filters.FindPlugin{IDs: []domain.Uint64ID{pluginID}}, nil, nil)
 		require.NoError(t, err)
 		assert.Empty(t, result)
 	})
@@ -666,7 +666,7 @@ func (s *PluginRepositorySuite) TestPluginRepositoryCompletePluginData() {
 		err := s.repo.Save(ctx, plugin)
 		require.NoError(t, err)
 
-		result, err := s.repo.Find(ctx, &filters.FindPlugin{IDs: []uint{plugin.ID}}, nil, nil)
+		result, err := s.repo.Find(ctx, &filters.FindPlugin{IDs: []domain.Uint64ID{plugin.ID}}, nil, nil)
 		require.NoError(t, err)
 		require.Len(t, result, 1)
 
@@ -731,7 +731,7 @@ func (s *PluginRepositorySuite) TestPluginRepositoryExists() {
 	}
 
 	s.T().Run("exists_by_id", func(t *testing.T) {
-		exists, err := s.repo.Exists(ctx, &filters.FindPlugin{IDs: []uint{plugins[0].ID}})
+		exists, err := s.repo.Exists(ctx, &filters.FindPlugin{IDs: []domain.Uint64ID{plugins[0].ID}})
 		require.NoError(t, err)
 		assert.True(t, exists)
 	})
@@ -755,7 +755,7 @@ func (s *PluginRepositorySuite) TestPluginRepositoryExists() {
 	})
 
 	s.T().Run("not_exists_by_id", func(t *testing.T) {
-		exists, err := s.repo.Exists(ctx, &filters.FindPlugin{IDs: []uint{99999}})
+		exists, err := s.repo.Exists(ctx, &filters.FindPlugin{IDs: []domain.Uint64ID{99999}})
 		require.NoError(t, err)
 		assert.False(t, exists)
 	})
@@ -803,13 +803,13 @@ func (s *PluginRepositorySuite) TestPluginRepositoryExists() {
 		}
 		require.NoError(t, s.repo.Save(ctx, plugin))
 
-		exists, err := s.repo.Exists(ctx, &filters.FindPlugin{IDs: []uint{plugin.ID}})
+		exists, err := s.repo.Exists(ctx, &filters.FindPlugin{IDs: []domain.Uint64ID{plugin.ID}})
 		require.NoError(t, err)
 		assert.True(t, exists)
 
 		require.NoError(t, s.repo.Delete(ctx, plugin.ID))
 
-		exists, err = s.repo.Exists(ctx, &filters.FindPlugin{IDs: []uint{plugin.ID}})
+		exists, err = s.repo.Exists(ctx, &filters.FindPlugin{IDs: []domain.Uint64ID{plugin.ID}})
 		require.NoError(t, err)
 		assert.False(t, exists)
 	})
@@ -834,7 +834,7 @@ func (s *PluginRepositorySuite) TestPluginRepositoryIntegration() {
 		require.NoError(t, err)
 		pluginID := plugin.ID
 
-		filter := &filters.FindPlugin{IDs: []uint{pluginID}}
+		filter := &filters.FindPlugin{IDs: []domain.Uint64ID{pluginID}}
 		results, err := s.repo.Find(ctx, filter, nil, nil)
 		require.NoError(t, err)
 		require.Len(t, results, 1)
@@ -866,11 +866,11 @@ func (s *PluginRepositorySuite) TestPluginRepositoryIntegration() {
 	})
 
 	s.T().Run("multiple_plugins_operations", func(t *testing.T) {
-		var pluginIDs []uint
+		var pluginIDs []domain.Uint64ID
 
 		for i := range 5 {
 			plugin := &domain.Plugin{
-				ID:          uint(7100 + i),
+				ID:          domain.Uint64ID(7100 + i),
 				Name:        "multi-plugin-" + string(rune('A'+i)),
 				Version:     "1.0.0",
 				Description: "Multi plugin " + string(rune('A'+i)),
@@ -909,7 +909,7 @@ func (s *PluginRepositorySuite) TestPluginRepositoryIntegration() {
 		}
 
 		require.NoError(t, s.repo.Save(ctx, plugin))
-		filter := &filters.FindPlugin{IDs: []uint{plugin.ID}}
+		filter := &filters.FindPlugin{IDs: []domain.Uint64ID{plugin.ID}}
 
 		transitions := []domain.PluginStatus{
 			domain.PluginStatusActive,
@@ -932,7 +932,7 @@ func (s *PluginRepositorySuite) TestPluginRepositoryIntegration() {
 	s.T().Run("priority_ordering", func(t *testing.T) {
 		for i := range 3 {
 			plugin := &domain.Plugin{
-				ID:          uint(7300 + i),
+				ID:          domain.Uint64ID(7300 + i),
 				Name:        "priority-plugin-" + string(rune('A'+i)),
 				Version:     "1.0.0",
 				Description: "Priority plugin",

@@ -275,7 +275,7 @@ type PluginRepository interface {
 
 	Save(ctx context.Context, plugin *domain.Plugin) error
 
-	Delete(ctx context.Context, id uint) error
+	Delete(ctx context.Context, id domain.Uint64ID) error
 
 	Exists(ctx context.Context, filter *filters.FindPlugin) (bool, error)
 }

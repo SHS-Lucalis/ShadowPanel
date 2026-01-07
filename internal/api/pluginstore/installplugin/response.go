@@ -7,13 +7,13 @@ import (
 )
 
 type installResponse struct {
-	ID          uint      `json:"id"`
-	Name        string    `json:"name"`
-	Version     string    `json:"version"`
-	Description string    `json:"description"`
-	Author      string    `json:"author"`
-	Status      string    `json:"status"`
-	InstalledAt time.Time `json:"installed_at"`
+	ID          domain.Uint64ID `json:"id"`
+	Name        string          `json:"name"`
+	Version     string          `json:"version"`
+	Description string          `json:"description"`
+	Author      string          `json:"author"`
+	Status      string          `json:"status"`
+	InstalledAt time.Time       `json:"installed_at"`
 }
 
 func newInstallResponse(plugin *domain.Plugin) *installResponse {

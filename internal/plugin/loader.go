@@ -33,7 +33,7 @@ type Loader struct {
 	pluginsDir    string
 
 	mu        sync.RWMutex
-	pluginIDs map[uint]string
+	pluginIDs map[domain.Uint64ID]string
 }
 
 func NewLoader(
@@ -49,7 +49,7 @@ func NewLoader(
 		pluginRepo:    pluginRepo,
 		autoLoadNames: autoLoadNames,
 		pluginsDir:    pluginsDir,
-		pluginIDs:     make(map[uint]string),
+		pluginIDs:     make(map[domain.Uint64ID]string),
 	}
 }
 
@@ -125,7 +125,7 @@ func (l *Loader) Unload(ctx context.Context, pluginID string) error {
 	return l.manager.Unload(ctx, pluginID)
 }
 
-func (l *Loader) GetPluginManagerID(dbID uint) (string, bool) {
+func (l *Loader) GetPluginManagerID(dbID domain.Uint64ID) (string, bool) {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 	id, ok := l.pluginIDs[dbID]
@@ -133,7 +133,7 @@ func (l *Loader) GetPluginManagerID(dbID uint) (string, bool) {
 	return id, ok
 }
 
-func (l *Loader) GetDBPluginID(managerID string) (uint, bool) {
+func (l *Loader) GetDBPluginID(managerID string) (domain.Uint64ID, bool) {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 	for dbID, mgrID := range l.pluginIDs {

@@ -136,7 +136,7 @@ func (h *Handler) parseInput(r *http.Request) (input, error) {
 	return inp, nil
 }
 
-func (h *Handler) checkNotInstalled(ctx context.Context, dbID uint) error {
+func (h *Handler) checkNotInstalled(ctx context.Context, dbID domain.Uint64ID) error {
 	exists, err := h.pluginRepo.Exists(ctx, filters.FindPluginByIDs(dbID))
 	if err != nil {
 		return errors.WithMessage(err, "failed to check if plugin exists")
@@ -206,7 +206,7 @@ func (h *Handler) downloadAndVerify(
 }
 
 func (h *Handler) buildPluginRecord(
-	dbID uint,
+	dbID domain.Uint64ID,
 	details *pluginstore.PluginDetails,
 	version *pluginstore.PluginVersion,
 	filename string,
