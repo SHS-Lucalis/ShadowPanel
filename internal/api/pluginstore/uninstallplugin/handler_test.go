@@ -6,9 +6,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gameap/gameap/internal/api/pluginstore/uninstallplugin"
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/files"
-	"github.com/gameap/gameap/internal/pluginstore/store/uninstallplugin"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/pkg/api"
 	pkgplugin "github.com/gameap/gameap/pkg/plugin"

@@ -1,0 +1,14 @@
+type: object
+description: Plugin author
+properties:
+  id:
+    type: integer
+    description: Author ID
+    example: 1
+  username:
+    type: string
+    description: Author username
+    example: "gameap-team"
+required:
+  - id
+  - username

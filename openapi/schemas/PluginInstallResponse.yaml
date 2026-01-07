@@ -1,0 +1,39 @@
+type: object
+description: Plugin install response
+properties:
+  id:
+    type: integer
+    description: Plugin ID
+    example: 1
+  name:
+    type: string
+    description: Plugin name
+    example: "Auto Restart"
+  version:
+    type: string
+    description: Installed version
+    example: "1.2.0"
+  description:
+    type: string
+    description: Plugin description
+    example: "Automatically restarts servers on crash"
+  author:
+    type: string
+    description: Plugin author
+    example: "GameAP Team"
+  status:
+    type: string
+    description: Plugin status
+    example: "active"
+  installed_at:
+    type: string
+    format: date-time
+    description: Installation timestamp
+required:
+  - id
+  - name
+  - version
+  - description
+  - author
+  - status
+  - installed_at

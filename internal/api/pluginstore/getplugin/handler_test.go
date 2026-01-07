@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gameap/gameap/internal/api/pluginstore/getplugin"
 	"github.com/gameap/gameap/internal/cache"
-	"github.com/gameap/gameap/internal/pluginstore/store/getplugin"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/internal/services/pluginstore"
 	"github.com/gameap/gameap/pkg/api"

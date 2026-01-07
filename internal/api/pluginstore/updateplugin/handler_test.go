@@ -7,10 +7,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gameap/gameap/internal/api/pluginstore/updateplugin"
 	"github.com/gameap/gameap/internal/cache"
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/files"
-	"github.com/gameap/gameap/internal/pluginstore/store/updateplugin"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/internal/services/pluginstore"
 	"github.com/gameap/gameap/pkg/api"
