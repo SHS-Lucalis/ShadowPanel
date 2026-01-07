@@ -2,7 +2,6 @@ package plugin
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/binary"
 	"hash/fnv"
 	"testing"
@@ -284,7 +283,7 @@ func TestParsePluginID_Base64(t *testing.T) {
 	var num uint64 = 9876543210
 	buf := make([]byte, 8)
 	binary.BigEndian.PutUint64(buf, num)
-	encoded := base64.StdEncoding.EncodeToString(buf)
+	encoded := pkgplugin.IDEncoding.EncodeToString(buf)
 
 	id := pkgplugin.ParsePluginID(encoded)
 	assert.Equal(t, uint(num), id)
