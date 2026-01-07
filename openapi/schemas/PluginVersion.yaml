@@ -1,30 +1,65 @@
 type: object
-description: Plugin version info
+description: Plugin version
 properties:
+  id:
+    type: integer
+    description: Version ID
+    example: 1
   version:
     type: string
     description: Version number
-    example: "1.0.0"
-  api_version:
-    type: string
-    description: Required API version
-    example: "v4"
+    example: "1.2.0"
   changelog:
-    type:
-      - string
-      - "null"
+    type: string
     description: Version changelog
-  download_url:
-    type:
-      - string
-      - "null"
-    description: Download URL
-  release_date:
-    type:
-      - string
-      - "null"
+    example: "- Fixed crash on startup\n- Improved performance"
+  file_size:
+    type: integer
+    format: int64
+    description: File size in bytes
+    example: 102400
+  file_hash:
+    type: string
+    description: File hash (SHA256)
+    example: "a1b2c3d4e5f6..."
+  sign_url:
+    type: string
+    description: Signature URL
+    example: "https://example.com/plugin.sig"
+  min_gameap_version:
+    type: string
+    description: Minimum GameAP version
+    example: "3.2.0"
+  min_plugin_api_version:
+    type: string
+    description: Minimum plugin API version
+    example: "v4"
+  is_stable:
+    type: boolean
+    description: Whether this is a stable release
+    example: true
+  screenshots:
+    type: array
+    items:
+      $ref: 'PluginScreenshot.yaml'
+  download_count:
+    type: integer
+    description: Download count for this version
+    example: 500
+  created_at:
+    type: string
     format: date-time
     description: Release date
 required:
+  - id
   - version
-  - api_version
+  - changelog
+  - file_size
+  - file_hash
+  - sign_url
+  - min_gameap_version
+  - min_plugin_api_version
+  - is_stable
+  - screenshots
+  - download_count
+  - created_at

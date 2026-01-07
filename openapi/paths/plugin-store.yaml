@@ -90,7 +90,7 @@
                     data:
                       type: array
                       items:
-                        $ref: '../schemas/Plugin.yaml'
+                        $ref: '../schemas/StorePlugin.yaml'
       '401':
         description: Unauthorized
         content:
@@ -119,7 +119,7 @@
         content:
           application/json:
             schema:
-              $ref: '../schemas/Plugin.yaml'
+              $ref: '../schemas/StorePluginDetails.yaml'
       '401':
         description: Unauthorized
         content:
@@ -182,15 +182,22 @@
     operationId: getPluginVersions
     parameters:
       - $ref: '../parameters/PathPluginId.yaml'
+      - $ref: '../parameters/QueryPage.yaml'
+      - $ref: '../parameters/QueryPerPage.yaml'
     responses:
       '200':
-        description: Plugin versions
+        description: Plugin versions (paginated)
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: '../schemas/PluginVersion.yaml'
+              allOf:
+                - $ref: '../schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../schemas/PluginVersion.yaml'
       '401':
         description: Unauthorized
         content:
@@ -235,7 +242,7 @@
         content:
           application/json:
             schema:
-              $ref: '../schemas/SuccessResponse.yaml'
+              $ref: '../schemas/PluginInstallResponse.yaml'
       '401':
         description: Unauthorized
         content:
@@ -280,7 +287,7 @@
         content:
           application/json:
             schema:
-              $ref: '../schemas/SuccessResponse.yaml'
+              $ref: '../schemas/PluginUpdateResponse.yaml'
       '401':
         description: Unauthorized
         content:

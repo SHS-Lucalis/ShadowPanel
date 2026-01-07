@@ -6,8 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gameap/gameap/internal/api/pluginstore/getpluginversions"
 	"github.com/gameap/gameap/internal/cache"
-	"github.com/gameap/gameap/internal/pluginstore/store/getpluginversions"
 	"github.com/gameap/gameap/internal/services/pluginstore"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/stretchr/testify/assert"

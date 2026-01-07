@@ -5,21 +5,20 @@ properties:
     type: integer
     description: Label ID
     example: 1
-  name:
-    type: string
-    description: Label name
-    example: "Official"
   slug:
     type: string
     description: Label slug
     example: "official"
+  name:
+    type: string
+    description: Label name
+    example: "Official"
   color:
-    type:
-      - string
-      - "null"
+    type: string
     description: Label color (hex)
     example: "#4CAF50"
 required:
   - id
-  - name
   - slug
+  - name
+  - color

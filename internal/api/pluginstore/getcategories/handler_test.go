@@ -6,8 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gameap/gameap/internal/api/pluginstore/getcategories"
 	"github.com/gameap/gameap/internal/cache"
-	"github.com/gameap/gameap/internal/pluginstore/store/getcategories"
 	"github.com/gameap/gameap/internal/services/pluginstore"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/samber/lo"

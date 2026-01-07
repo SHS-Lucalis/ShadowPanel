@@ -1,0 +1,71 @@
+type: object
+description: Plugin from store (list view)
+properties:
+  id:
+    type: string
+    description: Plugin ID
+    example: "auto-restart"
+  name:
+    type: string
+    description: Plugin name
+    example: "Auto Restart"
+  summary:
+    type: string
+    description: Plugin summary
+    example: "Automatically restarts servers on crash"
+  icon_url:
+    type: string
+    description: Plugin icon URL
+  category:
+    $ref: 'StorePluginCategory.yaml'
+  labels:
+    type: array
+    items:
+      $ref: 'PluginLabel.yaml'
+  download_count:
+    type: integer
+    description: Total download count
+    example: 1500
+  rating_avg:
+    type: number
+    format: float
+    description: Average rating
+    example: 4.5
+  rating_count:
+    type: integer
+    description: Number of ratings
+    example: 42
+  latest_version:
+    type: string
+    description: Latest version
+    example: "1.2.0"
+  created_at:
+    type: string
+    format: date-time
+    description: Creation timestamp
+  updated_at:
+    type: string
+    format: date-time
+    description: Last update timestamp
+  installed:
+    type: boolean
+    description: Whether the plugin is installed
+    example: false
+  installed_version:
+    type: string
+    description: Installed version (if installed)
+    example: "1.1.0"
+required:
+  - id
+  - name
+  - summary
+  - icon_url
+  - category
+  - labels
+  - download_count
+  - rating_avg
+  - rating_count
+  - latest_version
+  - created_at
+  - updated_at
+  - installed

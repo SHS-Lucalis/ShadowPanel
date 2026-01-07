@@ -1,0 +1,104 @@
+type: object
+description: Plugin details from store
+properties:
+  id:
+    type: string
+    description: Plugin ID
+    example: "auto-restart"
+  name:
+    type: string
+    description: Plugin name
+    example: "Auto Restart"
+  summary:
+    type: string
+    description: Plugin summary
+    example: "Automatically restarts servers on crash"
+  description:
+    type: string
+    description: Full plugin description
+    example: "A plugin that monitors server health and automatically restarts crashed servers."
+  icon_url:
+    type: string
+    description: Plugin icon URL
+  license:
+    type: string
+    description: License type
+    example: "MIT"
+  repository_url:
+    type: string
+    description: Repository URL
+    example: "https://github.com/gameap/auto-restart"
+  min_gameap_version:
+    type: string
+    description: Minimum GameAP version
+    example: "3.2.0"
+  min_plugin_api_version:
+    type: string
+    description: Minimum plugin API version
+    example: "v4"
+  author:
+    $ref: 'StorePluginAuthor.yaml'
+  category:
+    $ref: 'StorePluginCategoryDetails.yaml'
+  labels:
+    type: array
+    items:
+      $ref: 'PluginLabel.yaml'
+  download_count:
+    type: integer
+    description: Total download count
+    example: 1500
+  rating_avg:
+    type: number
+    format: float
+    description: Average rating
+    example: 4.5
+  rating_count:
+    type: integer
+    description: Number of ratings
+    example: 42
+  latest_version:
+    type: string
+    description: Latest version
+    example: "1.2.0"
+  published_at:
+    type: string
+    format: date-time
+    description: First publication timestamp
+  created_at:
+    type: string
+    format: date-time
+    description: Creation timestamp
+  updated_at:
+    type: string
+    format: date-time
+    description: Last update timestamp
+  installed:
+    type: boolean
+    description: Whether the plugin is installed
+    example: false
+  installed_version:
+    type: string
+    description: Installed version (if installed)
+    example: "1.1.0"
+required:
+  - id
+  - name
+  - summary
+  - description
+  - icon_url
+  - license
+  - repository_url
+  - min_gameap_version
+  - min_plugin_api_version
+  - author
+  - category
+  - labels
+  - download_count
+  - rating_avg
+  - rating_count
+  - latest_version
+  - published_at
+  - created_at
+  - updated_at
+  - installed

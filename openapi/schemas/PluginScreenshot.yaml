@@ -1,0 +1,19 @@
+type: object
+description: Plugin version screenshot
+properties:
+  id:
+    type: integer
+    description: Screenshot ID
+    example: 1
+  url:
+    type: string
+    description: Screenshot URL
+    example: "https://example.com/screenshot.png"
+  sort_order:
+    type: integer
+    description: Sort order
+    example: 1
+required:
+  - id
+  - url
+  - sort_order

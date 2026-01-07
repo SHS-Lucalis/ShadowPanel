@@ -1,5 +1,5 @@
 type: object
-description: Plugin store category
+description: Plugin category (compact, for list view)
 properties:
   id:
     type: integer
@@ -13,17 +13,7 @@ properties:
     type: string
     description: Category name
     example: "Monitoring"
-  description:
-    type: string
-    description: Category description
-    example: "Monitoring and analytics plugins"
-  sort_order:
-    type: integer
-    description: Category sort order
-    example: 1
 required:
   - id
   - slug
   - name
-  - description
-  - sort_order
