@@ -13,7 +13,7 @@ import (
 type EmptyPluginService struct{}
 
 func (EmptyPluginService) GetInfo(context.Context, *proto.GetInfoRequest) (*proto.PluginInfo, error) {
-	return nil, errors.New("not implemented")
+	return nil, errors.New("not implemented") //nolint:err113
 }
 
 func (EmptyPluginService) Initialize(context.Context, *proto.InitializeRequest) (*proto.InitializeResponse, error) {
