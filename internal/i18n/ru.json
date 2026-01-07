@@ -362,6 +362,16 @@
     "disable_success_msg": "Модуль успешно выключен",
     "remove_success_msg": "Модуль успешно удалён"
   },
+  "plugins": {
+    "plugins": "Плагины",
+    "title_list": "Список плагинов",
+    "installed": "Установленные",
+    "name": "Имя плагина",
+    "install": "Установить",
+    "update": "Обновить",
+    "install_success_msg": "Плагин успешно установлен",
+    "remove_success_msg": "Плагин успешно удалён"
+  },
   "navbar": {
     "main": "Главная",
     "logs": "Логи",
