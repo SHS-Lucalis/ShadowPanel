@@ -34,7 +34,7 @@ const breadcrumbs = computed(() => {
 const {loading, user} = storeToRefs(userStore)
 
 onMounted(() => {
-  userStore.setUserId(route.params.id)
+  userStore.setUserId(Number(route.params.id))
   userStore.fetchUser().then(() => {
     userUpdateModel.value.login = userStore.user.login
     userUpdateModel.value.email = userStore.user.email

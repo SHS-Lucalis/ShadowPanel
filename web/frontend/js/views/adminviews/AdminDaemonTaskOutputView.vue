@@ -11,7 +11,7 @@
       </tr>
       <tr>
         <td><strong>{{ trans('gdaemon_tasks.status') }}:</strong></td>
-        <td><GStatusBadge :status="task.status" /></td>
+        <td><GStatusBadge v-if="task.status" :status="task.status" /></td>
       </tr>
       <tr>
         <td><strong>{{ trans('gdaemon_tasks.created') }}:</strong></td>

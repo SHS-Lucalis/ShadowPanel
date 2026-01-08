@@ -95,9 +95,9 @@ const PORT_DIFF = {
 
 const props = defineProps({
   initialServerIp: String,
-  initialServerPort: String,
-  initialQueryPort: String,
-  initialRconPort: String,
+  initialServerPort: Number,
+  initialQueryPort: Number,
+  initialRconPort: Number,
   game: String,
   serverPortPath: { type: String, default: 'serverPort' },
   rconPortPath: { type: String, default: 'rconPort' },
