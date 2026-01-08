@@ -17,6 +17,9 @@
         <div class="flex-1">
           <div class="flex items-center gap-2 flex-wrap">
             <h2 class="text-xl font-bold whitespace-nowrap">{{ plugin.name }}</h2>
+            <a v-if="plugin.url" :href="plugin.url" target="_blank" class="text-blue-500 hover:text-blue-600">
+              <i class="fa-solid fa-external-link"></i>
+            </a>
             <span v-if="plugin.installed" class="hidden md:inline px-2 py-0.5 text-xs font-medium rounded-full bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-300 whitespace-nowrap">
               {{ trans('plugins.already_installed') }}
             </span>
