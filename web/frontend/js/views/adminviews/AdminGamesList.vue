@@ -81,7 +81,7 @@
 
 <script setup>
 import { GBreadcrumbs, GDeletableList, Loading } from "@gameap/ui"
-import {computed, ref, onMounted, h} from "vue"
+import {computed, ref, onMounted, h, watch} from "vue"
 import {trans} from "../../i18n/i18n"
 import GButton from "../../components/GButton.vue"
 import GameIcon from "../../components/GameIcon.vue"

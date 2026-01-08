@@ -54,6 +54,14 @@ export default defineConfig({
                 target: 'http://localhost:8025',
                 changeOrigin: true,
             },
+            '/plugins.css': {
+                target: 'http://localhost:8025',
+                changeOrigin: true,
+            },
+            '/plugins.js': {
+                target: 'http://localhost:8025',
+                changeOrigin: true,
+            },
         },
     },
 });

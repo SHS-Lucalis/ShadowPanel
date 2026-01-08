@@ -69,7 +69,7 @@
       preset="card"
       :title="currentPlugin?.name || ''"
       :bordered="false"
-      style="width: 700px; max-width: 90vw;"
+      style="width: 900px; max-width: 90vw;"
       :segmented="{content: 'soft', footer: 'soft'}"
   >
     <n-spin :show="actionLoading">
@@ -89,11 +89,11 @@
 
 <script setup>
 import { GBreadcrumbs, Loading } from "@gameap/ui"
-import { computed, ref, onMounted, h } from "vue"
-import { trans } from "../../i18n/i18n"
-import GButton from "../../components/GButton.vue"
-import { usePluginStoreStore } from "../../store/pluginStore"
-import { errorNotification, notification } from "../../parts/dialogs"
+import { computed, ref, onMounted, onUnmounted, h } from "vue"
+import { trans } from "@/i18n/i18n"
+import GButton from "@/components/GButton.vue"
+import { usePluginStoreStore } from "@/store/pluginStore"
+import { errorNotification, notification } from "@/parts/dialogs"
 import {
   NEmpty,
   NDataTable,
@@ -102,7 +102,6 @@ import {
   NTabPane,
   NPagination,
   NSpin,
-  NTag,
 } from "naive-ui"
 import { storeToRefs } from "pinia"
 import PluginDetailsModal from "./forms/PluginDetailsModal.vue"
@@ -130,6 +129,19 @@ const activeTab = ref('installed')
 const detailsModalVisible = ref(false)
 const actionLoading = ref(false)
 const storePage = ref(1)
+const isSmallScreen = ref(window.innerWidth < 768)
+
+const handleResize = () => {
+  isSmallScreen.value = window.innerWidth < 768
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
 
 const installedPluginsSorted = computed(() => {
   return [...installedPlugins.value].sort((a, b) => a.name.localeCompare(b.name))
@@ -145,31 +157,28 @@ const createInstalledColumns = () => {
       title: trans('plugins.name'),
       key: 'name',
       render(row) {
-        return h('div', { class: 'flex items-center gap-2' }, [
+        return h('div', {
+          class: 'flex items-center gap-2 cursor-pointer hover:opacity-80',
+          onClick: () => onShowDetails(row.id)
+        }, [
           row.icon_url
               ? h('img', { src: row.icon_url, class: 'w-8 h-8 rounded', alt: row.name })
-              : h('i', { class: 'fa-solid fa-puzzle-piece text-2xl text-gray-400' }),
+              : h('i', { class: 'fa-solid fa-puzzle-piece text-2xl text-stone-400' }),
           h('div', { class: 'flex flex-col' }, [
-            h('span', { class: 'font-medium' }, row.name),
-            row.labels?.length > 0
+            h('span', { class: 'font-medium text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap' }, row.name),
+            !isSmallScreen.value && row.labels?.length > 0
                 ? h('div', { class: 'flex gap-1 mt-1' },
                     row.labels.map(label =>
-                        h(NTag, {
-                          size: 'tiny',
-                          round: true,
+                        h('span', {
+                          class: 'px-2 py-0.5 text-xs font-medium rounded-full' + (!label.color ? ' bg-stone-100 text-stone-800 dark:bg-stone-700 dark:text-stone-300' : ''),
                           style: label.color ? { backgroundColor: label.color, color: '#fff' } : {}
-                        }, () => label.name)
+                        }, label.name)
                     )
                 )
                 : null
           ])
         ])
       },
-    },
-    {
-      title: trans('plugins.version'),
-      key: 'installed_version',
-      width: 100,
     },
     {
       title: trans('plugins.category'),
@@ -185,8 +194,8 @@ const createInstalledColumns = () => {
       width: 140,
       render(row) {
         return h('div', { class: 'flex items-center gap-1' }, [
-          h('span', { class: 'text-yellow-500' }, renderStars(row.rating_avg)),
-          h('span', { class: 'text-sm text-gray-500' }, `(${row.rating_count || 0})`)
+          h('span', { class: 'text-orange-500' }, renderStars(row.rating_avg)),
+          h('span', { class: 'text-sm text-stone-500' }, `(${row.rating_count || 0})`)
         ])
       }
     },
@@ -199,17 +208,17 @@ const createInstalledColumns = () => {
       }
     },
     {
+      title: trans('plugins.version'),
+      key: 'installed_version',
+      width: 100,
+    },
+    {
       title: trans('main.actions'),
       key: 'actions',
-      width: 180,
+      width: isSmallScreen.value ? 80 : 180,
       render(row) {
         const isUpdatable = row.installed_version && row.latest_version && row.installed_version !== row.latest_version
         return h('div', { class: 'flex gap-1' }, [
-          h(GButton, {
-            color: 'green',
-            size: 'small',
-            onClick: () => onShowDetails(row.id)
-          }, () => [h('i', { class: 'fa-solid fa-eye' })]),
           isUpdatable
               ? h(GButton, {
                 color: 'blue',
@@ -221,7 +230,9 @@ const createInstalledColumns = () => {
             color: 'red',
             size: 'small',
             onClick: () => onClickUninstall(row.id, row.name)
-          }, () => [h('i', { class: 'fa-solid fa-trash' })]),
+          }, () => isSmallScreen.value
+              ? [h('i', { class: 'fa-solid fa-xmark' })]
+              : [h('i', { class: 'fa-solid fa-xmark mr-1' }), trans('plugins.uninstall')]),
         ])
       },
     }
@@ -234,36 +245,33 @@ const createStoreColumns = () => {
       title: trans('plugins.name'),
       key: 'name',
       render(row) {
-        return h('div', { class: 'flex items-center gap-2' }, [
+        return h('div', {
+          class: 'flex items-center gap-2 cursor-pointer hover:opacity-80',
+          onClick: () => onShowDetails(row.id)
+        }, [
           row.icon_url
               ? h('img', { src: row.icon_url, class: 'w-8 h-8 rounded', alt: row.name })
-              : h('i', { class: 'fa-solid fa-puzzle-piece text-2xl text-gray-400' }),
+              : h('i', { class: 'fa-solid fa-puzzle-piece text-2xl text-stone-400' }),
           h('div', { class: 'flex flex-col' }, [
             h('div', { class: 'flex items-center gap-2' }, [
-              h('span', { class: 'font-medium' }, row.name),
-              row.installed
-                  ? h(NTag, { size: 'tiny', type: 'success' }, () => trans('plugins.already_installed'))
+              h('span', { class: 'font-medium text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap' }, row.name),
+              !isSmallScreen.value && row.installed
+                  ? h('span', { class: 'px-2 py-0.5 text-xs font-medium rounded-full bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-300 whitespace-nowrap' }, trans('plugins.already_installed'))
                   : null
             ]),
-            row.labels?.length > 0
+            !isSmallScreen.value && row.labels?.length > 0
                 ? h('div', { class: 'flex gap-1 mt-1' },
                     row.labels.map(label =>
-                        h(NTag, {
-                          size: 'tiny',
-                          round: true,
+                        h('span', {
+                          class: 'px-2 py-0.5 text-xs font-medium rounded-full' + (!label.color ? ' bg-stone-100 text-stone-800 dark:bg-stone-700 dark:text-stone-300' : ''),
                           style: label.color ? { backgroundColor: label.color, color: '#fff' } : {}
-                        }, () => label.name)
+                        }, label.name)
                     )
                 )
                 : null
           ])
         ])
       },
-    },
-    {
-      title: trans('plugins.version'),
-      key: 'latest_version',
-      width: 100,
     },
     {
       title: trans('plugins.category'),
@@ -279,8 +287,8 @@ const createStoreColumns = () => {
       width: 140,
       render(row) {
         return h('div', { class: 'flex items-center gap-1' }, [
-          h('span', { class: 'text-yellow-500' }, renderStars(row.rating_avg)),
-          h('span', { class: 'text-sm text-gray-500' }, `(${row.rating_count || 0})`)
+          h('span', { class: 'text-orange-500' }, renderStars(row.rating_avg)),
+          h('span', { class: 'text-sm text-stone-500' }, `(${row.rating_count || 0})`)
         ])
       }
     },
@@ -293,35 +301,59 @@ const createStoreColumns = () => {
       }
     },
     {
+      title: trans('plugins.version'),
+      key: 'latest_version',
+      width: 100,
+    },
+    {
       title: trans('main.actions'),
       key: 'actions',
-      width: 150,
+      width: isSmallScreen.value ? 80 : 150,
       render(row) {
-        return h('div', { class: 'flex gap-1' }, [
-          h(GButton, {
-            color: 'green',
-            size: 'small',
-            onClick: () => onShowDetails(row.id)
-          }, () => [h('i', { class: 'fa-solid fa-eye' })]),
-          row.installed
+        if (row.installed) {
+          return isSmallScreen.value
               ? h(GButton, {
                 color: 'gray',
                 size: 'small',
                 disabled: true,
-              }, () => trans('plugins.already_installed'))
+              }, () => [h('i', { class: 'fa-solid fa-check' })])
               : h(GButton, {
-                color: 'blue',
+                color: 'gray',
                 size: 'small',
-                onClick: () => onShowDetailsForInstall(row.id)
-              }, () => [h('i', { class: 'fa-solid fa-download mr-1' }), trans('plugins.install')]),
-        ])
+                disabled: true,
+              }, () => trans('plugins.already_installed'))
+        }
+        return isSmallScreen.value
+            ? h(GButton, {
+              color: 'blue',
+              size: 'small',
+              onClick: () => onShowDetailsForInstall(row.id)
+            }, () => [h('i', { class: 'fa-solid fa-download' })])
+            : h(GButton, {
+              color: 'blue',
+              size: 'small',
+              onClick: () => onShowDetailsForInstall(row.id)
+            }, () => [h('i', { class: 'fa-solid fa-download mr-1' }), trans('plugins.install')])
       },
     }
   ]
 }
 
-const installedColumns = ref(createInstalledColumns())
-const storeColumns = ref(createStoreColumns())
+const installedColumns = computed(() => {
+  const cols = createInstalledColumns()
+  if (isSmallScreen.value) {
+    return cols.filter(col => !['installed_version', 'download_count'].includes(col.key))
+  }
+  return cols
+})
+
+const storeColumns = computed(() => {
+  const cols = createStoreColumns()
+  if (isSmallScreen.value) {
+    return cols.filter(col => !['latest_version', 'download_count'].includes(col.key))
+  }
+  return cols
+})
 
 function renderStars(rating) {
   const fullStars = Math.floor(rating || 0)

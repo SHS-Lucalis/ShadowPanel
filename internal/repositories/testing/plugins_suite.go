@@ -954,3 +954,153 @@ func (s *PluginRepositorySuite) TestPluginRepositoryIntegration() {
 		}
 	})
 }
+
+func (s *PluginRepositorySuite) TestPluginRepositoryBigIntID() {
+	ctx := context.Background()
+
+	s.T().Run("max_int64_id", func(t *testing.T) {
+		maxInt64ID := domain.Uint64ID(1<<63 - 1) // 9223372036854775807
+
+		plugin := &domain.Plugin{
+			ID:          maxInt64ID,
+			Name:        "max-int64-plugin",
+			Version:     "1.0.0",
+			Description: "Plugin with max int64 ID",
+			Author:      "Test Author",
+			APIVersion:  "v1",
+			Status:      domain.PluginStatusActive,
+			Priority:    10,
+		}
+
+		err := s.repo.Save(ctx, plugin)
+		require.NoError(t, err)
+		assert.Equal(t, maxInt64ID, plugin.ID)
+
+		result, err := s.repo.Find(ctx, &filters.FindPlugin{IDs: []domain.Uint64ID{maxInt64ID}}, nil, nil)
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, maxInt64ID, result[0].ID)
+		assert.Equal(t, "max-int64-plugin", result[0].Name)
+
+		exists, err := s.repo.Exists(ctx, &filters.FindPlugin{IDs: []domain.Uint64ID{maxInt64ID}})
+		require.NoError(t, err)
+		assert.True(t, exists)
+
+		err = s.repo.Delete(ctx, maxInt64ID)
+		require.NoError(t, err)
+
+		result, err = s.repo.Find(ctx, &filters.FindPlugin{IDs: []domain.Uint64ID{maxInt64ID}}, nil, nil)
+		require.NoError(t, err)
+		assert.Empty(t, result)
+	})
+
+	s.T().Run("large_int64_id", func(t *testing.T) {
+		largeID := domain.Uint64ID(4120302874985960141) // 0x392e41a26e8f12cd
+
+		plugin := &domain.Plugin{
+			ID:          largeID,
+			Name:        "large-int64-plugin",
+			Version:     "1.0.0",
+			Description: "Plugin with large int64 ID",
+			Author:      "Test Author",
+			APIVersion:  "v1",
+			Status:      domain.PluginStatusActive,
+			Priority:    20,
+		}
+
+		err := s.repo.Save(ctx, plugin)
+		require.NoError(t, err)
+		assert.Equal(t, largeID, plugin.ID)
+
+		result, err := s.repo.Find(ctx, &filters.FindPlugin{IDs: []domain.Uint64ID{largeID}}, nil, nil)
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, largeID, result[0].ID)
+
+		plugin.Version = "2.0.0"
+		err = s.repo.Save(ctx, plugin)
+		require.NoError(t, err)
+
+		result, err = s.repo.Find(ctx, &filters.FindPlugin{IDs: []domain.Uint64ID{largeID}}, nil, nil)
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "2.0.0", result[0].Version)
+
+		err = s.repo.Delete(ctx, largeID)
+		require.NoError(t, err)
+	})
+
+	s.T().Run("multiple_large_ids_filter", func(t *testing.T) {
+		ids := []domain.Uint64ID{
+			domain.Uint64ID(1<<62 - 1),     // 4611686018427387903
+			domain.Uint64ID(1<<62 + 12345), // 4611686018427400248
+			domain.Uint64ID(1<<63 - 100),   // 9223372036854775707
+		}
+
+		for i, id := range ids {
+			plugin := &domain.Plugin{
+				ID:          id,
+				Name:        "large-id-plugin-" + string(rune('A'+i)),
+				Version:     "1.0.0",
+				Description: "Plugin with large ID",
+				Author:      "Test Author",
+				APIVersion:  "v1",
+				Status:      domain.PluginStatusActive,
+			}
+			err := s.repo.Save(ctx, plugin)
+			require.NoError(t, err)
+		}
+
+		result, err := s.repo.Find(ctx, &filters.FindPlugin{IDs: ids}, nil, nil)
+		require.NoError(t, err)
+		require.Len(t, result, 3)
+
+		foundIDs := make(map[domain.Uint64ID]bool)
+		for _, p := range result {
+			foundIDs[p.ID] = true
+		}
+		for _, id := range ids {
+			assert.True(t, foundIDs[id], "ID %d should be found", id)
+		}
+
+		for _, id := range ids {
+			err = s.repo.Delete(ctx, id)
+			require.NoError(t, err)
+		}
+	})
+
+	s.T().Run("boundary_int64_values", func(t *testing.T) {
+		boundaryIDs := []struct {
+			id   domain.Uint64ID
+			name string
+		}{
+			{id: domain.Uint64ID(1<<31 - 1), name: "max-int32-plugin"},     // 2147483647 (max int32)
+			{id: domain.Uint64ID(1 << 31), name: "overflow-int32-plugin"},  // 2147483648 (int32 overflow)
+			{id: domain.Uint64ID(1<<32 - 1), name: "max-uint32-plugin"},    // 4294967295 (max uint32)
+			{id: domain.Uint64ID(1 << 32), name: "overflow-uint32-plugin"}, // 4294967296 (uint32 overflow)
+		}
+
+		for _, tc := range boundaryIDs {
+			plugin := &domain.Plugin{
+				ID:          tc.id,
+				Name:        tc.name,
+				Version:     "1.0.0",
+				Description: "Boundary test plugin",
+				Author:      "Test Author",
+				APIVersion:  "v1",
+				Status:      domain.PluginStatusActive,
+			}
+
+			err := s.repo.Save(ctx, plugin)
+			require.NoError(t, err, "should save plugin with ID %d (%s)", tc.id, tc.name)
+
+			result, err := s.repo.Find(ctx, &filters.FindPlugin{IDs: []domain.Uint64ID{tc.id}}, nil, nil)
+			require.NoError(t, err)
+			require.Len(t, result, 1, "should find plugin with ID %d (%s)", tc.id, tc.name)
+			assert.Equal(t, tc.id, result[0].ID)
+
+			err = s.repo.Delete(ctx, tc.id)
+			require.NoError(t, err)
+		}
+	})
+}

@@ -12,37 +12,121 @@
             :alt="plugin.name"
             class="w-16 h-16 rounded-lg"
         />
-        <i v-else class="fa-solid fa-puzzle-piece text-5xl text-gray-400"></i>
+        <i v-else class="fa-solid fa-puzzle-piece text-5xl text-stone-400"></i>
 
         <div class="flex-1">
           <div class="flex items-center gap-2 flex-wrap">
-            <h2 class="text-xl font-bold">{{ plugin.name }}</h2>
-            <n-tag v-if="plugin.installed" type="success" size="small">
+            <h2 class="text-xl font-bold whitespace-nowrap">{{ plugin.name }}</h2>
+            <span v-if="plugin.installed" class="hidden md:inline px-2 py-0.5 text-xs font-medium rounded-full bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-300 whitespace-nowrap">
               {{ trans('plugins.already_installed') }}
-            </n-tag>
+            </span>
           </div>
 
-          <div v-if="plugin.labels?.length > 0" class="flex gap-1 mt-1">
-            <n-tag
+          <div v-if="plugin.summary" class="mb-4 text-stone-600 dark:text-stone-400">
+            {{ plugin.summary }}
+          </div>
+
+          <div v-if="plugin.labels?.length > 0" class="hidden md:flex gap-1 mt-1">
+            <span
                 v-for="label in plugin.labels"
                 :key="label.id"
-                size="tiny"
-                round
+                class="px-2 py-0.5 text-xs font-medium rounded-full"
                 :style="label.color ? { backgroundColor: label.color, color: '#fff' } : {}"
+                :class="!label.color ? 'bg-stone-100 text-stone-800 dark:bg-stone-700 dark:text-stone-300' : ''"
             >
               {{ label.name }}
-            </n-tag>
+            </span>
           </div>
 
           <div class="flex items-center gap-2 mt-2">
-            <span class="text-yellow-500 text-lg">{{ renderStars(plugin.rating_avg) }}</span>
-            <span class="text-gray-500">({{ plugin.rating_count || 0 }} {{ trans('plugins.reviews') }})</span>
+            <span class="text-orange-500 text-lg">{{ renderStars(plugin.rating_avg) }}</span>
+            <a v-if="plugin.url" :href="plugin.url + '/reviews'" target="_blank" class="text-stone-500 hover:text-blue-500 hover:underline">
+              ({{ plugin.rating_count || 0 }} {{ trans('plugins.reviews') }})
+            </a>
+            <span v-else class="text-stone-500">({{ plugin.rating_count || 0 }} {{ trans('plugins.reviews') }})</span>
           </div>
+        </div>
+
+        <div class="flex flex-col md:flex-row items-end md:items-center gap-2">
+          <n-select
+              v-if="!plugin.installed || hasUpdate"
+              v-model:value="selectedVersion"
+              :options="versionOptions"
+              :placeholder="trans('plugins.select_version')"
+              style="width: 120px;"
+              :size="isSmallScreen ? 'small' : 'large'"
+          />
+          <GButton
+              v-if="!plugin.installed"
+              color="green"
+              :size="isSmallScreen ? 'small' : 'medium'"
+              @click="$emit('install', selectedVersion)"
+          >
+            <i class="fa-solid fa-download mr-1"></i>
+            {{ trans('plugins.install') }}
+          </GButton>
+          <GButton
+              v-if="plugin.installed && hasUpdate"
+              color="blue"
+              :size="isSmallScreen ? 'small' : 'medium'"
+              @click="$emit('update', selectedVersion)"
+          >
+            <i class="fa-solid fa-sync mr-1"></i>
+            {{ trans('plugins.update') }}
+          </GButton>
+          <GButton
+              v-if="plugin.installed"
+              color="red"
+              :size="isSmallScreen ? 'small' : 'medium'"
+              @click="$emit('uninstall')"
+          >
+            <i class="fa-solid fa-xmark mr-1"></i>
+            {{ trans('plugins.uninstall') }}
+          </GButton>
         </div>
       </div>
 
-      <div v-if="plugin.summary" class="mb-4 text-gray-600 dark:text-gray-400">
-        {{ plugin.summary }}
+      <div class="flex justify-around py-4 border-t border-b border-stone-200 dark:border-stone-700 mb-4 divide-x divide-stone-100 dark:divide-stone-700">
+        <div v-if="plugin.author" class="flex flex-col items-center text-center px-4">
+          <i class="fa-solid fa-user text-xl text-stone-500 dark:text-stone-400 mb-1"></i>
+          <span class="text-sm font-medium whitespace-nowrap">{{ plugin.author.username }}</span>
+          <span class="text-xs text-stone-500">{{ trans('plugins.author') }}</span>
+        </div>
+
+        <div v-if="plugin.category" class="flex flex-col items-center text-center px-4">
+          <i class="fa-solid fa-folder text-xl text-stone-500 dark:text-stone-400 mb-1"></i>
+          <span class="text-sm font-medium whitespace-nowrap">{{ plugin.category.name }}</span>
+          <span class="text-xs text-stone-500">{{ trans('plugins.category') }}</span>
+        </div>
+
+        <div v-if="plugin.license" class="flex flex-col items-center text-center px-4">
+          <i class="fa-solid fa-scale-balanced text-xl text-stone-500 dark:text-stone-400 mb-1"></i>
+          <span class="text-sm font-medium whitespace-nowrap">{{ plugin.license }}</span>
+          <span class="text-xs text-stone-500">{{ trans('plugins.license') }}</span>
+        </div>
+
+        <div v-if="plugin.download_count !== undefined" class="hidden md:flex flex-col items-center text-center px-4">
+          <i class="fa-solid fa-download text-xl text-stone-500 dark:text-stone-400 mb-1"></i>
+          <span class="text-sm font-medium whitespace-nowrap">{{ formatNumber(plugin.download_count) }}</span>
+          <span class="text-xs text-stone-500">{{ trans('plugins.downloads') }}</span>
+        </div>
+
+        <div v-if="plugin.published_at" class="hidden md:flex flex-col items-center text-center px-4">
+          <i class="fa-solid fa-calendar text-xl text-stone-500 dark:text-stone-400 mb-1"></i>
+          <span class="text-sm font-medium whitespace-nowrap">{{ formatDate(plugin.published_at) }}</span>
+          <span class="text-xs text-stone-500">{{ trans('plugins.published_at') }}</span>
+        </div>
+
+        <div v-if="plugin.min_gameap_version" class="flex flex-col items-center text-center px-4">
+          <i class="fa-solid fa-gamepad text-xl text-stone-500 dark:text-stone-400 mb-1"></i>
+          <span class="text-sm font-medium whitespace-nowrap">{{ plugin.min_gameap_version }}</span>
+          <span class="text-xs text-stone-500">{{ trans('plugins.min_gameap_version') }}</span>
+        </div>
+
+        <a v-if="plugin.url" :href="plugin.url" target="_blank" class="flex flex-col items-center text-center px-4 hover:text-blue-500 transition-colors">
+          <i class="fa-solid fa-external-link text-xl text-blue-500 mb-1"></i>
+          <span class="text-sm font-medium text-blue-500">{{ trans('plugins.plugin_page') }}</span>
+        </a>
       </div>
 
       <div v-if="plugin.description" class="mb-4">
@@ -50,118 +134,31 @@
         <div class="text-sm whitespace-pre-wrap">{{ plugin.description }}</div>
       </div>
 
-      <n-divider />
-
-      <div class="grid grid-cols-2 gap-4 text-sm mb-4">
-        <div v-if="plugin.author">
-          <span class="text-gray-500">{{ trans('plugins.author') }}:</span>
-          <span class="ml-2">{{ plugin.author.username }}</span>
+      <div v-if="plugin.installed" class="flex justify-center gap-6 mb-4 p-3 bg-stone-100 dark:bg-stone-800 rounded-lg">
+        <div class="flex flex-col items-center text-center">
+          <i class="fa-solid fa-box text-xl text-lime-500 mb-1"></i>
+          <span class="text-sm font-medium whitespace-nowrap">{{ plugin.installed_version }}</span>
+          <span class="text-xs text-stone-500">{{ trans('plugins.installed_version') }}</span>
         </div>
-        <div v-if="plugin.category">
-          <span class="text-gray-500">{{ trans('plugins.category') }}:</span>
-          <span class="ml-2">{{ plugin.category.name }}</span>
+        <div class="flex flex-col items-center text-center">
+          <i class="fa-solid fa-arrow-up text-xl mb-1" :class="hasUpdate ? 'text-orange-500' : 'text-stone-400'"></i>
+          <span class="text-sm font-medium whitespace-nowrap">{{ plugin.latest_version }}</span>
+          <span class="text-xs text-stone-500">{{ trans('plugins.latest_version') }}</span>
         </div>
-        <div v-if="plugin.license">
-          <span class="text-gray-500">{{ trans('plugins.license') }}:</span>
-          <span class="ml-2">{{ plugin.license }}</span>
-        </div>
-        <div v-if="plugin.download_count !== undefined">
-          <span class="text-gray-500">{{ trans('plugins.downloads') }}:</span>
-          <span class="ml-2">{{ formatNumber(plugin.download_count) }}</span>
-        </div>
-        <div v-if="plugin.min_gameap_version">
-          <span class="text-gray-500">{{ trans('plugins.min_gameap_version') }}:</span>
-          <span class="ml-2">{{ plugin.min_gameap_version }}</span>
-        </div>
-        <div v-if="plugin.min_plugin_api_version">
-          <span class="text-gray-500">{{ trans('plugins.min_plugin_api') }}:</span>
-          <span class="ml-2">{{ plugin.min_plugin_api_version }}</span>
-        </div>
-        <div v-if="plugin.repository_url" class="col-span-2">
-          <span class="text-gray-500">{{ trans('plugins.repository') }}:</span>
-          <a :href="plugin.repository_url" target="_blank" class="ml-2 text-blue-500 hover:underline">
-            {{ plugin.repository_url }}
-          </a>
-        </div>
-        <div v-if="plugin.published_at">
-          <span class="text-gray-500">{{ trans('plugins.published_at') }}:</span>
-          <span class="ml-2">{{ formatDate(plugin.published_at) }}</span>
-        </div>
-      </div>
-
-      <div v-if="plugin.installed" class="mb-4 p-3 bg-gray-100 dark:bg-gray-800 rounded">
-        <div class="flex justify-between items-center">
-          <div>
-            <span class="text-gray-500">{{ trans('plugins.installed_version') }}:</span>
-            <span class="ml-2 font-medium">{{ plugin.installed_version }}</span>
-          </div>
-          <div>
-            <span class="text-gray-500">{{ trans('plugins.latest_version') }}:</span>
-            <span class="ml-2 font-medium">{{ plugin.latest_version }}</span>
-            <n-tag v-if="hasUpdate" type="warning" size="tiny" class="ml-2">
-              {{ trans('plugins.update') }}
-            </n-tag>
-          </div>
-        </div>
-      </div>
-
-      <n-divider />
-
-      <div class="mb-4">
-        <h3 class="font-semibold mb-2">{{ trans('plugins.select_version') }}</h3>
-        <n-select
-            v-model:value="selectedVersion"
-            :options="versionOptions"
-            :placeholder="trans('plugins.select_version')"
-        />
-
-        <div v-if="selectedVersionData && selectedVersionData.changelog" class="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded">
-          <h4 class="font-medium mb-1">{{ trans('plugins.changelog') }}</h4>
-          <div class="text-sm whitespace-pre-wrap text-gray-600 dark:text-gray-400 max-h-40 overflow-auto">
-            {{ selectedVersionData.changelog }}
-          </div>
-        </div>
-      </div>
-
-      <div class="flex gap-2 justify-end">
-        <n-button @click="$emit('close')">
-          {{ trans('main.close') }}
-        </n-button>
-        <GButton
-            v-if="!plugin.installed"
-            color="green"
-            @click="$emit('install', selectedVersion)"
-        >
-          <i class="fa-solid fa-download mr-1"></i>
-          {{ trans('plugins.install') }}
-        </GButton>
-        <GButton
-            v-if="plugin.installed && hasUpdate"
-            color="blue"
-            @click="$emit('update', selectedVersion)"
-        >
-          <i class="fa-solid fa-sync mr-1"></i>
+        <span v-if="hasUpdate" class="self-center px-2 py-0.5 text-xs font-medium rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300">
           {{ trans('plugins.update') }}
-        </GButton>
-        <GButton
-            v-if="plugin.installed"
-            color="red"
-            @click="$emit('uninstall')"
-        >
-          <i class="fa-solid fa-trash mr-1"></i>
-          {{ trans('plugins.uninstall') }}
-        </GButton>
+        </span>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { trans } from '@/i18n/i18n'
 import { Loading } from '@gameap/ui'
 import GButton from '@/components/GButton.vue'
-import { NTag, NSelect, NDivider, NButton } from 'naive-ui'
+import { NSelect } from 'naive-ui'
 
 const props = defineProps({
   plugin: {
@@ -178,9 +175,22 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['install', 'update', 'uninstall', 'close'])
+const emit = defineEmits(['install', 'update', 'uninstall'])
 
 const selectedVersion = ref(null)
+const isSmallScreen = ref(window.innerWidth < 768)
+
+const handleResize = () => {
+  isSmallScreen.value = window.innerWidth < 768
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
 
 const hasUpdate = computed(() => {
   if (!props.plugin?.installed) return false
@@ -199,19 +209,14 @@ const selectedVersionData = computed(() => {
   return props.versions.find(v => v.version === selectedVersion.value)
 })
 
-// Set default selected version
-watch(() => props.versions, (versions) => {
-  if (versions?.length > 0 && !selectedVersion.value) {
-    // Select latest stable version or just the first one
-    const stable = versions.find(v => v.is_stable)
-    selectedVersion.value = stable ? stable.version : versions[0].version
+// Set default selected version to latest
+watch([() => props.versions, () => props.plugin], ([versions, plugin]) => {
+  if (plugin?.latest_version) {
+    selectedVersion.value = plugin.latest_version
+  } else if (versions?.length > 0) {
+    selectedVersion.value = versions[0].version
   }
 }, { immediate: true })
-
-watch(() => props.plugin, () => {
-  // Reset selected version when plugin changes
-  selectedVersion.value = null
-})
 
 function renderStars(rating) {
   const fullStars = Math.floor(rating || 0)

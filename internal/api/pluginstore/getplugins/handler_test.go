@@ -26,6 +26,7 @@ func TestGetPlugins(t *testing.T) {
 		Data: []pluginstore.Plugin{
 			{
 				ID:            "hexeditor4jm2",
+				URL:           "https://plugins.gameap.dev/plugins/hexeditor4jm2",
 				Name:          "HEX Editor",
 				Summary:       "Hex editor in filemanager",
 				DownloadCount: 100,
@@ -53,6 +54,7 @@ func TestGetPlugins(t *testing.T) {
 				"current_page": 1,
 				"data": [{
 					"id": "hexeditor4jm2",
+					"url": "https://plugins.gameap.dev/plugins/hexeditor4jm2",
 					"name": "HEX Editor",
 					"summary": "Hex editor in filemanager",
 					"icon_url": "",
@@ -85,6 +87,7 @@ func TestGetPlugins(t *testing.T) {
 				"current_page": 1,
 				"data": [{
 					"id": "hexeditor4jm2",
+					"url": "https://plugins.gameap.dev/plugins/hexeditor4jm2",
 					"name": "HEX Editor",
 					"summary": "Hex editor in filemanager",
 					"icon_url": "",
@@ -112,6 +115,7 @@ func TestGetPlugins(t *testing.T) {
 				"current_page": 1,
 				"data": [{
 					"id": "hexeditor4jm2",
+					"url": "https://plugins.gameap.dev/plugins/hexeditor4jm2",
 					"name": "HEX Editor",
 					"summary": "Hex editor in filemanager",
 					"icon_url": "",
@@ -138,6 +142,7 @@ func TestGetPlugins(t *testing.T) {
 				"current_page": 1,
 				"data": [{
 					"id": "hexeditor4jm2",
+					"url": "https://plugins.gameap.dev/plugins/hexeditor4jm2",
 					"name": "HEX Editor",
 					"summary": "Hex editor in filemanager",
 					"icon_url": "",

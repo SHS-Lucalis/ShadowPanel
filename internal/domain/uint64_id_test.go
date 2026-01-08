@@ -82,6 +82,16 @@ func TestUint64ID_Scan(t *testing.T) {
 			want:  200,
 		},
 		{
+			name:  "negative_int64",
+			input: int64(-1),
+			want:  Uint64ID(^uint64(0)), // -1 as uint64
+		},
+		{
+			name:  "max_uint64",
+			input: uint64(^uint64(0)),
+			want:  Uint64ID(^uint64(0)),
+		},
+		{
 			name:  "nil_value",
 			input: nil,
 			want:  0,
@@ -141,6 +151,10 @@ func TestUint64ID_ScanValue_RoundTrip(t *testing.T) {
 		{
 			name: "max_int64_round_trip",
 			id:   Uint64ID(1<<63 - 1),
+		},
+		{
+			name: "max_uint64_round_trip",
+			id:   Uint64ID(^uint64(0)),
 		},
 	}
 
