@@ -155,10 +155,10 @@ const createColumns = () => {
             size: 'small',
             class: 'px-2 py-1',
             onClick: () => {onClickModCreate(row.code)},
-          }, [
+          }, { default: () => [
             h(GIcon, {name: 'mods', class: 'mr-0.5'}),
             h("span", {class: ''}, trans('games.add_first_mod'))
-          ])
+          ]})
         }
 
         return h(
@@ -181,19 +181,19 @@ const createColumns = () => {
             size: 'small',
             class: 'mr-0.5',
             route: {name: 'admin.games.edit', params: {code: row.code}},
-          }, [
+          }, { default: () => [
             h(GIcon, {name: 'edit'}),
             h("span", {class: 'hidden lg:inline'}, trans('main.edit')),
-          ]),
+          ]}),
           h(GButton, {
             color: 'red',
             size: 'small',
             text: trans('main.delete'),
             onClick: () => {onClickGameDelete(row.code)},
-          }, [
+          }, { default: () => [
             h(GIcon, {name: 'delete'}),
             h("span", {class: 'hidden lg:inline'}, trans('main.delete')),
-          ]),
+          ]}),
         ]
       },
     }

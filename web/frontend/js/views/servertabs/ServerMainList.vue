@@ -157,11 +157,11 @@
                                 size: "small",
                                 route: "/servers/" + row.id,
                               },
-                              [
+                              { default: () => [
                                 h('span', {"class": "hidden lg:inline"}, trans('servers.control')),
                                 " ",
                                 h(GIcon, {name: "chevron-double-right"}),
-                              ])
+                              ]})
                       );
                     }
 

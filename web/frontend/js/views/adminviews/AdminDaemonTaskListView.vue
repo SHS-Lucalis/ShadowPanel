@@ -119,7 +119,7 @@ const createColumns = () => {
             to: {name: 'servers.control', params: {id: server.id}},
             class: "text-blue-600 underline dark:text-blue-500 hover:no-underline",
           },
-          server.name,
+          { default: () => server.name },
         )
       },
     },
@@ -147,10 +147,10 @@ const createColumns = () => {
             size: 'small',
             class: 'mr-0.5',
             route: {name: 'admin.gdaemon_tasks.output', params: {id: row.id}},
-          }, [
+          }, { default: () => [
             h(GIcon, {name: 'view'}),
             h("span", {class: 'hidden lg:inline'}, trans('main.view')),
-          ]),
+          ]}),
         ]
       },
     }

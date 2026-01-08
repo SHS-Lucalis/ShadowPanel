@@ -22,7 +22,7 @@
 import GIcon from './GIcon.vue'
 
 const props = defineProps({
-  items: [],
+  items: Array,
   clickCallback: Function,
   deleteCallback: Function,
 });

@@ -90,10 +90,10 @@ const createColumns = () => {
             size: 'small',
             text: trans('main.delete'),
             onClick: () => {onClickDelete(row.id)},
-          }, [
+          }, { default: () => [
             h(GIcon, {name: 'delete'}),
             h("span", {class: 'hidden lg:inline'}, trans('main.delete')),
-          ]),
+          ]}),
         ]
       },
     }

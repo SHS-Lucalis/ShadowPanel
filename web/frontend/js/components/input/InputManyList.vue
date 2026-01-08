@@ -94,10 +94,10 @@ const columns = computed(() => {
           onClick: () => {
             removeItem(index)
           },
-        }, [
+        }, { default: () => [
           h(GIcon, {name: 'close', class: 'mr-0.5'}),
           h("span", {class: 'hidden lg:inline'}, trans('main.delete')),
-        ]),
+        ]}),
       ]
     },
   })

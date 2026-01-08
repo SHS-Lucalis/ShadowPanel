@@ -130,19 +130,19 @@ const createColumns = () => {
             size: 'small',
             class: 'mr-0.5',
             onClick: () => {onClickShow(row.id)},
-          }, [
+          }, { default: () => [
             h(GIcon, {name: 'view'}),
             h("span", {class: 'hidden lg:inline'}, trans('main.view')),
-          ]),
+          ]}),
           h(GButton, {
             color: 'red',
             size: 'small',
             text: trans('main.delete'),
             onClick: () => {onClickDelete(row.id)},
-          }, [
+          }, { default: () => [
             h(GIcon, {name: 'delete'}),
             h("span", {class: 'hidden lg:inline'}, trans('main.delete')),
-          ]),
+          ]}),
         ]
       },
     }

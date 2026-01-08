@@ -111,29 +111,29 @@ const createColumns = () => {
             size: 'small',
             class: 'mr-0.5',
             onClick: () => {onClickShow(row.id)},
-          }, [
+          }, { default: () => [
             h(GIcon, {name: 'view'}),
             h("span", {class: 'hidden lg:inline'}, trans('main.view')),
-          ]),
+          ]}),
           h(GButton, {
             color: 'blue',
             size: 'small',
             class: 'mr-0.5',
             route: {name: 'admin.users.edit', params: {id: row.id}},
-          }, [
+          }, { default: () => [
             h(GIcon, {name: 'edit'}),
             h("span", {class: 'hidden lg:inline'}, trans('main.edit')),
-          ]),
+          ]}),
           h(GButton, {
             color: 'red',
             size: 'small',
             disabled: authStore.user?.id === row.id,
             text: trans('main.delete'),
             onClick: () => {onClickDelete(row.id)},
-          }, [
+          }, { default: () => [
             h(GIcon, {name: 'delete'}),
             h("span", {class: 'hidden lg:inline'}, trans('main.delete')),
-          ]),
+          ]}),
         ]
       },
     }

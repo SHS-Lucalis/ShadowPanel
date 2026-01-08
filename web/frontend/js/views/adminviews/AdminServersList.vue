@@ -82,7 +82,7 @@ const createColumns = () => {
               to: {name: 'admin.nodes.view', params: {id: node.id}},
               class: "text-blue-600 underline dark:text-blue-500 hover:no-underline",
             },
-            node.name,
+            { default: () => node.name },
         )
       }
     },
@@ -95,19 +95,19 @@ const createColumns = () => {
               size: 'small',
               class: 'mr-0.5',
               route: {name: 'admin.servers.edit', params: {id: row.id}},
-            }, [
+            }, { default: () => [
               h(GIcon, {name: 'edit'}),
               h("span", {class: 'hidden lg:inline'}, trans('main.edit')),
-            ]),
+            ]}),
             h(GButton, {
               color: 'red',
               size: 'small',
               text: trans('main.delete'),
               onClick: () => {onClickDelete(row.id)},
-            }, [
+            }, { default: () => [
                 h(GIcon, {name: 'delete'}),
                 h("span", {class: 'hidden lg:inline'}, trans('main.delete')),
-            ]),
+            ]}),
         ]
       },
     }
