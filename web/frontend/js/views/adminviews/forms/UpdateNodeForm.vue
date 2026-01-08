@@ -351,7 +351,7 @@
 
     <slot name="button">
       <GButton class="mt-2" color="green" v-on:click="onClickSend">
-        <i class="fa-regular fa-floppy-disk mr-0.5"></i>
+        <GIcon name="save" class="mr-0.5" />
         <span class="hidden lg:inline">&nbsp;{{ trans('main.save') }}</span>
       </GButton>
     </slot>
@@ -359,6 +359,7 @@
 </template>
 
 <script setup>
+import { GIcon } from "@gameap/ui"
 import {computed, ref, onMounted, h} from "vue"
 import {allOfValidator, requiredValidator, stringLengthValidator} from "../../../parts/validators";
 import {trans} from "../../../i18n/i18n";
@@ -386,17 +387,17 @@ const renderLabel = (option) => {
   switch (option.label) {
     case 'Linux':
       return [
-          h('i', {class: 'fa-brands fa-linux'}, []),
+          h(GIcon, {name: 'linux'}),
           h('span', {class: 'ml-2'}, [option.label]),
       ]
     case 'Windows':
       return [
-        h('i', {class: 'fa-brands fa-windows'}, []),
+        h(GIcon, {name: 'windows'}),
         h('span', {class: 'ml-2'}, [option.label]),
       ]
     case 'MacOS':
       return [
-        h('i', {class: 'fa-brands fa-apple'}, []),
+        h(GIcon, {name: 'apple'}),
         h('span', {class: 'ml-2'}, [option.label]),
       ]
   }

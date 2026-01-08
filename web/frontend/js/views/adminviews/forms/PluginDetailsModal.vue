@@ -12,13 +12,13 @@
             :alt="plugin.name"
             class="w-16 h-16 rounded-lg"
         />
-        <i v-else class="fa-solid fa-puzzle-piece text-5xl text-stone-400"></i>
+        <GIcon v-else name="puzzle-piece" class="text-5xl text-stone-400" />
 
         <div class="flex-1">
           <div class="flex items-center gap-2 flex-wrap">
             <h2 class="text-xl font-bold whitespace-nowrap">{{ plugin.name }}</h2>
             <a v-if="plugin.url" :href="plugin.url" target="_blank" class="text-blue-500 hover:text-blue-600">
-              <i class="fa-solid fa-external-link"></i>
+              <GIcon name="external-link" />
             </a>
             <span v-if="plugin.installed" class="hidden md:inline px-2 py-0.5 text-xs font-medium rounded-full bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-300 whitespace-nowrap">
               {{ trans('plugins.already_installed') }}
@@ -65,7 +65,7 @@
               :size="isSmallScreen ? 'small' : 'medium'"
               @click="$emit('install', selectedVersion)"
           >
-            <i class="fa-solid fa-download mr-1"></i>
+            <GIcon name="download" class="mr-1" />
             {{ trans('plugins.install') }}
           </GButton>
           <GButton
@@ -74,7 +74,7 @@
               :size="isSmallScreen ? 'small' : 'medium'"
               @click="$emit('update', selectedVersion)"
           >
-            <i class="fa-solid fa-sync mr-1"></i>
+            <GIcon name="sync" class="mr-1" />
             {{ trans('plugins.update') }}
           </GButton>
           <GButton
@@ -83,7 +83,7 @@
               :size="isSmallScreen ? 'small' : 'medium'"
               @click="$emit('uninstall')"
           >
-            <i class="fa-solid fa-xmark mr-1"></i>
+            <GIcon name="close" class="mr-1" />
             {{ trans('plugins.uninstall') }}
           </GButton>
         </div>
@@ -91,43 +91,43 @@
 
       <div class="flex justify-around py-4 border-t border-b border-stone-200 dark:border-stone-700 mb-4 divide-x divide-stone-100 dark:divide-stone-700">
         <div v-if="plugin.author" class="flex flex-col items-center text-center px-4">
-          <i class="fa-solid fa-user text-xl text-stone-500 dark:text-stone-400 mb-1"></i>
+          <GIcon name="user" class="text-xl text-stone-500 dark:text-stone-400 mb-1" />
           <span class="text-sm font-medium whitespace-nowrap">{{ plugin.author.username }}</span>
           <span class="text-xs text-stone-500">{{ trans('plugins.author') }}</span>
         </div>
 
         <div v-if="plugin.category" class="flex flex-col items-center text-center px-4">
-          <i class="fa-solid fa-folder text-xl text-stone-500 dark:text-stone-400 mb-1"></i>
+          <GIcon name="folder" class="text-xl text-stone-500 dark:text-stone-400 mb-1" />
           <span class="text-sm font-medium whitespace-nowrap">{{ plugin.category.name }}</span>
           <span class="text-xs text-stone-500">{{ trans('plugins.category') }}</span>
         </div>
 
         <div v-if="plugin.license" class="flex flex-col items-center text-center px-4">
-          <i class="fa-solid fa-scale-balanced text-xl text-stone-500 dark:text-stone-400 mb-1"></i>
+          <GIcon name="scale-balanced" class="text-xl text-stone-500 dark:text-stone-400 mb-1" />
           <span class="text-sm font-medium whitespace-nowrap">{{ plugin.license }}</span>
           <span class="text-xs text-stone-500">{{ trans('plugins.license') }}</span>
         </div>
 
         <div v-if="plugin.download_count !== undefined" class="hidden md:flex flex-col items-center text-center px-4">
-          <i class="fa-solid fa-download text-xl text-stone-500 dark:text-stone-400 mb-1"></i>
+          <GIcon name="download" class="text-xl text-stone-500 dark:text-stone-400 mb-1" />
           <span class="text-sm font-medium whitespace-nowrap">{{ formatNumber(plugin.download_count) }}</span>
           <span class="text-xs text-stone-500">{{ trans('plugins.downloads') }}</span>
         </div>
 
         <div v-if="plugin.published_at" class="hidden md:flex flex-col items-center text-center px-4">
-          <i class="fa-solid fa-calendar text-xl text-stone-500 dark:text-stone-400 mb-1"></i>
+          <GIcon name="calendar" class="text-xl text-stone-500 dark:text-stone-400 mb-1" />
           <span class="text-sm font-medium whitespace-nowrap">{{ formatDate(plugin.published_at) }}</span>
           <span class="text-xs text-stone-500">{{ trans('plugins.published_at') }}</span>
         </div>
 
         <div v-if="plugin.min_gameap_version" class="flex flex-col items-center text-center px-4">
-          <i class="fa-solid fa-gamepad text-xl text-stone-500 dark:text-stone-400 mb-1"></i>
+          <GIcon name="gamepad" class="text-xl text-stone-500 dark:text-stone-400 mb-1" />
           <span class="text-sm font-medium whitespace-nowrap">{{ plugin.min_gameap_version }}</span>
           <span class="text-xs text-stone-500">{{ trans('plugins.min_gameap_version') }}</span>
         </div>
 
         <a v-if="plugin.url" :href="plugin.url" target="_blank" class="flex flex-col items-center text-center px-4 hover:text-blue-500 transition-colors">
-          <i class="fa-solid fa-external-link text-xl text-blue-500 mb-1"></i>
+          <GIcon name="external-link" class="text-xl text-blue-500 mb-1" />
           <span class="text-sm font-medium text-blue-500">{{ trans('plugins.plugin_page') }}</span>
         </a>
       </div>
@@ -139,12 +139,12 @@
 
       <div v-if="plugin.installed" class="flex justify-center gap-6 mb-4 p-3 bg-stone-100 dark:bg-stone-800 rounded-lg">
         <div class="flex flex-col items-center text-center">
-          <i class="fa-solid fa-box text-xl text-lime-500 mb-1"></i>
+          <GIcon name="box" class="text-xl text-lime-500 mb-1" />
           <span class="text-sm font-medium whitespace-nowrap">{{ plugin.installed_version }}</span>
           <span class="text-xs text-stone-500">{{ trans('plugins.installed_version') }}</span>
         </div>
         <div class="flex flex-col items-center text-center">
-          <i class="fa-solid fa-arrow-up text-xl mb-1" :class="hasUpdate ? 'text-orange-500' : 'text-stone-400'"></i>
+          <GIcon name="arrow-up" class="text-xl mb-1" :class="hasUpdate ? 'text-orange-500' : 'text-stone-400'" />
           <span class="text-sm font-medium whitespace-nowrap">{{ plugin.latest_version }}</span>
           <span class="text-xs text-stone-500">{{ trans('plugins.latest_version') }}</span>
         </div>
@@ -159,7 +159,7 @@
 <script setup>
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { trans } from '@/i18n/i18n'
-import { Loading } from '@gameap/ui'
+import { GIcon, Loading } from '@gameap/ui'
 import GButton from '@/components/GButton.vue'
 import { NSelect } from 'naive-ui'
 

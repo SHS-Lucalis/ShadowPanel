@@ -19,7 +19,7 @@
             <div class="relative flex items-stretch w-full">
               <div class="w-full">
                 <div class="inline">{{ consoleHostname }}:>&nbsp;</div>
-                <i v-if="sendCommandLoading" class="fa-solid fa-gear fa-spin"></i>
+                <GIcon v-if="sendCommandLoading" name="loading" class="animate-spin" />
                 <input
                     v-else
                     v-on:keyup.enter="sendCommand"
@@ -50,6 +50,7 @@ import { replace } from 'lodash-es';
 import {
   NDivider,
 } from "naive-ui"
+import { GIcon } from '@gameap/ui'
 import {errorNotification} from "@/parts/dialogs";
 
 const props = defineProps({

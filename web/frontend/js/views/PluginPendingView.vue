@@ -1,7 +1,7 @@
 <template>
     <div v-if="loading" class="flex items-center justify-center h-64">
         <div class="text-center">
-            <i class="fas fa-spinner fa-spin text-4xl text-stone-400"></i>
+            <GIcon name="loading" class="animate-spin text-4xl text-stone-400" />
             <p class="mt-4 text-stone-600 dark:text-stone-400">Loading plugin...</p>
         </div>
     </div>
@@ -11,6 +11,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { GIcon } from '@gameap/ui'
 import { usePluginsStore } from '../store/plugins'
 import Error404View from './errors/Error404View.vue'
 

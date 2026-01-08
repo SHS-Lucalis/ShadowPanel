@@ -4,6 +4,7 @@
   import {trans} from "@/i18n/i18n";
   import {useAuthStore} from "@/store/auth";
   import axios from "@/config/axios";
+  import { GIcon } from '@gameap/ui';
   import GButton from "@/components/GButton.vue";
 
   const authStore = useAuthStore();
@@ -300,7 +301,7 @@
   </n-modal>
 
   <g-button :class="button" :color="buttonColor" :size="buttonSize" @click="run(command)">
-    <i :class="icon"></i>
+    <GIcon :name="icon" />
     <span class="hidden lg:inline">&nbsp;{{ text }}</span>
   </g-button>
 </template>

@@ -19,7 +19,7 @@
                 :class="{ 'mr-1': i < footerButtons.length - 1 }"
                 @click="btn.action"
             >
-                <i v-if="btn.icon" :class="[btn.icon, 'mr-1']" />
+                <GIcon v-if="btn.icon" :name="btn.icon" class="mr-1" />
                 {{ btn.label }}
             </GButton>
         </template>
@@ -28,6 +28,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { GIcon } from '@gameap/ui'
 import { useModalStore } from '@/filemanager/stores'
 import { useTranslate } from '@/filemanager/composables'
 import { usePluginsStore } from '@/store/plugins'

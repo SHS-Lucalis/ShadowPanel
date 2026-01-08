@@ -4,7 +4,7 @@
             <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse" v-bind:class="[manager === activeManager ? 'active-manager' : 'bg-light']">
                 <li class="breadcrumb-item" v-on:click="selectMainDirectory">
                     <span class="badge bg-secondary dark:text-stone-400">
-                        <i class="fa-solid fa-hard-drive"></i>
+                        <GIcon name="hard-drive" />
                     </span>
                 </li>
                 <li
@@ -26,6 +26,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { GIcon } from '@gameap/ui'
 import { useFileManagerStore } from '../../stores/useFileManagerStore.js'
 import { useManager } from '../../composables/useManager.js'
 

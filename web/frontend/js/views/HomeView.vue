@@ -4,22 +4,22 @@
         border dark:border-stone-700 dark:bg-stone-800
         dark:hover:bg-stone-900 m-2 h-28 min-w-48" :route="{name: 'servers'}">
         <div class="text-lg">
-          <i class="fa-solid fa-server"></i>
+          <GIcon name="server" />
           {{ trans('servers.servers') }}
         </div>
         <div class="mt-3 grid grid-cols-2 content-center">
           <div class="text-xs text-lime-600">
             <div class="inline" v-if="!loading">
-              <i class="fa-solid fa-heart-pulse"></i>:
+              <GIcon name="heart-pulse" />:
             </div>
-            <i v-if="loading" class="fa-solid fa-gear fa-spin"></i>
+            <GIcon v-if="loading" name="loading" class="animate-spin" />
             <span v-else>{{ serverListStore.summary.online }}</span>
           </div>
           <div class="text-xs text-red-600">
             <div class="inline" v-if="!loading">
-              <i class="fa-solid fa-skull"></i>:
+              <GIcon name="skull" />:
             </div>
-            <i v-if="loading" class="fa-solid fa-gear fa-spin"></i>
+            <GIcon v-if="loading" name="loading" class="animate-spin" />
             <span v-else>{{ serverListStore.summary.offline }}</span>
           </div>
         </div>
@@ -29,22 +29,22 @@
         px-8 py-8 bg-stone-50 hover:bg-stone-100 border dark:border-stone-700
         dark:bg-stone-800 dark:hover:bg-stone-900 m-2 h-28 min-w-48" :route="{name: 'admin.nodes.index'}">
         <div class="text-lg">
-          <i class="fa-solid fa-hard-drive"></i>
+          <GIcon name="hard-drive" />
           {{ trans('dedicated_servers.nodes' )}}
         </div>
         <div class="mt-3 grid grid-cols-2 content-center">
           <div class="text-xs text-lime-600">
             <div class="inline" v-if="!loading">
-              <i class="fa-solid fa-heart-pulse"></i>:
+              <GIcon name="heart-pulse" />:
             </div>
-            <i v-if="loading" class="fa-solid fa-gear fa-spin"></i>
+            <GIcon v-if="loading" name="loading" class="animate-spin" />
             <span v-else>{{ nodeListStore.summary.online }}</span>
           </div>
           <div class="text-xs text-red-600">
             <div class="inline" v-if="!loading">
-              <i class="fa-solid fa-power-off"></i>:
+              <GIcon name="power-off" />:
             </div>
-            <i v-if="loading" class="fa-solid fa-gear fa-spin"></i>
+            <GIcon v-if="loading" name="loading" class="animate-spin" />
             <span v-else>{{ nodeListStore.summary.offline }}</span>
           </div>
         </div>
@@ -76,7 +76,7 @@
   <div class="w-full mt-10 p-3 border border-stone-200 bg-stone-50 rounded-lg sm:p-4 dark:bg-stone-800 dark:border-stone-700">
     <div class="grid grid-cols-5 gap-4">
       <h5 class="col-span-3 text-base inline-block align-middle font-semibold text-stone-900 dark:text-white">
-        <i class="fa-regular fa-comments mr-1"></i>
+        <GIcon name="comments" class="mr-1" />
         {{ trans('home.channels') }}
       </h5>
       <div class="col-span-2">
@@ -128,7 +128,7 @@
   <div class="w-full mt-5 p-3 border border-stone-200 bg-stone-50 rounded-lg sm:p-4 dark:bg-stone-800 dark:border-stone-700">
     <div class="grid grid-cols-5 gap-4">
       <h5 class="col-span-3 text-base inline-block align-middle font-semibold text-stone-900 dark:text-white">
-        <i class="fa-regular fa-heart mr-1"></i>
+        <GIcon name="heart" class="mr-1" />
         {{ trans('home.support_gameap') }}
       </h5>
       <div class="col-span-2">
@@ -169,7 +169,7 @@
   <div class="w-full mt-5 p-3 border border-stone-200 bg-stone-50 rounded-lg sm:p-4 dark:bg-stone-800 dark:border-stone-700">
     <div class="grid grid-cols-5 gap-4">
       <h5 class="col-span-3 text-base inline-block align-middle font-semibold text-stone-900 dark:text-white">
-        <i class="fa-regular fa-circle-question mr-1"></i>
+        <GIcon name="question" class="mr-1" />
         {{ trans('home.need_help') }}
       </h5>
       <div class="col-span-2">
@@ -179,7 +179,7 @@
             :href=" (pageLanguage() === 'ru') ? 'https://docs.gameap.com/ru/' : 'https://docs.gameap.com/en/'"
             target="_blank"
         >
-          <i class="fa-solid fa-book mr-1"></i>
+          <GIcon name="book" class="mr-1" />
           {{ trans('home.documentation') }}
         </a>
 
@@ -189,7 +189,7 @@
             href="https://openapi.gameap.io/"
             target="_blank"
         >
-          <i class="fa-solid fa-book mr-1"></i>
+          <GIcon name="book" class="mr-1" />
           {{ trans('home.api_documentation') }}
         </a>
 
@@ -211,6 +211,7 @@
 
 <script setup>
 import {computed, onMounted} from "vue"
+import { GIcon } from "@gameap/ui"
 import GButton from "../components/GButton.vue"
 import PluginSlot from "../plugins/components/PluginSlot.vue"
 import {useAuthStore} from "../store/auth"

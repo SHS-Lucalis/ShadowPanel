@@ -2,7 +2,7 @@
   <div class="block w-full overflow-auto scrolling-touch" :class="$attrs.class">
     <div class="mb-3">
       <GButton color="green" size="small" v-on:click="addItem">
-        <span class="fa-solid fa-plus"></span>
+        <GIcon name="add" />
       </GButton>
     </div>
 
@@ -10,7 +10,7 @@
 
     <div class="flex justify-center mt-2">
       <GButton color="green" size="small" v-on:click="addItem">
-        <span class="fa-solid fa-plus"></span>&nbsp;{{ trans('main.add') }}
+        <GIcon name="add" />&nbsp;{{ trans('main.add') }}
       </GButton>
     </div>
   </div>
@@ -18,6 +18,7 @@
 
 <script setup>
 import GButton from "../GButton.vue";
+import { GIcon } from '@gameap/ui';
 import {
   NDataTable,
   NInput,
@@ -94,7 +95,7 @@ const columns = computed(() => {
             removeItem(index)
           },
         }, [
-          h("i", {class: 'fa-solid fa-times mr-0.5'}),
+          h(GIcon, {name: 'close', class: 'mr-0.5'}),
           h("span", {class: 'hidden lg:inline'}, trans('main.delete')),
         ]),
       ]

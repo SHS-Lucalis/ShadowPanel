@@ -95,8 +95,8 @@ onMounted(() => {
 
 defineExpose({
     footerButtons: computed(() => [
-        { label: lang.value.btn.submit, color: 'green', icon: 'fa-solid fa-floppy-disk', action: updateFile },
-        { label: lang.value.btn.cancel, color: 'black', icon: 'fa-solid fa-xmark', action: hideModal },
+        { label: lang.value.btn.submit, color: 'green', icon: 'save', action: updateFile },
+        { label: lang.value.btn.cancel, color: 'black', icon: 'close', action: hideModal },
     ]),
 })
 </script>

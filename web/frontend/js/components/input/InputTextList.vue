@@ -6,7 +6,7 @@
                   <n-input type="text" v-model:value="items[index]"></n-input>
 
                   <GButton color="red" size="small" class="ml-1" v-on:click="removeItem(index)">
-                    <span class="fa-solid fa-times"></span>
+                    <GIcon name="close" />
                   </GButton>
                 </div>
             </div>
@@ -14,7 +14,7 @@
 
         <div class="flex justify-center mt-2">
           <GButton color="green" size="small" v-on:click="addItem">
-            <span class="fa-solid fa-plus"></span>
+            <GIcon name="add" />
           </GButton>
         </div>
     </div>
@@ -23,6 +23,7 @@
 <script setup>
 import { defineProps, defineModel } from 'vue'
 import GButton from "../GButton.vue"
+import { GIcon } from '@gameap/ui'
 import {
   NInput,
 } from "naive-ui"

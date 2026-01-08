@@ -2,7 +2,7 @@
   <n-modal class="create-node-modal" v-model:show="showModal">
     <template #header-extra>
       <button type="button" class="btn-close" aria-label="Close" v-on:click="showModal = false">
-        <i class="fa-solid fa-xmark"></i>
+        <GIcon name="close" />
       </button>
     </template>
 
@@ -17,7 +17,7 @@
       <n-tabs type="line" class="flex justify-between" animated>
     <n-tab-pane name="linux">
       <template #tab>
-        <i class="fa-brands fa-linux mr-1"></i>Linux
+        <GIcon name="linux" class="mr-1" />Linux
       </template>
 
       <div class="md:w-full pr-4 pl-4 m-6"
@@ -34,7 +34,7 @@
 
     <n-tab-pane name="windows">
       <template #tab>
-        <i class="fa-brands fa-windows mr-1"></i>Windows
+        <GIcon name="windows" class="mr-1" />Windows
       </template>
 
       <div class="md:w-full pr-4 pl-4 m-6"
@@ -56,6 +56,7 @@
 <script setup>
 import {trans} from "../../i18n/i18n";
 import {onMounted, ref} from "vue";
+import { GIcon } from '@gameap/ui';
 
 const props = defineProps({
   link: '',

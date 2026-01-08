@@ -3,7 +3,7 @@
 
   <div class="mb-5">
     <GButton class="mr-1" color="green" v-on:click="onClickGenerate()">
-      <i class="fa-solid fa-plus-square"></i>&nbsp;{{ trans('tokens.generate_token') }}
+      <GIcon name="add-square" />&nbsp;{{ trans('tokens.generate_token') }}
     </GButton>
   </div>
 
@@ -41,7 +41,7 @@
 
 <script setup>
 import {computed, onMounted, ref, h} from "vue"
-import { GBreadcrumbs, Loading } from "@gameap/ui"
+import { GBreadcrumbs, Loading, GIcon } from "@gameap/ui"
 import {trans} from "@/i18n/i18n"
 import GButton from "@/components/GButton.vue";
 import {useTokensStore} from "@/store/tokens";
@@ -91,7 +91,7 @@ const createColumns = () => {
             text: trans('main.delete'),
             onClick: () => {onClickDelete(row.id)},
           }, [
-            h("i", {class: 'fa-solid fa-trash'}),
+            h(GIcon, {name: 'delete'}),
             h("span", {class: 'hidden lg:inline'}, trans('main.delete')),
           ]),
         ]
@@ -187,8 +187,8 @@ const onGenerateToken = () => {
               },
             }, [
                 copied.value
-                    ? h("i", {class: "fa-solid fa-check" })
-                    : h("i", {class: "fa-solid fa-copy" }),
+                    ? h(GIcon, {name: "check" })
+                    : h(GIcon, {name: "copy" }),
             ])
           ]),
         ]

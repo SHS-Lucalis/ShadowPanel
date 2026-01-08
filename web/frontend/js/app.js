@@ -24,6 +24,7 @@ import {
     GBreadcrumbs,
     GDeletableList,
     GStatusBadge,
+    GIcon,
     Loading,
     Progressbar
 } from '@gameap/ui'
@@ -121,6 +122,7 @@ const authStore = useAuthStore()
 app.component('GBreadcrumbs', GBreadcrumbs);
 app.component('GDeletableList', GDeletableList);
 app.component('GStatusBadge', GStatusBadge);
+app.component('GIcon', GIcon);
 app.component('Loading', Loading);
 app.component('Progressbar', Progressbar);
 app.component('GButton', GButton);

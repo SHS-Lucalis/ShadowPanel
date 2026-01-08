@@ -1,7 +1,7 @@
 <template>
     <div id="rcon-players-component">
         <GButton color="green" size="small" class="mb-2" v-on:click="updatePlayers">
-          <i class="fas fa-sync"></i>
+          <GIcon name="sync" />
         </GButton>
 
         <n-table size="small" :bordered="false">
@@ -27,7 +27,7 @@
                   </GButton>
 
                   <GButton color="black" size="small" class="mb-2" v-on:click="openDialog('ban', key)">
-                    <i class="fas fa-ban mr-1"></i>
+                    <GIcon name="ban" class="mr-1" />
                     <span class="hidden lg:inline">{{ trans('rcon.ban') }}</span>
                   </GButton>
                 </td>
@@ -92,6 +92,7 @@
     import { some, isEmpty } from 'lodash-es'
     import { pluralize, trans } from '@/i18n/i18n'
     import GButton from "../GButton.vue"
+    import { GIcon } from '@gameap/ui'
     import {
       NTable,
       NModal,
@@ -100,7 +101,7 @@
 
     export default {
         name: "RconPlayers",
-      components: {GButton},
+      components: {GButton, GIcon},
         props: {
             serverId: Number,
         },

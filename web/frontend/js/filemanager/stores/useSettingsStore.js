@@ -59,25 +59,25 @@ export const useSettingsStore = defineStore('fm-settings', () => {
 
     const contextMenu = ref([
         [
-            { name: 'open', icon: 'fa-regular fa-folder-open' },
-            { name: 'audioPlay', icon: 'fa-regular fa-play' },
-            { name: 'videoPlay', icon: 'fa-regular fa-play' },
-            { name: 'view', icon: 'fa-solid fa-eye' },
-            { name: 'edit', icon: 'fa-solid fa-pen' },
-            { name: 'select', icon: 'fa-solid fa-check' },
-            { name: 'download', icon: 'fa-solid fa-download' },
+            { name: 'open', icon: 'folder-open' },
+            { name: 'audioPlay', icon: 'play' },
+            { name: 'videoPlay', icon: 'play' },
+            { name: 'view', icon: 'search' },
+            { name: 'edit', icon: 'edit' },
+            { name: 'select', icon: 'file' },
+            { name: 'download', icon: 'download' },
         ],
         [
-            { name: 'copy', icon: 'fa-regular fa-copy' },
-            { name: 'cut', icon: 'fa-solid fa-scissors' },
-            { name: 'rename', icon: 'fa-regular fa-pen-to-square' },
-            { name: 'paste', icon: 'fa-regular fa-paste' },
+            { name: 'copy', icon: 'copy' },
+            { name: 'cut', icon: 'cut' },
+            { name: 'rename', icon: 'edit' },
+            { name: 'paste', icon: 'paste' },
         ],
         [
-            { name: 'delete', icon: 'fa-regular fa-trash-can text-danger' },
+            { name: 'delete', icon: 'delete', iconClass: 'text-danger' },
         ],
         [
-            { name: 'properties', icon: 'fa-regular fa-rectangle-list' },
+            { name: 'properties', icon: 'info' },
         ],
     ])
 

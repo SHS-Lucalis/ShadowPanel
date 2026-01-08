@@ -34,7 +34,7 @@
 
         <div class="w-full bg-stone-700 p-8 rounded-b">
           <button @click="login" type="button" class="text-stone-900 bg-white border focus:outline-none hover:bg-stone-100 focus:ring-4 focus:ring-stone-100 font-medium rounded text-sm px-5 py-2.5 me-2 mb-2 dark:bg-stone-800 dark:text-white dark:border-stone-600 dark:hover:bg-stone-700 dark:hover:border-stone-600 dark:focus:ring-stone-700">
-            <i class="fa-solid fa-right-to-bracket mr-1"></i>
+            <GIcon name="sign-in" class="mr-1" />
             <span>{{ trans('auth.sign_in')}}</span>
           </button>
         </div>
@@ -45,6 +45,7 @@
 
 <script setup>
 import {ref} from "vue"
+import { GIcon } from "@gameap/ui"
 import {trans} from "../i18n/i18n"
 import {useAuthStore} from "../store/auth"
 import {errorNotification} from "../parts/dialogs";

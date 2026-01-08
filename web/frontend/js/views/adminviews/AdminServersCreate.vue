@@ -27,7 +27,7 @@
                   type="text"
               />
               <n-button @click="generateRandomName">
-                <i class="fa-solid fa-dice"></i>
+                <GIcon name="dice" />
               </n-button>
             </n-input-group>
           </n-form-item>
@@ -112,7 +112,7 @@
       </div>
 
       <GButton color="green" v-on:click="onClickCreate">
-        <i class="fa-regular fa-square-plus"></i>
+        <GIcon name="add-square" />
         <span class="hidden lg:inline">&nbsp;{{ trans('main.create') }}</span>
       </GButton>
     </div>
@@ -120,7 +120,7 @@
 </template>
 
 <script setup>
-import { GBreadcrumbs } from "@gameap/ui"
+import { GBreadcrumbs, GIcon } from "@gameap/ui"
 import {computed, onMounted, ref, watch} from "vue"
 import {trans} from "@/i18n/i18n"
 import {useGameListStore} from "@/store/gameList"

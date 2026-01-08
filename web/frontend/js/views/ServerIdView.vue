@@ -5,7 +5,7 @@
   <n-tabs v-else type="line" class="flex justify-between" :class="(!isServerEnabled) ? 'hidden': ''" animated display-directive="show:lazy">
     <n-tab-pane name="control">
       <template #tab>
-        <i class="fas fa-play mr-1"></i>
+        <GIcon name="play" class="mr-1" />
         {{ trans('servers.control') }}
       </template>
 
@@ -39,7 +39,7 @@
                   :server-id="serverId"
                   button="m-1"
                   button-color="green"
-                  icon="fas fa-play"
+                  icon="play"
                   :text="trans('servers.start')"
               ></ServerControlButton>
 
@@ -49,7 +49,7 @@
                   :server-id="serverId"
                   button="m-1"
                   button-color="red"
-                  icon="fas fa-stop"
+                  icon="stop"
                   :text="trans('servers.stop')"
               ></ServerControlButton>
 
@@ -59,7 +59,7 @@
                   :server-id="serverId"
                   button="m-1"
                   button-color="orange"
-                  icon="fas fa-redo"
+                  icon="restart"
                   :text="trans('servers.restart')"
               ></ServerControlButton>
 
@@ -69,7 +69,7 @@
                   :server-id="serverId"
                   button="m-1"
                   button-color="black"
-                  icon="fas fa-sync"
+                  icon="refresh"
                   :text="trans('servers.update')"
               ></ServerControlButton>
 
@@ -79,7 +79,7 @@
                   :server-id="serverId"
                   button="m-1"
                   button-color="black"
-                  icon="fas fa-reply-all"
+                  icon="rcon"
                   :text="trans('servers.reinstall')"
               ></ServerControlButton>
             </div>
@@ -131,7 +131,7 @@
 
     <n-tab-pane name="rcon" v-if="rconTabPossible">
       <template #tab>
-        <i class="fas fa-user-astronaut mr-1"></i>
+        <GIcon name="rcon" class="mr-1" />
         RCON
       </template>
 
@@ -173,7 +173,7 @@
 
     <n-tab-pane name="files" v-if="serverStore.canManageFiles">
       <template #tab>
-        <i class="fa fa-folder-open mr-1"></i>
+        <GIcon name="folder-solid" class="mr-1" />
         {{ trans('servers.files') }}
       </template>
 
@@ -199,7 +199,7 @@
 
     <n-tab-pane name="schedules" v-if="serverStore.canManageTasks">
       <template #tab>
-        <i class="far fa-calendar-alt mr-1"></i>
+        <GIcon name="calendar" class="mr-1" />
         {{ trans('servers.task_scheduler') }}
       </template>
 
@@ -228,7 +228,7 @@
 
     <n-tab-pane name="settings" v-if="serverStore.canManageSettings">
       <template #tab>
-        <i class="fa fa-cogs mr-1"></i>
+        <GIcon name="cogs" class="mr-1" />
         {{ trans('servers.settings') }}
       </template>
 
@@ -247,7 +247,7 @@
     <template #suffix v-if="isAdmin">
       <div class="order-last ml-auto text-red-500 hover:text-red-600">
         <router-link :to="{name: 'admin.servers.edit', params: {id: serverId}}">
-          <i class="fa fa-hammer mr-1"></i>
+          <GIcon name="hammer" class="mr-1" />
           {{ trans('servers.admin') }}
         </router-link>
       </div>
@@ -290,7 +290,7 @@ const FileManager = defineAsyncComponent(() =>
     import('../filemanager/FileManager.vue')
 )
 
-import { GBreadcrumbs, Loading } from "@gameap/ui";
+import { GBreadcrumbs, Loading, GIcon } from "@gameap/ui";
 
 import {useServerStore} from "@/store/server"
 import {useServerRconStore} from "@/store/serverRcon"

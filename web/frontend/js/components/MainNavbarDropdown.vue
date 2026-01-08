@@ -2,16 +2,16 @@
   <GMenu as="div" :class="$attrs.class" class="relative inline-block text-left">
     <div class="sm:hidden">
       <GMenuButton @click="onMenuButtonClick" class="gap-x-1.5 mt-4 text-white hover:bg-stone-800 px-4 py-2 rounded">
-        <i v-if="buttonIcon" :class="buttonIcon"></i>
+        <GIcon v-if="buttonIcon" :name="buttonIcon" />
       </GMenuButton>
     </div>
 
     <div class="sm:visible invisible">
       <GMenuButton @click="onMenuButtonClick" class="w-full gap-x-1.5 text-white hover:bg-stone-800 md:px-4 md:py-2 rounded">
-        <i v-if="buttonIcon" :class="buttonIcon" class="mr-1"></i>
+        <GIcon v-if="buttonIcon" :name="buttonIcon" class="mr-1" />
         <span class="md:visible collapse">{{ props.buttonText }}</span>
-        <i v-if="!menuOpened" class="fa-solid fa-chevron-down ml-4 md:visible collapse"></i>
-        <i v-else class="fa-solid fa-chevron-up ml-4 md:visible collapse"></i>
+        <GIcon v-if="!menuOpened" name="chevron-down" class="ml-4 md:visible collapse" />
+        <GIcon v-else name="chevron-up" class="ml-4 md:visible collapse" />
       </GMenuButton>
     </div>
 
@@ -28,7 +28,7 @@
                   'block px-4 py-2 text-sm cursor-pointer'
                 ]"
             >
-                <i v-if="item.icon" :class="item.icon"></i>
+                <GIcon v-if="item.icon" :name="item.icon" />
                 {{ item.label }}
             </a>
             <a
@@ -41,7 +41,7 @@
                   'block px-4 py-2 text-sm'
                 ]"
             >
-              <i v-if="item.icon" :class="item.icon"></i>
+              <GIcon v-if="item.icon" :name="item.icon" />
               {{ item.label }}
             </a>
             <a
@@ -54,7 +54,7 @@
                   'block px-4 py-2 text-sm cursor-pointer'
                 ]"
             >
-              <i v-if="item.icon" :class="item.icon"></i>
+              <GIcon v-if="item.icon" :name="item.icon" />
               {{ item.label }}
             </a>
           </GMenuItem>
@@ -65,7 +65,7 @@
 </template>
 
 <script setup>
-import { GMenu, GMenuButton, GMenuItem, GMenuItems } from "@gameap/ui"
+import { GMenu, GMenuButton, GMenuItem, GMenuItems, GIcon } from "@gameap/ui"
 import {defineProps, ref} from "vue"
 import {useRouter} from "vue-router"
 

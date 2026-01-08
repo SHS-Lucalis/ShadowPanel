@@ -13,7 +13,7 @@
         <div class="fm-upload-list" v-if="countFiles">
             <div class="grid grid-cols-2 gap-4 my-4" v-for="(item, index) in newFiles" :key="index">
                 <div class="truncate">
-                    <i :class="mimeToIcon(item.type)" />
+                    <GIcon :name="mimeToIcon(item.type)" />
                     {{ item.name }}
                 </div>
                 <div class="text-right">
@@ -58,6 +58,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { GIcon } from '@gameap/ui'
 import { useFileManagerStore } from '../../../stores/useFileManagerStore.js'
 import { useMessagesStore } from '../../../stores/useMessagesStore.js'
 import { useTranslate } from '../../../composables/useTranslate.js'
@@ -107,8 +108,8 @@ function uploadFiles() {
 
 defineExpose({
     footerButtons: computed(() => [
-        { label: lang.value.btn.submit, color: 'green', icon: 'fa-solid fa-upload', action: uploadFiles, disabled: !countFiles.value },
-        { label: lang.value.btn.cancel, color: 'black', icon: 'fa-solid fa-xmark', action: hideModal },
+        { label: lang.value.btn.submit, color: 'green', icon: 'upload', action: uploadFiles, disabled: !countFiles.value },
+        { label: lang.value.btn.cancel, color: 'black', icon: 'close', action: hideModal },
     ]),
 })
 </script>

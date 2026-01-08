@@ -11,7 +11,7 @@
           class="ml-[2px] text-xs h-full inline-flex items-center px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded-e cursor-pointer"
           @click="onClickDelete(item.id)"
       >
-        <i class="fa-solid fa-trash"></i>&nbsp;
+        <GIcon name="delete" />&nbsp;
       </div>
     </div>
   </div>
@@ -19,6 +19,8 @@
 </template>
 
 <script setup>
+import GIcon from './GIcon.vue'
+
 const props = defineProps({
   items: [],
   clickCallback: Function,

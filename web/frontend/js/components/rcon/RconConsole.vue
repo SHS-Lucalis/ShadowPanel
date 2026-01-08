@@ -35,7 +35,7 @@
         </div>
 
         <GButton color="black" size="small" v-on:click="sendCommand">
-          <i class="fa-solid fa-terminal"></i>
+          <GIcon name="terminal" />
           <span class="hidden lg:inline">&nbsp;{{ trans('main.send') }}</span>
         </GButton>
 
@@ -48,7 +48,7 @@ import {computed, ref, onMounted, defineProps} from "vue"
 import {
   NInput,
 } from "naive-ui"
-import { Loading } from "@gameap/ui"
+import { Loading, GIcon } from "@gameap/ui"
 import {storeToRefs} from "pinia"
 import GButton from "../GButton.vue"
 import {errorNotification} from "../../parts/dialogs"

@@ -15,14 +15,14 @@
               :title="editorItem.disabled ? lang.contextMenu.fileTooLarge : ''"
               @click="!editorItem.disabled && openPluginEditor(editorItem)"
           >
-            <i :class="editorItem.editor.icon || 'fa-solid fa-pen-ruler'" />
+            <GIcon :name="editorItem.editor.icon || 'edit'" />
             {{ getEditorMenuLabel(editorItem) }}
           </li>
         </ul>
         <ul v-for="(group, index) in menu" v-bind:key="`g-${index}`" class="list-unstyled">
             <template v-for="(item, idx) in group">
                 <li v-if="showMenuItem(item.name)" v-on:click="menuAction(item.name)" v-bind:key="`i-${idx}`">
-                    <i v-bind:class="item.icon" />
+                    <GIcon :name="item.icon" :class="item.iconClass" />
                     {{ lang.contextMenu[item.name] }}
                 </li>
             </template>
@@ -32,6 +32,7 @@
 
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
+import { GIcon } from '@gameap/ui'
 import EventBus from '../../emitter.js'
 import { useFileManagerStore } from '../../stores/useFileManagerStore.js'
 import { useSettingsStore } from '../../stores/useSettingsStore.js'

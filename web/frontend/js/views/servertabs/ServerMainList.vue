@@ -1,5 +1,5 @@
 <script setup>
-    import { Loading } from "@gameap/ui";
+    import { Loading, GIcon } from "@gameap/ui";
     import {h, ref, onMounted, computed} from 'vue'
     import {storeToRefs} from 'pinia'
     import {trans} from "@/i18n/i18n";
@@ -94,7 +94,7 @@
                                 "command": "install",
                                 "button-color": "orange",
                                 "button-size": "small",
-                                "icon": "fa fa-download",
+                                "icon": "download",
                                 "text": trans('servers.install'),
                                 "server-id": row.id,
                             });
@@ -110,7 +110,7 @@
                                         "command": "stop",
                                         "button-color": "red",
                                         "button-size": "small",
-                                        "icon": "fa fa-stop",
+                                        "icon": "stop",
                                         "text": trans('servers.stop'),
                                         "server-id": row.id,
                                     }),
@@ -125,7 +125,7 @@
                                         "command": "start",
                                         "button-color": "green",
                                         "button-size": "small",
-                                        "icon": "fa fa-play",
+                                        "icon": "play",
                                         "text": trans('servers.start'),
                                         "server-id": row.id,
                                     }),
@@ -140,7 +140,7 @@
                                     "command": "restart",
                                     "button-color": "orange",
                                     "button-size": "small",
-                                    "icon": "fa fa-redo",
+                                    "icon": "restart",
                                     "text": trans('servers.restart'),
                                     "server-id": row.id,
                                   }),
@@ -160,7 +160,7 @@
                               [
                                 h('span', {"class": "hidden lg:inline"}, trans('servers.control')),
                                 " ",
-                                h('span', {"class": "fa fa-angle-double-right"}),
+                                h(GIcon, {name: "chevron-double-right"}),
                               ])
                       );
                     }
@@ -348,7 +348,7 @@
 
                     <div class="md:w-1/4 pr-4 pl-4">
                         <n-button @click="clearFilters" type="error" :disabled="!isFiltersSet()" ghost>
-                            <i class="fa fa-eraser"></i><span class="hidden lg:inline">&nbsp;{{ trans('main.clear') }}</span>
+                            <GIcon name="eraser" /><span class="hidden lg:inline">&nbsp;{{ trans('main.clear') }}</span>
                         </n-button>
                     </div>
                 </div>

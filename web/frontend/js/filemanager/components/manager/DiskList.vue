@@ -7,7 +7,7 @@
                     v-on:click="selectDisk(disk)"
                     v-bind:class="[disk === selectedDisk ? 'bg-secondary' : 'bg-light text-dark']"
                 >
-                    <i class="fa-solid fa-hard-drive"></i> {{ disk }}
+                    <GIcon name="hard-drive" /> {{ disk }}
                 </span>
             </li>
         </ul>
@@ -15,8 +15,11 @@
 </template>
 
 <script>
+import { GIcon } from '@gameap/ui'
+
 export default {
     name: 'DiskList',
+    components: { GIcon },
     props: {
         // manager name - left or right
         manager: { type: String, required: true },

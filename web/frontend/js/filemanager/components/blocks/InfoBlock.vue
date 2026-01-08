@@ -35,14 +35,14 @@
                 v-on:click="showModal('ClipboardModal')"
                 v-bind:title="[lang.clipboard.title + ' - ' + lang.clipboard[clipboardType]]"
             >
-                <i class="fa-regular fa-clipboard"></i>
+                <GIcon name="clipboard" />
             </span>
             <span
                 v-on:click="showModal('StatusModal')"
                 v-bind:class="[hasErrors ? 'text-danger' : 'text-success']"
                 v-bind:title="lang.modal.status.title"
             >
-                <i class="fa-solid fa-circle-info"></i>
+                <GIcon name="info" />
             </span>
         </div>
     </div>
@@ -50,6 +50,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { GIcon } from '@gameap/ui'
 import { useFileManagerStore } from '../../stores/useFileManagerStore.js'
 import { useMessagesStore } from '../../stores/useMessagesStore.js'
 import { useModalStore } from '../../stores/useModalStore.js'

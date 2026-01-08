@@ -9,7 +9,7 @@
   >
     <template #button>
       <GButton class="mt-2" color="green" v-on:click="onCreate">
-        <i class="fa-regular fa-plus-square mr-0.5"></i>
+        <GIcon name="add-square" class="mr-0.5" />
         <span class="hidden lg:inline">&nbsp;{{ trans('main.create') }}</span>
       </GButton>
     </template>
@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import { GBreadcrumbs } from "@gameap/ui"
+import { GBreadcrumbs, GIcon } from "@gameap/ui"
 import {computed, ref, onMounted} from "vue"
 import {trans} from "@/i18n/i18n"
 import {useClientCertificatesStore} from "@/store/clientCertificates";

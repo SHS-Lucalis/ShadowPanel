@@ -42,23 +42,23 @@
         </div>
 
         <div class="md:mr-4 gap-x-1.5 text-white hover:bg-stone-800 px-5 py-2 rounded" v-on:click="switchTheme()">
-          <i v-if="currentTheme === 'dark'" class="fa-solid fa-sun px-2 w-full"></i>
-          <i v-if="currentTheme === 'light'" class="fa-solid fa-moon px-2 w-full"></i>
+          <GIcon v-if="currentTheme === 'dark'" name="sun" class="px-2 w-full" />
+          <GIcon v-if="currentTheme === 'light'" name="moon" class="px-2 w-full" />
         </div>
 
         <MainNavbarDropdown
             class="md:mr-4"
             :button-text="trans('navbar.help')"
-            button-icon="fa-solid fa-circle-question"
+            button-icon="help"
             :items="[
                 [
                     {
-                      icon: 'fa-solid fa-book',
+                      icon: 'book',
                       label: trans('navbar.documentation'),
                       link: pageLanguage === 'ru' ? 'https://docs.gameap.com/ru/' : 'https://docs.gameap.com/en/',
                     },
                     {
-                      icon: 'fa-solid fa-laptop-code',
+                      icon: 'admin-panel',
                       label: trans('navbar.api_documentation'),
                       link: 'https://openapi.gameap.io/',
                     }
@@ -69,23 +69,23 @@
         <MainNavbarDropdown
             class="md:mr-4"
             :button-text="user.name"
-            button-icon="fa-solid fa-user"
+            button-icon="user"
             :items="[
                 [
                     {
-                      icon: 'fa-regular fa-address-card',
+                      icon: 'profile',
                       label: trans('navbar.profile'),
                       route: {name: 'profile'},
                     },
                     {
-                      icon: 'fa-solid fa-key',
+                      icon: 'key',
                       label: trans('tokens.tokens'),
                       route: {name: 'tokens'},
                     }
                 ],
                 [
                     {
-                      icon: 'fa-solid fa-sign-out-alt',
+                      icon: 'logout',
                       label: trans('navbar.sign_out'),
                       onClick: logout,
                     }
@@ -105,7 +105,7 @@
             class="bg-stone-800 text-white block rounded px-3 py-2 font-medium"
             aria-current="page"
         >
-          <i :class="link.icon" class="ml-1"></i>
+          <GIcon :name="link.icon" class="ml-1" />
           {{ link.text }}
         </router-link>
         <router-link
@@ -115,7 +115,7 @@
             class="bg-stone-800 text-white block rounded px-3 py-2 font-medium"
             aria-current="page"
         >
-          <i :class="link.icon" class="ml-1"></i>
+          <GIcon :name="link.icon" class="ml-1" />
           {{ link.text }}
         </router-link>
       </div>

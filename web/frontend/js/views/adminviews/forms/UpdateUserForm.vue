@@ -115,14 +115,14 @@
     </n-form>
 
     <GButton color="green" v-on:click="onClickUpdate" class="mt-4">
-      <i class="fa-regular fa-floppy-disk mr-0.5"></i>
+      <GIcon name="save" class="mr-0.5" />
       <span class="hidden lg:inline">&nbsp;{{ trans('main.save') }}</span>
     </GButton>
   </div>
 </template>
 
 <script setup>
-import { Loading } from "@gameap/ui"
+import { GIcon, Loading } from "@gameap/ui"
 import {ref, defineModel, defineProps, defineEmits} from "vue"
 import {trans} from "../../../i18n/i18n";
 import GButton from "../../../components/GButton.vue";
