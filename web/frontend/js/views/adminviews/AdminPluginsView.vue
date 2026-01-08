@@ -88,7 +88,7 @@
 </template>
 
 <script setup>
-import { GBreadcrumbs, Loading } from "@gameap/ui"
+import { GBreadcrumbs, Loading, GIcon } from "@gameap/ui"
 import { computed, ref, onMounted, onUnmounted, h } from "vue"
 import { trans } from "@/i18n/i18n"
 import GButton from "@/components/GButton.vue"
@@ -163,7 +163,7 @@ const createInstalledColumns = () => {
         }, [
           row.icon_url
               ? h('img', { src: row.icon_url, class: 'w-8 h-8 rounded', alt: row.name })
-              : h('i', { class: 'fa-solid fa-puzzle-piece text-2xl text-stone-400' }),
+              : h(GIcon, { name: 'plugin', class: 'text-2xl text-stone-400' }),
           h('div', { class: 'flex flex-col' }, [
             h('span', { class: 'font-medium text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap' }, row.name),
             !isSmallScreen.value && row.labels?.length > 0
@@ -224,15 +224,15 @@ const createInstalledColumns = () => {
                 color: 'blue',
                 size: 'small',
                 onClick: () => onShowDetailsForUpdate(row.id)
-              }, () => [h('i', { class: 'fa-solid fa-sync' })])
+              }, () => [h(GIcon, { name: 'sync' })])
               : null,
           h(GButton, {
             color: 'red',
             size: 'small',
             onClick: () => onClickUninstall(row.id, row.name)
           }, () => isSmallScreen.value
-              ? [h('i', { class: 'fa-solid fa-xmark' })]
-              : [h('i', { class: 'fa-solid fa-xmark mr-1' }), trans('plugins.uninstall')]),
+              ? [h(GIcon, { name: 'close' })]
+              : [h(GIcon, { name: 'close', class: 'mr-1' }), trans('plugins.uninstall')]),
         ])
       },
     }
@@ -251,7 +251,7 @@ const createStoreColumns = () => {
         }, [
           row.icon_url
               ? h('img', { src: row.icon_url, class: 'w-8 h-8 rounded', alt: row.name })
-              : h('i', { class: 'fa-solid fa-puzzle-piece text-2xl text-stone-400' }),
+              : h(GIcon, { name: 'plugin', class: 'text-2xl text-stone-400' }),
           h('div', { class: 'flex flex-col' }, [
             h('div', { class: 'flex items-center gap-2' }, [
               h('span', { class: 'font-medium text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap' }, row.name),
@@ -316,7 +316,7 @@ const createStoreColumns = () => {
                 color: 'gray',
                 size: 'small',
                 disabled: true,
-              }, () => [h('i', { class: 'fa-solid fa-check' })])
+              }, () => [h(GIcon, { name: 'check' })])
               : h(GButton, {
                 color: 'gray',
                 size: 'small',
@@ -328,12 +328,12 @@ const createStoreColumns = () => {
               color: 'blue',
               size: 'small',
               onClick: () => onShowDetailsForInstall(row.id)
-            }, () => [h('i', { class: 'fa-solid fa-download' })])
+            }, () => [h(GIcon, { name: 'download' })])
             : h(GButton, {
               color: 'blue',
               size: 'small',
               onClick: () => onShowDetailsForInstall(row.id)
-            }, () => [h('i', { class: 'fa-solid fa-download mr-1' }), trans('plugins.install')])
+            }, () => [h(GIcon, { name: 'download', class: 'mr-1' }), trans('plugins.install')])
       },
     }
   ]

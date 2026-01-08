@@ -4,10 +4,10 @@
             <div><strong>{{ lang.modal.properties.disk }}:</strong></div>
             <div>{{ selectedDisk }}</div>
             <div class="text-right cursor-pointer">
-                <i
+                <GIcon
                     @click="copyToClipboard(selectedDisk)"
                     :title="lang.clipboard.copy"
-                    class="fa-regular fa-copy"
+                    name="copy"
                 />
             </div>
         </div>
@@ -15,10 +15,10 @@
             <div><strong>{{ lang.modal.properties.name }}:</strong></div>
             <div class="break-all">{{ selectedItem.basename }}</div>
             <div class="text-right cursor-pointer">
-                <i
+                <GIcon
                     @click="copyToClipboard(selectedItem.basename)"
                     :title="lang.clipboard.copy"
-                    class="fa-regular fa-copy"
+                    name="copy"
                 />
             </div>
         </div>
@@ -26,10 +26,10 @@
             <div><strong>{{ lang.modal.properties.path }}:</strong></div>
             <div class="break-all">{{ selectedItem.path }}</div>
             <div class="text-right cursor-pointer">
-                <i
+                <GIcon
                     @click="copyToClipboard(selectedItem.path)"
                     :title="lang.clipboard.copy"
-                    class="fa-regular fa-copy"
+                    name="copy"
                 />
             </div>
         </div>
@@ -38,10 +38,10 @@
                 <div><strong>{{ lang.modal.properties.size }}:</strong></div>
                 <div>{{ bytesToHuman(selectedItem.size) }}</div>
                 <div class="text-right cursor-pointer">
-                    <i
+                    <GIcon
                         @click="copyToClipboard(bytesToHuman(selectedItem.size))"
                         :title="lang.clipboard.copy"
-                        class="fa-regular fa-copy"
+                        name="copy"
                     />
                 </div>
             </div>
@@ -51,10 +51,10 @@
                 <div><strong>{{ lang.modal.properties.modified }}:</strong></div>
                 <div>{{ timestampToDate(selectedItem.timestamp) }}</div>
                 <div class="text-right cursor-pointer">
-                    <i
+                    <GIcon
                         @click="copyToClipboard(timestampToDate(selectedItem.timestamp))"
                         :title="lang.clipboard.copy"
-                        class="fa-regular fa-copy"
+                        name="copy"
                     />
                 </div>
             </div>
@@ -70,6 +70,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { GIcon } from '@gameap/ui'
 import { useFileManagerStore } from '../../../stores/useFileManagerStore.js'
 import { useTranslate } from '../../../composables/useTranslate.js'
 import { useHelper } from '../../../composables/useHelper.js'
@@ -95,7 +96,7 @@ function copyToClipboard(text) {
 
 defineExpose({
     footerButtons: computed(() => [
-        { label: lang.value.btn.cancel, color: 'black', icon: 'fa-solid fa-xmark', action: hideModal },
+        { label: lang.value.btn.cancel, color: 'black', icon: 'close', action: hideModal },
     ]),
 })
 </script>

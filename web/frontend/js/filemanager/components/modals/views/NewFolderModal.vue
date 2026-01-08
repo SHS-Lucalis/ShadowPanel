@@ -53,8 +53,8 @@ function addFolder() {
 
 defineExpose({
     footerButtons: computed(() => [
-        { label: lang.value.btn.submit, color: 'green', icon: 'fa-solid fa-folder-plus', action: addFolder, disabled: !submitActive.value },
-        { label: lang.value.btn.cancel, color: 'black', icon: 'fa-solid fa-xmark', action: hideModal },
+        { label: lang.value.btn.submit, color: 'green', icon: 'add-folder', action: addFolder, disabled: !submitActive.value },
+        { label: lang.value.btn.cancel, color: 'black', icon: 'close', action: hideModal },
     ]),
 })
 </script>

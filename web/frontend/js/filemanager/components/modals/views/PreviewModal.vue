@@ -55,7 +55,7 @@ onMounted(() => {
 
 defineExpose({
     footerButtons: computed(() => [
-        { label: lang.value.btn.cancel, color: 'black', icon: 'fa-solid fa-xmark', action: hideModal }
+        { label: lang.value.btn.cancel, color: 'black', icon: 'close', action: hideModal }
     ]),
 })
 </script>

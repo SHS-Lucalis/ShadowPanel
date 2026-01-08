@@ -21,10 +21,10 @@
                       <td>{{ server.server_ip }}:{{ server.server_port }}</td>
                       <td class="flex flex-wrap gap-1">
                         <GButton color="blue" size="small" v-on:click="onClickEditPrivileges(server)">
-                          <i class="fas fa-lock"></i>
+                          <GIcon name="lock" />
                         </GButton>
                         <GButton color="red" size="small" v-on:click="removeItem(itemIndex)">
-                            <i class="fa fa-times"></i>
+                            <GIcon name="close" />
                         </GButton>
                       </td>
                   </tr>
@@ -35,7 +35,7 @@
         <div class="mt-6 mb-3">
           <div class="flex justify-center mt-2">
             <GButton color="green" size="small" v-on:click="onClickAddServer">
-              <span class="fa-solid fa-plus"></span>&nbsp;{{ trans('main.add') }}
+              <GIcon name="add" />&nbsp;{{ trans('main.add') }}
             </GButton>
           </div>
         </div>
@@ -74,7 +74,7 @@
 
     <div class="flex justify-center mt-2">
       <GButton color="green" v-on:click="addItem">
-        <span class="fa-solid fa-plus"></span>&nbsp;{{ trans('main.add') }}
+        <GIcon name="add" />&nbsp;{{ trans('main.add') }}
       </GButton>
     </div>
   </n-modal>
@@ -118,7 +118,7 @@
     </div>
 
     <GButton color="green" v-on:click="onClickSavePermissions">
-      <i class="fa-solid fa-floppy-disk"></i>
+      <GIcon name="save" />
       <span class="hidden lg:inline">&nbsp;{{ trans('main.save') }}</span>
     </GButton>
 
@@ -136,6 +136,7 @@ import {
   NSwitch,
 } from "naive-ui"
 import GButton from "../GButton.vue";
+import { GIcon } from '@gameap/ui';
 import GameIcon from "../GameIcon.vue";
 import {trans as systemTrans, trans} from "@/i18n/i18n";
 import {useUserStore} from "@/store/user";

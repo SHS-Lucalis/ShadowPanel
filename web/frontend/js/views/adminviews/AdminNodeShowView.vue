@@ -2,17 +2,17 @@
   <GBreadcrumbs :items="breadcrumbs"></GBreadcrumbs>
 
   <GButton color="blue" size="middle" class="mb-5 mr-1" :route="{name: 'admin.nodes.edit', params: {id: route.params.id}}">
-    <i class="fa-solid fa-edit mr-0.5"></i>
+    <GIcon name="edit" class="mr-0.5" />
     <span>{{ trans('main.edit')}}</span>
   </GButton>
 
   <GButton color="orange" size="middle" class="mb-5 mr-1" :disabled="downloading" @click="downloadLogs">
-    <i class="fa-solid fa-download mr-0.5"></i>
+    <GIcon name="download" class="mr-0.5" />
     <span>{{ trans('dedicated_servers.download_logs')}}</span>
   </GButton>
 
   <GButton color="green" size="middle" class="mb-5 mr-1" :disabled="downloading" @click="downloadCertificates">
-    <i class="fa-solid fa-download mr-0.5"></i>
+    <GIcon name="download" class="mr-0.5" />
     <span>{{ trans('dedicated_servers.download_certificates')}}</span>
   </GButton>
 
@@ -90,7 +90,7 @@
 </template>
 
 <script setup>
-import { GBreadcrumbs, Loading, Progressbar } from "@gameap/ui"
+import { GBreadcrumbs, Loading, Progressbar, GIcon } from "@gameap/ui"
 import {computed, onMounted, ref} from "vue"
 import {trans} from "../../i18n/i18n"
 import {

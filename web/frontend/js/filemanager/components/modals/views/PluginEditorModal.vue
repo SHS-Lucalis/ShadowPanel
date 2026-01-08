@@ -119,7 +119,7 @@ defineExpose({
             buttons.push({
                 label: lang.value.btn.submit,
                 color: 'green',
-                icon: 'fa-solid fa-floppy-disk',
+                icon: 'save',
                 action: triggerSave
             })
         }
@@ -127,7 +127,7 @@ defineExpose({
         buttons.push({
             label: lang.value.btn.cancel,
             color: 'black',
-            icon: 'fa-solid fa-xmark',
+            icon: 'close',
             action: handleClose
         })
 

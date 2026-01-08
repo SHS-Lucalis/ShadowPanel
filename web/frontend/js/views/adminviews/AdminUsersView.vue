@@ -2,7 +2,7 @@
   <GBreadcrumbs :items="breadcrumbs"></GBreadcrumbs>
 
   <GButton color="green" size="middle" class="mb-5" v-on:click="onClickCreate()">
-    <i class="fa fa-plus-square mr-0.5"></i>
+    <GIcon name="add-square" class="mr-0.5" />
     <span>{{ trans('users.create')}}</span>
   </GButton>
 
@@ -65,7 +65,7 @@
 </template>
 
 <script setup>
-import { GBreadcrumbs, Loading } from "@gameap/ui";
+import { GBreadcrumbs, Loading, GIcon } from "@gameap/ui";
 import {trans} from "@/i18n/i18n";
 import {computed, h, ref, onMounted} from "vue"
 import {useUserListStore} from "@/store/userList";
@@ -112,7 +112,7 @@ const createColumns = () => {
             class: 'mr-0.5',
             onClick: () => {onClickShow(row.id)},
           }, [
-            h("i", {class: 'fa-solid fa-eye'}),
+            h(GIcon, {name: 'view'}),
             h("span", {class: 'hidden lg:inline'}, trans('main.view')),
           ]),
           h(GButton, {
@@ -121,7 +121,7 @@ const createColumns = () => {
             class: 'mr-0.5',
             route: {name: 'admin.users.edit', params: {id: row.id}},
           }, [
-            h("i", {class: 'fa-solid fa-pen-to-square'}),
+            h(GIcon, {name: 'edit'}),
             h("span", {class: 'hidden lg:inline'}, trans('main.edit')),
           ]),
           h(GButton, {
@@ -131,7 +131,7 @@ const createColumns = () => {
             text: trans('main.delete'),
             onClick: () => {onClickDelete(row.id)},
           }, [
-            h("i", {class: 'fa-solid fa-trash'}),
+            h(GIcon, {name: 'delete'}),
             h("span", {class: 'hidden lg:inline'}, trans('main.delete')),
           ]),
         ]

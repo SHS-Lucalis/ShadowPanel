@@ -15,15 +15,15 @@
             <template v-if="playingIndex === index">
                 <n-button quaternary circle @click="togglePlay()">
                     <template #icon>
-                        <i v-if="status === 'playing'" class="fa-solid fa-pause" />
-                        <i v-else class="fa-solid fa-play text-blue-500" />
+                        <GIcon v-if="status === 'playing'" name="close" />
+                        <GIcon v-else name="play" class="text-blue-500" />
                     </template>
                 </n-button>
             </template>
             <template v-else>
                 <n-button quaternary circle @click="selectTrack(index)">
                     <template #icon>
-                        <i class="fa-solid fa-play" />
+                        <GIcon name="play" />
                     </template>
                 </n-button>
             </template>
@@ -33,6 +33,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { GIcon } from '@gameap/ui'
 import { useFileManagerStore } from '../../../stores/useFileManagerStore.js'
 import { useSettingsStore } from '../../../stores/useSettingsStore.js'
 

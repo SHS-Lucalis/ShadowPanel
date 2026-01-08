@@ -5,15 +5,15 @@
                 <div class="truncate">
                     <n-tag>
                         <template #icon>
-                            <i class="fa-solid fa-hard-drive"></i>
+                            <GIcon name="hard-drive" />
                         </template>
                         {{ clipboard.disk }}
                     </n-tag>
                 </div>
                 <div class="text-stone-500">
                     <span :title="`${lang.clipboard.actionType} - ${lang.clipboard[clipboard.type]}`">
-                        <i v-if="clipboard.type === 'copy'" class="fa-regular fa-copy" />
-                        <i v-else class="fa-solid fa-scissors" />
+                        <GIcon v-if="clipboard.type === 'copy'" name="copy" />
+                        <GIcon v-else name="cut" />
                     </span>
                 </div>
             </div>
@@ -24,7 +24,7 @@
                 :key="`d-${index}`"
             >
                 <div class="truncate">
-                    <span><i class="fa-regular fa-folder mr-2"></i>{{ dir.name }}</span>
+                    <span><GIcon name="folder" class="mr-2" />{{ dir.name }}</span>
                 </div>
                 <div>
                     <n-button
@@ -35,14 +35,14 @@
                         @click="deleteItem('directories', dir.path)"
                     >
                         <template #icon>
-                            <i class="fa-solid fa-xmark"></i>
+                            <GIcon name="close" />
                         </template>
                     </n-button>
                 </div>
             </div>
             <div class="flex justify-between items-center py-1" v-for="(file, index) in files" :key="`f-${index}`">
                 <div class="truncate">
-                    <span><i :class="[file.icon, 'mr-2']" />{{ file.name }}</span>
+                    <span><GIcon :name="file.icon" class="mr-2" />{{ file.name }}</span>
                 </div>
                 <div>
                     <n-button
@@ -53,7 +53,7 @@
                         @click="deleteItem('files', file.path)"
                     >
                         <template #icon>
-                            <i class="fa-solid fa-xmark"></i>
+                            <GIcon name="close" />
                         </template>
                     </n-button>
                 </div>
@@ -67,6 +67,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { GIcon } from '@gameap/ui'
 import { useFileManagerStore } from '../../../stores/useFileManagerStore.js'
 import { useTranslate } from '../../../composables/useTranslate.js'
 import { useHelper } from '../../../composables/useHelper.js'
@@ -107,8 +108,8 @@ function resetClipboardAction() {
 
 defineExpose({
     footerButtons: computed(() => [
-        { label: lang.value.btn.clear, color: 'red', icon: 'fa-solid fa-broom', action: resetClipboardAction, disabled: !clipboard.value.type },
-        { label: lang.value.btn.cancel, color: 'black', icon: 'fa-solid fa-xmark', action: hideModal },
+        { label: lang.value.btn.clear, color: 'red', icon: 'clear', action: resetClipboardAction, disabled: !clipboard.value.type },
+        { label: lang.value.btn.cancel, color: 'black', icon: 'close', action: hideModal },
     ]),
 })
 </script>

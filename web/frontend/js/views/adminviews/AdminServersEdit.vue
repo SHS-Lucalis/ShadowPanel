@@ -183,7 +183,7 @@
       </div>
 
       <GButton color="green" v-on:click="onClickSave">
-        <i class="fa-solid fa-floppy-disk"></i>
+        <GIcon name="save" />
         <span class="hidden lg:inline">&nbsp;{{ trans('main.save') }}</span>
       </GButton>
     </div>
@@ -191,7 +191,7 @@
 </template>
 
 <script setup>
-import { GBreadcrumbs, Loading } from "@gameap/ui"
+import { GBreadcrumbs, GIcon, Loading } from "@gameap/ui"
 import {computed, ref, onMounted} from "vue"
 import {trans} from "@/i18n/i18n"
 import {NForm, NFormItem, NSwitch} from "naive-ui"

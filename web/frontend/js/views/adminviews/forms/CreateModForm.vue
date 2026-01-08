@@ -38,7 +38,7 @@
     </n-form>
 
     <GButton color="green" v-on:click="onClickSendCreateModForm">
-      <i class="fa-regular fa-square-plus"></i>
+      <GIcon name="add-square" />
       <span class="hidden lg:inline">&nbsp;{{ trans('main.create') }}</span>
     </GButton>
   </div>
@@ -46,6 +46,7 @@
 </template>
 
 <script setup>
+import { GIcon } from "@gameap/ui"
 import {computed, ref, defineModel} from "vue"
 import {trans} from "../../../i18n/i18n";
 import GButton from "../../../components/GButton.vue";

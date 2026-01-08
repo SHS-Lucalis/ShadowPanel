@@ -36,7 +36,7 @@
       />
 
       <n-button @click="clearFilters" type="error" :disabled="!isFiltersSet()" ghost>
-        <i class="fa fa-eraser"></i><span class="hidden lg:inline">&nbsp;{{ trans('main.clear') }}</span>
+        <GIcon name="eraser" /><span class="hidden lg:inline">&nbsp;{{ trans('main.clear') }}</span>
       </n-button>
     </n-input-group>
   </div>
@@ -59,7 +59,7 @@
 </template>
 
 <script setup>
-import { GBreadcrumbs, GStatusBadge, Loading } from "@gameap/ui"
+import { GBreadcrumbs, GStatusBadge, Loading, GIcon } from "@gameap/ui"
 import {computed, h, ref, reactive, onMounted} from "vue"
 import {
   NButton,
@@ -148,7 +148,7 @@ const createColumns = () => {
             class: 'mr-0.5',
             route: {name: 'admin.gdaemon_tasks.output', params: {id: row.id}},
           }, [
-            h("i", {class: 'fa-solid fa-eye'}),
+            h(GIcon, {name: 'view'}),
             h("span", {class: 'hidden lg:inline'}, trans('main.view')),
           ]),
         ]
@@ -308,21 +308,21 @@ const renderTaskOptionLabel = (option) => {
 const renderTaskNameWithIcon = (taskCode, taskName) => {
   switch (taskCode) {
     case 'gsstart':
-      return [h("i", {class: "fa-solid fa-play mr-2"}), taskName]
+      return [h(GIcon, {name: "play", class: "mr-2"}), taskName]
     case 'gsstop':
-      return [h("i", {class: "fa-solid fa-stop mr-2"}), taskName]
+      return [h(GIcon, {name: "stop", class: "mr-2"}), taskName]
     case 'gsrest':
-      return [h("i", {class: "fa-solid fa-redo mr-2"}), taskName]
+      return [h(GIcon, {name: "restart", class: "mr-2"}), taskName]
     case 'gsupd':
-      return [h("i", {class: "fa-solid fa-refresh mr-2"}), taskName]
+      return [h(GIcon, {name: "refresh", class: "mr-2"}), taskName]
     case 'gsinst':
-      return [h("i", {class: "fa-solid fa-download mr-2"}), taskName]
+      return [h(GIcon, {name: "download", class: "mr-2"}), taskName]
     case 'gsdel':
-      return [h("i", {class: "fa-solid fa-trash mr-2"}), taskName]
+      return [h(GIcon, {name: "delete", class: "mr-2"}), taskName]
     case 'gsmove':
-      return [h("i", {class: "fa-solid fa-dolly mr-2"}), taskName]
+      return [h(GIcon, {name: "move", class: "mr-2"}), taskName]
     case 'cmdexec':
-      return [h("i", {class: "fa-solid fa-terminal mr-2"}), taskName]
+      return [h(GIcon, {name: "terminal", class: "mr-2"}), taskName]
     default:
       return taskName
   }

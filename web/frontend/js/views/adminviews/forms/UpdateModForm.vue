@@ -254,7 +254,7 @@
     </n-form>
 
     <GButton color="green" v-on:click="onClickUpdate">
-      <i class="fa-regular fa-floppy-disk mr-0.5"></i>
+      <GIcon name="save" class="mr-0.5" />
       <span class="hidden lg:inline">&nbsp;{{ trans('main.save') }}</span>
     </GButton>
 
@@ -262,6 +262,7 @@
 </template>
 
 <script setup>
+import { GIcon } from "@gameap/ui"
 import {computed, ref, onMounted, h} from "vue"
 import {allOfValidator, requiredValidator, stringLengthValidator} from "../../../parts/validators";
 import {trans} from "../../../i18n/i18n";

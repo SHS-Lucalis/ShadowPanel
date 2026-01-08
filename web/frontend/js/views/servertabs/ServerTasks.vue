@@ -2,7 +2,7 @@
     <div id="server-task-component">
         <div class="mb-2">
           <GButton color="green" size="small" v-on:click="createTask()">
-            <i class="fa fa-plus-square"></i>
+            <GIcon name="add-square" />
             {{ trans('main.add') }}
           </GButton>
         </div>
@@ -23,11 +23,11 @@
           <td class="px-3 py-4">{{ humanRepeatText(value.repeat) }}</td>
           <td class="px-3 py-4">
             <GButton v-on:click="editTask(key)" color="blue" size="small" class="mr-1">
-              <i class="fas fa-edit"></i>
+              <GIcon name="edit" />
               <span class="hidden lg:inline">&nbsp;{{ trans('main.edit') }}</span>
             </GButton>
             <GButton v-on:click="deleteTask(key)" color="red" size="small">
-              <i class="fas fa-trash"></i>
+              <GIcon name="delete" />
               <span class="hidden lg:inline">&nbsp;{{ trans('main.delete') }}</span>
             </GButton>
           </td>
@@ -168,6 +168,7 @@
     import { useServerStore } from '@/store/server'
     import { useServerTasksStore } from '@/store/serverTasks'
     import { pluralize, trans } from '@/i18n/i18n'
+    import { GIcon } from '@gameap/ui'
     import GButton from "@/components/GButton.vue";
     import {confirm, errorNotification} from "@/parts/dialogs";
 
@@ -178,7 +179,7 @@
     const RADIO_REPEAT_CUSTOM       = '';
 
     export default {
-      components: {GButton},
+      components: {GButton, GIcon},
         props: {
             serverId: Number,
             privileges: {

@@ -6,29 +6,29 @@
                     <th class="w-65" v-on:click="handleSortBy('name')">
                         {{ lang.manager.table.name }}
                         <template v-if="sortSettings.field === 'name'">
-                            <i class="fa-solid fa-arrow-down-wide-short" v-show="sortSettings.direction === 'down'" />
-                            <i class="fa-solid fa-arrow-up-wide-short" v-show="sortSettings.direction === 'up'" />
+                            <GIcon name="sort-desc" v-show="sortSettings.direction === 'down'" />
+                            <GIcon name="sort-asc" v-show="sortSettings.direction === 'up'" />
                         </template>
                     </th>
                     <th class="w-10" v-on:click="handleSortBy('size')">
                         {{ lang.manager.table.size }}
                         <template v-if="sortSettings.field === 'size'">
-                            <i class="fa-solid fa-arrow-down-wide-short" v-show="sortSettings.direction === 'down'" />
-                            <i class="fa-solid fa-arrow-up-wide-short" v-show="sortSettings.direction === 'up'" />
+                            <GIcon name="sort-desc" v-show="sortSettings.direction === 'down'" />
+                            <GIcon name="sort-asc" v-show="sortSettings.direction === 'up'" />
                         </template>
                     </th>
                     <th class="w-10" v-on:click="handleSortBy('type')">
                         {{ lang.manager.table.type }}
                         <template v-if="sortSettings.field === 'type'">
-                            <i class="fa-solid fa-arrow-down-wide-short" v-show="sortSettings.direction === 'down'" />
-                            <i class="fa-solid fa-arrow-up-wide-short" v-show="sortSettings.direction === 'up'" />
+                            <GIcon name="sort-desc" v-show="sortSettings.direction === 'down'" />
+                            <GIcon name="sort-asc" v-show="sortSettings.direction === 'up'" />
                         </template>
                     </th>
                     <th class="w-auto" v-on:click="handleSortBy('date')">
                         {{ lang.manager.table.date }}
                         <template v-if="sortSettings.field === 'date'">
-                            <i class="fa-solid fa-arrow-down-wide-short" v-show="sortSettings.direction === 'down'" />
-                            <i class="fa-solid fa-arrow-up-wide-short" v-show="sortSettings.direction === 'up'" />
+                            <GIcon name="sort-desc" v-show="sortSettings.direction === 'down'" />
+                            <GIcon name="sort-asc" v-show="sortSettings.direction === 'up'" />
                         </template>
                     </th>
                 </tr>
@@ -36,7 +36,7 @@
             <tbody>
                 <tr v-if="!isRootPath">
                     <td colspan="4" class="fm-content-item" v-on:click="levelUp">
-                        <i class="fa-solid fa-arrow-turn-up"></i>
+                        <GIcon name="arrow-turn-up" />
                     </td>
                 </tr>
                 <tr
@@ -51,7 +51,7 @@
                         v-bind:class="acl && directory.acl === 0 ? 'text-hidden' : ''"
                         v-on:dblclick="handleSelectDirectory(directory.path)"
                     >
-                        <i class="fa-regular fa-folder"></i> {{ directory.basename }}
+                        <GIcon name="folder" /> {{ directory.basename }}
                     </td>
                     <td />
                     <td>{{ lang.manager.table.folder }}</td>
@@ -68,7 +68,7 @@
                     v-on:contextmenu.prevent="contextMenu(file, $event)"
                 >
                     <td class="fm-content-item unselectable" v-bind:class="acl && file.acl === 0 ? 'text-hidden' : ''">
-                        <i v-bind:class="extensionToIcon(file.extension)" />
+                        <GIcon :name="extensionToIcon(file.extension)" />
                         {{ file.basename }}
                     </td>
                     <td>{{ bytesToHuman(file.size) }}</td>
@@ -86,6 +86,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { GIcon } from '@gameap/ui'
 import EventBus from '../../emitter.js'
 import { useFileManagerStore } from '../../stores/useFileManagerStore.js'
 import { useSettingsStore } from '../../stores/useSettingsStore.js'

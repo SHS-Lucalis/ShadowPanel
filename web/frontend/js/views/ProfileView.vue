@@ -2,7 +2,7 @@
   <GBreadcrumbs :items="breadcrumbs"></GBreadcrumbs>
 
   <GButton color="green" size="middle" class="mb-5" v-on:click="onClickUpdate()">
-    <i class="fa-solid fa-user-pen mr-1"></i>
+    <GIcon name="edit" class="mr-1" />
     <span>{{ trans('profile.edit')}}</span>
   </GButton>
 
@@ -56,7 +56,7 @@
 </template>
 
 <script setup>
-import { GBreadcrumbs } from "@gameap/ui"
+import { GBreadcrumbs, GIcon } from "@gameap/ui"
 import {computed, ref} from "vue"
 import {trans, getCurrentLanguage, changeLanguage} from "@/i18n/i18n"
 import {

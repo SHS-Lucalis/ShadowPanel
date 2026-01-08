@@ -53,8 +53,8 @@ function addFile() {
 
 defineExpose({
     footerButtons: computed(() => [
-        { label: lang.value.btn.submit, color: 'green', icon: 'fa-solid fa-plus', action: addFile, disabled: !submitActive.value },
-        { label: lang.value.btn.cancel, color: 'black', icon: 'fa-solid fa-xmark', action: hideModal },
+        { label: lang.value.btn.submit, color: 'green', icon: 'file', action: addFile, disabled: !submitActive.value },
+        { label: lang.value.btn.cancel, color: 'black', icon: 'close', action: hideModal },
     ]),
 })
 </script>

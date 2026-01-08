@@ -36,8 +36,8 @@ function clearErrors() {
 
 defineExpose({
     footerButtons: computed(() => [
-        { label: lang.value.btn.clear, color: 'red', icon: 'fa-solid fa-broom', action: clearErrors, disabled: !errors.value.length },
-        { label: lang.value.btn.cancel, color: 'black', icon: 'fa-solid fa-xmark', action: hideModal },
+        { label: lang.value.btn.clear, color: 'red', icon: 'clear', action: clearErrors, disabled: !errors.value.length },
+        { label: lang.value.btn.cancel, color: 'black', icon: 'close', action: hideModal },
     ]),
 })
 </script>

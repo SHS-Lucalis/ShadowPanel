@@ -35,8 +35,8 @@ function deleteItems() {
 
 defineExpose({
     footerButtons: computed(() => [
-        { label: lang.value.modal.delete.title, color: 'red', icon: 'fa-solid fa-trash', action: deleteItems, disabled: !selectedItems.value.length },
-        { label: lang.value.btn.cancel, color: 'black', icon: 'fa-solid fa-xmark', action: hideModal },
+        { label: lang.value.modal.delete.title, color: 'red', icon: 'delete', action: deleteItems, disabled: !selectedItems.value.length },
+        { label: lang.value.btn.cancel, color: 'black', icon: 'close', action: hideModal },
     ]),
 })
 </script>

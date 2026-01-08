@@ -3,22 +3,22 @@
 
   <div class="mb-5">
     <GButton class="mr-1" color="green" v-on:click="onClickGameCreate()">
-      <i class="fa-solid fa-plus-square"></i>&nbsp;{{ trans('games.add') }}
+      <GIcon name="add-square" />&nbsp;{{ trans('games.add') }}
     </GButton>
 
     <GButton class="mr-1" color="orange" v-on:click="onClickModCreate()">
-      <i class="fa-solid fa-cat"></i>&nbsp;{{ trans('games.add_mod') }}
+      <GIcon name="mods" />&nbsp;{{ trans('games.add_mod') }}
     </GButton>
 
     <GButton class="mr-1" color="black" v-on:click="onClickGamesUpgrade()">
-      <i class="fa-solid fa-sync"></i>&nbsp{{ trans('games.upgrade')}}
+      <GIcon name="sync" />&nbsp{{ trans('games.upgrade')}}
     </GButton>
   </div>
 
   <div class="w-1/4 mb-1">
     <n-input-group>
       <n-input-group-label>
-        <i class="fa-solid fa-magnifying-glass"></i>
+        <GIcon name="search" />
       </n-input-group-label>
       <n-input
           v-model:value="searchGames"
@@ -26,7 +26,7 @@
           :placeholder="trans('main.search')"
       />
       <n-button @click="clearSearch" type="error" :disabled="!searchGames" ghost>
-        <i class="fa fa-eraser"></i>
+        <GIcon name="eraser" />
       </n-button>
     </n-input-group>
   </div>
@@ -80,7 +80,7 @@
 </template>
 
 <script setup>
-import { GBreadcrumbs, GDeletableList, Loading } from "@gameap/ui"
+import { GBreadcrumbs, GDeletableList, Loading, GIcon } from "@gameap/ui"
 import {computed, ref, onMounted, h, watch} from "vue"
 import {trans} from "../../i18n/i18n"
 import GButton from "../../components/GButton.vue"
@@ -156,7 +156,7 @@ const createColumns = () => {
             class: 'px-2 py-1',
             onClick: () => {onClickModCreate(row.code)},
           }, [
-            h("i", {class: 'fa-solid fa-cat mr-0.5'}),
+            h(GIcon, {name: 'mods', class: 'mr-0.5'}),
             h("span", {class: ''}, trans('games.add_first_mod'))
           ])
         }
@@ -182,7 +182,7 @@ const createColumns = () => {
             class: 'mr-0.5',
             route: {name: 'admin.games.edit', params: {code: row.code}},
           }, [
-            h("i", {class: 'fa-solid fa-pen-to-square'}),
+            h(GIcon, {name: 'edit'}),
             h("span", {class: 'hidden lg:inline'}, trans('main.edit')),
           ]),
           h(GButton, {
@@ -191,7 +191,7 @@ const createColumns = () => {
             text: trans('main.delete'),
             onClick: () => {onClickGameDelete(row.code)},
           }, [
-            h("i", {class: 'fa-solid fa-trash'}),
+            h(GIcon, {name: 'delete'}),
             h("span", {class: 'hidden lg:inline'}, trans('main.delete')),
           ]),
         ]

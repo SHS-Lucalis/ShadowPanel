@@ -2,7 +2,7 @@
   <GBreadcrumbs :items="breadcrumbs"></GBreadcrumbs>
 
   <GButton class="mr-1" color="orange" v-on:click="onClickModCreate()">
-    <i class="fa-solid fa-cat"></i>&nbsp;{{ trans('games.add_mod') }}
+    <GIcon name="cat" />&nbsp;{{ trans('games.add_mod') }}
   </GButton>
 
   <UpdateGameForm :loading="loading" v-model="gameUpdateModel" v-on:update="onClickUpdate">
@@ -46,7 +46,7 @@
 </template>
 
 <script setup>
-import { GBreadcrumbs, GDeletableList, Loading } from "@gameap/ui"
+import { GBreadcrumbs, GDeletableList, GIcon, Loading } from "@gameap/ui"
 import UpdateGameForm from "./forms/UpdateGameForm.vue"
 import {computed, ref, onMounted} from "vue"
 import {trans} from "../../i18n/i18n";

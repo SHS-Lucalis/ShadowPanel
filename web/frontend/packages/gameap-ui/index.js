@@ -7,6 +7,21 @@ export { default as GMenu } from './components/GMenu.vue'
 export { default as GMenuButton } from './components/GMenuButton.vue'
 export { default as GMenuItems } from './components/GMenuItems.vue'
 export { default as GMenuItem } from './components/GMenuItem.vue'
+export { default as GIcon } from './components/GIcon.vue'
+
+export { registerIcons, iconRegistry, getIcon, hasIcon } from './icons/registry.js'
+export { defaultIconMap } from './icons/iconMap.js'
+
+import GBreadcrumbs from './components/GBreadcrumbs.vue'
+import GDeletableList from './components/GDeletableList.vue'
+import GStatusBadge from './components/GStatusBadge.vue'
+import Loading from './components/Loading.vue'
+import Progressbar from './components/Progressbar.vue'
+import GMenu from './components/GMenu.vue'
+import GMenuButton from './components/GMenuButton.vue'
+import GMenuItems from './components/GMenuItems.vue'
+import GMenuItem from './components/GMenuItem.vue'
+import GIcon from './components/GIcon.vue'
 
 export function install(app) {
   app.component('GBreadcrumbs', GBreadcrumbs)
@@ -18,6 +33,7 @@ export function install(app) {
   app.component('GMenuButton', GMenuButton)
   app.component('GMenuItems', GMenuItems)
   app.component('GMenuItem', GMenuItem)
+  app.component('GIcon', GIcon)
 }
 
 export default { install }

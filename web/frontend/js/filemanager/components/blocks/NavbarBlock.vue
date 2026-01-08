@@ -9,7 +9,7 @@
                         v-on:click="refreshAll()"
                         v-bind:title="lang.btn.refresh"
                     >
-                        <i class="fa-solid fa-rotate"></i>
+                        <GIcon name="refresh" />
                     </button>
                 </div>
                 <div class="btn-group mr-4" role="group">
@@ -19,7 +19,7 @@
                         v-on:click="showModal('NewFileModal')"
                         v-bind:title="lang.btn.file"
                     >
-                        <i class="fa-regular fa-file"></i>
+                        <GIcon name="file" />
                     </button>
                     <button
                         type="button"
@@ -27,7 +27,7 @@
                         v-on:click="showModal('NewFolderModal')"
                         v-bind:title="lang.btn.folder"
                     >
-                        <i class="fa-regular fa-folder"></i>
+                        <GIcon name="folder" />
                     </button>
                     <button
                         type="button"
@@ -36,7 +36,7 @@
                         v-if="uploading"
                         v-bind:title="lang.btn.upload"
                     >
-                        <i class="fa-solid fa-upload"></i>
+                        <GIcon name="upload" />
                     </button>
                     <button
                         type="button"
@@ -45,7 +45,7 @@
                         v-on:click="showModal('UploadModal')"
                         v-bind:title="lang.btn.upload"
                     >
-                        <i class="fa-solid fa-upload"></i>
+                        <GIcon name="upload" />
                     </button>
                     <button
                         type="button"
@@ -54,7 +54,7 @@
                         v-on:click="showModal('DeleteModal')"
                         v-bind:title="lang.btn.delete"
                     >
-                        <i class="fa-regular fa-trash-can"></i>
+                        <GIcon name="delete" />
                     </button>
                 </div>
                 <div class="btn-group mr-4" role="group">
@@ -65,7 +65,7 @@
                         v-bind:title="lang.btn.copy"
                         v-on:click="handleToClipboard('copy')"
                     >
-                        <i class="fa-regular fa-copy"></i>
+                        <GIcon name="copy" />
                     </button>
                     <button
                         type="button"
@@ -74,7 +74,7 @@
                         v-bind:title="lang.btn.cut"
                         v-on:click="handleToClipboard('cut')"
                     >
-                        <i class="fa-solid fa-scissors"></i>
+                        <GIcon name="cut" />
                     </button>
                     <button
                         type="button"
@@ -83,7 +83,7 @@
                         v-bind:title="lang.btn.paste"
                         v-on:click="handlePaste"
                     >
-                        <i class="fa-regular fa-paste"></i>
+                        <GIcon name="paste" />
                     </button>
                 </div>
             </div>
@@ -93,6 +93,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { GIcon } from '@gameap/ui'
 import { notification } from '@/parts/dialogs.js'
 import { useFileManagerStore } from '../../stores/useFileManagerStore.js'
 import { useMessagesStore } from '../../stores/useMessagesStore.js'

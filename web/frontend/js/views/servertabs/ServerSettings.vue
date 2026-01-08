@@ -21,7 +21,7 @@
       </n-form-item>
 
       <GButton color="green" v-on:click="saveSettings()">
-        <i class="fas fa-edit"></i>
+        <GIcon name="save" />
         <span class="hidden lg:inline">&nbsp;{{ trans('main.save') }}</span>
       </GButton>
   </n-form>
@@ -39,6 +39,7 @@ import {
   NEmpty,
   NSwitch,
 } from "naive-ui"
+import { GIcon } from '@gameap/ui'
 import GButton from '@/components/GButton.vue'
 import {errorNotification, notification} from "@/parts/dialogs";
 
