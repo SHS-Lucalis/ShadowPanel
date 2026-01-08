@@ -378,6 +378,7 @@
     "summary": "Summary",
     "license": "License",
     "repository": "Repository",
+    "plugin_page": "Plugin Page",
     "min_gameap_version": "Min GameAP Version",
     "min_plugin_api": "Min Plugin API",
     "downloads": "Downloads",

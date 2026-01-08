@@ -379,6 +379,7 @@
     "summary": "Краткое описание",
     "license": "Лицензия",
     "repository": "Репозиторий",
+    "plugin_page": "Страница плагина",
     "min_gameap_version": "Мин. версия GameAP",
     "min_plugin_api": "Мин. версия API плагинов",
     "downloads": "Загрузки",

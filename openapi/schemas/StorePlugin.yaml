@@ -4,7 +4,12 @@ properties:
   id:
     type: string
     description: Plugin ID
-    example: "auto-restart"
+    example: "hexeditor4jm2"
+  url:
+    type: string
+    format: uri
+    description: Plugin page URL
+    example: "https://plugins.gameap.dev/plugins/hexeditor4jm2"
   name:
     type: string
     description: Plugin name
@@ -57,6 +62,7 @@ properties:
     example: "1.1.0"
 required:
   - id
+  - url
   - name
   - summary
   - icon_url

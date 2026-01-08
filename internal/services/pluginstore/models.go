@@ -31,6 +31,7 @@ type Screenshot struct {
 
 type Plugin struct {
 	ID            string    `json:"id"`
+	URL           string    `json:"url"`
 	Name          string    `json:"name"`
 	Summary       string    `json:"summary"`
 	IconURL       string    `json:"icon_url"`
@@ -46,6 +47,7 @@ type Plugin struct {
 
 type PluginDetails struct {
 	ID                  string    `json:"id"`
+	URL                 string    `json:"url"`
 	Name                string    `json:"name"`
 	Summary             string    `json:"summary"`
 	Description         string    `json:"description"`

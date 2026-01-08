@@ -22,6 +22,7 @@ type categoryResponse struct {
 
 type pluginResponse struct {
 	ID               string           `json:"id"`
+	URL              string           `json:"url"`
 	Name             string           `json:"name"`
 	Summary          string           `json:"summary"`
 	IconURL          string           `json:"icon_url"`
@@ -65,6 +66,7 @@ func newPluginsResponse(
 
 		data = append(data, pluginResponse{
 			ID:      p.ID,
+			URL:     p.URL,
 			Name:    p.Name,
 			Summary: p.Summary,
 			IconURL: p.IconURL,

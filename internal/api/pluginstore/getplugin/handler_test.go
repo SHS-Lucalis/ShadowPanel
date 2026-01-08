@@ -21,6 +21,7 @@ import (
 func TestGetPlugin(t *testing.T) {
 	storeResp := pluginstore.PluginDetails{
 		ID:            "hexeditor4jm2",
+		URL:           "https://plugins.gameap.dev/plugins/hexeditor4jm2",
 		Name:          "HEX Editor",
 		Summary:       "Hex editor in filemanager",
 		Description:   "Full description here",
@@ -46,6 +47,7 @@ func TestGetPlugin(t *testing.T) {
 			wantStatus: http.StatusOK,
 			wantBody: `{
 				"id": "hexeditor4jm2",
+				"url": "https://plugins.gameap.dev/plugins/hexeditor4jm2",
 				"name": "HEX Editor",
 				"summary": "Hex editor in filemanager",
 				"description": "Full description here",
