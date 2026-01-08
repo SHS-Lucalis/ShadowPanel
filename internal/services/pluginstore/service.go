@@ -27,17 +27,19 @@ const (
 
 type Service struct {
 	baseURL    string
+	licenseKey string
 	httpClient *http.Client
 	cache      cache.Cache
 }
 
-func NewService(baseURL string, c cache.Cache) *Service {
+func NewService(baseURL string, licenseKey string, c cache.Cache) *Service {
 	if baseURL == "" {
 		baseURL = defaultBaseURL
 	}
 
 	return &Service{
-		baseURL: baseURL,
+		baseURL:    baseURL,
+		licenseKey: licenseKey,
 		httpClient: &http.Client{
 			Timeout: httpTimeout,
 		},
@@ -47,6 +49,33 @@ func NewService(baseURL string, c cache.Cache) *Service {
 
 func (s *Service) BaseURL() string {
 	return s.baseURL
+}
+
+func (s *Service) HasLicenseKey() bool {
+	return s.licenseKey != ""
+}
+
+func (s *Service) ValidateLicense(ctx context.Context) (*LicenseValidation, error) {
+	if s.licenseKey == "" {
+		return nil, nil
+	}
+
+	cacheKey := s.buildCacheKey("license", "", "")
+
+	if cached, err := s.getFromCache(ctx, cacheKey); err == nil {
+		if validation, ok := cached.(*LicenseValidation); ok {
+			return validation, nil
+		}
+	}
+
+	validation, err := fetchJSONWithLicenseKey[LicenseValidation](ctx, s, "/licenses/validate", "", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	s.setCache(ctx, cacheKey, &validation)
+
+	return &validation, nil
 }
 
 func (s *Service) GetCategories(ctx context.Context, lang string) ([]Category, error) {
@@ -208,6 +237,10 @@ func (s *Service) DownloadPlugin(
 		return nil, errors.Wrap(err, "failed to create download request")
 	}
 
+	if s.licenseKey != "" {
+		req.Header.Set("X-License-Key", s.licenseKey)
+	}
+
 	resp, err := s.httpClient.Do(req) //nolint:bodyclose
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to execute download request")
@@ -215,7 +248,7 @@ func (s *Service) DownloadPlugin(
 	defer closeBody(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.Errorf("download failed with HTTP status: %d", resp.StatusCode)
+		return nil, parseAPIError(resp.Body, resp.StatusCode)
 	}
 
 	limitedReader := io.LimitReader(resp.Body, maxDownloadSize)
@@ -279,6 +312,27 @@ func fetchJSON[T any](
 	lang string,
 	query url.Values,
 ) (T, error) {
+	return doFetchJSON[T](ctx, s, path, lang, query, false)
+}
+
+func fetchJSONWithLicenseKey[T any](
+	ctx context.Context,
+	s *Service,
+	path string,
+	lang string,
+	query url.Values,
+) (T, error) {
+	return doFetchJSON[T](ctx, s, path, lang, query, true)
+}
+
+func doFetchJSON[T any](
+	ctx context.Context,
+	s *Service,
+	path string,
+	lang string,
+	query url.Values,
+	includeLicenseKey bool,
+) (T, error) {
 	var zero T
 
 	requestURL := s.baseURL + path
@@ -295,6 +349,9 @@ func fetchJSON[T any](
 	if lang != "" {
 		req.Header.Set("Accept-Language", lang)
 	}
+	if includeLicenseKey && s.licenseKey != "" {
+		req.Header.Set("X-License-Key", s.licenseKey)
+	}
 
 	resp, err := s.httpClient.Do(req) //nolint:bodyclose
 	if err != nil {
@@ -303,7 +360,7 @@ func fetchJSON[T any](
 	defer closeBody(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
-		return zero, errors.Errorf("unexpected HTTP status: %d", resp.StatusCode)
+		return zero, parseAPIError(resp.Body, resp.StatusCode)
 	}
 
 	var result T

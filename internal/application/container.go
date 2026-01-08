@@ -869,7 +869,11 @@ func (c *Container) createGlobalAPIService() *services.GlobalAPIService {
 
 func (c *Container) PluginStoreService() *pluginstore.Service {
 	if c.pluginStoreService == nil {
-		c.pluginStoreService = pluginstore.NewService(c.config.PluginStore.URL, c.Cache())
+		c.pluginStoreService = pluginstore.NewService(
+			c.config.PluginStore.URL,
+			c.config.PluginStore.LicenseKey,
+			c.Cache(),
+		)
 	}
 
 	return c.pluginStoreService

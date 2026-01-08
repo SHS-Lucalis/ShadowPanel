@@ -70,7 +70,7 @@ func TestGetCategories(t *testing.T) {
 			mockServer := tt.mockServer()
 			defer mockServer.Close()
 
-			storeService := pluginstore.NewService(mockServer.URL, cache.NewInMemory())
+			storeService := pluginstore.NewService(mockServer.URL, "", cache.NewInMemory())
 
 			h := getcategories.NewHandler(storeService, api.NewResponder())
 			recorder := httptest.NewRecorder()
@@ -107,7 +107,7 @@ func TestGetCategories_with_language_query_param(t *testing.T) {
 	}))
 	defer mockServer.Close()
 
-	storeService := pluginstore.NewService(mockServer.URL, cache.NewInMemory())
+	storeService := pluginstore.NewService(mockServer.URL, "", cache.NewInMemory())
 
 	h := getcategories.NewHandler(storeService, api.NewResponder())
 	recorder := httptest.NewRecorder()

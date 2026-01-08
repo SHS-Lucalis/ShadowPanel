@@ -94,7 +94,8 @@ type Config struct {
 	}
 
 	PluginStore struct {
-		URL string `env:"PLUGIN_STORE_URL" envDefault:"https://plugins.gameap.dev/api"`
+		URL        string `env:"PLUGIN_STORE_URL" envDefault:"https://plugins.gameap.dev/api"`
+		LicenseKey string `env:"PLUGIN_STORE_LICENSE_KEY" envDefault:""`
 	}
 }
 

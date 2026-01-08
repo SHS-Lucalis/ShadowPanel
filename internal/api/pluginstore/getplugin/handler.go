@@ -1,6 +1,7 @@
 package getplugin
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/gameap/gameap/internal/api/base"
@@ -61,5 +62,17 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	h.responder.Write(ctx, rw, newPluginResponse(plugin, installedVersion))
+	var licenseValidation *pluginstore.LicenseValidation
+	if h.storeService.HasLicenseKey() {
+		licenseValidation, err = h.storeService.ValidateLicense(ctx)
+		if err != nil {
+			slog.Warn(
+				"failed to validate license",
+				slog.String("error", err.Error()),
+				slog.String("plugin_id", pluginID),
+			)
+		}
+	}
+
+	h.responder.Write(ctx, rw, newPluginResponse(plugin, installedVersion, licenseValidation))
 }

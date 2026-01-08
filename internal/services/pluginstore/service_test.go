@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gameap/gameap/internal/cache"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -76,7 +77,7 @@ func TestService_GetCategories(t *testing.T) {
 			mockStatusCode: http.StatusInternalServerError,
 			mockResponse:   nil,
 			wantErr:        true,
-			errContains:    "unexpected HTTP status: 500",
+			errContains:    "plugin store API error: HTTP 500",
 		},
 		{
 			name:           "invalid_JSON_response",
@@ -117,7 +118,7 @@ func TestService_GetCategories(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			service := NewService(server.URL, testCache)
+			service := NewService(server.URL, "", testCache)
 
 			categories, err := service.GetCategories(context.Background(), tt.lang)
 
@@ -174,7 +175,7 @@ func TestService_GetLabels(t *testing.T) {
 			}))
 			defer server.Close()
 
-			service := NewService(server.URL, cache.NewInMemory())
+			service := NewService(server.URL, "", cache.NewInMemory())
 
 			labels, err := service.GetLabels(context.Background(), tt.lang)
 
@@ -272,7 +273,7 @@ func TestService_GetPlugins(t *testing.T) {
 			}))
 			defer server.Close()
 
-			service := NewService(server.URL, cache.NewInMemory())
+			service := NewService(server.URL, "", cache.NewInMemory())
 
 			resp, err := service.GetPlugins(context.Background(), "en", tt.params)
 
@@ -344,7 +345,7 @@ func TestService_GetPlugin(t *testing.T) {
 			}))
 			defer server.Close()
 
-			service := NewService(server.URL, cache.NewInMemory())
+			service := NewService(server.URL, "", cache.NewInMemory())
 
 			plugin, err := service.GetPlugin(context.Background(), tt.pluginID, "en")
 
@@ -411,7 +412,7 @@ func TestService_GetPluginVersions(t *testing.T) {
 			}))
 			defer server.Close()
 
-			service := NewService(server.URL, cache.NewInMemory())
+			service := NewService(server.URL, "", cache.NewInMemory())
 
 			resp, err := service.GetPluginVersions(context.Background(), tt.pluginID, tt.params)
 
@@ -436,6 +437,7 @@ func TestService_DownloadPlugin(t *testing.T) {
 		mockStatusCode int
 		wantErr        bool
 		errContains    string
+		wantHTTPStatus int
 	}{
 		{
 			name:           "successful_download",
@@ -446,12 +448,44 @@ func TestService_DownloadPlugin(t *testing.T) {
 			wantErr:        false,
 		},
 		{
-			name:           "download_not_found",
+			name:           "download_not_found_with_json_message",
 			pluginID:       "nonexistent",
 			version:        "1.0.0",
 			mockStatusCode: http.StatusNotFound,
+			mockResponse:   []byte(`{"message": "Plugin not found", "error": "", "http_code": 404}`),
 			wantErr:        true,
-			errContains:    "download failed with HTTP status: 404",
+			errContains:    "Plugin not found",
+			wantHTTPStatus: http.StatusNotFound,
+		},
+		{
+			name:           "download_402_payment_required",
+			pluginID:       "paid-plugin",
+			version:        "1.0.0",
+			mockStatusCode: http.StatusPaymentRequired,
+			mockResponse:   []byte(`{"message": "Payment required for this plugin", "error": "", "http_code": 402}`),
+			wantErr:        true,
+			errContains:    "Payment required for this plugin",
+			wantHTTPStatus: http.StatusPaymentRequired,
+		},
+		{
+			name:           "download_403_forbidden",
+			pluginID:       "restricted-plugin",
+			version:        "1.0.0",
+			mockStatusCode: http.StatusForbidden,
+			mockResponse:   []byte(`{"message": "", "error": "Access denied", "http_code": 403}`),
+			wantErr:        true,
+			errContains:    "Access denied",
+			wantHTTPStatus: http.StatusForbidden,
+		},
+		{
+			name:           "download_4XX_with_empty_body",
+			pluginID:       "some-plugin",
+			version:        "1.0.0",
+			mockStatusCode: http.StatusBadRequest,
+			mockResponse:   nil,
+			wantErr:        true,
+			errContains:    "plugin store API error: HTTP 400",
+			wantHTTPStatus: http.StatusBadRequest,
 		},
 	}
 
@@ -468,7 +502,7 @@ func TestService_DownloadPlugin(t *testing.T) {
 			}))
 			defer server.Close()
 
-			service := NewService(server.URL, nil)
+			service := NewService(server.URL, "", nil)
 
 			data, err := service.DownloadPlugin(context.Background(), tt.pluginID, tt.version)
 
@@ -476,6 +510,11 @@ func TestService_DownloadPlugin(t *testing.T) {
 				require.Error(t, err)
 				if tt.errContains != "" {
 					assert.Contains(t, err.Error(), tt.errContains)
+				}
+				if tt.wantHTTPStatus != 0 {
+					var apiErr *APIError
+					require.True(t, errors.As(err, &apiErr), "error should be *APIError")
+					assert.Equal(t, tt.wantHTTPStatus, apiErr.HTTPStatus())
 				}
 			} else {
 				require.NoError(t, err)
@@ -577,7 +616,7 @@ func TestService_CacheExpiration(t *testing.T) {
 	defer server.Close()
 
 	testCache := cache.NewInMemory()
-	service := NewService(server.URL, testCache)
+	service := NewService(server.URL, "", testCache)
 
 	// First call should hit the API
 	categories1, err := service.GetCategories(context.Background(), "en")
@@ -598,7 +637,7 @@ func TestService_ContextCancellation(t *testing.T) {
 	}))
 	defer server.Close()
 
-	service := NewService(server.URL, nil)
+	service := NewService(server.URL, "", nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
@@ -620,7 +659,7 @@ func TestService_WithNilCache(t *testing.T) {
 	}))
 	defer server.Close()
 
-	service := NewService(server.URL, nil)
+	service := NewService(server.URL, "", nil)
 
 	// First call
 	_, err := service.GetCategories(context.Background(), "en")
@@ -643,7 +682,7 @@ func TestService_LanguageAwareCaching(t *testing.T) {
 	defer server.Close()
 
 	testCache := cache.NewInMemory()
-	service := NewService(server.URL, testCache)
+	service := NewService(server.URL, "", testCache)
 
 	categoriesEN, err := service.GetCategories(context.Background(), "en")
 	require.NoError(t, err)
@@ -660,21 +699,58 @@ func TestService_LanguageAwareCaching(t *testing.T) {
 }
 
 func TestService_BaseURL(t *testing.T) {
-	service := NewService("https://custom.api.com", nil)
+	service := NewService("https://custom.api.com", "", nil)
 	assert.Equal(t, "https://custom.api.com", service.BaseURL())
 }
 
 func TestService_DefaultBaseURL(t *testing.T) {
-	service := NewService("", nil)
+	service := NewService("", "", nil)
 	assert.Equal(t, defaultBaseURL, service.BaseURL())
 }
 
 func TestNewService(t *testing.T) {
 	testCache := cache.NewInMemory()
-	service := NewService("https://test.com", testCache)
+	service := NewService("https://test.com", "", testCache)
 
 	require.NotNil(t, service)
 	assert.Equal(t, "https://test.com", service.baseURL)
 	assert.NotNil(t, service.httpClient)
 	assert.Equal(t, 30*time.Second, service.httpClient.Timeout)
+}
+
+func TestAPIError(t *testing.T) {
+	tests := []struct {
+		name           string
+		statusCode     int
+		message        string
+		wantError      string
+		wantHTTPStatus int
+	}{
+		{
+			name:           "error_with_message",
+			statusCode:     http.StatusPaymentRequired,
+			message:        "Payment required",
+			wantError:      "Payment required",
+			wantHTTPStatus: http.StatusPaymentRequired,
+		},
+		{
+			name:           "error_without_message",
+			statusCode:     http.StatusForbidden,
+			message:        "",
+			wantError:      "plugin store API error: HTTP 403",
+			wantHTTPStatus: http.StatusForbidden,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			apiErr := &APIError{
+				StatusCode: tt.statusCode,
+				Message:    tt.message,
+			}
+
+			assert.Equal(t, tt.wantError, apiErr.Error())
+			assert.Equal(t, tt.wantHTTPStatus, apiErr.HTTPStatus())
+		})
+	}
 }
