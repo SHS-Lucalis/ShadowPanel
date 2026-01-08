@@ -81,6 +81,9 @@ export const defaultIconMap = {
   "gamepad": "fa-solid fa-gamepad",
   "tasks": "fa-solid fa-tasks",
   "plug": "fa-solid fa-plug",
+  "memory": "fa-solid fa-memory",
+  "cpu": "fa-solid fa-microchip",
+  "microchip": "fa-solid fa-microchip",
 
   // ===== User/Auth Icons =====
   "user": "fa-solid fa-user",
