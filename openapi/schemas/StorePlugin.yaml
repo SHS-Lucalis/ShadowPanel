@@ -44,6 +44,15 @@ properties:
     type: string
     description: Latest version
     example: "1.2.0"
+  requires_subscription:
+    type: boolean
+    description: Whether the plugin requires a license/subscription
+    example: false
+  subscription_url:
+    type: string
+    format: uri
+    description: URL to purchase subscription/license
+    example: "https://plugins.gameap.dev/subscriptions/hexeditor4jm2"
   created_at:
     type: string
     format: date-time
@@ -60,6 +69,17 @@ properties:
     type: string
     description: Installed version (if installed)
     example: "1.1.0"
+  has_subscription:
+    type: boolean
+    nullable: true
+    description: Whether the current license has an active subscription for this plugin (only set for plugins with requires_subscription=true)
+    example: true
+  subscription_expires_at:
+    type: string
+    format: date-time
+    nullable: true
+    description: Subscription expiration date (only set if has_subscription=true)
+    example: "2025-12-31T23:59:59Z"
 required:
   - id
   - url

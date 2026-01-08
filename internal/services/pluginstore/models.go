@@ -30,42 +30,46 @@ type Screenshot struct {
 }
 
 type Plugin struct {
-	ID            string    `json:"id"`
-	URL           string    `json:"url"`
-	Name          string    `json:"name"`
-	Summary       string    `json:"summary"`
-	IconURL       string    `json:"icon_url"`
-	Category      Category  `json:"category"`
-	Labels        []Label   `json:"labels"`
-	DownloadCount int       `json:"download_count"`
-	RatingAvg     float64   `json:"rating_avg"`
-	RatingCount   int       `json:"rating_count"`
-	LatestVersion string    `json:"latest_version"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
+	ID                   string    `json:"id"`
+	URL                  string    `json:"url"`
+	Name                 string    `json:"name"`
+	Summary              string    `json:"summary"`
+	IconURL              string    `json:"icon_url"`
+	Category             Category  `json:"category"`
+	Labels               []Label   `json:"labels"`
+	DownloadCount        int       `json:"download_count"`
+	RatingAvg            float64   `json:"rating_avg"`
+	RatingCount          int       `json:"rating_count"`
+	LatestVersion        string    `json:"latest_version"`
+	RequiresSubscription bool      `json:"requires_subscription"`
+	SubscriptionURL      string    `json:"subscription_url"`
+	CreatedAt            time.Time `json:"created_at"`
+	UpdatedAt            time.Time `json:"updated_at"`
 }
 
 type PluginDetails struct {
-	ID                  string    `json:"id"`
-	URL                 string    `json:"url"`
-	Name                string    `json:"name"`
-	Summary             string    `json:"summary"`
-	Description         string    `json:"description"`
-	IconURL             string    `json:"icon_url"`
-	License             string    `json:"license"`
-	RepositoryURL       string    `json:"repository_url"`
-	MinGameAPVersion    string    `json:"min_gameap_version"`
-	MinPluginAPIVersion string    `json:"min_plugin_api_version"`
-	Author              Author    `json:"author"`
-	Category            Category  `json:"category"`
-	Labels              []Label   `json:"labels"`
-	DownloadCount       int       `json:"download_count"`
-	RatingAvg           float64   `json:"rating_avg"`
-	RatingCount         int       `json:"rating_count"`
-	LatestVersion       string    `json:"latest_version"`
-	PublishedAt         time.Time `json:"published_at"`
-	CreatedAt           time.Time `json:"created_at"`
-	UpdatedAt           time.Time `json:"updated_at"`
+	ID                   string    `json:"id"`
+	URL                  string    `json:"url"`
+	Name                 string    `json:"name"`
+	Summary              string    `json:"summary"`
+	Description          string    `json:"description"`
+	IconURL              string    `json:"icon_url"`
+	License              string    `json:"license"`
+	RepositoryURL        string    `json:"repository_url"`
+	MinGameAPVersion     string    `json:"min_gameap_version"`
+	MinPluginAPIVersion  string    `json:"min_plugin_api_version"`
+	Author               Author    `json:"author"`
+	Category             Category  `json:"category"`
+	Labels               []Label   `json:"labels"`
+	DownloadCount        int       `json:"download_count"`
+	RatingAvg            float64   `json:"rating_avg"`
+	RatingCount          int       `json:"rating_count"`
+	LatestVersion        string    `json:"latest_version"`
+	RequiresSubscription bool      `json:"requires_subscription"`
+	SubscriptionURL      string    `json:"subscription_url"`
+	PublishedAt          time.Time `json:"published_at"`
+	CreatedAt            time.Time `json:"created_at"`
+	UpdatedAt            time.Time `json:"updated_at"`
 }
 
 type PluginVersion struct {
@@ -90,4 +94,17 @@ type PaginatedResponse[T any] struct {
 	LastPage    int `json:"last_page"`
 	PerPage     int `json:"per_page"`
 	Total       int `json:"total"`
+}
+
+type LicenseSubscription struct {
+	PluginID   string    `json:"plugin_id"`
+	PluginName string    `json:"plugin_name"`
+	ExpiresAt  time.Time `json:"expires_at"`
+}
+
+type LicenseValidation struct {
+	Valid         bool                  `json:"valid"`
+	ExpiresAt     *time.Time            `json:"expires_at,omitempty"`
+	Subscriptions []LicenseSubscription `json:"subscriptions"`
+	Message       string                `json:"message,omitempty"`
 }

@@ -60,7 +60,7 @@ func TestGetLabels(t *testing.T) {
 			}))
 			defer mockServer.Close()
 
-			storeService := pluginstore.NewService(mockServer.URL, cache.NewInMemory())
+			storeService := pluginstore.NewService(mockServer.URL, "", cache.NewInMemory())
 
 			h := getlabels.NewHandler(storeService, api.NewResponder())
 			recorder := httptest.NewRecorder()

@@ -85,6 +85,12 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := h.checkSubscription(ctx, pluginDetails); err != nil {
+		h.responder.WriteError(ctx, rw, err)
+
+		return
+	}
+
 	selectedVersion, err := h.selectVersion(ctx, storePluginID, inp.Version)
 	if err != nil {
 		h.responder.WriteError(ctx, rw, err)
@@ -146,6 +152,45 @@ func (h *Handler) checkNotInstalled(ctx context.Context, dbID domain.Uint64ID) e
 	}
 
 	return nil
+}
+
+func (h *Handler) checkSubscription(ctx context.Context, details *pluginstore.PluginDetails) error {
+	if !details.RequiresSubscription {
+		return nil
+	}
+
+	if !h.storeService.HasLicenseKey() {
+		return api.WrapHTTPError(
+			errors.New("this plugin requires a subscription"),
+			http.StatusPaymentRequired,
+		)
+	}
+
+	licenseValidation, err := h.storeService.ValidateLicense(ctx)
+	if err != nil {
+		return api.WrapHTTPError(
+			errors.New("this plugin requires a subscription"),
+			http.StatusPaymentRequired,
+		)
+	}
+
+	if licenseValidation == nil || !licenseValidation.Valid {
+		return api.WrapHTTPError(
+			errors.New("this plugin requires a subscription"),
+			http.StatusPaymentRequired,
+		)
+	}
+
+	for _, sub := range licenseValidation.Subscriptions {
+		if sub.PluginID == details.ID {
+			return nil
+		}
+	}
+
+	return api.WrapHTTPError(
+		errors.New("no active subscription for this plugin"),
+		http.StatusPaymentRequired,
+	)
 }
 
 func (h *Handler) selectVersion(

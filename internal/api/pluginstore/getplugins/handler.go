@@ -1,6 +1,7 @@
 package getplugins
 
 import (
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -56,7 +57,18 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		installedMap[p.ID] = p.Version
 	}
 
-	response := newPluginsResponse(storePlugins, installedMap)
+	var licenseValidation *pluginstore.LicenseValidation
+	if h.storeService.HasLicenseKey() {
+		licenseValidation, err = h.storeService.ValidateLicense(ctx)
+		if err != nil {
+			slog.Warn(
+				"failed to validate license",
+				slog.String("error", err.Error()),
+			)
+		}
+	}
+
+	response := newPluginsResponse(storePlugins, installedMap, licenseValidation)
 
 	h.responder.Write(ctx, rw, response)
 }

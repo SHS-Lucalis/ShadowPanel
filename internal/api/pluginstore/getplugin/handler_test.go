@@ -63,6 +63,7 @@ func TestGetPlugin(t *testing.T) {
 				"rating_avg": 0,
 				"rating_count": 0,
 				"latest_version": "1.0.0",
+				"requires_subscription": false,
 				"published_at": "2026-01-01T00:00:00Z",
 				"created_at": "2026-01-01T00:00:00Z",
 				"updated_at": "2026-01-01T00:00:00Z",
@@ -87,7 +88,7 @@ func TestGetPlugin(t *testing.T) {
 			}))
 			defer mockServer.Close()
 
-			storeService := pluginstore.NewService(mockServer.URL, cache.NewInMemory())
+			storeService := pluginstore.NewService(mockServer.URL, "", cache.NewInMemory())
 			pluginRepo := inmemory.NewPluginRepository()
 
 			h := getplugin.NewHandler(storeService, pluginRepo, api.NewResponder())

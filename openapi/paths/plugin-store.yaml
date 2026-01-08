@@ -255,6 +255,12 @@
           application/json:
             schema:
               $ref: '../schemas/ErrorResponse.yaml'
+      '402':
+        description: Payment required (paid plugin)
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
       '404':
         description: Plugin not found
         content:
@@ -290,6 +296,12 @@
               $ref: '../schemas/PluginUpdateResponse.yaml'
       '401':
         description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '402':
+        description: Payment required (paid plugin)
         content:
           application/json:
             schema:

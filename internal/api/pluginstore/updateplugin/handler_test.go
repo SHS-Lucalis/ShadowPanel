@@ -51,7 +51,7 @@ func TestUpdatePlugin(t *testing.T) {
 	}))
 	defer mockServer.Close()
 
-	storeService := pluginstore.NewService(mockServer.URL, cache.NewInMemory())
+	storeService := pluginstore.NewService(mockServer.URL, "", cache.NewInMemory())
 	pluginRepo := inmemory.NewPluginRepository()
 	fileManager := files.NewInMemoryFileManager()
 
@@ -102,7 +102,7 @@ func TestUpdatePlugin_not_installed(t *testing.T) {
 	}))
 	defer mockServer.Close()
 
-	storeService := pluginstore.NewService(mockServer.URL, cache.NewInMemory())
+	storeService := pluginstore.NewService(mockServer.URL, "", cache.NewInMemory())
 	pluginRepo := inmemory.NewPluginRepository()
 	fileManager := files.NewInMemoryFileManager()
 

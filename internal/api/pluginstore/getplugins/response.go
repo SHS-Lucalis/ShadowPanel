@@ -21,21 +21,25 @@ type categoryResponse struct {
 }
 
 type pluginResponse struct {
-	ID               string           `json:"id"`
-	URL              string           `json:"url"`
-	Name             string           `json:"name"`
-	Summary          string           `json:"summary"`
-	IconURL          string           `json:"icon_url"`
-	Category         categoryResponse `json:"category"`
-	Labels           []labelResponse  `json:"labels"`
-	DownloadCount    int              `json:"download_count"`
-	RatingAvg        float64          `json:"rating_avg"`
-	RatingCount      int              `json:"rating_count"`
-	LatestVersion    string           `json:"latest_version"`
-	CreatedAt        time.Time        `json:"created_at"`
-	UpdatedAt        time.Time        `json:"updated_at"`
-	Installed        bool             `json:"installed"`
-	InstalledVersion *string          `json:"installed_version,omitempty"`
+	ID                    string           `json:"id"`
+	URL                   string           `json:"url"`
+	Name                  string           `json:"name"`
+	Summary               string           `json:"summary"`
+	IconURL               string           `json:"icon_url"`
+	Category              categoryResponse `json:"category"`
+	Labels                []labelResponse  `json:"labels"`
+	DownloadCount         int              `json:"download_count"`
+	RatingAvg             float64          `json:"rating_avg"`
+	RatingCount           int              `json:"rating_count"`
+	LatestVersion         string           `json:"latest_version"`
+	RequiresSubscription  bool             `json:"requires_subscription"`
+	SubscriptionURL       string           `json:"subscription_url,omitempty"`
+	CreatedAt             time.Time        `json:"created_at"`
+	UpdatedAt             time.Time        `json:"updated_at"`
+	Installed             bool             `json:"installed"`
+	InstalledVersion      *string          `json:"installed_version,omitempty"`
+	HasSubscription       *bool            `json:"has_subscription,omitempty"`
+	SubscriptionExpiresAt *time.Time       `json:"subscription_expires_at,omitempty"`
 }
 
 type paginatedPluginsResponse struct {
@@ -50,7 +54,9 @@ type paginatedPluginsResponse struct {
 func newPluginsResponse(
 	storePlugins *pluginstore.PaginatedResponse[pluginstore.Plugin],
 	installedMap map[domain.Uint64ID]string,
+	licenseValidation *pluginstore.LicenseValidation,
 ) *paginatedPluginsResponse {
+	subscriptionMap := buildSubscriptionMap(licenseValidation)
 	data := make([]pluginResponse, 0, len(storePlugins.Data))
 
 	for _, p := range storePlugins.Data {
@@ -64,6 +70,8 @@ func newPluginsResponse(
 			})
 		}
 
+		hasSubscription, subscriptionExpiresAt := getSubscriptionInfo(p.ID, p.RequiresSubscription, subscriptionMap)
+
 		data = append(data, pluginResponse{
 			ID:      p.ID,
 			URL:     p.URL,
@@ -75,15 +83,19 @@ func newPluginsResponse(
 				Slug: p.Category.Slug,
 				Name: p.Category.Name,
 			},
-			Labels:           labels,
-			DownloadCount:    p.DownloadCount,
-			RatingAvg:        p.RatingAvg,
-			RatingCount:      p.RatingCount,
-			LatestVersion:    p.LatestVersion,
-			CreatedAt:        p.CreatedAt,
-			UpdatedAt:        p.UpdatedAt,
-			Installed:        isInstalled(p.ID, installedMap),
-			InstalledVersion: getInstalledVersion(p.ID, installedMap),
+			Labels:                labels,
+			DownloadCount:         p.DownloadCount,
+			RatingAvg:             p.RatingAvg,
+			RatingCount:           p.RatingCount,
+			LatestVersion:         p.LatestVersion,
+			RequiresSubscription:  p.RequiresSubscription,
+			SubscriptionURL:       p.SubscriptionURL,
+			CreatedAt:             p.CreatedAt,
+			UpdatedAt:             p.UpdatedAt,
+			Installed:             isInstalled(p.ID, installedMap),
+			InstalledVersion:      getInstalledVersion(p.ID, installedMap),
+			HasSubscription:       hasSubscription,
+			SubscriptionExpiresAt: subscriptionExpiresAt,
 		})
 	}
 
@@ -95,4 +107,41 @@ func newPluginsResponse(
 		PerPage:     storePlugins.PerPage,
 		Total:       storePlugins.Total,
 	}
+}
+
+func buildSubscriptionMap(licenseValidation *pluginstore.LicenseValidation) map[string]time.Time {
+	if licenseValidation == nil || !licenseValidation.Valid {
+		return nil
+	}
+
+	subscriptionMap := make(map[string]time.Time)
+	for _, sub := range licenseValidation.Subscriptions {
+		subscriptionMap[sub.PluginID] = sub.ExpiresAt
+	}
+
+	return subscriptionMap
+}
+
+func getSubscriptionInfo(
+	pluginID string,
+	requiresSubscription bool,
+	subscriptionMap map[string]time.Time,
+) (*bool, *time.Time) {
+	if !requiresSubscription {
+		return nil, nil
+	}
+
+	if subscriptionMap == nil {
+		return nil, nil
+	}
+
+	if expiresAt, ok := subscriptionMap[pluginID]; ok {
+		hasSubscription := true
+
+		return &hasSubscription, &expiresAt
+	}
+
+	hasSubscription := false
+
+	return &hasSubscription, nil
 }
