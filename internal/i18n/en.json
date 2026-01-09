@@ -405,7 +405,12 @@
     "uninstall_confirm_msg": "Are you sure you want to uninstall this plugin?",
     "install_success_msg": "Plugin installed successfully",
     "update_success_msg": "Plugin updated successfully",
-    "uninstall_success_msg": "Plugin uninstalled successfully"
+    "uninstall_success_msg": "Plugin uninstalled successfully",
+    "purchase": "Purchase",
+    "subscription_required": "Subscription Required",
+    "subscription_info": "This plugin requires an active subscription to install.",
+    "subscription_expires": "Subscription expires",
+    "get_subscription": "Get Subscription"
   },
   "navbar": {
     "main": "Home",

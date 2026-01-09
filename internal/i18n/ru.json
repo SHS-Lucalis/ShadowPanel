@@ -406,7 +406,12 @@
     "uninstall_confirm_msg": "Вы уверены, что хотите удалить этот плагин?",
     "install_success_msg": "Плагин успешно установлен",
     "update_success_msg": "Плагин успешно обновлён",
-    "uninstall_success_msg": "Плагин успешно удалён"
+    "uninstall_success_msg": "Плагин успешно удалён",
+    "purchase": "Приобрести",
+    "subscription_required": "Требуется подписка",
+    "subscription_info": "Для установки этого плагина требуется активная подписка.",
+    "subscription_expires": "Подписка истекает",
+    "get_subscription": "Оформить подписку"
   },
   "navbar": {
     "main": "Главная",
