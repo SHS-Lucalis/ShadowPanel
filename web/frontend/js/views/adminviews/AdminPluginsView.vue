@@ -85,6 +85,11 @@
       />
     </n-spin>
   </n-modal>
+
+  <SubscriptionModal
+      v-model:show="subscriptionModalVisible"
+      :plugin="subscriptionPlugin"
+  />
 </template>
 
 <script setup>
@@ -105,6 +110,7 @@ import {
 } from "naive-ui"
 import { storeToRefs } from "pinia"
 import PluginDetailsModal from "./forms/PluginDetailsModal.vue"
+import SubscriptionModal from "./forms/SubscriptionModal.vue"
 
 const pluginStore = usePluginStoreStore()
 
@@ -130,6 +136,8 @@ const detailsModalVisible = ref(false)
 const actionLoading = ref(false)
 const storePage = ref(1)
 const isSmallScreen = ref(window.innerWidth < 768)
+const subscriptionModalVisible = ref(false)
+const subscriptionPlugin = ref(null)
 
 const handleResize = () => {
   isSmallScreen.value = window.innerWidth < 768
@@ -255,6 +263,9 @@ const createStoreColumns = () => {
           h('div', { class: 'flex flex-col' }, [
             h('div', { class: 'flex items-center gap-2' }, [
               h('span', { class: 'font-medium text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap' }, row.name),
+              row.requires_subscription
+                  ? h(GIcon, { name: 'star', class: 'text-yellow-500' })
+                  : null,
               !isSmallScreen.value && row.installed
                   ? h('span', { class: 'px-2 py-0.5 text-xs font-medium rounded-full bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-300 whitespace-nowrap' }, trans('plugins.already_installed'))
                   : null
@@ -323,6 +334,21 @@ const createStoreColumns = () => {
                 disabled: true,
               }, () => trans('plugins.already_installed'))
         }
+
+        if (requiresSubscriptionPurchase(row)) {
+          return isSmallScreen.value
+              ? h(GButton, {
+                color: 'orange',
+                size: 'small',
+                onClick: () => showSubscriptionModal(row)
+              }, () => [h(GIcon, { name: 'star' })])
+              : h(GButton, {
+                color: 'orange',
+                size: 'small',
+                onClick: () => showSubscriptionModal(row)
+              }, () => [h(GIcon, { name: 'star', class: 'mr-1' }), trans('plugins.purchase')])
+        }
+
         return isSmallScreen.value
             ? h(GButton, {
               color: 'blue',
@@ -368,6 +394,15 @@ function formatNumber(num) {
   if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
   if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
   return num.toString()
+}
+
+function showSubscriptionModal(plugin) {
+  subscriptionPlugin.value = plugin
+  subscriptionModalVisible.value = true
+}
+
+function requiresSubscriptionPurchase(row) {
+  return row.requires_subscription && row.has_subscription !== true && !row.installed
 }
 
 function onTabChange(tab) {

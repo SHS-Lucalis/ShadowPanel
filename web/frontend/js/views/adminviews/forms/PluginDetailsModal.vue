@@ -17,6 +17,7 @@
         <div class="flex-1">
           <div class="flex items-center gap-2 flex-wrap">
             <h2 class="text-xl font-bold whitespace-nowrap">{{ plugin.name }}</h2>
+            <GIcon v-if="plugin.requires_subscription" name="star" class="text-yellow-500" />
             <a v-if="plugin.url" :href="plugin.url" target="_blank" class="text-blue-500 hover:text-blue-600">
               <GIcon name="external-link" />
             </a>
@@ -51,23 +52,35 @@
         </div>
 
         <div class="flex flex-col md:flex-row items-end md:items-center gap-2">
-          <n-select
-              v-if="!plugin.installed || hasUpdate"
-              v-model:value="selectedVersion"
-              :options="versionOptions"
-              :placeholder="trans('plugins.select_version')"
-              style="width: 120px;"
-              :size="isSmallScreen ? 'small' : 'large'"
-          />
-          <GButton
-              v-if="!plugin.installed"
-              color="green"
-              :size="isSmallScreen ? 'small' : 'medium'"
-              @click="$emit('install', selectedVersion)"
-          >
-            <GIcon name="download" class="mr-1" />
-            {{ trans('plugins.install') }}
-          </GButton>
+          <template v-if="!plugin.installed && requiresSubscriptionPurchase">
+            <GButton
+                color="orange"
+                :size="isSmallScreen ? 'small' : 'medium'"
+                @click="openSubscriptionUrl"
+            >
+              <GIcon name="external-link" class="mr-1" />
+              {{ trans('plugins.get_subscription') }}
+            </GButton>
+          </template>
+          <template v-else>
+            <n-select
+                v-if="!plugin.installed || hasUpdate"
+                v-model:value="selectedVersion"
+                :options="versionOptions"
+                :placeholder="trans('plugins.select_version')"
+                style="width: 120px;"
+                :size="isSmallScreen ? 'small' : 'large'"
+            />
+            <GButton
+                v-if="!plugin.installed"
+                color="green"
+                :size="isSmallScreen ? 'small' : 'medium'"
+                @click="$emit('install', selectedVersion)"
+            >
+              <GIcon name="download" class="mr-1" />
+              {{ trans('plugins.install') }}
+            </GButton>
+          </template>
           <GButton
               v-if="plugin.installed && hasUpdate"
               color="blue"
@@ -118,6 +131,12 @@
           <GIcon name="calendar" class="text-xl text-stone-500 dark:text-stone-400 mb-1" />
           <span class="text-sm font-medium whitespace-nowrap">{{ formatDate(plugin.published_at) }}</span>
           <span class="text-xs text-stone-500">{{ trans('plugins.published_at') }}</span>
+        </div>
+
+        <div v-if="plugin.has_subscription && plugin.subscription_expires_at" class="flex flex-col items-center text-center px-4">
+          <GIcon name="star" class="text-xl text-yellow-500 mb-1" />
+          <span class="text-sm font-medium whitespace-nowrap">{{ formatDate(plugin.subscription_expires_at) }}</span>
+          <span class="text-xs text-stone-500">{{ trans('plugins.subscription_expires') }}</span>
         </div>
 
         <div v-if="plugin.min_gameap_version" class="flex flex-col items-center text-center px-4">
@@ -199,6 +218,16 @@ const hasUpdate = computed(() => {
   if (!props.plugin?.installed) return false
   return props.plugin.installed_version !== props.plugin.latest_version
 })
+
+const requiresSubscriptionPurchase = computed(() => {
+  return props.plugin?.requires_subscription && props.plugin?.has_subscription !== true
+})
+
+function openSubscriptionUrl() {
+  if (props.plugin?.subscription_url) {
+    window.open(props.plugin.subscription_url, '_blank')
+  }
+}
 
 const versionOptions = computed(() => {
   return props.versions.map(v => ({
