@@ -919,6 +919,86 @@ export const handlers = [
         })
     }),
 
+    // ==================== Plugin Store ====================
+    http.get('/api/plugin-store/categories', async () => {
+        await delay(debugState.networkDelay)
+        return HttpResponse.json([
+            { id: 1, slug: 'game-management', name: 'Game Management' },
+            { id: 2, slug: 'monitoring', name: 'Monitoring' },
+            { id: 3, slug: 'utilities', name: 'Utilities' },
+        ])
+    }),
+
+    http.get('/api/plugin-store/labels', async () => {
+        await delay(debugState.networkDelay)
+        return HttpResponse.json([
+            { id: 1, slug: 'official', name: 'Official', color: '#4f46e5' },
+            { id: 2, slug: 'popular', name: 'Popular', color: '#059669' },
+        ])
+    }),
+
+    http.get('/api/plugin-store/plugins', async () => {
+        await delay(debugState.networkDelay)
+        return HttpResponse.json({
+            data: [
+                {
+                    id: 1,
+                    slug: 'example-plugin',
+                    name: 'Example Plugin',
+                    description: 'An example plugin for testing',
+                    installed: false,
+                    installed_version: null,
+                    latest_version: '1.0.0',
+                    category: { slug: 'utilities', name: 'Utilities' },
+                    labels: [{ slug: 'official', name: 'Official', color: '#4f46e5' }],
+                },
+            ],
+            current_page: 1,
+            last_page: 1,
+            total: 1,
+        })
+    }),
+
+    http.get('/api/plugin-store/plugins/:id', async ({ params }) => {
+        await delay(debugState.networkDelay)
+        return HttpResponse.json({
+            id: Number(params.id),
+            slug: 'example-plugin',
+            name: 'Example Plugin',
+            description: 'An example plugin for testing',
+            readme: '# Example Plugin\n\nThis is an example plugin.',
+            installed: false,
+            installed_version: null,
+            latest_version: '1.0.0',
+        })
+    }),
+
+    http.get('/api/plugin-store/plugins/:id/versions', async () => {
+        await delay(debugState.networkDelay)
+        return HttpResponse.json({
+            data: [
+                { version: '1.0.0', released_at: '2024-01-01', changelog: 'Initial release' },
+            ],
+            current_page: 1,
+            last_page: 1,
+        })
+    }),
+
+    http.post('/api/plugin-store/plugins/:id/install', async () => {
+        await delay(debugState.networkDelay)
+        return HttpResponse.json({ success: true })
+    }),
+
+    http.post('/api/plugin-store/plugins/:id/update', async () => {
+        await delay(debugState.networkDelay)
+        return HttpResponse.json({ success: true })
+    }),
+
+    http.delete('/api/plugin-store/plugins/:id', async () => {
+        await delay(debugState.networkDelay)
+        return HttpResponse.json({ success: true })
+    }),
+
     // ==================== Language ====================
     // Language/translations endpoint - uses actual translation files
     http.get('/lang/:locale.json', async ({ params }) => {

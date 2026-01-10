@@ -54,6 +54,7 @@ Each server has different capabilities (RCON, console access, file manager, etc.
 - GDaemon Tasks
 - File Manager (browse, upload, download, zip/unzip)
 - Plugins (JS/CSS loading)
+- Plugin Store (categories, labels, plugins, install/update/uninstall)
 - Translations
 
 ## Usage
@@ -66,3 +67,91 @@ await startMockServiceWorker()
 ```
 
 The debug panel (in main.ts) provides UI controls for switching user types, adjusting network delay, and changing locale.
+
+## Plugin Mock API
+
+Plugins can register custom mock handlers for their API endpoints. This is useful for:
+- Adding mock endpoints for plugin-specific APIs
+- Overriding default handler responses
+- Testing different API scenarios
+
+### Registering Mock Handlers
+
+In your plugin's `onInit()` hook:
+
+```typescript
+export const myPlugin = {
+    id: 'my-plugin',
+    name: 'My Plugin',
+    version: '1.0.0',
+
+    onInit() {
+        if (window.gameapDebug) {
+            const { http, HttpResponse, delay } = window.gameapDebug.msw
+
+            window.gameapDebug.registerMockHandlers([
+                http.get('/api/plugins/my-plugin/data', async () => {
+                    await delay(100)
+                    return HttpResponse.json({
+                        items: [{ id: 1, name: 'Item 1' }]
+                    })
+                }),
+            ])
+        }
+    },
+}
+```
+
+### MSW Utilities
+
+The `window.gameapDebug.msw` object exposes:
+
+| Utility | Description |
+|---------|-------------|
+| `http` | HTTP method handlers (`http.get()`, `http.post()`, etc.) |
+| `HttpResponse` | Response builder for mock responses |
+| `delay` | Async delay function for simulating network latency |
+
+### Mock Data Utilities
+
+Manipulate mock data programmatically via `window.gameapDebug.mockData`:
+
+```javascript
+// Add a custom server
+const newServer = mockData.addServer({
+    name: 'My Test Server',
+    game_id: 'minecraft',
+    process_active: true
+})
+
+// Update existing server
+mockData.updateServer(1, { name: 'Updated Name' })
+
+// Remove a server
+mockData.removeServer(3)
+
+// Get all servers
+const servers = mockData.getServers()
+
+// Add a custom user type
+mockData.addUser('moderator', {
+    id: 3,
+    login: 'mod',
+    name: 'Moderator',
+    roles: ['moderator'],
+    isAdmin: false,
+    isAuthenticated: true
+})
+```
+
+### Resetting Handlers
+
+To restore original handlers (remove all plugin handlers):
+
+```javascript
+window.gameapDebug.resetMockHandlers()
+```
+
+### Handler Priority
+
+Plugin handlers are prepended and checked **first** before default handlers, allowing overrides.

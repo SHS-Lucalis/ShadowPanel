@@ -1,6 +1,6 @@
 {
   "name": "@gameap/debug",
-  "version": "0.2.17",
+  "version": "0.3.5",
   "type": "module",
   "description": "Debug harness for GameAP plugin development with mock API",
   "scripts": {
@@ -8,7 +8,7 @@
     "build": "vue-tsc && vite build",
     "preview": "vite preview",
     "msw:init": "npx msw init ../../public --save",
-    "sync:translations": "cp ../../../internal/i18n/en.json src/mocks/translations-en.json && cp ../../../internal/i18n/ru.json src/mocks/translations-ru.json"
+    "sync:translations": "cp ../../../../internal/i18n/en.json src/mocks/translations-en.json && cp ../../../../internal/i18n/ru.json src/mocks/translations-ru.json"
   },
   "bin": {
     "gameap-debug": "./bin/cli.js"
@@ -26,7 +26,7 @@
   ],
   "dependencies": {
     "@gameap/plugin-sdk": "^0.2.0",
-    "@gameap/frontend": "4.1.0-dev8",
+    "@gameap/frontend": "4.1.0-dev11",
     "@originjs/vite-plugin-commonjs": "^1.0.3",
     "@tailwindcss/postcss": "^4.1.0",
     "@vitejs/plugin-vue": "^6.0.1",
