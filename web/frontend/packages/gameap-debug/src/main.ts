@@ -8,7 +8,34 @@
 // Import frontend styles (bundled in vendor directory)
 import '../vendor/frontend.css'
 
-import { startMockServiceWorker, setPluginContent, updateDebugState } from './mocks/browser'
+// Import and expose framework globals for the externalized @gameap/frontend package
+import * as Vue from 'vue'
+import * as VueRouter from 'vue-router'
+import * as Pinia from 'pinia'
+import axios from 'axios'
+import * as naive from 'naive-ui'
+
+// Expose globals before loading the frontend
+window.Vue = Vue
+window.VueRouter = VueRouter
+window.Pinia = Pinia
+window.axios = axios
+window.naive = naive
+
+import {
+    startMockServiceWorker,
+    setPluginContent,
+    updateDebugState,
+    registerMockHandlers,
+    resetMockHandlers,
+    http,
+    HttpResponse,
+    delay
+} from './mocks/browser'
+import { mockServersList, type ServerListItem } from './mocks/servers'
+import { userMocks } from './mocks/users'
+import type { UserData } from '@gameap/plugin-sdk'
+import type { RequestHandler } from 'msw'
 
 // Declare window globals for plugin compatibility
 declare global {
@@ -17,12 +44,28 @@ declare global {
         VueRouter: typeof import('vue-router')
         Pinia: typeof import('pinia')
         axios: typeof import('axios').default
+        naive: typeof import('naive-ui')
         gameapLang: string
         i18n: Record<string, string>
         gameapDebug: {
             updateDebugState: typeof updateDebugState
             setPluginContent: typeof setPluginContent
             loadPlugin: (js: string, css?: string) => void
+            registerMockHandlers: (handlers: RequestHandler[]) => void
+            resetMockHandlers: () => void
+            msw: {
+                http: typeof http
+                HttpResponse: typeof HttpResponse
+                delay: typeof delay
+            }
+            mockData: {
+                addServer: (server: Partial<ServerListItem>) => ServerListItem
+                updateServer: (id: number, updates: Partial<ServerListItem>) => void
+                removeServer: (id: number) => void
+                getServers: () => ServerListItem[]
+                addUser: (key: string, user: UserData) => void
+                getUsers: () => Record<string, UserData>
+            }
         }
     }
 }
@@ -108,7 +151,69 @@ async function init() {
         setPluginContent(js, css)
     }
 
-    // Start MSW
+    // Expose debug utilities globally BEFORE starting MSW
+    // so plugins can register handlers in onInit()
+    window.gameapDebug = {
+        updateDebugState,
+        setPluginContent,
+        loadPlugin: (newJs: string, newCss?: string) => {
+            setPluginContent(newJs, newCss || '')
+            console.log('[Debug] Plugin content updated, reload to apply')
+        },
+        registerMockHandlers,
+        resetMockHandlers,
+        msw: {
+            http,
+            HttpResponse,
+            delay,
+        },
+        mockData: {
+            addServer: (server: Partial<ServerListItem>) => {
+                const id = Math.max(...mockServersList.map(s => s.id), 0) + 1
+                const newServer: ServerListItem = {
+                    id,
+                    enabled: true,
+                    installed: 1,
+                    blocked: false,
+                    name: `Server ${id}`,
+                    game_id: 'minecraft',
+                    ds_id: 1,
+                    game_mod_id: 1,
+                    expires: null,
+                    server_ip: '127.0.0.1',
+                    server_port: 25565 + id,
+                    query_port: 25565 + id,
+                    rcon_port: 25575 + id,
+                    process_active: false,
+                    last_process_check: new Date().toISOString(),
+                    game: { code: 'minecraft', name: 'Minecraft', engine: 'Minecraft', engine_version: '1' },
+                    online: false,
+                    ...server,
+                }
+                mockServersList.push(newServer)
+                return newServer
+            },
+            updateServer: (id: number, updates: Partial<ServerListItem>) => {
+                const idx = mockServersList.findIndex(s => s.id === id)
+                if (idx !== -1) {
+                    Object.assign(mockServersList[idx], updates)
+                }
+            },
+            removeServer: (id: number) => {
+                const idx = mockServersList.findIndex(s => s.id === id)
+                if (idx !== -1) {
+                    mockServersList.splice(idx, 1)
+                }
+            },
+            getServers: () => [...mockServersList],
+            addUser: (key: string, user: UserData) => {
+                userMocks[key] = user
+            },
+            getUsers: () => ({ ...userMocks }),
+        },
+    }
+
+    // Start MSW (will apply any pre-registered handlers)
     console.log('[Debug] Starting Mock Service Worker...')
     await startMockServiceWorker()
     console.log('[Debug] MSW started successfully')
@@ -118,16 +223,6 @@ async function init() {
 
     // Load translations AFTER MSW starts (so MSW can intercept the request)
     await loadTranslations()
-
-    // Expose debug utilities globally
-    window.gameapDebug = {
-        updateDebugState,
-        setPluginContent,
-        loadPlugin: (newJs: string, newCss?: string) => {
-            setPluginContent(newJs, newCss || '')
-            console.log('[Debug] Plugin content updated, reload to apply')
-        },
-    }
 
     // Now load the real GameAP frontend
     console.log('[Debug] Loading GameAP frontend...')

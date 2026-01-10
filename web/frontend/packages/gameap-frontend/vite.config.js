@@ -1,5 +1,7 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import Components from 'unplugin-vue-components/vite'
+import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -7,7 +9,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const frontendRoot = resolve(__dirname, '../..')
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    Components({
+      resolvers: [NaiveUiResolver()],
+      dts: false,
+    }),
+  ],
   publicDir: resolve(frontendRoot, 'public'),
   build: {
     lib: {
