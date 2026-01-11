@@ -2,15 +2,17 @@ import axios from '../config/axios'
 import * as Vue from 'vue'
 import * as VueRouter from 'vue-router'
 import * as Pinia from 'pinia'
+import * as NaiveUI from 'naive-ui/es/index.mjs'
 import { usePluginsStore } from '../store/plugins'
 
 // Expose Vue and related libraries globally for pre-compiled plugin components
-// When plugins are built with external: ['vue', 'vue-router', 'pinia', 'axios'],
+// When plugins are built with external: ['vue', 'vue-router', 'pinia', 'axios', 'naive-ui'],
 // they expect these to be available globally
 window.Vue = Vue
 window.VueRouter = VueRouter
 window.Pinia = Pinia
 window.axios = axios
+window.NaiveUI = NaiveUI
 
 // Keep backwards compatibility with render function plugins
 window.__gameap_vue_h = Vue.h

@@ -340,7 +340,9 @@ export const myPlugin: PluginDefinition = {
 };
 ```
 
-Use translations in components with `usePluginTrans`:
+### Using Translations in Plugin Routes
+
+For components rendered as plugin routes (pages), use `usePluginTrans`:
 
 ```vue
 <script setup>
@@ -355,6 +357,32 @@ const { trans, locale } = usePluginTrans();
     <p>Current locale: {{ locale }}</p>
 </template>
 ```
+
+### Using Translations in Slot Components
+
+For slot components (server tabs, dashboard widgets, etc.), use `providePluginTrans` with the `pluginId` prop. This creates a translation context for the component and all its children:
+
+```vue
+<script setup>
+import { providePluginTrans } from '@gameap/plugin-sdk';
+import type { ServerTabProps } from '@gameap/plugin-sdk';
+
+const props = defineProps<ServerTabProps>();
+
+// providePluginTrans creates context for this component and its children
+const { trans } = providePluginTrans(props.pluginId);
+</script>
+
+<template>
+    <p>{{ trans('greeting', { name: 'World' }) }}</p>
+</template>
+```
+
+**Why two different functions?**
+- `usePluginTrans()` - Use in plugin routes/pages where the translation context is automatically provided
+- `providePluginTrans(pluginId)` - Use in slot components (tabs, widgets) where you need to create the context manually
+
+Child components of a slot component can still use `usePluginTrans()` - they will inherit the context from the parent.
 
 The `trans` function:
 - Returns the translated string for the current locale

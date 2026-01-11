@@ -57,7 +57,7 @@ export {
 } from './context';
 
 // i18n
-export { usePluginTrans } from './i18n';
+export { usePluginTrans, providePluginTrans } from './i18n';
 export type { PluginI18nContext } from './i18n';
 
 // Re-export Vue utilities that plugins commonly need

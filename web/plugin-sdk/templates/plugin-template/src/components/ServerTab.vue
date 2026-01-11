@@ -2,30 +2,30 @@
     <div class="p-4">
         <div class="p-4 border border-stone-200 dark:border-stone-700 rounded-lg bg-white dark:bg-stone-800">
             <h3 class="text-lg font-semibold mb-3 text-stone-900 dark:text-white">
-                My Plugin Tab
+                {{ trans('tab_title') }}
             </h3>
 
             <div class="space-y-2">
                 <p class="text-stone-700 dark:text-stone-300">
-                    <strong>Server ID:</strong> {{ serverId }}
+                    <strong>{{ trans('server_id') }}:</strong> {{ serverId }}
                 </p>
                 <p class="text-stone-700 dark:text-stone-300">
-                    <strong>Server Name:</strong> {{ server?.name || 'Loading...' }}
+                    <strong>{{ trans('server_name') }}:</strong> {{ server?.name || 'Loading...' }}
                 </p>
                 <p class="text-stone-700 dark:text-stone-300">
-                    <strong>Game:</strong> {{ server?.game_id || 'N/A' }}
+                    <strong>{{ trans('game') }}:</strong> {{ server?.game_id || 'N/A' }}
                 </p>
                 <p class="text-stone-700 dark:text-stone-300">
-                    <strong>Address:</strong> {{ serverAddress }}
+                    <strong>{{ trans('address') }}:</strong> {{ serverAddress }}
                 </p>
                 <p class="text-stone-700 dark:text-stone-300">
-                    <strong>Status:</strong>
+                    <strong>{{ trans('status') }}:</strong>
                     <span :class="statusClass">{{ statusText }}</span>
                 </p>
             </div>
 
             <p class="mt-4 text-stone-600 dark:text-stone-400">
-                This tab was added by your plugin. It demonstrates access to server data.
+                {{ trans('tab_description') }}
             </p>
         </div>
     </div>
@@ -33,9 +33,15 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { providePluginTrans } from '@gameap/plugin-sdk';
 import type { ServerTabProps } from '@gameap/plugin-sdk';
 
 const props = defineProps<ServerTabProps>();
+
+// Use providePluginTrans for slot components (tabs, widgets).
+// This provides translation context to this component and all its children.
+// For plugin routes/pages, use usePluginTrans() instead.
+const { trans } = providePluginTrans(props.pluginId);
 
 const serverAddress = computed(() => {
     if (!props.server) return 'N/A';
@@ -43,10 +49,10 @@ const serverAddress = computed(() => {
 });
 
 const statusText = computed(() => {
-    if (!props.server) return 'Unknown';
-    if (props.server.process_active) return 'Running';
-    if (!props.server.enabled) return 'Disabled';
-    return 'Stopped';
+    if (!props.server) return trans('unknown');
+    if (props.server.process_active) return trans('running');
+    if (!props.server.enabled) return trans('disabled');
+    return trans('stopped');
 });
 
 const statusClass = computed(() => {
