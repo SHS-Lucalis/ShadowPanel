@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, reactive, computed, h } from 'vue'
+import { ref, reactive, computed, h, markRaw } from 'vue'
 import PluginRouteWrapper from '@/plugins/components/PluginRouteWrapper.vue'
 import { trans } from "@/i18n/i18n";
 
@@ -79,7 +79,7 @@ export const usePluginsStore = defineStore('plugins', () => {
 
         slots[slotName].push({
             pluginId,
-            component,
+            component: markRaw(component),
             props: options.props || {},
             order: options.order || 0,
             label: options.label || '',

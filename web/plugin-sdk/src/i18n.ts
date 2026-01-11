@@ -1,10 +1,58 @@
-import { inject } from 'vue';
+import { inject, provide, unref, type Ref } from 'vue';
 
 const PLUGIN_I18N_KEY = 'pluginI18n';
 
 export interface PluginI18nContext {
     trans: (key: string, params?: Record<string, string | number>) => string;
     locale: string;
+}
+
+/**
+ * Provide plugin translations context for child components.
+ * Call this in the root component of a plugin tab/slot when pluginId
+ * is passed via props (e.g., on server page tabs).
+ *
+ * @example
+ * ```vue
+ * <script setup>
+ * import { providePluginTrans } from '@gameap/plugin-sdk';
+ *
+ * const props = defineProps<{ pluginId: string }>();
+ * const { trans } = providePluginTrans(props.pluginId);
+ * </script>
+ *
+ * <template>
+ *     <p>{{ trans('greeting', { name: 'World' }) }}</p>
+ * </template>
+ * ```
+ */
+export function providePluginTrans(
+    pluginId: string | Ref<string | undefined>
+): PluginI18nContext {
+    const pluginsStore = inject<any>('pluginsStore');
+    const locale = (window as unknown as { gameapLang?: string }).gameapLang || 'en';
+
+    const i18nContext: PluginI18nContext = {
+        trans: (key: string, params?: Record<string, string | number>): string => {
+            const id = unref(pluginId);
+            const translations = id && pluginsStore
+                ? pluginsStore.getPluginTranslations(id)
+                : null;
+            const langTrans = translations?.[locale] || translations?.['en'] || {};
+            let value = langTrans[key] ?? key;
+
+            if (params) {
+                Object.entries(params).forEach(([k, v]) => {
+                    value = value.replace(`:${k}`, String(v));
+                });
+            }
+            return value;
+        },
+        locale
+    };
+
+    provide(PLUGIN_I18N_KEY, i18nContext);
+    return i18nContext;
 }
 
 /**

@@ -75,12 +75,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { usePluginTrans } from '@gameap/plugin-sdk';
+import { providePluginTrans } from '@gameap/plugin-sdk';
 import type { ServerTabProps } from '@gameap/plugin-sdk';
 import axios from 'axios';
 
 const props = defineProps<ServerTabProps>();
-const { trans } = usePluginTrans();
+const { trans } = providePluginTrans(props.pluginId);
 
 const loading = ref(true);
 const error = ref<string | null>(null);

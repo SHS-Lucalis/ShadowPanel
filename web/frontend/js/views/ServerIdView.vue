@@ -296,6 +296,7 @@ import {useServerStore} from "@/store/server"
 import {useServerRconStore} from "@/store/serverRcon"
 import {useAuthStore} from "@/store/auth"
 import {usePluginsStore} from "@/store/plugins"
+import {providePluginContext} from "@/plugins/context"
 import {trans, pageLanguage} from "@/i18n/i18n";
 import GameIcon from "../components/GameIcon.vue";
 import InactiveServer from "./InactiveServer.vue";
@@ -305,6 +306,8 @@ const serverStore = useServerStore()
 const serverRconStore = useServerRconStore()
 const authStore = useAuthStore()
 const pluginsStore = usePluginsStore()
+
+providePluginContext()
 
 const {
   serverId,

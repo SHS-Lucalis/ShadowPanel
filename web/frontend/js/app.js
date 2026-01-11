@@ -22,9 +22,21 @@ import { useAuthStore } from './store/auth'
 
 import {
     GBreadcrumbs,
+    GCard,
+    GDataTable,
     GDeletableList,
-    GStatusBadge,
+    GDivider,
+    GEmpty,
     GIcon,
+    GInput,
+    GMenu,
+    GMenuButton,
+    GMenuItem,
+    GMenuItems,
+    GModal,
+    GStatusBadge,
+    GSwitch,
+    GTable,
     Loading,
     Progressbar
 } from '@gameap/ui'
@@ -120,9 +132,21 @@ const authStore = useAuthStore()
 
 // Register global components BEFORE mounting
 app.component('GBreadcrumbs', GBreadcrumbs);
+app.component('GCard', GCard);
+app.component('GDataTable', GDataTable);
 app.component('GDeletableList', GDeletableList);
-app.component('GStatusBadge', GStatusBadge);
+app.component('GDivider', GDivider);
+app.component('GEmpty', GEmpty);
 app.component('GIcon', GIcon);
+app.component('GInput', GInput);
+app.component('GMenu', GMenu);
+app.component('GMenuButton', GMenuButton);
+app.component('GMenuItem', GMenuItem);
+app.component('GMenuItems', GMenuItems);
+app.component('GModal', GModal);
+app.component('GStatusBadge', GStatusBadge);
+app.component('GSwitch', GSwitch);
+app.component('GTable', GTable);
 app.component('Loading', Loading);
 app.component('Progressbar', Progressbar);
 app.component('GButton', GButton);

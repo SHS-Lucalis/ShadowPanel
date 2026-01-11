@@ -36,12 +36,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { usePluginTrans } from '@gameap/plugin-sdk';
+import { providePluginTrans } from '@gameap/plugin-sdk';
 import type { DashboardWidgetProps } from '@gameap/plugin-sdk';
 import axios from 'axios';
 
 const props = defineProps<DashboardWidgetProps>();
-const { trans } = usePluginTrans();
+const { trans } = providePluginTrans(props.pluginId);
 
 const loading = ref(true);
 const error = ref<string | null>(null);

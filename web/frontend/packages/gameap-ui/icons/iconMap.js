@@ -1,3 +1,5 @@
+import FileNetworkIcon from './svg/FileNetworkIcon.vue'
+
 export const defaultIconMap = {
   // ===== Action Icons =====
   "delete": "fa-solid fa-trash-can",
@@ -118,6 +120,7 @@ export const defaultIconMap = {
   "folder-open": "fa-regular fa-folder-open",
   "folder-plus": "fa-solid fa-folder-plus",
   "clipboard": "fa-regular fa-clipboard",
+  "ftp": FileNetworkIcon,
 
   // ===== Content/UI Icons =====
   "book": "fa-solid fa-book",

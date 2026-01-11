@@ -1,6 +1,6 @@
 {
   "name": "@gameap/debug",
-  "version": "0.3.5",
+  "version": "0.3.10",
   "type": "module",
   "description": "Debug harness for GameAP plugin development with mock API",
   "scripts": {
@@ -25,8 +25,8 @@
     "empty-plugin"
   ],
   "dependencies": {
-    "@gameap/plugin-sdk": "^0.2.0",
-    "@gameap/frontend": "4.1.0-dev11",
+    "@gameap/plugin-sdk": "^0.3.1",
+    "@gameap/frontend": "file:../gameap-frontend",
     "@originjs/vite-plugin-commonjs": "^1.0.3",
     "@tailwindcss/postcss": "^4.1.0",
     "@vitejs/plugin-vue": "^6.0.1",

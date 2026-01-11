@@ -15,6 +15,8 @@ export function providePluginContext(customContext = {}) {
     const i18nContext = createI18nContext()
     provide(PLUGIN_I18N_KEY, i18nContext)
 
+    provide('pluginsStore', usePluginsStore())
+
     return context
 }
 
