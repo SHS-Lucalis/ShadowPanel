@@ -4,7 +4,7 @@
           <GIcon name="sync" />
         </GButton>
 
-        <n-table size="small" :bordered="false">
+        <GTable size="small">
             <thead>
             <tr>
                 <th>{{ trans('rcon.player_name') }}</th>
@@ -33,16 +33,12 @@
                 </td>
             </tr>
             </tbody>
-        </n-table>
+        </GTable>
 
-        <n-modal
+        <GModal
             v-model:show="modalEnabled"
-            class="custom-card"
-            preset="card"
             :title="dialogTitle"
-            :bordered="false"
             style="width: 600px"
-            :segmented="segmented"
         >
             <div>
                 <form>
@@ -80,7 +76,7 @@
                 <button type="button" class="inline-block align-middle text-center select-none border font-normal whitespace-no-wrap rounded py-2 px-3 leading-normal no-underline bg-stone-600 text-white hover:bg-stone-700" v-on:click="hideModal">{{ trans('main.close') }}</button>
 
             </template>
-        </n-modal>
+        </GModal>
     </div>
 </template>
 
@@ -92,11 +88,7 @@
     import { some, isEmpty } from 'lodash-es'
     import { pluralize, trans } from '@/i18n/i18n'
     import GButton from "../GButton.vue"
-    import { GIcon } from '@gameap/ui'
-    import {
-      NTable,
-      NModal,
-    } from "naive-ui"
+    import { GIcon, GModal, GTable } from '@gameap/ui'
     import {errorNotification, notification} from "@/parts/dialogs";
 
     export default {

@@ -41,10 +41,7 @@
           ></GameModSelector>
 
           <n-form-item :label="trans('servers.install')" path="install">
-            <n-switch
-                v-model:value="serverForm.install"
-            >
-            </n-switch>
+            <GSwitch v-model:value="serverForm.install" />
           </n-form-item>
 
           <n-collapse>
@@ -120,7 +117,7 @@
 </template>
 
 <script setup>
-import { GBreadcrumbs, GIcon } from "@gameap/ui"
+import { GBreadcrumbs, GIcon, GSwitch } from "@gameap/ui"
 import {computed, onMounted, ref, watch} from "vue"
 import {trans} from "@/i18n/i18n"
 import {useGameListStore} from "@/store/gameList"
@@ -128,7 +125,7 @@ import {useNodeListStore} from "@/store/nodeList"
 import {useServerListStore} from "@/store/serverList"
 import {storeToRefs} from "pinia"
 import {errorNotification, notification} from "@/parts/dialogs"
-import {NForm, NFormItem, NSwitch, NInputGroup} from "naive-ui"
+import {NForm, NFormItem, NInputGroup} from "naive-ui"
 import {generateServerName} from "@/parts/nameGenerator"
 import GButton from "@/components/GButton.vue"
 import {useRouter} from "vue-router";

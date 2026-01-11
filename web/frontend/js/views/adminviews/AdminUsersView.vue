@@ -6,10 +6,8 @@
     <span>{{ trans('users.create')}}</span>
   </GButton>
 
-  <n-data-table
+  <GDataTable
       ref="tableRef"
-      :bordered="false"
-      :single-line="true"
       :columns="columns"
       :data="usersData"
       :loading="loading"
@@ -18,18 +16,14 @@
     <template #loading>
       <Loading />
     </template>
-  </n-data-table>
+  </GDataTable>
 
-  <n-modal
+  <GModal
       v-model:show="showUserModalEnabled"
-      class="custom-card"
-      preset="card"
       :title="trans('users.user')"
-      :bordered="false"
       style="width: 600px"
-      :segmented="{content: 'soft', footer: 'soft'}"
   >
-    <n-table :bordered="false" :single-line="true">
+    <GTable>
       <tbody>
         <tr>
           <td><strong>{{ trans('users.login') }}:</strong></td>
@@ -48,24 +42,20 @@
           <td>{{ userStore.user.roles.join(', ')  }}</td>
         </tr>
       </tbody>
-    </n-table>
-  </n-modal>
+    </GTable>
+  </GModal>
 
-  <n-modal
+  <GModal
       v-model:show="createUserModalEnabled"
-      class="custom-card"
-      preset="card"
       :title="trans('users.create')"
-      :bordered="false"
       style="width: 600px"
-      :segmented="{content: 'soft', footer: 'soft'}"
   >
     <CreateUserForm v-model="createUserModel" v-on:create="onCreate" />
-  </n-modal>
+  </GModal>
 </template>
 
 <script setup>
-import { GBreadcrumbs, Loading, GIcon } from "@gameap/ui";
+import { GBreadcrumbs, Loading, GIcon, GDataTable, GModal, GTable } from "@gameap/ui";
 import {trans} from "@/i18n/i18n";
 import {computed, h, ref, onMounted} from "vue"
 import {useUserListStore} from "@/store/userList";
@@ -73,11 +63,6 @@ import {useUserStore} from "@/store/user";
 import {useAuthStore} from "@/store/auth";
 import {storeToRefs} from "pinia"
 import {errorNotification, notification} from "@/parts/dialogs";
-import {
-  NModal,
-  NTable,
-  NDataTable,
-} from "naive-ui"
 import GButton from "@/components/GButton.vue";
 import CreateUserForm from "./forms/CreateUserForm.vue";
 

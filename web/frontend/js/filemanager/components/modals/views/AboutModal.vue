@@ -1,7 +1,7 @@
 <template>
     <div>
         <strong>{{ lang.modal.about.name }}</strong>
-        <n-divider />
+        <GDivider />
         <n-descriptions :column="1" label-placement="left">
             <n-descriptions-item :label="lang.modal.about.version">
                 {{ version }}
@@ -27,6 +27,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { GDivider } from '@gameap/ui'
 import { useSettingsStore } from '../../../stores/useSettingsStore.js'
 import { useTranslate } from '../../../composables/useTranslate.js'
 import { useModal } from '../../../composables/useModal.js'

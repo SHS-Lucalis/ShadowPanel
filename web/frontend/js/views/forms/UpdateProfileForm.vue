@@ -21,9 +21,9 @@
         />
       </n-form-item>
 
-      <n-divider>
+      <GDivider>
         {{ trans('profile.change_password') }}
-      </n-divider>
+      </GDivider>
 
       <n-form-item :label="trans('labels.current_password')" path="currentPassword">
         <div class="flex w-full">
@@ -71,11 +71,10 @@
 
 <script setup>
 import {ref, defineModel} from "vue"
-import { GIcon } from "@gameap/ui"
+import { GIcon, GDivider } from "@gameap/ui"
 import {trans} from "@/i18n/i18n";
 import GButton from "@/components/GButton.vue";
 import {
-  NDivider,
   NForm,
   NFormItem,
   NInput,

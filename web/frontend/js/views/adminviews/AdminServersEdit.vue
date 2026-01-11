@@ -34,18 +34,14 @@
 
 
               <n-form-item :label="trans('labels.enabled')" path="enabled">
-                <n-switch
-                    v-model:value="serverForm.enabled"
-                >
-                </n-switch>
+                <GSwitch v-model:value="serverForm.enabled" />
               </n-form-item>
 
               <n-form-item :label="trans('labels.blocked')" path="blocked">
-                <n-switch
+                <GSwitch
                     v-model:value="serverForm.blocked"
                     :rail-style="({checked}) => { return checked ? {background: '#b91c1c'} : {}}"
-                >
-                </n-switch>
+                />
               </n-form-item>
             </div>
 
@@ -191,10 +187,10 @@
 </template>
 
 <script setup>
-import { GBreadcrumbs, GIcon, Loading } from "@gameap/ui"
+import { GBreadcrumbs, GIcon, Loading, GSwitch } from "@gameap/ui"
 import {computed, ref, onMounted} from "vue"
 import {trans} from "@/i18n/i18n"
-import {NForm, NFormItem, NSwitch} from "naive-ui"
+import {NForm, NFormItem} from "naive-ui"
 import GButton from "@/components/GButton.vue"
 import {useRoute, useRouter} from "vue-router"
 import {storeToRefs} from "pinia"

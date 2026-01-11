@@ -31,10 +31,8 @@
     </n-input-group>
   </div>
 
-  <n-data-table
+  <GDataTable
       ref="tableRef"
-      :bordered="false"
-      :single-line="true"
       :columns="columns"
       :data="gamesData"
       :loading="loading"
@@ -44,43 +42,34 @@
       <Loading />
     </template>
     <template #empty>
-      <n-empty :description="trans('servers.empty_list')">
-      </n-empty>
+      <GEmpty :description="trans('servers.empty_list')" />
     </template>
-  </n-data-table>
+  </GDataTable>
 
-  <n-modal
+  <GModal
       v-model:show="gameCreateModalEnabled"
-      class="custom-card"
-      preset="card"
       :title="trans('games.title_add')"
-      :bordered="false"
       style="width: 600px"
-      :segmented="{content: 'soft', footer: 'soft'}"
   >
     <CreateGameForm
         v-model="gameCreateModel"
         v-on:create="onCreateGame"/>
-  </n-modal>
+  </GModal>
 
-  <n-modal
+  <GModal
       v-model:show="modCreateModalEnabled"
-      class="custom-card"
-      preset="card"
       :title="trans('games.title_add_mod')"
-      :bordered="false"
       style="width: 600px"
-      :segmented="{content: 'soft', footer: 'soft'}"
   >
     <CreateModForm
         v-model="modCreateModel"
         v-on:create="onCreateMod"
     />
-  </n-modal>
+  </GModal>
 </template>
 
 <script setup>
-import { GBreadcrumbs, GDeletableList, Loading, GIcon } from "@gameap/ui"
+import { GBreadcrumbs, GDeletableList, Loading, GIcon, GDataTable, GModal, GEmpty } from "@gameap/ui"
 import {computed, ref, onMounted, h, watch} from "vue"
 import {trans} from "../../i18n/i18n"
 import GButton from "../../components/GButton.vue"
@@ -89,9 +78,6 @@ import {useGameListStore} from "../../store/gameList"
 import {errorNotification, notification} from "../../parts/dialogs"
 import {
   NButton,
-  NEmpty,
-  NDataTable,
-  NModal,
   NInput,
   NInputGroup,
   NInputGroupLabel,

@@ -41,11 +41,9 @@
     </n-input-group>
   </div>
 
-  <n-data-table
+  <GDataTable
       remote
       ref="tableRef"
-      :bordered="false"
-      :single-line="true"
       :columns="columns"
       :data="listData"
       :loading="loading"
@@ -55,17 +53,16 @@
     <template #loading>
       <Loading />
     </template>
-  </n-data-table>
+  </GDataTable>
 </template>
 
 <script setup>
-import { GBreadcrumbs, GStatusBadge, Loading, GIcon } from "@gameap/ui"
+import { GBreadcrumbs, GStatusBadge, Loading, GIcon, GDataTable } from "@gameap/ui"
 import {computed, h, ref, reactive, onMounted} from "vue"
 import {
   NButton,
   NSelect,
   NInputGroup,
-  NDataTable,
 } from "naive-ui"
 import {trans} from "@/i18n/i18n"
 import {useDaemonTaskListStore} from "@/store/daemonTaskList"

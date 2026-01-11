@@ -3,7 +3,7 @@
 
   <Loading v-if="loading"></Loading>
   <div :class="loading ? 'hidden' : ''">
-    <n-table :bordered="false" :single-line="true">
+    <GTable>
       <tbody>
       <tr>
         <td><strong>{{ trans('gdaemon_tasks.task') }}:</strong></td>
@@ -22,7 +22,7 @@
         <td>{{ task.updated_at }}</td>
       </tr>
       </tbody>
-    </n-table>
+    </GTable>
 
     <div class="w-full mt-3">
       <div class="coding inverse-toggle px-5 pt-4 shadow-lg text-stone-100 text-sm font-mono subpixel-antialiased
@@ -42,13 +42,10 @@
 </template>
 
 <script setup>
-import { GBreadcrumbs, GStatusBadge, Loading } from "@gameap/ui"
+import { GBreadcrumbs, GStatusBadge, Loading, GTable } from "@gameap/ui"
 import {computed, onMounted} from "vue"
 import {trans} from "../../i18n/i18n"
 import {errorNotification, notification} from "../../parts/dialogs"
-import {
-  NTable,
-} from "naive-ui"
 import {useRoute} from "vue-router"
 import {storeToRefs} from "pinia"
 import {useDaemonTaskStore} from "../../store/daemonTask";

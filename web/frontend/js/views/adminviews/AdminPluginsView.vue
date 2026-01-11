@@ -5,9 +5,7 @@
     <n-tab-pane name="installed" :tab="trans('plugins.installed')">
       <div v-if="updatablePlugins.length > 0" class="mb-6">
         <h3 class="text-lg font-semibold mb-2">{{ trans('plugins.updates_available') }}</h3>
-        <n-data-table
-            :bordered="false"
-            :single-line="true"
+        <GDataTable
             :columns="installedColumns"
             :data="updatablePlugins"
             :loading="loading"
@@ -16,12 +14,10 @@
           <template #loading>
             <Loading />
           </template>
-        </n-data-table>
+        </GDataTable>
       </div>
 
-      <n-data-table
-          :bordered="false"
-          :single-line="true"
+      <GDataTable
           :columns="installedColumns"
           :data="installedPluginsSorted"
           :loading="loading"
@@ -31,15 +27,13 @@
           <Loading />
         </template>
         <template #empty>
-          <n-empty :description="trans('plugins.no_plugins')"></n-empty>
+          <GEmpty :description="trans('plugins.no_plugins')"></GEmpty>
         </template>
-      </n-data-table>
+      </GDataTable>
     </n-tab-pane>
 
     <n-tab-pane name="store" :tab="trans('plugins.store')">
-      <n-data-table
-          :bordered="false"
-          :single-line="true"
+      <GDataTable
           :columns="storeColumns"
           :data="plugins"
           :loading="loading"
@@ -49,9 +43,9 @@
           <Loading />
         </template>
         <template #empty>
-          <n-empty :description="trans('plugins.no_plugins')"></n-empty>
+          <GEmpty :description="trans('plugins.no_plugins')"></GEmpty>
         </template>
-      </n-data-table>
+      </GDataTable>
 
       <div class="flex justify-center mt-4" v-if="lastPage > 1">
         <n-pagination
@@ -63,14 +57,10 @@
     </n-tab-pane>
   </n-tabs>
 
-  <n-modal
+  <GModal
       v-model:show="detailsModalVisible"
-      class="custom-card"
-      preset="card"
       :title="currentPlugin?.name || ''"
-      :bordered="false"
       style="width: 900px; max-width: 90vw;"
-      :segmented="{content: 'soft', footer: 'soft'}"
   >
     <n-spin :show="actionLoading">
       <PluginDetailsModal
@@ -84,7 +74,7 @@
           @close="closeDetailsModal"
       />
     </n-spin>
-  </n-modal>
+  </GModal>
 
   <SubscriptionModal
       v-model:show="subscriptionModalVisible"
@@ -93,16 +83,13 @@
 </template>
 
 <script setup>
-import { GBreadcrumbs, Loading, GIcon } from "@gameap/ui"
+import { GBreadcrumbs, Loading, GIcon, GDataTable, GModal, GEmpty } from "@gameap/ui"
 import { computed, ref, onMounted, onUnmounted, h } from "vue"
 import { trans } from "@/i18n/i18n"
 import GButton from "@/components/GButton.vue"
 import { usePluginStoreStore } from "@/store/pluginStore"
 import { errorNotification, notification } from "@/parts/dialogs"
 import {
-  NEmpty,
-  NDataTable,
-  NModal,
   NTabs,
   NTabPane,
   NPagination,

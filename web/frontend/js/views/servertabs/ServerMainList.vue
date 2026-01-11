@@ -1,5 +1,5 @@
 <script setup>
-    import { Loading, GIcon } from "@gameap/ui";
+    import { Loading, GIcon, GDataTable, GEmpty } from "@gameap/ui";
     import {h, ref, onMounted, computed} from 'vue'
     import {storeToRefs} from 'pinia'
     import {trans} from "@/i18n/i18n";
@@ -356,10 +356,8 @@
         </n-collapse>
     </div>
 
-    <n-data-table
+    <GDataTable
         ref="tableRef"
-        :bordered="false"
-        :single-line="true"
         :columns="columns"
         :data="data"
         :loading="loading"
@@ -369,8 +367,7 @@
           <Loading />
         </template>
         <template #empty>
-            <n-empty :description="trans('servers.empty_list')">
-            </n-empty>
+            <GEmpty :description="trans('servers.empty_list')" />
         </template>
-    </n-data-table>
+    </GDataTable>
 </template>

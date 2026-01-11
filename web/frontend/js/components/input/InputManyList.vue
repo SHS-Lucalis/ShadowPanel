@@ -6,7 +6,7 @@
       </GButton>
     </div>
 
-    <n-data-table :columns="columns" :data="items" />
+    <GDataTable :columns="columns" :data="items" />
 
     <div class="flex justify-center mt-2">
       <GButton color="green" size="small" v-on:click="addItem">
@@ -18,9 +18,8 @@
 
 <script setup>
 import GButton from "../GButton.vue";
-import { GIcon } from '@gameap/ui';
+import { GIcon, GDataTable } from '@gameap/ui';
 import {
-  NDataTable,
   NInput,
   NSwitch,
 } from "naive-ui"

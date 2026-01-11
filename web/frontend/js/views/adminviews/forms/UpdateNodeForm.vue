@@ -33,10 +33,7 @@
                 </n-form-item>
 
                 <n-form-item :label="trans('labels.enabled')" path="enabled">
-                  <n-switch
-                      v-model:value="form.enabled"
-                  >
-                  </n-switch>
+                  <GSwitch v-model:value="form.enabled" />
                 </n-form-item>
 
                 <n-form-item :label="trans('labels.os')" path="os">
@@ -359,7 +356,7 @@
 </template>
 
 <script setup>
-import { GIcon } from "@gameap/ui"
+import { GIcon, GSwitch } from "@gameap/ui"
 import {computed, ref, onMounted, h} from "vue"
 import {allOfValidator, requiredValidator, stringLengthValidator} from "../../../parts/validators";
 import {trans} from "../../../i18n/i18n";
@@ -371,7 +368,6 @@ import {
   NInput,
   NTabs,
   NTabPane,
-  NSwitch,
   NSelect,
   NUpload,
 } from "naive-ui"

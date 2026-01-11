@@ -11,10 +11,8 @@
     <span>{{ trans('client_certificates.client_certificates')}}</span>
   </GButton>
 
-  <n-data-table
+  <GDataTable
       ref="tableRef"
-      :bordered="false"
-      :single-line="true"
       :columns="columns"
       :data="nodesData"
       :loading="loading"
@@ -24,14 +22,13 @@
       <Loading />
     </template>
     <template #empty>
-      <n-empty :description="trans('servers.empty_list')">
-      </n-empty>
+      <GEmpty :description="trans('servers.empty_list')" />
     </template>
-  </n-data-table>
+  </GDataTable>
 </template>
 
 <script setup>
-import { GBreadcrumbs, Loading, GIcon } from "@gameap/ui"
+import { GBreadcrumbs, Loading, GIcon, GDataTable, GEmpty } from "@gameap/ui"
 import {computed, h, ref, onMounted} from "vue"
 import {trans} from "../../i18n/i18n"
 import GButton from "../../components/GButton.vue"
@@ -39,10 +36,6 @@ import {useNodeListStore} from "../../store/nodeList"
 import {errorNotification, notification} from "../../parts/dialogs"
 import {storeToRefs} from "pinia"
 import { join } from "lodash-es"
-import {
-  NEmpty,
-  NDataTable,
-} from "naive-ui"
 
 const nodeListStore = useNodeListStore()
 
