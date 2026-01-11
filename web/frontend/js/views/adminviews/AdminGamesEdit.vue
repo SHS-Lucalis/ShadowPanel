@@ -29,24 +29,20 @@
     </template>
   </UpdateGameForm>
 
-  <n-modal
+  <GModal
       v-model:show="modCreateModalEnabled"
-      class="custom-card"
-      preset="card"
       :title="trans('games.title_add_mod')"
-      :bordered="false"
       style="width: 600px"
-      :segmented="{content: 'soft', footer: 'soft'}"
   >
     <CreateModForm
         v-model="modCreateModel"
         v-on:create="onCreateMod"
     />
-  </n-modal>
+  </GModal>
 </template>
 
 <script setup>
-import { GBreadcrumbs, GDeletableList, GIcon, Loading } from "@gameap/ui"
+import { GBreadcrumbs, GDeletableList, GIcon, Loading, GModal } from "@gameap/ui"
 import UpdateGameForm from "./forms/UpdateGameForm.vue"
 import {computed, ref, onMounted} from "vue"
 import {trans} from "../../i18n/i18n";
@@ -55,10 +51,7 @@ import {useGameStore} from "../../store/game"
 import {useGameListStore} from "../../store/gameList";
 import CreateModForm from "./forms/CreateModForm.vue";
 import {errorNotification, notification} from "../../parts/dialogs";
-import {
-  NModal,
-  NCard,
-} from "naive-ui"
+import { NCard } from "naive-ui"
 import {useRoute, useRouter} from "vue-router"
 import {storeToRefs} from "pinia"
 

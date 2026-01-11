@@ -20,7 +20,7 @@
                     {{ bytesToHuman(item.size) }}
                 </div>
             </div>
-            <n-divider />
+            <GDivider />
             <div class="grid grid-cols-2 gap-4 my-4">
                 <div>
                     <strong>{{ lang.modal.upload.selected }}</strong>
@@ -31,7 +31,7 @@
                     {{ allFilesSize }}
                 </div>
             </div>
-            <n-divider />
+            <GDivider />
             <div class="flex items-center gap-4 my-4">
                 <div>
                     <strong>{{ lang.modal.upload.ifExist }}</strong>
@@ -41,7 +41,7 @@
                     <n-radio :value="1">{{ lang.modal.upload.overwrite }}</n-radio>
                 </n-radio-group>
             </div>
-            <n-divider />
+            <GDivider />
         </div>
         <div v-else>
             <p>{{ lang.modal.upload.noSelected }}</p>
@@ -58,7 +58,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { GIcon } from '@gameap/ui'
+import { GIcon, GDivider } from '@gameap/ui'
 import { useFileManagerStore } from '../../../stores/useFileManagerStore.js'
 import { useMessagesStore } from '../../../stores/useMessagesStore.js'
 import { useTranslate } from '../../../composables/useTranslate.js'

@@ -1,5 +1,5 @@
 <template>
-  <n-empty v-if="!settings || settings.length === 0"></n-empty>
+  <GEmpty v-if="!settings || settings.length === 0" />
   <n-form
       v-else
       label-placement="left"
@@ -8,11 +8,10 @@
       :model="settingsForm"
   >
       <n-form-item v-for="setting in settings" :label="setting.label">
-        <n-switch
+        <GSwitch
             v-if="setting.type === 'bool'"
             v-model:value="settingsForm[setting.name]"
-        >
-        </n-switch>
+        />
         <n-input
             v-if="setting.type === 'string'"
             v-model:value="settingsForm[setting.name]"
@@ -36,10 +35,8 @@ import {
   NForm,
   NFormItem,
   NInput,
-  NEmpty,
-  NSwitch,
 } from "naive-ui"
-import { GIcon } from '@gameap/ui'
+import { GIcon, GEmpty, GSwitch } from '@gameap/ui'
 import GButton from '@/components/GButton.vue'
 import {errorNotification, notification} from "@/parts/dialogs";
 

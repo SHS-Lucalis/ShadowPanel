@@ -6,17 +6,8 @@
     <span>{{ trans('profile.edit')}}</span>
   </GButton>
 
-  <n-card
-      :title="trans('profile.profile')"
-      size="small"
-      class="mb-3"
-      header-class="g-card-header"
-      :segmented="{
-                            content: true,
-                            footer: 'soft'
-                          }"
-  >
-    <n-table :bordered="false" :single-line="true">
+  <GCard :title="trans('profile.profile')" class="mb-3">
+    <GTable>
       <tbody>
       <tr>
         <td><strong>{{ trans('users.login') }}:</strong></td>
@@ -39,31 +30,22 @@
         <td>{{ currentLanguageLabel }}</td>
       </tr>
       </tbody>
-    </n-table>
-  </n-card>
+    </GTable>
+  </GCard>
 
-  <n-modal
+  <GModal
       v-model:show="updateProfileModalEnabled"
-      class="custom-card"
-      preset="card"
       :title="trans('profile.edit')"
-      :bordered="false"
       style="width: 600px"
-      :segmented="{content: 'soft', footer: 'soft'}"
   >
     <UpdateProfileForm v-model="updateProfileModel" v-on:update="onUpdate" />
-  </n-modal>
+  </GModal>
 </template>
 
 <script setup>
-import { GBreadcrumbs, GIcon } from "@gameap/ui"
+import { GBreadcrumbs, GIcon, GModal, GCard, GTable } from "@gameap/ui"
 import {computed, ref} from "vue"
 import {trans, getCurrentLanguage, changeLanguage} from "@/i18n/i18n"
-import {
-  NCard,
-  NTable,
-  NModal,
-} from "naive-ui"
 import UpdateProfileForm from "./forms/UpdateProfileForm.vue";
 import {useAuthStore} from "@/store/auth";
 import {useUISettingsStore} from "@/store/uiSettings";

@@ -7,11 +7,9 @@
     </GButton>
   </div>
 
-  <n-data-table
+  <GDataTable
       remote
       ref="tableRef"
-      :bordered="false"
-      :single-line="true"
       :columns="columns"
       :data="listData"
       :loading="loading"
@@ -20,28 +18,24 @@
     <template #loading>
       <Loading />
     </template>
-  </n-data-table>
+  </GDataTable>
 
-  <n-modal
+  <GModal
       v-model:show="generateTokenModalEnabled"
-      class="custom-card"
-      preset="card"
       :title="trans('tokens.generate_token')"
-      :bordered="false"
       style="width: 800px"
-      :segmented="{content: 'soft', footer: 'soft'}"
   >
     <GenerateTokenForm
         :abilities="abilities"
         v-model="generateTokenModel"
         v-on:generate="onGenerateToken"
     />
-  </n-modal>
+  </GModal>
 </template>
 
 <script setup>
 import {computed, onMounted, ref, h} from "vue"
-import { GBreadcrumbs, Loading, GIcon } from "@gameap/ui"
+import { GBreadcrumbs, Loading, GIcon, GDataTable, GModal } from "@gameap/ui"
 import {trans} from "@/i18n/i18n"
 import GButton from "@/components/GButton.vue";
 import {useTokensStore} from "@/store/tokens";
@@ -49,8 +43,6 @@ import {storeToRefs} from "pinia"
 import { join } from "lodash-es";
 import {
   NButton,
-  NDataTable,
-  NModal,
   NInput,
   NInputGroup,
 } from "naive-ui"

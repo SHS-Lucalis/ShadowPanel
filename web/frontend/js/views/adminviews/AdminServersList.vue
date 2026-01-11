@@ -6,10 +6,8 @@
     <span>{{ trans('servers.create')}}</span>
   </GButton>
 
-  <n-data-table
+  <GDataTable
       ref="tableRef"
-      :bordered="false"
-      :single-line="true"
       :columns="columns"
       :data="serversData"
       :loading="loading"
@@ -19,14 +17,13 @@
       <Loading />
     </template>
     <template #empty>
-      <n-empty :description="trans('servers.empty_list')">
-      </n-empty>
+      <GEmpty :description="trans('servers.empty_list')" />
     </template>
-  </n-data-table>
+  </GDataTable>
 </template>
 
 <script setup>
-import { GBreadcrumbs, Loading, GIcon } from "@gameap/ui"
+import { GBreadcrumbs, Loading, GIcon, GDataTable, GEmpty } from "@gameap/ui"
 import {trans} from "../../i18n/i18n"
 import GButton from "../../components/GButton.vue"
 import {h, onMounted, computed, ref} from "vue"
@@ -34,10 +31,6 @@ import {useServerListStore} from "../../store/serverList"
 import {useNodeListStore} from "../../store/nodeList"
 import {errorNotification} from "../../parts/dialogs"
 import {storeToRefs} from "pinia"
-import {
-  NDataTable,
-  NEmpty,
-} from "naive-ui"
 import GameIcon from "../../components/GameIcon.vue";
 import { RouterLink } from 'vue-router';
 

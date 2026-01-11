@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="mb-4">
-            <n-table :bordered="false" :single-line="true">
+            <GTable>
                 <thead>
                   <tr>
                       <th>{{ trans('servers.name') }}</th>
@@ -29,7 +29,7 @@
                       </td>
                   </tr>
                 </tbody>
-            </n-table>
+            </GTable>
         </div>
 
         <div class="mt-6 mb-3">
@@ -41,14 +41,10 @@
         </div>
     </div>
 
-  <n-modal
+  <GModal
       v-model:show="addServerModalEnabled"
-      class="custom-card"
-      preset="card"
       :title="trans('servers.add_server')"
-      :bordered="false"
       style="width: 800px"
-      :segmented="{content: 'soft', footer: 'soft'}"
   >
     <div class="md:w-full">
       <n-select
@@ -77,18 +73,14 @@
         <GIcon name="add" />&nbsp;{{ trans('main.add') }}
       </GButton>
     </div>
-  </n-modal>
+  </GModal>
 
-  <n-modal
+  <GModal
       v-model:show="editPrivilegestModalEnabled"
-      class="custom-card"
-      preset="card"
       :title="trans('users.server_permission_edit')"
-      :bordered="false"
       style="width: 800px"
-      :segmented="{content: 'soft', footer: 'soft'}"
   >
-    <n-table :bordered="false" :single-line="true" size="small" class="mb-8">
+    <GTable size="small" class="mb-8">
       <tbody>
       <tr>
         <td><strong>{{ trans('servers.name') }}:</strong></td>
@@ -106,12 +98,12 @@
         </td>
       </tr>
       </tbody>
-    </n-table>
+    </GTable>
 
     <div class="grid grid-cols-2 gap-x-20 mb-4">
       <div v-for="item in serverPermissions" class="grid grid-cols-4 gap-x-4 mb-6">
         <div class="col-span-3">{{ transWithPlugin(item.name) }}</div>
-        <n-switch
+        <GSwitch
             v-model:value="item.value"
         />
       </div>
@@ -122,21 +114,16 @@
       <span class="hidden lg:inline">&nbsp;{{ trans('main.save') }}</span>
     </GButton>
 
-  </n-modal>
+  </GModal>
 </template>
 
 <script setup>
 import { defineProps, defineModel, ref, onMounted, computed, h } from 'vue'
 import axios from '../../config/axios'
 import {storeToRefs} from "pinia";
-import {
-  NTable,
-  NSelect,
-  NModal,
-  NSwitch,
-} from "naive-ui"
+import { NSelect } from "naive-ui"
 import GButton from "../GButton.vue";
-import { GIcon } from '@gameap/ui';
+import { GIcon, GModal, GTable, GSwitch } from '@gameap/ui';
 import GameIcon from "../GameIcon.vue";
 import {trans as systemTrans, trans} from "@/i18n/i18n";
 import {useUserStore} from "@/store/user";

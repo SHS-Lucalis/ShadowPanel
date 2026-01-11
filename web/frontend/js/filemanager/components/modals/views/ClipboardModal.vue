@@ -17,7 +17,7 @@
                     </span>
                 </div>
             </div>
-            <n-divider />
+            <GDivider />
             <div
                 class="flex justify-between items-center py-1"
                 v-for="(dir, index) in directories"
@@ -67,7 +67,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { GIcon } from '@gameap/ui'
+import { GIcon, GDivider } from '@gameap/ui'
 import { useFileManagerStore } from '../../../stores/useFileManagerStore.js'
 import { useTranslate } from '../../../composables/useTranslate.js'
 import { useHelper } from '../../../composables/useHelper.js'

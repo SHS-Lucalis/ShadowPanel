@@ -20,17 +20,9 @@
     <Progressbar :progress="downloadProgress" />
   </div>
 
-  <n-card
-      size="small"
-      class="mb-3"
-      header-class="g-card-header"
-      :segmented="{
-                            content: true,
-                            footer: 'soft'
-                          }"
-  >
+  <GCard class="mb-3">
     <Loading v-if="loading"></Loading>
-    <n-table v-else :bordered="false" :single-line="true">
+    <GTable v-else>
       <tbody>
       <tr>
         <td><strong>ID:</strong></td>
@@ -85,18 +77,14 @@
           }}</td>
       </tr>
       </tbody>
-    </n-table>
-  </n-card>
+    </GTable>
+  </GCard>
 </template>
 
 <script setup>
-import { GBreadcrumbs, Loading, Progressbar, GIcon } from "@gameap/ui"
+import { GBreadcrumbs, Loading, Progressbar, GIcon, GCard, GTable } from "@gameap/ui"
 import {computed, onMounted, ref} from "vue"
 import {trans} from "../../i18n/i18n"
-import {
-  NCard,
-  NTable,
-} from "naive-ui"
 import {useNodeStore} from "../../store/node"
 import {errorNotification} from "../../parts/dialogs"
 import {storeToRefs} from "pinia"

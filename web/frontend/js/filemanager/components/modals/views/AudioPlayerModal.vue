@@ -1,7 +1,7 @@
 <template>
     <div class="fm-modal-audio-player">
         <audio ref="fmAudio" controls class="w-full" />
-        <n-divider />
+        <GDivider />
         <div
             class="flex justify-between items-center py-2 px-2 rounded cursor-pointer"
             :class="playingIndex === index ? 'bg-stone-100 dark:bg-stone-800' : 'hover:bg-stone-50 dark:hover:bg-stone-900'"
@@ -33,7 +33,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { GIcon } from '@gameap/ui'
+import { GIcon, GDivider } from '@gameap/ui'
 import { useFileManagerStore } from '../../../stores/useFileManagerStore.js'
 import { useSettingsStore } from '../../../stores/useSettingsStore.js'
 

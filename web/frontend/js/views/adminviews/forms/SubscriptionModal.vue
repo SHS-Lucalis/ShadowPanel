@@ -1,9 +1,7 @@
 <template>
-  <n-modal
+  <GModal
       v-model:show="showModal"
-      preset="card"
       :title="trans('plugins.subscription_required')"
-      :bordered="false"
       style="width: 500px; max-width: 90vw;"
   >
     <div class="space-y-4">
@@ -32,15 +30,14 @@
         </GButton>
       </div>
     </template>
-  </n-modal>
+  </GModal>
 </template>
 
 <script setup>
 import { computed } from 'vue'
 import { trans } from '@/i18n/i18n'
-import { GIcon } from '@gameap/ui'
+import { GIcon, GModal } from '@gameap/ui'
 import GButton from '@/components/GButton.vue'
-import { NModal } from 'naive-ui'
 
 const props = defineProps({
   show: {

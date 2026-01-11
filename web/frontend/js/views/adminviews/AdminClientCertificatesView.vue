@@ -6,10 +6,8 @@
     <span>{{ trans('client_certificates.upload')}}</span>
   </GButton>
 
-  <n-data-table
+  <GDataTable
       ref="tableRef"
-      :bordered="false"
-      :single-line="true"
       :columns="columns"
       :data="clientCertificatesData"
       :loading="loading"
@@ -18,16 +16,12 @@
     <template #loading>
       <Loading />
     </template>
-  </n-data-table>
+  </GDataTable>
 
-  <n-modal
+  <GModal
       v-model:show="createCertificateModalEnabled"
-      class="custom-card"
-      preset="card"
       :title="trans('client_certificates.title_upload')"
-      :bordered="false"
       style="width: 600px"
-      :segmented="{content: 'soft', footer: 'soft'}"
   >
     <CreateCertificateForm
         v-model="createCertificateModel"
@@ -35,18 +29,14 @@
         v-model:privateKeyFile="createCertificatePrivateKeyFile"
         v-on:create="onCreate"
     />
-  </n-modal>
+  </GModal>
 
-  <n-modal
+  <GModal
       v-model:show="viewCertificateModalEnabled"
-      class="custom-card"
-      preset="card"
       :title="trans('client_certificates.title_view')"
-      :bordered="false"
       style="width: 800px"
-      :segmented="{content: 'soft', footer: 'soft'}"
   >
-    <n-table :bordered="false" :single-line="true">
+    <GTable>
       <tbody>
       <tr>
         <td><strong>{{ trans('client_certificates.fingerprint') }}:</strong></td>
@@ -81,12 +71,12 @@
         <td>{{ selectedCertificate.info.expires }}</td>
       </tr>
       </tbody>
-    </n-table>
-  </n-modal>
+    </GTable>
+  </GModal>
 </template>
 
 <script setup>
-import { GBreadcrumbs, Loading, GIcon } from "@gameap/ui"
+import { GBreadcrumbs, Loading, GIcon, GDataTable, GModal, GTable } from "@gameap/ui"
 import {computed, h, ref, onMounted} from "vue"
 import { camelCase } from "lodash-es"
 import {trans} from "@/i18n/i18n"
@@ -94,11 +84,6 @@ import GButton from "@/components/GButton.vue"
 import {errorNotification, notification} from "@/parts/dialogs"
 import {storeToRefs} from "pinia"
 import {useClientCertificatesStore} from "@/store/clientCertificates"
-import {
-  NTable,
-  NDataTable,
-  NModal,
-} from "naive-ui"
 import CreateCertificateForm from "./forms/CreateCertificateForm.vue";
 
 const clientCertificatesStore = useClientCertificatesStore()
