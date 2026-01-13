@@ -82,6 +82,7 @@ type Container struct {
 	serverSettingRepository       repositories.ServerSettingRepository
 	nodeRepository                repositories.NodeRepository
 	clientCertificateRepository   repositories.ClientCertificateRepository
+	pluginStorageRepository       repositories.PluginStorageRepository
 
 	// Services
 	authService          auth.Service
@@ -748,6 +749,29 @@ func (c *Container) createClientCertificateRepository() repositories.ClientCerti
 	}
 }
 
+func (c *Container) PluginStorageRepository() repositories.PluginStorageRepository {
+	if c.pluginStorageRepository == nil {
+		c.pluginStorageRepository = c.createPluginStorageRepository()
+	}
+
+	return c.pluginStorageRepository
+}
+
+func (c *Container) createPluginStorageRepository() repositories.PluginStorageRepository {
+	switch c.config.DatabaseDriver {
+	case databaseDriverMySQL:
+		return mysql.NewPluginStorageRepository(c.TransactionalDB())
+	case databaseDriverPostgres, databaseDriverPGX:
+		return postgres.NewPluginStorageRepository(c.TransactionalDB())
+	case databaseDriverSQLite:
+		return sqlite.NewPluginStorageRepository(c.TransactionalDB())
+	case databaseDriverInMemory:
+		return inmemory.NewPluginStorageRepository()
+	default:
+		return inmemory.NewPluginStorageRepository()
+	}
+}
+
 func (c *Container) Cache() cache.Cache {
 	if c.cache == nil {
 		c.cache = c.createCache()
@@ -960,6 +984,9 @@ func (c *Container) createPluginManager() *pkgplugin.Manager {
 			hostlibrary.NewLogHostLibrary(slog.Default()),
 			hostlibrary.NewNodeFSHostLibrary(c.DaemonFiles(), c.NodeRepository()),
 			hostlibrary.NewNodeCmdHostLibrary(c.DaemonCommands(), c.NodeRepository()),
+		},
+		LibraryFactories: []pkgplugin.HostLibraryFactory{
+			hostlibrary.NewStorageHostLibraryFactory(c.PluginStorageRepository()),
 		},
 	})
 }
