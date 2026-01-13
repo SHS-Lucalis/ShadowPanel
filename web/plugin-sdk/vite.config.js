@@ -15,6 +15,7 @@ function globalExternalsPlugin() {
         'vue-router': 'window.VueRouter',
         'pinia': 'window.Pinia',
         'axios': 'window.axios',
+        '@gameap/ui': 'window.gameapUI',
     };
 
     return {
@@ -84,13 +85,14 @@ export function createPluginConfig(options = {}) {
             outDir,
             emptyOutDir: true,
             rollupOptions: {
-                external: ['vue', 'vue-router', 'pinia', 'axios'],
+                external: ['vue', 'vue-router', 'pinia', 'axios', '@gameap/ui'],
                 output: {
                     globals: {
                         vue: 'Vue',
                         'vue-router': 'VueRouter',
                         pinia: 'Pinia',
                         axios: 'axios',
+                        '@gameap/ui': 'gameapUI',
                     },
                 },
                 plugins: [globalExternalsPlugin()],
@@ -116,12 +118,13 @@ export default defineConfig({
         outDir: 'dist',
         emptyOutDir: true,
         rollupOptions: {
-            external: ['vue', 'vue-router', 'pinia'],
+            external: ['vue', 'vue-router', 'pinia', '@gameap/ui'],
             output: {
                 globals: {
                     vue: 'Vue',
                     'vue-router': 'VueRouter',
                     pinia: 'Pinia',
+                    '@gameap/ui': 'gameapUI',
                 },
             },
         },

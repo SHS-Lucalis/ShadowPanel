@@ -37,7 +37,7 @@
   import { useGameListStore } from '@/store/gameList'
   import { trans } from '@/i18n/i18n'
   import { NFormItem } from 'naive-ui'
-  import GameIcon from '../GameIcon.vue'
+  import { GGameIcon } from '@gameap/ui'
 
   const props = defineProps({
     games: Object,
@@ -60,7 +60,7 @@
 
   const renderGameLabel = (option) => {
     return [
-      h(GameIcon, {game: option.value, class: 'mr-2'}),
+      h(GGameIcon, {game: option.value, class: 'mr-2'}),
       option.label,
     ]
   }

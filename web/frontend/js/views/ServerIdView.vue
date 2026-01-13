@@ -215,7 +215,7 @@
         :name="'plugin-' + tab.pluginId + '-' + (tab.name || 'tab')"
     >
       <template #tab>
-        <i v-if="tab.icon" :class="tab.icon" class="mr-1"></i>
+        <GIcon v-if="tab.icon" :name="tab.icon" class="mr-1"></GIcon>
         {{ pluginsStore.resolvePluginText(tab.pluginId, tab.label) }}
       </template>
       <component
@@ -290,7 +290,7 @@ const FileManager = defineAsyncComponent(() =>
     import('../filemanager/FileManager.vue')
 )
 
-import { GBreadcrumbs, Loading, GIcon } from "@gameap/ui";
+import { GBreadcrumbs, Loading, GIcon, GGameIcon } from "@gameap/ui";
 
 import {useServerStore} from "@/store/server"
 import {useServerRconStore} from "@/store/serverRcon"
@@ -298,7 +298,6 @@ import {useAuthStore} from "@/store/auth"
 import {usePluginsStore} from "@/store/plugins"
 import {providePluginContext} from "@/plugins/context"
 import {trans, pageLanguage} from "@/i18n/i18n";
-import GameIcon from "../components/GameIcon.vue";
 import InactiveServer from "./InactiveServer.vue";
 
 const route = useRoute()
@@ -376,7 +375,7 @@ const breadcrumbs = computed(() => {
   if (server.value?.name) {
     bc.push({
       render: () => [
-        h(GameIcon, {game: server.value.game?.code ?? '', class: 'mr-2 align-middle'}),
+        h(GGameIcon, {game: server.value.game?.code ?? '', class: 'mr-2 align-middle'}),
         h('span', {game: server.value.game?.code ?? '', class: 'align-middle'}, server.value.name),
       ]
     })

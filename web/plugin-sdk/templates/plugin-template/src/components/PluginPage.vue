@@ -1,5 +1,7 @@
 <template>
     <div class="p-4">
+        <GBreadcrumbs :items="breadcrumbs" class="mb-4" />
+
         <h1 class="text-xl font-bold mb-4 text-stone-900 dark:text-white">
             {{ trans('title') }}
         </h1>
@@ -7,23 +9,48 @@
             {{ trans('welcome') }}
         </p>
 
-        <div class="p-4 border border-stone-200 dark:border-stone-700 rounded-lg bg-white dark:bg-stone-800">
-            <h2 class="font-semibold mb-2 text-stone-900 dark:text-white">
-                {{ trans('user_info') }}
-            </h2>
-            <p class="text-stone-600 dark:text-stone-400">
-                {{ trans('logged_in_as') }}: <strong>{{ user.login }}</strong>
-            </p>
-            <p class="text-stone-600 dark:text-stone-400">
-                {{ trans('admin') }}: {{ user.isAdmin ? trans('yes') : trans('no') }}
-            </p>
-        </div>
+        <GCard :title="trans('user_info')">
+            <GTable>
+                <tbody>
+                    <tr>
+                        <td class="font-semibold">{{ trans('logged_in_as') }}</td>
+                        <td>
+                            <GIcon name="user" class="mr-2" />
+                            {{ user.login }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="font-semibold">{{ trans('admin') }}</td>
+                        <td>
+                            <GStatusBadge
+                                :status="user.isAdmin ? 'success' : 'waiting'"
+                                :text="user.isAdmin ? trans('yes') : trans('no')"
+                            />
+                        </td>
+                    </tr>
+                </tbody>
+            </GTable>
+        </GCard>
     </div>
 </template>
 
 <script setup lang="ts">
-import { useCurrentUser, usePluginTrans } from '@gameap/plugin-sdk';
+import { computed } from 'vue';
+import {
+    useCurrentUser,
+    usePluginTrans,
+    GBreadcrumbs,
+    GCard,
+    GTable,
+    GIcon,
+    GStatusBadge,
+} from '@gameap/plugin-sdk';
 
 const user = useCurrentUser();
 const { trans } = usePluginTrans();
+
+const breadcrumbs = computed(() => [
+    { text: 'GameAP', route: '/', icon: 'gicon gicon-gameap' },
+    { text: trans('title') },
+]);
 </script>

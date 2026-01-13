@@ -62,3 +62,32 @@ export type { PluginI18nContext } from './i18n';
 
 // Re-export Vue utilities that plugins commonly need
 export { defineComponent, ref, computed, watch, onMounted, onUnmounted } from 'vue';
+
+// Re-export @gameap/ui components for plugin convenience
+// Plugins can also import directly from '@gameap/ui'
+export {
+    GBreadcrumbs,
+    GCard,
+    GDataTable,
+    GDeletableList,
+    GDivider,
+    GEmpty,
+    GGameIcon,
+    GIcon,
+    GInput,
+    GMenu,
+    GMenuButton,
+    GMenuItem,
+    GMenuItems,
+    GModal,
+    GStatusBadge,
+    GSwitch,
+    GTable,
+    Loading,
+    Progressbar,
+    registerIcons,
+    iconRegistry,
+    getIcon,
+    hasIcon,
+    defaultIconMap,
+} from '@gameap/ui';

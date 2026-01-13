@@ -15,7 +15,7 @@
                   <tr v-for="(server, itemIndex) in items">
                       <td><a :href="'/admin/servers/' + server.id + '/edit'">{{ server.name }}</a></td>
                       <td>
-                        <GameIcon :game="server.game.code" />
+                        <GGameIcon :game="server.game.code" />
                         {{ server.game.name }}
                       </td>
                       <td>{{ server.server_ip }}:{{ server.server_port }}</td>
@@ -93,7 +93,7 @@
       <tr>
         <td><strong>{{ trans('servers.game') }}:</strong></td>
         <td>
-          <GameIcon :game="editPrivilegesServer.game.code" class="mr-2" />
+          <GGameIcon :game="editPrivilegesServer.game.code" class="mr-2" />
           {{ editPrivilegesServer.game.name }}
         </td>
       </tr>
@@ -123,8 +123,7 @@ import axios from '../../config/axios'
 import {storeToRefs} from "pinia";
 import { NSelect } from "naive-ui"
 import GButton from "../GButton.vue";
-import { GIcon, GModal, GTable, GSwitch } from '@gameap/ui';
-import GameIcon from "../GameIcon.vue";
+import { GIcon, GModal, GTable, GSwitch, GGameIcon } from '@gameap/ui';
 import {trans as systemTrans, trans} from "@/i18n/i18n";
 import {useUserStore} from "@/store/user";
 import {errorNotification, notification} from "@/parts/dialogs";

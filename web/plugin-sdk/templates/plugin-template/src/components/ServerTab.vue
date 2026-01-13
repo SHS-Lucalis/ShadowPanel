@@ -1,39 +1,46 @@
 <template>
     <div class="p-4">
-        <div class="p-4 border border-stone-200 dark:border-stone-700 rounded-lg bg-white dark:bg-stone-800">
-            <h3 class="text-lg font-semibold mb-3 text-stone-900 dark:text-white">
-                {{ trans('tab_title') }}
-            </h3>
-
-            <div class="space-y-2">
-                <p class="text-stone-700 dark:text-stone-300">
-                    <strong>{{ trans('server_id') }}:</strong> {{ serverId }}
-                </p>
-                <p class="text-stone-700 dark:text-stone-300">
-                    <strong>{{ trans('server_name') }}:</strong> {{ server?.name || 'Loading...' }}
-                </p>
-                <p class="text-stone-700 dark:text-stone-300">
-                    <strong>{{ trans('game') }}:</strong> {{ server?.game_id || 'N/A' }}
-                </p>
-                <p class="text-stone-700 dark:text-stone-300">
-                    <strong>{{ trans('address') }}:</strong> {{ serverAddress }}
-                </p>
-                <p class="text-stone-700 dark:text-stone-300">
-                    <strong>{{ trans('status') }}:</strong>
-                    <span :class="statusClass">{{ statusText }}</span>
-                </p>
-            </div>
+        <GCard :title="trans('tab_title')">
+            <GTable>
+                <tbody>
+                    <tr>
+                        <td class="font-semibold">{{ trans('server_id') }}</td>
+                        <td>{{ serverId }}</td>
+                    </tr>
+                    <tr>
+                        <td class="font-semibold">{{ trans('server_name') }}</td>
+                        <td>{{ server?.name || 'Loading...' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="font-semibold">{{ trans('game') }}</td>
+                        <td>
+                            <GGameIcon :game="server?.game_id || ''" class="mr-2" />
+                            {{ server?.game_id || 'N/A' }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="font-semibold">{{ trans('address') }}</td>
+                        <td>{{ serverAddress }}</td>
+                    </tr>
+                    <tr>
+                        <td class="font-semibold">{{ trans('status') }}</td>
+                        <td>
+                            <GStatusBadge :status="serverStatus" :text="statusText" />
+                        </td>
+                    </tr>
+                </tbody>
+            </GTable>
 
             <p class="mt-4 text-stone-600 dark:text-stone-400">
                 {{ trans('tab_description') }}
             </p>
-        </div>
+        </GCard>
     </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { providePluginTrans } from '@gameap/plugin-sdk';
+import { providePluginTrans, GCard, GTable, GGameIcon, GStatusBadge } from '@gameap/plugin-sdk';
 import type { ServerTabProps } from '@gameap/plugin-sdk';
 
 const props = defineProps<ServerTabProps>();
@@ -48,17 +55,17 @@ const serverAddress = computed(() => {
     return `${props.server.ip}:${props.server.port}`;
 });
 
+const serverStatus = computed(() => {
+    if (!props.server) return 'waiting';
+    if (props.server.process_active) return 'success';
+    if (!props.server.enabled) return 'error';
+    return 'canceled';
+});
+
 const statusText = computed(() => {
     if (!props.server) return trans('unknown');
     if (props.server.process_active) return trans('running');
     if (!props.server.enabled) return trans('disabled');
     return trans('stopped');
-});
-
-const statusClass = computed(() => {
-    if (!props.server) return 'text-stone-500';
-    if (props.server.process_active) return 'text-green-600 dark:text-green-400';
-    if (!props.server.enabled) return 'text-red-600 dark:text-red-400';
-    return 'text-yellow-600 dark:text-yellow-400';
 });
 </script>

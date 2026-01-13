@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import { GBreadcrumbs, Loading, GIcon, GDataTable, GEmpty } from "@gameap/ui"
+import { GBreadcrumbs, Loading, GIcon, GDataTable, GEmpty, GGameIcon } from "@gameap/ui"
 import {trans} from "../../i18n/i18n"
 import GButton from "../../components/GButton.vue"
 import {h, onMounted, computed, ref} from "vue"
@@ -31,7 +31,6 @@ import {useServerListStore} from "../../store/serverList"
 import {useNodeListStore} from "../../store/nodeList"
 import {errorNotification} from "../../parts/dialogs"
 import {storeToRefs} from "pinia"
-import GameIcon from "../../components/GameIcon.vue";
 import { RouterLink } from 'vue-router';
 
 const serverListStore = useServerListStore()
@@ -54,7 +53,7 @@ const createColumns = () => {
       title: trans('servers.game'),
       key: "game",
       render: (row) => [
-        h(GameIcon, {game: row.gameCode, class: 'mr-2'}),
+        h(GGameIcon, {game: row.gameCode, class: 'mr-2'}),
         row.game,
       ]
     },
