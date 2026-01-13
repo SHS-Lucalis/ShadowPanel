@@ -143,31 +143,14 @@ func (m *DaemonTaskFilter) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		copy(dAtA[i:], m.unknownFields)
 	}
 	if len(m.TaskTypes) > 0 {
-		for iNdEx := len(m.TaskTypes) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.TaskTypes[iNdEx])
-			copy(dAtA[i:], m.TaskTypes[iNdEx])
-			i = encodeVarint(dAtA, i, uint64(len(m.TaskTypes[iNdEx])))
-			i--
-			dAtA[i] = 0x2a
-		}
-	}
-	if len(m.Statuses) > 0 {
-		for iNdEx := len(m.Statuses) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.Statuses[iNdEx])
-			copy(dAtA[i:], m.Statuses[iNdEx])
-			i = encodeVarint(dAtA, i, uint64(len(m.Statuses[iNdEx])))
-			i--
-			dAtA[i] = 0x22
-		}
-	}
-	if len(m.NodeIds) > 0 {
 		var pksize2 int
-		for _, num := range m.NodeIds {
+		for _, num := range m.TaskTypes {
 			pksize2 += sov(uint64(num))
 		}
 		i -= pksize2
 		j1 := i
-		for _, num := range m.NodeIds {
+		for _, num1 := range m.TaskTypes {
+			num := uint64(num1)
 			for num >= 1<<7 {
 				dAtA[j1] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
@@ -178,16 +161,17 @@ func (m *DaemonTaskFilter) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		}
 		i = encodeVarint(dAtA, i, uint64(pksize2))
 		i--
-		dAtA[i] = 0x1a
+		dAtA[i] = 0x2a
 	}
-	if len(m.ServerIds) > 0 {
+	if len(m.Statuses) > 0 {
 		var pksize4 int
-		for _, num := range m.ServerIds {
+		for _, num := range m.Statuses {
 			pksize4 += sov(uint64(num))
 		}
 		i -= pksize4
 		j3 := i
-		for _, num := range m.ServerIds {
+		for _, num1 := range m.Statuses {
+			num := uint64(num1)
 			for num >= 1<<7 {
 				dAtA[j3] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
@@ -198,16 +182,16 @@ func (m *DaemonTaskFilter) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		}
 		i = encodeVarint(dAtA, i, uint64(pksize4))
 		i--
-		dAtA[i] = 0x12
+		dAtA[i] = 0x22
 	}
-	if len(m.Ids) > 0 {
+	if len(m.NodeIds) > 0 {
 		var pksize6 int
-		for _, num := range m.Ids {
+		for _, num := range m.NodeIds {
 			pksize6 += sov(uint64(num))
 		}
 		i -= pksize6
 		j5 := i
-		for _, num := range m.Ids {
+		for _, num := range m.NodeIds {
 			for num >= 1<<7 {
 				dAtA[j5] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
@@ -217,6 +201,46 @@ func (m *DaemonTaskFilter) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 			j5++
 		}
 		i = encodeVarint(dAtA, i, uint64(pksize6))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.ServerIds) > 0 {
+		var pksize8 int
+		for _, num := range m.ServerIds {
+			pksize8 += sov(uint64(num))
+		}
+		i -= pksize8
+		j7 := i
+		for _, num := range m.ServerIds {
+			for num >= 1<<7 {
+				dAtA[j7] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j7++
+			}
+			dAtA[j7] = uint8(num)
+			j7++
+		}
+		i = encodeVarint(dAtA, i, uint64(pksize8))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Ids) > 0 {
+		var pksize10 int
+		for _, num := range m.Ids {
+			pksize10 += sov(uint64(num))
+		}
+		i -= pksize10
+		j9 := i
+		for _, num := range m.Ids {
+			for num >= 1<<7 {
+				dAtA[j9] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j9++
+			}
+			dAtA[j9] = uint8(num)
+			j9++
+		}
+		i = encodeVarint(dAtA, i, uint64(pksize10))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -334,12 +358,10 @@ func (m *CreateDaemonTaskRequest) MarshalToSizedBufferVT(dAtA []byte) (int, erro
 		i--
 		dAtA[i] = 0x22
 	}
-	if len(m.TaskType) > 0 {
-		i -= len(m.TaskType)
-		copy(dAtA[i:], m.TaskType)
-		i = encodeVarint(dAtA, i, uint64(len(m.TaskType)))
+	if m.TaskType != 0 {
+		i = encodeVarint(dAtA, i, uint64(m.TaskType))
 		i--
-		dAtA[i] = 0x1a
+		dAtA[i] = 0x18
 	}
 	if m.ServerId != nil {
 		i = encodeVarint(dAtA, i, uint64(*m.ServerId))
@@ -484,16 +506,18 @@ func (m *DaemonTaskFilter) SizeVT() (n int) {
 		n += 1 + sov(uint64(l)) + l
 	}
 	if len(m.Statuses) > 0 {
-		for _, s := range m.Statuses {
-			l = len(s)
-			n += 1 + l + sov(uint64(l))
+		l = 0
+		for _, e := range m.Statuses {
+			l += sov(uint64(e))
 		}
+		n += 1 + sov(uint64(l)) + l
 	}
 	if len(m.TaskTypes) > 0 {
-		for _, s := range m.TaskTypes {
-			l = len(s)
-			n += 1 + l + sov(uint64(l))
+		l = 0
+		for _, e := range m.TaskTypes {
+			l += sov(uint64(e))
 		}
+		n += 1 + sov(uint64(l)) + l
 	}
 	n += len(m.unknownFields)
 	return n
@@ -536,9 +560,8 @@ func (m *CreateDaemonTaskRequest) SizeVT() (n int) {
 	if m.ServerId != nil {
 		n += 1 + sov(uint64(*m.ServerId))
 	}
-	l = len(m.TaskType)
-	if l > 0 {
-		n += 1 + l + sov(uint64(l))
+	if m.TaskType != 0 {
+		n += 1 + sov(uint64(m.TaskType))
 	}
 	if m.Data != nil {
 		l = len(*m.Data)
@@ -1012,69 +1035,143 @@ func (m *DaemonTaskFilter) UnmarshalVT(dAtA []byte) error {
 				return fmt.Errorf("proto: wrong wireType = %d for field NodeIds", wireType)
 			}
 		case 4:
-			if wireType != 2 {
+			if wireType == 0 {
+				var v proto1.DaemonTaskStatus
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= proto1.DaemonTaskStatus(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.Statuses = append(m.Statuses, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLength
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLength
+				}
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				if elementCount != 0 && len(m.Statuses) == 0 {
+					m.Statuses = make([]proto1.DaemonTaskStatus, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v proto1.DaemonTaskStatus
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflow
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= proto1.DaemonTaskStatus(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.Statuses = append(m.Statuses, v)
+				}
+			} else {
 				return fmt.Errorf("proto: wrong wireType = %d for field Statuses", wireType)
 			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflow
+		case 5:
+			if wireType == 0 {
+				var v proto1.DaemonTaskType
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= proto1.DaemonTaskType(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
 				}
-				if iNdEx >= l {
+				m.TaskTypes = append(m.TaskTypes, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLength
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLength
+				}
+				if postIndex > l {
 					return io.ErrUnexpectedEOF
 				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
+				var elementCount int
+				if elementCount != 0 && len(m.TaskTypes) == 0 {
+					m.TaskTypes = make([]proto1.DaemonTaskType, 0, elementCount)
 				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLength
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLength
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Statuses = append(m.Statuses, string(dAtA[iNdEx:postIndex]))
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
+				for iNdEx < postIndex {
+					var v proto1.DaemonTaskType
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflow
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= proto1.DaemonTaskType(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.TaskTypes = append(m.TaskTypes, v)
+				}
+			} else {
 				return fmt.Errorf("proto: wrong wireType = %d for field TaskTypes", wireType)
 			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLength
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLength
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.TaskTypes = append(m.TaskTypes, string(dAtA[iNdEx:postIndex]))
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skip(dAtA[iNdEx:])
@@ -1278,10 +1375,10 @@ func (m *CreateDaemonTaskRequest) UnmarshalVT(dAtA []byte) error {
 			}
 			m.ServerId = &v
 		case 3:
-			if wireType != 2 {
+			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field TaskType", wireType)
 			}
-			var stringLen uint64
+			m.TaskType = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflow
@@ -1291,24 +1388,11 @@ func (m *CreateDaemonTaskRequest) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				m.TaskType |= proto1.DaemonTaskType(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLength
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLength
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.TaskType = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Data", wireType)
