@@ -69,11 +69,10 @@
 </template>
 
 <script setup>
-import { GBreadcrumbs, GDeletableList, Loading, GIcon, GDataTable, GModal, GEmpty } from "@gameap/ui"
+import { GBreadcrumbs, GDeletableList, Loading, GIcon, GDataTable, GModal, GEmpty, GGameIcon } from "@gameap/ui"
 import {computed, ref, onMounted, h, watch} from "vue"
 import {trans} from "../../i18n/i18n"
 import GButton from "../../components/GButton.vue"
-import GameIcon from "../../components/GameIcon.vue"
 import {useGameListStore} from "../../store/gameList"
 import {errorNotification, notification} from "../../parts/dialogs"
 import {
@@ -122,7 +121,7 @@ const createColumns = () => {
       key: 'name',
       render(row) {
         return h("div", {class: 'flex items-center'}, [
-          h(GameIcon, {game: row.code, class: "mr-2"}),
+          h(GGameIcon, {game: row.code, class: "mr-2"}),
           h("span", {class: ''}, row.name)
         ])
       },

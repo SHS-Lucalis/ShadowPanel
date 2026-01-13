@@ -1,5 +1,5 @@
 <script setup>
-    import { Loading, GIcon, GDataTable, GEmpty } from "@gameap/ui";
+    import { Loading, GIcon, GDataTable, GEmpty, GGameIcon } from "@gameap/ui";
     import {h, ref, onMounted, computed} from 'vue'
     import {storeToRefs} from 'pinia'
     import {trans} from "@/i18n/i18n";
@@ -8,7 +8,6 @@
     import {useServerListStore} from "@/store/serverList";
 
     import GButton from "@/components/GButton.vue";
-    import GameIcon from "@/components/GameIcon.vue";
 
     import ServerControlButton  from "./ServerControlButton.vue";
 
@@ -31,7 +30,7 @@
                 key: "name",
                 render(row) {
                   return h("div", {class: 'flex items-center'}, [
-                    h(GameIcon, {game: row.game.code, class: "mr-2"}),
+                    h(GGameIcon, {game: row.game.code, class: "mr-2"}),
                     h("span", {class: ''}, row.name)
                   ])
                 },
@@ -227,7 +226,7 @@
 
     const renderGameLabel = (option) => {
         return [
-            h(GameIcon, {game: option.value, class: 'mr-2'}),
+            h(GGameIcon, {game: option.value, class: 'mr-2'}),
             option.label,
         ]
     }

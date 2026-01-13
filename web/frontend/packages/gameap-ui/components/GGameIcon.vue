@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import {computed, defineProps} from 'vue'
+import { computed } from 'vue'
 
 const icons = {
   '7d2d': 'fa-solid fa-7',
@@ -71,31 +71,28 @@ const commonIcons = [
 ]
 
 const props = defineProps({
-  game: 'minecraft',
-  search: '',
+  game: {
+    type: String,
+    default: 'minecraft',
+  },
 })
 
 const gameIconClass = computed(() => {
-  if (icons[props.game] === undefined) {
-    return defineCommonIcon(props.game)
+  if (icons[props.game] !== undefined) {
+    return icons[props.game]
   }
-
-  return icons[props.game]
+  return defineCommonIcon(props.game)
 })
 
-const defineCommonIcon = (game) => {
-  if (icons[game] === undefined) {
-    return commonIcons[checksum(game)]
-  }
+function defineCommonIcon(game) {
+  return commonIcons[checksum(game)]
 }
 
 function checksum(data) {
-  let c = 0;
-
+  let c = 0
   for (let i = 0; i < data.length; i++) {
-    c += data.charCodeAt(i);
+    c += data.charCodeAt(i)
   }
-  return c % commonIcons.length;
+  return c % commonIcons.length
 }
-
 </script>

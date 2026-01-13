@@ -14,6 +14,7 @@ import * as VueRouter from 'vue-router'
 import * as Pinia from 'pinia'
 import axios from 'axios'
 import * as naive from 'naive-ui'
+import * as gameapUI from '@gameap/ui'
 
 // Expose globals before loading the frontend
 window.Vue = Vue
@@ -21,6 +22,7 @@ window.VueRouter = VueRouter
 window.Pinia = Pinia
 window.axios = axios
 window.naive = naive
+window.gameapUI = gameapUI
 
 import {
     startMockServiceWorker,
@@ -45,6 +47,7 @@ declare global {
         Pinia: typeof import('pinia')
         axios: typeof import('axios').default
         naive: typeof import('naive-ui')
+        gameapUI: typeof import('@gameap/ui')
         gameapLang: string
         i18n: Record<string, string>
         gameapDebug: {

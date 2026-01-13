@@ -27,6 +27,7 @@ import {
     GDeletableList,
     GDivider,
     GEmpty,
+    GGameIcon,
     GIcon,
     GInput,
     GMenu,
@@ -137,6 +138,7 @@ app.component('GDataTable', GDataTable);
 app.component('GDeletableList', GDeletableList);
 app.component('GDivider', GDivider);
 app.component('GEmpty', GEmpty);
+app.component('GGameIcon', GGameIcon);
 app.component('GIcon', GIcon);
 app.component('GInput', GInput);
 app.component('GMenu', GMenu);

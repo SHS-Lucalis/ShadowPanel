@@ -1,0 +1,899 @@
+# @gameap/ui
+
+A Vue 3 component library providing GameAP-styled UI components. Built as a wrapper around [Naive UI](https://www.naiveui.com/) with sensible defaults and additional custom components.
+
+## Features
+
+- 19 reusable Vue 3 components
+- Wrapper components for Naive UI with GameAP defaults
+- Flexible icon system with 150+ predefined icons
+- Custom menu system with keyboard navigation
+- Tailwind CSS integration
+- Full TypeScript-friendly props
+- Accessibility support (ARIA attributes, keyboard navigation)
+
+## Installation
+
+```bash
+npm install @gameap/ui
+```
+
+## Setup
+
+Register the plugin in your Vue application:
+
+```javascript
+import { createApp } from 'vue'
+import gameapUI from '@gameap/ui'
+import '@gameap/ui/style.css'
+
+const app = createApp(App)
+app.use(gameapUI)
+app.mount('#app')
+```
+
+Or import components individually:
+
+```javascript
+import { GCard, GModal, GIcon } from '@gameap/ui'
+```
+
+## Components
+
+### GCard
+
+Card container component wrapping Naive UI's NCard.
+
+**Props:**
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| title | string | `''` | Card title |
+| size | string | `'small'` | Card size |
+| bordered | boolean | `true` | Show border |
+| segmented | boolean \| object | `{ content: true, footer: 'soft' }` | Content segmentation |
+| headerClass | string | `'g-card-header'` | Header CSS class |
+
+Supports all [Naive UI NCard props](https://www.naiveui.com/en-US/os-theme/components/card).
+
+**Example:**
+
+```vue
+<template>
+  <GCard title="Server Status">
+    <p>Server is running normally.</p>
+
+    <template #footer>
+      <button>Restart Server</button>
+    </template>
+  </GCard>
+</template>
+```
+
+---
+
+### GDataTable
+
+Data table component wrapping Naive UI's NDataTable.
+
+**Props:**
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| bordered | boolean | `false` | Show border |
+| singleLine | boolean | `true` | Single line rows |
+| columns | array | `[]` | Column definitions |
+| data | array | `[]` | Table data |
+| loading | boolean | `false` | Loading state |
+| pagination | object \| boolean | `false` | Pagination config |
+| remote | boolean | `false` | Remote data mode |
+
+Supports all [Naive UI NDataTable props](https://www.naiveui.com/en-US/os-theme/components/data-table).
+
+**Example:**
+
+```vue
+<script setup>
+const columns = [
+  { title: 'Name', key: 'name' },
+  { title: 'Status', key: 'status' },
+  { title: 'Players', key: 'players' }
+]
+
+const data = [
+  { name: 'Server 1', status: 'Online', players: 12 },
+  { name: 'Server 2', status: 'Offline', players: 0 }
+]
+</script>
+
+<template>
+  <GDataTable :columns="columns" :data="data" />
+</template>
+```
+
+**With Pagination:**
+
+```vue
+<script setup>
+import { ref } from 'vue'
+
+const pagination = ref({
+  page: 1,
+  pageSize: 10,
+  itemCount: 100,
+  showSizePicker: true,
+  pageSizes: [10, 20, 50]
+})
+
+function handlePageChange(page) {
+  pagination.value.page = page
+  fetchData()
+}
+</script>
+
+<template>
+  <GDataTable
+    :columns="columns"
+    :data="data"
+    :pagination="pagination"
+    :remote="true"
+    @update:page="handlePageChange"
+  />
+</template>
+```
+
+---
+
+### GTable
+
+Simple table component wrapping Naive UI's NTable.
+
+**Props:**
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| bordered | boolean | `false` | Show border |
+| singleLine | boolean | `true` | Single line rows |
+| size | string | - | Table size |
+
+**Example:**
+
+```vue
+<template>
+  <GTable>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>CPU Usage</td>
+        <td>45%</td>
+      </tr>
+      <tr>
+        <td>Memory</td>
+        <td>2.4 GB</td>
+      </tr>
+    </tbody>
+  </GTable>
+</template>
+```
+
+---
+
+### GModal
+
+Modal dialog component wrapping Naive UI's NModal.
+
+**Props:**
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| show | boolean | `false` | Modal visibility |
+| preset | string | `'card'` | Modal preset |
+| bordered | boolean | `false` | Show border |
+| title | string | `''` | Modal title |
+| segmented | object | `{ content: 'soft', footer: 'soft' }` | Content segmentation |
+
+**Emits:**
+
+| Event | Payload | Description |
+|-------|---------|-------------|
+| update:show | boolean | Emitted when modal should close |
+
+Supports all [Naive UI NModal props](https://www.naiveui.com/en-US/os-theme/components/modal).
+
+**Example:**
+
+```vue
+<script setup>
+import { ref } from 'vue'
+
+const showModal = ref(false)
+</script>
+
+<template>
+  <button @click="showModal = true">Open Modal</button>
+
+  <GModal
+    v-model:show="showModal"
+    title="Confirm Action"
+  >
+    <p>Are you sure you want to proceed?</p>
+
+    <template #footer>
+      <button @click="showModal = false">Cancel</button>
+      <button @click="confirmAction">Confirm</button>
+    </template>
+  </GModal>
+</template>
+```
+
+---
+
+### GInput
+
+Input field component wrapping Naive UI's NInput.
+
+**Props:**
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| value | string \| array | - | Input value |
+| type | string | `'text'` | Input type |
+| placeholder | string | `''` | Placeholder text |
+| disabled | boolean | `false` | Disabled state |
+| readonly | boolean | `false` | Read-only state |
+| clearable | boolean | `false` | Show clear button |
+| size | string | - | Input size |
+
+**Emits:**
+
+| Event | Payload | Description |
+|-------|---------|-------------|
+| update:value | string | Emitted when value changes |
+
+Supports all [Naive UI NInput props](https://www.naiveui.com/en-US/os-theme/components/input).
+
+**Example:**
+
+```vue
+<script setup>
+import { ref } from 'vue'
+
+const serverName = ref('')
+</script>
+
+<template>
+  <GInput
+    v-model:value="serverName"
+    placeholder="Enter server name"
+    clearable
+  />
+</template>
+```
+
+**Password Input:**
+
+```vue
+<template>
+  <GInput
+    v-model:value="password"
+    type="password"
+    placeholder="Enter password"
+    show-password-on="click"
+  />
+</template>
+```
+
+---
+
+### GSwitch
+
+Toggle switch component wrapping Naive UI's NSwitch.
+
+**Props:**
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| value | boolean | `false` | Switch state |
+| disabled | boolean | `false` | Disabled state |
+| size | string | - | Switch size |
+
+**Emits:**
+
+| Event | Payload | Description |
+|-------|---------|-------------|
+| update:value | boolean | Emitted when state changes |
+
+**Example:**
+
+```vue
+<script setup>
+import { ref } from 'vue'
+
+const autoStart = ref(true)
+</script>
+
+<template>
+  <label>
+    Auto-start server
+    <GSwitch v-model:value="autoStart" />
+  </label>
+</template>
+```
+
+---
+
+### GEmpty
+
+Empty state component wrapping Naive UI's NEmpty.
+
+**Props:**
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| description | string | - | Description text |
+| size | string | - | Component size |
+
+**Example:**
+
+```vue
+<template>
+  <GEmpty description="No servers found">
+    <template #extra>
+      <button>Add Server</button>
+    </template>
+  </GEmpty>
+</template>
+```
+
+---
+
+### GDivider
+
+Visual divider component wrapping Naive UI's NDivider.
+
+**Example:**
+
+```vue
+<template>
+  <div>Section 1</div>
+  <GDivider />
+  <div>Section 2</div>
+
+  <!-- With label -->
+  <GDivider>Or</GDivider>
+</template>
+```
+
+---
+
+### GIcon
+
+Flexible icon component supporting Font Awesome classes and Vue components.
+
+**Props:**
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| name | string | *required* | Icon name from registry |
+| size | string | `'md'` | Size: `'sm'`, `'md'`, `'lg'`, `'xl'` |
+| class | string | `''` | Additional CSS classes |
+
+**Size Mappings:**
+
+| Size | Font Awesome | Component |
+|------|--------------|-----------|
+| sm | fa-sm | 0.875em |
+| md | (default) | 1em |
+| lg | fa-lg | 1.25em |
+| xl | fa-2x | 2em |
+
+**Example:**
+
+```vue
+<template>
+  <!-- Basic usage -->
+  <GIcon name="server" />
+
+  <!-- With size -->
+  <GIcon name="warning" size="lg" />
+
+  <!-- With custom class -->
+  <GIcon name="delete" class="text-red-500" />
+</template>
+```
+
+---
+
+### GGameIcon
+
+Game-specific icon component that displays icons based on game codes.
+
+**Props:**
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| game | string | `'minecraft'` | Game code identifier |
+
+**Supported Games:**
+
+The component includes built-in icon mappings for popular games:
+- Counter-Strike series: `cs2`, `csgo`, `css`, `cstrike`, `cs15`, `czero`
+- Valve games: `halflife`, `tf2`, `l4d`, `l4d2`, `dod`, `dods`, `garrysmod`
+- Other popular games: `minecraft`, `rust`, `ark`, `arma2`, `arma3`, `7d2d`, `dst`, `fivem`, `gta`, `hurtworld`, `quake`, `quake2`, `quake3`, `samp`, `teamspeak`
+
+For unknown game codes, the component automatically assigns a consistent fallback icon from a set of common gaming icons.
+
+**Example:**
+
+```vue
+<template>
+  <!-- Basic usage -->
+  <GGameIcon game="minecraft" />
+
+  <!-- In a table -->
+  <GDataTable :columns="columns" :data="servers">
+    <template #game="{ row }">
+      <GGameIcon :game="row.gameCode" class="mr-2" />
+      {{ row.gameName }}
+    </template>
+  </GDataTable>
+</template>
+```
+
+**With render function:**
+
+```vue
+<script setup>
+import { h } from 'vue'
+import { GGameIcon } from '@gameap/ui'
+
+const renderGameLabel = (option) => {
+  return [
+    h(GGameIcon, { game: option.value, class: 'mr-2' }),
+    option.label
+  ]
+}
+</script>
+```
+
+---
+
+### GBreadcrumbs
+
+Breadcrumb navigation component with support for links, router links, and icons.
+
+**Props:**
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| items | array | *required* | Breadcrumb items |
+
+**Item Structure:**
+
+```typescript
+interface BreadcrumbItem {
+  text: string           // Display text
+  link?: string          // External URL
+  route?: string         // Vue Router route
+  icon?: string          // Icon class name
+  render?: () => VNode   // Custom render function
+}
+```
+
+**Example:**
+
+```vue
+<script setup>
+const breadcrumbs = [
+  { text: 'Home', route: '/', icon: 'fa-solid fa-home' },
+  { text: 'Servers', route: '/servers' },
+  { text: 'Server 1' }
+]
+</script>
+
+<template>
+  <GBreadcrumbs :items="breadcrumbs" />
+</template>
+```
+
+**With Custom Render:**
+
+```vue
+<script setup>
+import { h } from 'vue'
+
+const breadcrumbs = [
+  { text: 'Home', route: '/' },
+  {
+    text: 'Status',
+    render: () => h('span', { class: 'text-green-500' }, 'Online')
+  }
+]
+</script>
+
+<template>
+  <GBreadcrumbs :items="breadcrumbs" />
+</template>
+```
+
+---
+
+### GStatusBadge
+
+Status indicator badge with predefined color schemes.
+
+**Props:**
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| status | string | *required* | Status type |
+| text | string | - | Override default text |
+
+**Available Statuses:**
+
+| Status | Color | Default Text |
+|--------|-------|--------------|
+| waiting | Stone (light) | waiting |
+| working | Blue | working |
+| error | Red | error |
+| success | Green | success |
+| canceled | Stone | canceled |
+
+**Example:**
+
+```vue
+<template>
+  <GStatusBadge status="success" />
+
+  <!-- With custom text -->
+  <GStatusBadge status="working" text="Installing..." />
+
+  <!-- In a table -->
+  <GDataTable :columns="columns" :data="data">
+    <template #status="{ row }">
+      <GStatusBadge :status="row.status" />
+    </template>
+  </GDataTable>
+</template>
+```
+
+---
+
+### GDeletableList
+
+List component with delete buttons for each item.
+
+**Props:**
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| items | array | *required* | List items |
+| clickCallback | function | - | Called on item click: `(gameCode, id) => void` |
+| deleteCallback | function | - | Called on delete click: `(id) => void` |
+
+**Item Structure:**
+
+```typescript
+interface ListItem {
+  id: any          // Unique identifier
+  name: string     // Display name
+  gameCode: string // Game code identifier
+}
+```
+
+**Example:**
+
+```vue
+<script setup>
+const games = [
+  { id: 1, name: 'Counter-Strike 2', gameCode: 'cs2' },
+  { id: 2, name: 'Minecraft', gameCode: 'minecraft' },
+  { id: 3, name: 'Rust', gameCode: 'rust' }
+]
+
+function handleClick(gameCode, id) {
+  console.log(`Clicked ${gameCode} with id ${id}`)
+}
+
+function handleDelete(id) {
+  console.log(`Delete item ${id}`)
+}
+</script>
+
+<template>
+  <GDeletableList
+    :items="games"
+    :click-callback="handleClick"
+    :delete-callback="handleDelete"
+  />
+</template>
+```
+
+---
+
+### Menu System
+
+A set of components for building accessible dropdown menus with keyboard navigation.
+
+#### GMenu
+
+Container component that provides menu context to children.
+
+**Props:**
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| as | string | `'div'` | HTML element tag |
+
+#### GMenuButton
+
+Button to toggle menu visibility.
+
+#### GMenuItems
+
+Container for menu items with visibility control.
+
+**Props:**
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| unmount | boolean | `true` | Unmount when closed (false uses v-show) |
+
+#### GMenuItem
+
+Individual menu item with slot props.
+
+**Slot Props:**
+
+| Prop | Type | Description |
+|------|------|-------------|
+| active | boolean | Item is currently focused |
+| close | function | Close the menu |
+
+**Features:**
+- Click-outside detection
+- ESC key closes menu
+- Enter/Space/ArrowDown opens menu
+- Hover state tracking
+- ARIA attributes for accessibility
+
+**Example:**
+
+```vue
+<template>
+  <GMenu>
+    <GMenuButton class="btn btn-primary">
+      Actions
+      <GIcon name="chevron-down" size="sm" />
+    </GMenuButton>
+
+    <GMenuItems class="dropdown-menu">
+      <GMenuItem v-slot="{ active, close }">
+        <button
+          :class="{ 'bg-blue-100': active }"
+          @click="startServer(); close()"
+        >
+          <GIcon name="play" /> Start
+        </button>
+      </GMenuItem>
+
+      <GMenuItem v-slot="{ active, close }">
+        <button
+          :class="{ 'bg-blue-100': active }"
+          @click="stopServer(); close()"
+        >
+          <GIcon name="stop" /> Stop
+        </button>
+      </GMenuItem>
+
+      <GMenuItem v-slot="{ active, close }">
+        <button
+          :class="{ 'bg-red-100': active }"
+          @click="deleteServer(); close()"
+        >
+          <GIcon name="delete" /> Delete
+        </button>
+      </GMenuItem>
+    </GMenuItems>
+  </GMenu>
+</template>
+```
+
+---
+
+### Loading
+
+Animated loading spinner component.
+
+**Example:**
+
+```vue
+<template>
+  <Loading v-if="isLoading" />
+  <div v-else>
+    Content loaded
+  </div>
+</template>
+```
+
+---
+
+### Progressbar
+
+Linear progress bar with percentage display.
+
+**Props:**
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| progress | number | `0` | Progress percentage (0-100) |
+
+**Example:**
+
+```vue
+<script setup>
+import { ref } from 'vue'
+
+const downloadProgress = ref(45)
+</script>
+
+<template>
+  <Progressbar :progress="downloadProgress" />
+</template>
+```
+
+---
+
+## Icon System
+
+The package includes a flexible icon registry system.
+
+### Icon Registry API
+
+```javascript
+import {
+  registerIcons,
+  getIcon,
+  hasIcon,
+  iconRegistry,
+  defaultIconMap
+} from '@gameap/ui'
+
+// Register custom icons
+registerIcons({
+  'my-icon': 'fa-solid fa-star',
+  'custom-component': MyIconComponent
+})
+
+// Check if icon exists
+if (hasIcon('server')) {
+  const icon = getIcon('server')
+}
+
+// Access all icons
+console.log(iconRegistry)
+```
+
+### Default Icon Categories
+
+The package includes 150+ predefined icon mappings:
+
+**Action Icons:**
+`delete`, `edit`, `save`, `add`, `close`, `copy`, `paste`, `cut`, `refresh`, `download`, `upload`, `search`, `view`, `clear`, `eraser`, `ban`, `move`
+
+**Navigation Icons:**
+`chevron-left`, `chevron-right`, `chevron-up`, `chevron-down`, `arrow-up`, `arrow-down`, `sort-asc`, `sort-desc`, `external-link`
+
+**Status Icons:**
+`check`, `warning`, `error`, `info`, `question`, `online`, `offline`, `certificate`, `heart-pulse`, `power-off`
+
+**UI/State Icons:**
+`loading`, `spinner`, `play`, `pause`, `stop`, `restart`
+
+**Server/Infrastructure Icons:**
+`server`, `node`, `hard-drive`, `terminal`, `console`, `gamepad`, `tasks`, `plug`, `memory`, `cpu`
+
+**User/Auth Icons:**
+`user`, `users`, `user-edit`, `login`, `logout`, `key`, `lock`, `address-card`, `profile`
+
+**File Icons:**
+`file`, `file-code`, `file-text`, `file-pdf`, `file-word`, `file-excel`, `folder`, `folder-open`, `clipboard`, `ftp`
+
+**Brand Icons:**
+`linux`, `windows`, `apple`, `telegram`, `discord`, `vk`, `reddit`, `patreon`, `teamspeak`
+
+**Game Icons:**
+`dice`, `dice-one` through `dice-six`, `cat`, `mods`
+
+**Theme Icons:**
+`sun`, `moon`
+
+### Custom Icon Registration
+
+Register custom icons at app initialization:
+
+```javascript
+import { registerIcons } from '@gameap/ui'
+import CustomIcon from './components/CustomIcon.vue'
+
+// Register Font Awesome classes
+registerIcons({
+  'rocket': 'fa-solid fa-rocket',
+  'database': 'fa-solid fa-database'
+})
+
+// Register Vue components
+registerIcons({
+  'custom-logo': CustomIcon
+})
+```
+
+---
+
+## CSS Utilities
+
+The package provides Tailwind CSS utility classes in `style.css`.
+
+### Badge Classes
+
+```html
+<span class="badge-red">Error</span>
+<span class="badge-green">Success</span>
+<span class="badge-orange">Warning</span>
+<span class="badge-blue">Info</span>
+<span class="badge-stone">Neutral</span>
+<span class="badge-light">Light</span>
+```
+
+All badge classes include dark mode support.
+
+### Progress Classes
+
+```html
+<div class="progress">
+  <div class="progress-bar progress-bar-info" style="width: 50%">
+    50%
+  </div>
+</div>
+```
+
+---
+
+## Dependencies
+
+### Peer Dependencies
+
+| Package | Version | Required |
+|---------|---------|----------|
+| vue | ^3.5.0 | Yes |
+| vue-router | ^4.0.0 | Optional |
+
+### Runtime Dependencies
+
+- **naive-ui** - Base UI component library
+
+### Styling Requirements
+
+- **Tailwind CSS** - Must be configured in the consuming application
+- **Font Awesome** - Required for default icon mappings
+
+---
+
+## Browser Support
+
+Supports all modern browsers that support Vue 3:
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
+
+---
+
+## License
+
+Part of the GameAP project.

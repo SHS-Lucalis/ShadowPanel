@@ -16,6 +16,7 @@ export { default as GTable } from './components/GTable.vue'
 export { default as GEmpty } from './components/GEmpty.vue'
 export { default as GSwitch } from './components/GSwitch.vue'
 export { default as GDivider } from './components/GDivider.vue'
+export { default as GGameIcon } from './components/GGameIcon.vue'
 
 export { registerIcons, iconRegistry, getIcon, hasIcon } from './icons/registry.js'
 export { defaultIconMap } from './icons/iconMap.js'
@@ -38,6 +39,7 @@ import GTable from './components/GTable.vue'
 import GEmpty from './components/GEmpty.vue'
 import GSwitch from './components/GSwitch.vue'
 import GDivider from './components/GDivider.vue'
+import GGameIcon from './components/GGameIcon.vue'
 
 export function install(app) {
   app.component('GBreadcrumbs', GBreadcrumbs)
@@ -58,6 +60,7 @@ export function install(app) {
   app.component('GEmpty', GEmpty)
   app.component('GSwitch', GSwitch)
   app.component('GDivider', GDivider)
+  app.component('GGameIcon', GGameIcon)
 }
 
 export default { install }
