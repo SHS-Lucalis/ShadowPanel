@@ -21,17 +21,142 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type DaemonTaskStatus int32
+
+const (
+	DaemonTaskStatus_DAEMON_TASK_STATUS_UNSPECIFIED DaemonTaskStatus = 0
+	DaemonTaskStatus_DAEMON_TASK_STATUS_WAITING     DaemonTaskStatus = 1
+	DaemonTaskStatus_DAEMON_TASK_STATUS_WORKING     DaemonTaskStatus = 2
+	DaemonTaskStatus_DAEMON_TASK_STATUS_ERROR       DaemonTaskStatus = 3
+	DaemonTaskStatus_DAEMON_TASK_STATUS_SUCCESS     DaemonTaskStatus = 4
+	DaemonTaskStatus_DAEMON_TASK_STATUS_CANCELED    DaemonTaskStatus = 5
+)
+
+// Enum value maps for DaemonTaskStatus.
+var (
+	DaemonTaskStatus_name = map[int32]string{
+		0: "DAEMON_TASK_STATUS_UNSPECIFIED",
+		1: "DAEMON_TASK_STATUS_WAITING",
+		2: "DAEMON_TASK_STATUS_WORKING",
+		3: "DAEMON_TASK_STATUS_ERROR",
+		4: "DAEMON_TASK_STATUS_SUCCESS",
+		5: "DAEMON_TASK_STATUS_CANCELED",
+	}
+	DaemonTaskStatus_value = map[string]int32{
+		"DAEMON_TASK_STATUS_UNSPECIFIED": 0,
+		"DAEMON_TASK_STATUS_WAITING":     1,
+		"DAEMON_TASK_STATUS_WORKING":     2,
+		"DAEMON_TASK_STATUS_ERROR":       3,
+		"DAEMON_TASK_STATUS_SUCCESS":     4,
+		"DAEMON_TASK_STATUS_CANCELED":    5,
+	}
+)
+
+func (x DaemonTaskStatus) Enum() *DaemonTaskStatus {
+	p := new(DaemonTaskStatus)
+	*p = x
+	return p
+}
+
+func (x DaemonTaskStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (DaemonTaskStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_pkg_proto_daemontask_proto_enumTypes[0].Descriptor()
+}
+
+func (DaemonTaskStatus) Type() protoreflect.EnumType {
+	return &file_pkg_proto_daemontask_proto_enumTypes[0]
+}
+
+func (x DaemonTaskStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use DaemonTaskStatus.Descriptor instead.
+func (DaemonTaskStatus) EnumDescriptor() ([]byte, []int) {
+	return file_pkg_proto_daemontask_proto_rawDescGZIP(), []int{0}
+}
+
+type DaemonTaskType int32
+
+const (
+	DaemonTaskType_DAEMON_TASK_TYPE_UNSPECIFIED    DaemonTaskType = 0
+	DaemonTaskType_DAEMON_TASK_TYPE_SERVER_START   DaemonTaskType = 1
+	DaemonTaskType_DAEMON_TASK_TYPE_SERVER_STOP    DaemonTaskType = 2
+	DaemonTaskType_DAEMON_TASK_TYPE_SERVER_RESTART DaemonTaskType = 3
+	DaemonTaskType_DAEMON_TASK_TYPE_SERVER_UPDATE  DaemonTaskType = 4
+	DaemonTaskType_DAEMON_TASK_TYPE_SERVER_INSTALL DaemonTaskType = 5
+	DaemonTaskType_DAEMON_TASK_TYPE_SERVER_DELETE  DaemonTaskType = 6
+	DaemonTaskType_DAEMON_TASK_TYPE_SERVER_MOVE    DaemonTaskType = 7
+	DaemonTaskType_DAEMON_TASK_TYPE_CMD_EXEC       DaemonTaskType = 8
+)
+
+// Enum value maps for DaemonTaskType.
+var (
+	DaemonTaskType_name = map[int32]string{
+		0: "DAEMON_TASK_TYPE_UNSPECIFIED",
+		1: "DAEMON_TASK_TYPE_SERVER_START",
+		2: "DAEMON_TASK_TYPE_SERVER_STOP",
+		3: "DAEMON_TASK_TYPE_SERVER_RESTART",
+		4: "DAEMON_TASK_TYPE_SERVER_UPDATE",
+		5: "DAEMON_TASK_TYPE_SERVER_INSTALL",
+		6: "DAEMON_TASK_TYPE_SERVER_DELETE",
+		7: "DAEMON_TASK_TYPE_SERVER_MOVE",
+		8: "DAEMON_TASK_TYPE_CMD_EXEC",
+	}
+	DaemonTaskType_value = map[string]int32{
+		"DAEMON_TASK_TYPE_UNSPECIFIED":    0,
+		"DAEMON_TASK_TYPE_SERVER_START":   1,
+		"DAEMON_TASK_TYPE_SERVER_STOP":    2,
+		"DAEMON_TASK_TYPE_SERVER_RESTART": 3,
+		"DAEMON_TASK_TYPE_SERVER_UPDATE":  4,
+		"DAEMON_TASK_TYPE_SERVER_INSTALL": 5,
+		"DAEMON_TASK_TYPE_SERVER_DELETE":  6,
+		"DAEMON_TASK_TYPE_SERVER_MOVE":    7,
+		"DAEMON_TASK_TYPE_CMD_EXEC":       8,
+	}
+)
+
+func (x DaemonTaskType) Enum() *DaemonTaskType {
+	p := new(DaemonTaskType)
+	*p = x
+	return p
+}
+
+func (x DaemonTaskType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (DaemonTaskType) Descriptor() protoreflect.EnumDescriptor {
+	return file_pkg_proto_daemontask_proto_enumTypes[1].Descriptor()
+}
+
+func (DaemonTaskType) Type() protoreflect.EnumType {
+	return &file_pkg_proto_daemontask_proto_enumTypes[1]
+}
+
+func (x DaemonTaskType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use DaemonTaskType.Descriptor instead.
+func (DaemonTaskType) EnumDescriptor() ([]byte, []int) {
+	return file_pkg_proto_daemontask_proto_rawDescGZIP(), []int{1}
+}
+
 type DaemonTask struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	RunAfterId    *uint64                `protobuf:"varint,2,opt,name=run_after_id,json=runAfterId,proto3,oneof" json:"run_after_id,omitempty"`
 	NodeId        uint64                 `protobuf:"varint,3,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
 	ServerId      *uint64                `protobuf:"varint,4,opt,name=server_id,json=serverId,proto3,oneof" json:"server_id,omitempty"`
-	TaskType      string                 `protobuf:"bytes,5,opt,name=task_type,json=taskType,proto3" json:"task_type,omitempty"`
+	TaskType      DaemonTaskType         `protobuf:"varint,5,opt,name=task_type,json=taskType,proto3,enum=gameap.DaemonTaskType" json:"task_type,omitempty"`
 	Data          *string                `protobuf:"bytes,6,opt,name=data,proto3,oneof" json:"data,omitempty"`
 	Cmd           *string                `protobuf:"bytes,7,opt,name=cmd,proto3,oneof" json:"cmd,omitempty"`
 	Output        *string                `protobuf:"bytes,8,opt,name=output,proto3,oneof" json:"output,omitempty"`
-	Status        string                 `protobuf:"bytes,9,opt,name=status,proto3" json:"status,omitempty"`
+	Status        DaemonTaskStatus       `protobuf:"varint,9,opt,name=status,proto3,enum=gameap.DaemonTaskStatus" json:"status,omitempty"`
 	CreatedAt     *int64                 `protobuf:"varint,10,opt,name=created_at,json=createdAt,proto3,oneof" json:"created_at,omitempty"`
 	UpdatedAt     *int64                 `protobuf:"varint,11,opt,name=updated_at,json=updatedAt,proto3,oneof" json:"updated_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -96,11 +221,11 @@ func (x *DaemonTask) GetServerId() uint64 {
 	return 0
 }
 
-func (x *DaemonTask) GetTaskType() string {
+func (x *DaemonTask) GetTaskType() DaemonTaskType {
 	if x != nil {
 		return x.TaskType
 	}
-	return ""
+	return DaemonTaskType_DAEMON_TASK_TYPE_UNSPECIFIED
 }
 
 func (x *DaemonTask) GetData() string {
@@ -124,11 +249,11 @@ func (x *DaemonTask) GetOutput() string {
 	return ""
 }
 
-func (x *DaemonTask) GetStatus() string {
+func (x *DaemonTask) GetStatus() DaemonTaskStatus {
 	if x != nil {
 		return x.Status
 	}
-	return ""
+	return DaemonTaskStatus_DAEMON_TASK_STATUS_UNSPECIFIED
 }
 
 func (x *DaemonTask) GetCreatedAt() int64 {
@@ -149,19 +274,19 @@ var File_pkg_proto_daemontask_proto protoreflect.FileDescriptor
 
 const file_pkg_proto_daemontask_proto_rawDesc = "" +
 	"\n" +
-	"\x1apkg/proto/daemontask.proto\x12\x06gameap\"\xa1\x03\n" +
+	"\x1apkg/proto/daemontask.proto\x12\x06gameap\"\xd3\x03\n" +
 	"\n" +
 	"DaemonTask\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12%\n" +
 	"\frun_after_id\x18\x02 \x01(\x04H\x00R\n" +
 	"runAfterId\x88\x01\x01\x12\x17\n" +
 	"\anode_id\x18\x03 \x01(\x04R\x06nodeId\x12 \n" +
-	"\tserver_id\x18\x04 \x01(\x04H\x01R\bserverId\x88\x01\x01\x12\x1b\n" +
-	"\ttask_type\x18\x05 \x01(\tR\btaskType\x12\x17\n" +
+	"\tserver_id\x18\x04 \x01(\x04H\x01R\bserverId\x88\x01\x01\x123\n" +
+	"\ttask_type\x18\x05 \x01(\x0e2\x16.gameap.DaemonTaskTypeR\btaskType\x12\x17\n" +
 	"\x04data\x18\x06 \x01(\tH\x02R\x04data\x88\x01\x01\x12\x15\n" +
 	"\x03cmd\x18\a \x01(\tH\x03R\x03cmd\x88\x01\x01\x12\x1b\n" +
-	"\x06output\x18\b \x01(\tH\x04R\x06output\x88\x01\x01\x12\x16\n" +
-	"\x06status\x18\t \x01(\tR\x06status\x12\"\n" +
+	"\x06output\x18\b \x01(\tH\x04R\x06output\x88\x01\x01\x120\n" +
+	"\x06status\x18\t \x01(\x0e2\x18.gameap.DaemonTaskStatusR\x06status\x12\"\n" +
 	"\n" +
 	"created_at\x18\n" +
 	" \x01(\x03H\x05R\tcreatedAt\x88\x01\x01\x12\"\n" +
@@ -174,7 +299,24 @@ const file_pkg_proto_daemontask_proto_rawDesc = "" +
 	"\x04_cmdB\t\n" +
 	"\a_outputB\r\n" +
 	"\v_created_atB\r\n" +
-	"\v_updated_atB$Z\"github.com/gameap/gameap/pkg/protob\x06proto3"
+	"\v_updated_at*\xd5\x01\n" +
+	"\x10DaemonTaskStatus\x12\"\n" +
+	"\x1eDAEMON_TASK_STATUS_UNSPECIFIED\x10\x00\x12\x1e\n" +
+	"\x1aDAEMON_TASK_STATUS_WAITING\x10\x01\x12\x1e\n" +
+	"\x1aDAEMON_TASK_STATUS_WORKING\x10\x02\x12\x1c\n" +
+	"\x18DAEMON_TASK_STATUS_ERROR\x10\x03\x12\x1e\n" +
+	"\x1aDAEMON_TASK_STATUS_SUCCESS\x10\x04\x12\x1f\n" +
+	"\x1bDAEMON_TASK_STATUS_CANCELED\x10\x05*\xca\x02\n" +
+	"\x0eDaemonTaskType\x12 \n" +
+	"\x1cDAEMON_TASK_TYPE_UNSPECIFIED\x10\x00\x12!\n" +
+	"\x1dDAEMON_TASK_TYPE_SERVER_START\x10\x01\x12 \n" +
+	"\x1cDAEMON_TASK_TYPE_SERVER_STOP\x10\x02\x12#\n" +
+	"\x1fDAEMON_TASK_TYPE_SERVER_RESTART\x10\x03\x12\"\n" +
+	"\x1eDAEMON_TASK_TYPE_SERVER_UPDATE\x10\x04\x12#\n" +
+	"\x1fDAEMON_TASK_TYPE_SERVER_INSTALL\x10\x05\x12\"\n" +
+	"\x1eDAEMON_TASK_TYPE_SERVER_DELETE\x10\x06\x12 \n" +
+	"\x1cDAEMON_TASK_TYPE_SERVER_MOVE\x10\a\x12\x1d\n" +
+	"\x19DAEMON_TASK_TYPE_CMD_EXEC\x10\bB$Z\"github.com/gameap/gameap/pkg/protob\x06proto3"
 
 var (
 	file_pkg_proto_daemontask_proto_rawDescOnce sync.Once
@@ -188,16 +330,21 @@ func file_pkg_proto_daemontask_proto_rawDescGZIP() []byte {
 	return file_pkg_proto_daemontask_proto_rawDescData
 }
 
+var file_pkg_proto_daemontask_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
 var file_pkg_proto_daemontask_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_pkg_proto_daemontask_proto_goTypes = []any{
-	(*DaemonTask)(nil), // 0: gameap.DaemonTask
+	(DaemonTaskStatus)(0), // 0: gameap.DaemonTaskStatus
+	(DaemonTaskType)(0),   // 1: gameap.DaemonTaskType
+	(*DaemonTask)(nil),    // 2: gameap.DaemonTask
 }
 var file_pkg_proto_daemontask_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	1, // 0: gameap.DaemonTask.task_type:type_name -> gameap.DaemonTaskType
+	0, // 1: gameap.DaemonTask.status:type_name -> gameap.DaemonTaskStatus
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_pkg_proto_daemontask_proto_init() }
@@ -211,13 +358,14 @@ func file_pkg_proto_daemontask_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_proto_daemontask_proto_rawDesc), len(file_pkg_proto_daemontask_proto_rawDesc)),
-			NumEnums:      0,
+			NumEnums:      2,
 			NumMessages:   1,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_pkg_proto_daemontask_proto_goTypes,
 		DependencyIndexes: file_pkg_proto_daemontask_proto_depIdxs,
+		EnumInfos:         file_pkg_proto_daemontask_proto_enumTypes,
 		MessageInfos:      file_pkg_proto_daemontask_proto_msgTypes,
 	}.Build()
 	File_pkg_proto_daemontask_proto = out.File

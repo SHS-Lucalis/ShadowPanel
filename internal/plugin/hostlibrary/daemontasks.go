@@ -12,6 +12,44 @@ import (
 	"github.com/tetratelabs/wazero"
 )
 
+var domainToProtoStatus = map[domain.DaemonTaskStatus]proto.DaemonTaskStatus{
+	domain.DaemonTaskStatusWaiting:  proto.DaemonTaskStatus_DAEMON_TASK_STATUS_WAITING,
+	domain.DaemonTaskStatusWorking:  proto.DaemonTaskStatus_DAEMON_TASK_STATUS_WORKING,
+	domain.DaemonTaskStatusError:    proto.DaemonTaskStatus_DAEMON_TASK_STATUS_ERROR,
+	domain.DaemonTaskStatusSuccess:  proto.DaemonTaskStatus_DAEMON_TASK_STATUS_SUCCESS,
+	domain.DaemonTaskStatusCanceled: proto.DaemonTaskStatus_DAEMON_TASK_STATUS_CANCELED,
+}
+
+var protoToDomainStatus = map[proto.DaemonTaskStatus]domain.DaemonTaskStatus{
+	proto.DaemonTaskStatus_DAEMON_TASK_STATUS_WAITING:  domain.DaemonTaskStatusWaiting,
+	proto.DaemonTaskStatus_DAEMON_TASK_STATUS_WORKING:  domain.DaemonTaskStatusWorking,
+	proto.DaemonTaskStatus_DAEMON_TASK_STATUS_ERROR:    domain.DaemonTaskStatusError,
+	proto.DaemonTaskStatus_DAEMON_TASK_STATUS_SUCCESS:  domain.DaemonTaskStatusSuccess,
+	proto.DaemonTaskStatus_DAEMON_TASK_STATUS_CANCELED: domain.DaemonTaskStatusCanceled,
+}
+
+var domainToProtoType = map[domain.DaemonTaskType]proto.DaemonTaskType{
+	domain.DaemonTaskTypeServerStart:   proto.DaemonTaskType_DAEMON_TASK_TYPE_SERVER_START,
+	domain.DaemonTaskTypeServerStop:    proto.DaemonTaskType_DAEMON_TASK_TYPE_SERVER_STOP,
+	domain.DaemonTaskTypeServerRestart: proto.DaemonTaskType_DAEMON_TASK_TYPE_SERVER_RESTART,
+	domain.DaemonTaskTypeServerUpdate:  proto.DaemonTaskType_DAEMON_TASK_TYPE_SERVER_UPDATE,
+	domain.DaemonTaskTypeServerInstall: proto.DaemonTaskType_DAEMON_TASK_TYPE_SERVER_INSTALL,
+	domain.DaemonTaskTypeServerDelete:  proto.DaemonTaskType_DAEMON_TASK_TYPE_SERVER_DELETE,
+	domain.DaemonTaskTypeServerMove:    proto.DaemonTaskType_DAEMON_TASK_TYPE_SERVER_MOVE,
+	domain.DaemonTaskTypeCmdExec:       proto.DaemonTaskType_DAEMON_TASK_TYPE_CMD_EXEC,
+}
+
+var protoToDomainType = map[proto.DaemonTaskType]domain.DaemonTaskType{
+	proto.DaemonTaskType_DAEMON_TASK_TYPE_SERVER_START:   domain.DaemonTaskTypeServerStart,
+	proto.DaemonTaskType_DAEMON_TASK_TYPE_SERVER_STOP:    domain.DaemonTaskTypeServerStop,
+	proto.DaemonTaskType_DAEMON_TASK_TYPE_SERVER_RESTART: domain.DaemonTaskTypeServerRestart,
+	proto.DaemonTaskType_DAEMON_TASK_TYPE_SERVER_UPDATE:  domain.DaemonTaskTypeServerUpdate,
+	proto.DaemonTaskType_DAEMON_TASK_TYPE_SERVER_INSTALL: domain.DaemonTaskTypeServerInstall,
+	proto.DaemonTaskType_DAEMON_TASK_TYPE_SERVER_DELETE:  domain.DaemonTaskTypeServerDelete,
+	proto.DaemonTaskType_DAEMON_TASK_TYPE_SERVER_MOVE:    domain.DaemonTaskTypeServerMove,
+	proto.DaemonTaskType_DAEMON_TASK_TYPE_CMD_EXEC:       domain.DaemonTaskTypeCmdExec,
+}
+
 type DaemonTasksServiceImpl struct {
 	daemonTaskRepo repositories.DaemonTaskRepository
 }
@@ -32,6 +70,8 @@ func (s *DaemonTasksServiceImpl) FindDaemonTasks(
 			IDs:                uintsFromUint64s(req.Filter.Ids),
 			DedicatedServerIDs: uintsFromUint64s(req.Filter.NodeIds),
 			ServerIDs:          uintPtrsFromUint64s(req.Filter.ServerIds),
+			Statuses:           convertProtoStatusesToDomain(req.Filter.Statuses),
+			Tasks:              convertProtoTypesToDomain(req.Filter.TaskTypes),
 		}
 	}
 
@@ -60,9 +100,17 @@ func (s *DaemonTasksServiceImpl) CreateDaemonTask(
 	ctx context.Context,
 	req *daemontasks.CreateDaemonTaskRequest,
 ) (*daemontasks.CreateDaemonTaskResponse, error) {
+	taskType, ok := protoToDomainType[req.TaskType]
+	if !ok {
+		return &daemontasks.CreateDaemonTaskResponse{
+			Success: false,
+			Error:   lo.ToPtr("invalid task type"),
+		}, nil
+	}
+
 	task := &domain.DaemonTask{
 		DedicatedServerID: uint(req.NodeId),
-		Task:              domain.DaemonTaskType(req.TaskType),
+		Task:              taskType,
 		Status:            domain.DaemonTaskStatusWaiting,
 	}
 
@@ -93,6 +141,22 @@ func (s *DaemonTasksServiceImpl) CreateDaemonTask(
 	}, nil
 }
 
+func convertProtoStatusesToDomain(statuses []proto.DaemonTaskStatus) []domain.DaemonTaskStatus {
+	return lo.FilterMap(statuses, func(s proto.DaemonTaskStatus, _ int) (domain.DaemonTaskStatus, bool) {
+		ds, ok := protoToDomainStatus[s]
+
+		return ds, ok
+	})
+}
+
+func convertProtoTypesToDomain(types []proto.DaemonTaskType) []domain.DaemonTaskType {
+	return lo.FilterMap(types, func(t proto.DaemonTaskType, _ int) (domain.DaemonTaskType, bool) {
+		dt, ok := protoToDomainType[t]
+
+		return dt, ok
+	})
+}
+
 func convertDaemonTasksToProto(tasks []domain.DaemonTask) []*proto.DaemonTask {
 	return lo.Map(tasks, func(t domain.DaemonTask, _ int) *proto.DaemonTask {
 		return convertDaemonTaskToProto(&t)
@@ -113,10 +177,10 @@ func convertDaemonTaskToProto(t *domain.DaemonTask) *proto.DaemonTask {
 		NodeId:     uint64(t.DedicatedServerID),
 		ServerId:   serverID,
 		RunAfterId: runAfterID,
-		TaskType:   string(t.Task),
+		TaskType:   domainToProtoType[t.Task],
 		Cmd:        t.Cmd,
 		Output:     t.Output,
-		Status:     string(t.Status),
+		Status:     domainToProtoStatus[t.Status],
 	}
 }
 

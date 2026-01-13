@@ -61,11 +61,11 @@ type DaemonTaskFilter struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Ids       []uint64 `protobuf:"varint,1,rep,packed,name=ids,proto3" json:"ids,omitempty"`
-	ServerIds []uint64 `protobuf:"varint,2,rep,packed,name=server_ids,json=serverIds,proto3" json:"server_ids,omitempty"`
-	NodeIds   []uint64 `protobuf:"varint,3,rep,packed,name=node_ids,json=nodeIds,proto3" json:"node_ids,omitempty"`
-	Statuses  []string `protobuf:"bytes,4,rep,name=statuses,proto3" json:"statuses,omitempty"`
-	TaskTypes []string `protobuf:"bytes,5,rep,name=task_types,json=taskTypes,proto3" json:"task_types,omitempty"`
+	Ids       []uint64                 `protobuf:"varint,1,rep,packed,name=ids,proto3" json:"ids,omitempty"`
+	ServerIds []uint64                 `protobuf:"varint,2,rep,packed,name=server_ids,json=serverIds,proto3" json:"server_ids,omitempty"`
+	NodeIds   []uint64                 `protobuf:"varint,3,rep,packed,name=node_ids,json=nodeIds,proto3" json:"node_ids,omitempty"`
+	Statuses  []proto.DaemonTaskStatus `protobuf:"varint,4,rep,packed,name=statuses,proto3,enum=gameap.DaemonTaskStatus" json:"statuses,omitempty"`
+	TaskTypes []proto.DaemonTaskType   `protobuf:"varint,5,rep,packed,name=task_types,json=taskTypes,proto3,enum=gameap.DaemonTaskType" json:"task_types,omitempty"`
 }
 
 func (x *DaemonTaskFilter) ProtoReflect() protoreflect.Message {
@@ -93,14 +93,14 @@ func (x *DaemonTaskFilter) GetNodeIds() []uint64 {
 	return nil
 }
 
-func (x *DaemonTaskFilter) GetStatuses() []string {
+func (x *DaemonTaskFilter) GetStatuses() []proto.DaemonTaskStatus {
 	if x != nil {
 		return x.Statuses
 	}
 	return nil
 }
 
-func (x *DaemonTaskFilter) GetTaskTypes() []string {
+func (x *DaemonTaskFilter) GetTaskTypes() []proto.DaemonTaskType {
 	if x != nil {
 		return x.TaskTypes
 	}
@@ -139,12 +139,12 @@ type CreateDaemonTaskRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	NodeId     uint64  `protobuf:"varint,1,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
-	ServerId   *uint64 `protobuf:"varint,2,opt,name=server_id,json=serverId,proto3,oneof" json:"server_id,omitempty"`
-	TaskType   string  `protobuf:"bytes,3,opt,name=task_type,json=taskType,proto3" json:"task_type,omitempty"`
-	Data       *string `protobuf:"bytes,4,opt,name=data,proto3,oneof" json:"data,omitempty"`
-	Cmd        *string `protobuf:"bytes,5,opt,name=cmd,proto3,oneof" json:"cmd,omitempty"`
-	RunAfterId *uint64 `protobuf:"varint,6,opt,name=run_after_id,json=runAfterId,proto3,oneof" json:"run_after_id,omitempty"`
+	NodeId     uint64               `protobuf:"varint,1,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
+	ServerId   *uint64              `protobuf:"varint,2,opt,name=server_id,json=serverId,proto3,oneof" json:"server_id,omitempty"`
+	TaskType   proto.DaemonTaskType `protobuf:"varint,3,opt,name=task_type,json=taskType,proto3,enum=gameap.DaemonTaskType" json:"task_type,omitempty"`
+	Data       *string              `protobuf:"bytes,4,opt,name=data,proto3,oneof" json:"data,omitempty"`
+	Cmd        *string              `protobuf:"bytes,5,opt,name=cmd,proto3,oneof" json:"cmd,omitempty"`
+	RunAfterId *uint64              `protobuf:"varint,6,opt,name=run_after_id,json=runAfterId,proto3,oneof" json:"run_after_id,omitempty"`
 }
 
 func (x *CreateDaemonTaskRequest) ProtoReflect() protoreflect.Message {
@@ -165,11 +165,11 @@ func (x *CreateDaemonTaskRequest) GetServerId() uint64 {
 	return 0
 }
 
-func (x *CreateDaemonTaskRequest) GetTaskType() string {
+func (x *CreateDaemonTaskRequest) GetTaskType() proto.DaemonTaskType {
 	if x != nil {
 		return x.TaskType
 	}
-	return ""
+	return proto.DaemonTaskType_DAEMON_TASK_TYPE_UNSPECIFIED
 }
 
 func (x *CreateDaemonTaskRequest) GetData() string {

@@ -58,12 +58,10 @@ func (m *DaemonTask) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x50
 	}
-	if len(m.Status) > 0 {
-		i -= len(m.Status)
-		copy(dAtA[i:], m.Status)
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.Status)))
+	if m.Status != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Status))
 		i--
-		dAtA[i] = 0x4a
+		dAtA[i] = 0x48
 	}
 	if m.Output != nil {
 		i -= len(*m.Output)
@@ -86,12 +84,10 @@ func (m *DaemonTask) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x32
 	}
-	if len(m.TaskType) > 0 {
-		i -= len(m.TaskType)
-		copy(dAtA[i:], m.TaskType)
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.TaskType)))
+	if m.TaskType != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.TaskType))
 		i--
-		dAtA[i] = 0x2a
+		dAtA[i] = 0x28
 	}
 	if m.ServerId != nil {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(*m.ServerId))
@@ -134,9 +130,8 @@ func (m *DaemonTask) SizeVT() (n int) {
 	if m.ServerId != nil {
 		n += 1 + protohelpers.SizeOfVarint(uint64(*m.ServerId))
 	}
-	l = len(m.TaskType)
-	if l > 0 {
-		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+	if m.TaskType != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.TaskType))
 	}
 	if m.Data != nil {
 		l = len(*m.Data)
@@ -150,9 +145,8 @@ func (m *DaemonTask) SizeVT() (n int) {
 		l = len(*m.Output)
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
-	l = len(m.Status)
-	if l > 0 {
-		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+	if m.Status != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.Status))
 	}
 	if m.CreatedAt != nil {
 		n += 1 + protohelpers.SizeOfVarint(uint64(*m.CreatedAt))
@@ -272,10 +266,10 @@ func (m *DaemonTask) UnmarshalVT(dAtA []byte) error {
 			}
 			m.ServerId = &v
 		case 5:
-			if wireType != 2 {
+			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field TaskType", wireType)
 			}
-			var stringLen uint64
+			m.TaskType = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return protohelpers.ErrIntOverflow
@@ -285,24 +279,11 @@ func (m *DaemonTask) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				m.TaskType |= DaemonTaskType(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return protohelpers.ErrInvalidLength
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return protohelpers.ErrInvalidLength
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.TaskType = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Data", wireType)
@@ -403,10 +384,10 @@ func (m *DaemonTask) UnmarshalVT(dAtA []byte) error {
 			m.Output = &s
 			iNdEx = postIndex
 		case 9:
-			if wireType != 2 {
+			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
 			}
-			var stringLen uint64
+			m.Status = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return protohelpers.ErrIntOverflow
@@ -416,24 +397,11 @@ func (m *DaemonTask) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				m.Status |= DaemonTaskStatus(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return protohelpers.ErrInvalidLength
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return protohelpers.ErrInvalidLength
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Status = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		case 10:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CreatedAt", wireType)
