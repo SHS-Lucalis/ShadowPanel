@@ -18,7 +18,7 @@ import (
 )
 
 type LoaderManager interface {
-	Load(ctx context.Context, wasmBytes []byte, config map[string]string) (*pkgplugin.LoadedPlugin, error)
+	Load(ctx context.Context, wasmBytes []byte, config map[string]string, pluginID uint64) (*pkgplugin.LoadedPlugin, error)
 	Unload(ctx context.Context, pluginID string) error
 	GetPlugin(pluginID string) (*pkgplugin.LoadedPlugin, bool)
 	GetPlugins() []*pkgplugin.LoadedPlugin
@@ -67,7 +67,7 @@ func (l *Loader) LoadAll(ctx context.Context) error {
 
 	for _, plugin := range plugins {
 		filename := l.resolvePluginFilename(&plugin)
-		loaded, err := l.Load(ctx, filename)
+		loaded, err := l.LoadWithID(ctx, filename, uint64(plugin.ID))
 		if err != nil {
 			return errors.WithMessagef(err, "failed to load plugin %s", plugin.Name)
 		}
@@ -88,6 +88,10 @@ func (l *Loader) LoadAll(ctx context.Context) error {
 }
 
 func (l *Loader) Load(ctx context.Context, filename string) (*pkgplugin.LoadedPlugin, error) {
+	return l.LoadWithID(ctx, filename, 0)
+}
+
+func (l *Loader) LoadWithID(ctx context.Context, filename string, pluginID uint64) (*pkgplugin.LoadedPlugin, error) {
 	pluginPath := path.Join(l.pluginsDir, filename)
 
 	if !l.fileManager.Exists(ctx, pluginPath) {
@@ -99,7 +103,7 @@ func (l *Loader) Load(ctx context.Context, filename string) (*pkgplugin.LoadedPl
 		return nil, errors.WithMessage(err, "failed to read plugin file")
 	}
 
-	loaded, err := l.manager.Load(ctx, wasmBytes, nil)
+	loaded, err := l.manager.Load(ctx, wasmBytes, nil, pluginID)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to load plugin")
 	}
@@ -165,7 +169,7 @@ func (l *Loader) processAutoLoad(ctx context.Context) error {
 			return errors.WithMessage(err, "failed to read plugin file")
 		}
 
-		loaded, err := l.manager.Load(ctx, wasmBytes, nil)
+		loaded, err := l.manager.Load(ctx, wasmBytes, nil, 0)
 		if err != nil {
 			return errors.WithMessagef(err, "failed to load plugin for info %s", filename)
 		}

@@ -22,6 +22,12 @@ type HostLibrary interface {
 	Instantiate(ctx context.Context, r wazero.Runtime) error
 }
 
+// HostLibraryFactory creates host libraries that need per-plugin configuration.
+type HostLibraryFactory interface {
+	// Create returns a new HostLibrary instance configured for the given plugin.
+	Create(pluginID uint64) HostLibrary
+}
+
 // LoadedPlugin represents a loaded plugin instance.
 type LoadedPlugin struct {
 	Info            *proto.PluginInfo
@@ -47,7 +53,8 @@ func (p *LoadedPlugin) Close(ctx context.Context) error {
 
 // ManagerConfig holds configuration for the plugin manager.
 type ManagerConfig struct {
-	Libraries []HostLibrary
+	Libraries        []HostLibrary
+	LibraryFactories []HostLibraryFactory
 }
 
 // Manager handles plugin lifecycle.
@@ -67,10 +74,13 @@ func NewManager(cfg ManagerConfig) *Manager {
 }
 
 // Load loads a plugin from WASM bytes.
+// pluginID is used to configure per-plugin host libraries (like storage).
+// Pass 0 if the plugin ID is not known (e.g., during initial info discovery).
 func (m *Manager) Load(
 	ctx context.Context,
 	wasmBytes []byte,
 	config map[string]string,
+	pluginID uint64,
 ) (*LoadedPlugin, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -79,7 +89,7 @@ func (m *Manager) Load(
 		return nil, ErrManagerClosed
 	}
 
-	r, module, err := m.initializeRuntime(ctx, wasmBytes)
+	r, module, err := m.initializeRuntime(ctx, wasmBytes, pluginID)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to initialize runtime")
 	}
@@ -120,6 +130,7 @@ func (m *Manager) Load(
 func (m *Manager) initializeRuntime(
 	ctx context.Context,
 	wasmBytes []byte,
+	pluginID uint64,
 ) (wazero.Runtime, api.Module, error) {
 	r := wazero.NewRuntime(ctx)
 
@@ -149,18 +160,16 @@ func (m *Manager) initializeRuntime(
 		return nil, nil, errors.Wrap(err, "failed to instantiate env module")
 	}
 
-	for _, lib := range m.config.Libraries {
-		if err := lib.Instantiate(ctx, r); err != nil {
-			closeErr := r.Close(ctx)
-			if closeErr != nil {
-				slog.Warn("failed to close runtime after host library instantiation failure",
-					slog.String("error", closeErr.Error()),
-					slog.String("library_error", err.Error()),
-				)
-			}
-
-			return nil, nil, errors.WithMessage(err, "failed to instantiate host library")
+	if err := m.instantiateLibraries(ctx, r, pluginID); err != nil {
+		closeErr := r.Close(ctx)
+		if closeErr != nil {
+			slog.Warn("failed to close runtime after host library instantiation failure",
+				slog.String("error", closeErr.Error()),
+				slog.String("library_error", err.Error()),
+			)
 		}
+
+		return nil, nil, err
 	}
 
 	code, err := r.CompileModule(ctx, wasmBytes)
@@ -217,6 +226,23 @@ func (m *Manager) initializeRuntime(
 	}
 
 	return r, module, nil
+}
+
+func (m *Manager) instantiateLibraries(ctx context.Context, r wazero.Runtime, pluginID uint64) error {
+	for _, lib := range m.config.Libraries {
+		if err := lib.Instantiate(ctx, r); err != nil {
+			return errors.WithMessage(err, "failed to instantiate host library")
+		}
+	}
+
+	for _, factory := range m.config.LibraryFactories {
+		lib := factory.Create(pluginID)
+		if err := lib.Instantiate(ctx, r); err != nil {
+			return errors.WithMessage(err, "failed to instantiate factory host library")
+		}
+	}
+
+	return nil
 }
 
 func (m *Manager) initializePlugin(

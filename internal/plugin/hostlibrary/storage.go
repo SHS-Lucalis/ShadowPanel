@@ -7,6 +7,7 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
+	pkgplugin "github.com/gameap/gameap/pkg/plugin"
 	"github.com/gameap/gameap/pkg/plugin/sdk/storage"
 	"github.com/samber/lo"
 	"github.com/tetratelabs/wazero"
@@ -170,4 +171,16 @@ func NewStorageHostLibrary(pluginID uint64, repo repositories.PluginStorageRepos
 
 func (l *StorageHostLibrary) Instantiate(ctx context.Context, r wazero.Runtime) error {
 	return storage.Instantiate(ctx, r, l.impl)
+}
+
+type StorageHostLibraryFactory struct {
+	repo repositories.PluginStorageRepository
+}
+
+func NewStorageHostLibraryFactory(repo repositories.PluginStorageRepository) *StorageHostLibraryFactory {
+	return &StorageHostLibraryFactory{repo: repo}
+}
+
+func (f *StorageHostLibraryFactory) Create(pluginID uint64) pkgplugin.HostLibrary {
+	return NewStorageHostLibrary(pluginID, f.repo)
 }

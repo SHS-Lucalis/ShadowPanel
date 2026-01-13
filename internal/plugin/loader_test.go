@@ -18,7 +18,7 @@ import (
 )
 
 type mockPluginManager struct {
-	loadFunc    func(ctx context.Context, wasmBytes []byte, config map[string]string) (*pkgplugin.LoadedPlugin, error)
+	loadFunc    func(ctx context.Context, wasmBytes []byte, config map[string]string, pluginID uint64) (*pkgplugin.LoadedPlugin, error)
 	unloadFunc  func(ctx context.Context, pluginID string) error
 	getPlugin   func(pluginID string) (*pkgplugin.LoadedPlugin, bool)
 	getPlugins  func() []*pkgplugin.LoadedPlugin
@@ -30,10 +30,11 @@ func (m *mockPluginManager) Load(
 	ctx context.Context,
 	wasmBytes []byte,
 	config map[string]string,
+	pluginID uint64,
 ) (*pkgplugin.LoadedPlugin, error) {
 	m.loadedCount++
 	if m.loadFunc != nil {
-		return m.loadFunc(ctx, wasmBytes, config)
+		return m.loadFunc(ctx, wasmBytes, config, pluginID)
 	}
 
 	return &pkgplugin.LoadedPlugin{
@@ -87,6 +88,7 @@ func TestLoader_LoadAll_FromRepository(t *testing.T) {
 	_ = fileManager.Write(ctx, "plugins/test-plugin.wasm", []byte("wasm-content"))
 
 	plugin := &domain.Plugin{
+		ID:       456,
 		Name:     "test-plugin",
 		Version:  "1.0.0",
 		Filename: lo.ToPtr("test-plugin.wasm"),
@@ -110,7 +112,7 @@ func TestLoader_LoadAll_FromRepository(t *testing.T) {
 func TestLoader_LoadAll_WithAutoLoad(t *testing.T) {
 	ctx := context.Background()
 	manager := &mockPluginManager{
-		loadFunc: func(_ context.Context, _ []byte, _ map[string]string) (*pkgplugin.LoadedPlugin, error) {
+		loadFunc: func(_ context.Context, _ []byte, _ map[string]string, _ uint64) (*pkgplugin.LoadedPlugin, error) {
 			return &pkgplugin.LoadedPlugin{
 				Info: &proto.PluginInfo{
 					Id:      "auto-plugin-id",
@@ -247,7 +249,7 @@ func TestLoader_GetDBPluginID(t *testing.T) {
 
 	dbID, ok := loader.GetDBPluginID("manager-id-456")
 	assert.True(t, ok)
-	assert.Equal(t, uint(456), dbID)
+	assert.Equal(t, domain.Uint64ID(456), dbID)
 
 	_, ok = loader.GetDBPluginID("nonexistent-id")
 	assert.False(t, ok)
@@ -276,7 +278,7 @@ func TestLoader_Unload(t *testing.T) {
 
 func TestParsePluginID_Numeric(t *testing.T) {
 	id := pkgplugin.ParsePluginID("12345")
-	assert.Equal(t, uint(12345), id)
+	assert.Equal(t, domain.Uint64ID(12345), id)
 }
 
 func TestParsePluginID_Base64(t *testing.T) {
@@ -286,13 +288,13 @@ func TestParsePluginID_Base64(t *testing.T) {
 	encoded := pkgplugin.IDEncoding.EncodeToString(buf)
 
 	id := pkgplugin.ParsePluginID(encoded)
-	assert.Equal(t, uint(num), id)
+	assert.Equal(t, domain.Uint64ID(num), id)
 }
 
 func TestParsePluginID_Hash(t *testing.T) {
 	h := fnv.New64a()
 	_, _ = h.Write([]byte("arbitrary-plugin-id"))
-	expected := uint(h.Sum64())
+	expected := domain.Uint64ID(h.Sum64())
 
 	id := pkgplugin.ParsePluginID("arbitrary-plugin-id")
 	assert.Equal(t, expected, id)
@@ -307,6 +309,7 @@ func TestLoader_LoadAll_UpdatesLastLoadedAt(t *testing.T) {
 	_ = fileManager.Write(ctx, "plugins/test-plugin.wasm", []byte("wasm-content"))
 
 	plugin := &domain.Plugin{
+		ID:       789,
 		Name:     "test-plugin",
 		Version:  "1.0.0",
 		Filename: lo.ToPtr("test-plugin.wasm"),
