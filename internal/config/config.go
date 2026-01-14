@@ -97,6 +97,17 @@ type Config struct {
 		URL        string `env:"PLUGIN_STORE_URL" envDefault:"https://plugins.gameap.dev/api"`
 		LicenseKey string `env:"PLUGIN_STORE_LICENSE_KEY" envDefault:""`
 	}
+
+	PubSub struct {
+		Driver     string `env:"PUBSUB_DRIVER" envDefault:"memory"`
+		InstanceID string `env:"PUBSUB_INSTANCE_ID" envDefault:""`
+
+		Redis struct {
+			Addr     string `env:"PUBSUB_REDIS_ADDR" envDefault:""`
+			Password string `env:"PUBSUB_REDIS_PASSWORD" envDefault:""`
+			DB       int    `env:"PUBSUB_REDIS_DB" envDefault:"1"`
+		}
+	}
 }
 
 func LoadConfig() (*Config, error) {
@@ -139,6 +150,14 @@ func normalizeConfigValues(cfg *Config) {
 	}
 
 	cfg.UI.DefaultLanguage = strings.ToLower(cfg.UI.DefaultLanguage)
+
+	cfg.PubSub.Driver = strings.ToLower(cfg.PubSub.Driver)
+	switch cfg.PubSub.Driver {
+	case "postgres", "postgresql", "pgx", "pg", "pgsql": //nolint:goconst,nolintlint
+		cfg.PubSub.Driver = "postgres"
+	case "inmemory":
+		cfg.PubSub.Driver = "memory"
+	}
 }
 
 func (c *Config) TLSEnabled() bool {

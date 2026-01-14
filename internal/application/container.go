@@ -23,6 +23,10 @@ import (
 	"github.com/gameap/gameap/internal/files"
 	internalplugin "github.com/gameap/gameap/internal/plugin"
 	"github.com/gameap/gameap/internal/plugin/hostlibrary"
+	"github.com/gameap/gameap/internal/pubsub"
+	pubsubmemory "github.com/gameap/gameap/internal/pubsub/memory"
+	pubsubpg "github.com/gameap/gameap/internal/pubsub/postgres"
+	pubsubredis "github.com/gameap/gameap/internal/pubsub/redis"
 	"github.com/gameap/gameap/internal/rbac"
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/internal/repositories/base"
@@ -52,6 +56,12 @@ const (
 	cacheDriverInmemory = "inmemory"
 	cacheDriverMySQL    = "mysql"
 	cacheDriverRedis    = "redis"
+)
+
+const (
+	pubsubDriverMemory   = "memory"
+	pubsubDriverRedis    = "redis"
+	pubsubDriverPostgres = "postgres"
 )
 
 const (
@@ -112,6 +122,9 @@ type Container struct {
 	httpServer  *http.Server
 	httpsServer *http.Server
 	responder   *api.Responder
+
+	// PubSub
+	pubsub pubsub.PubSub
 
 	// Shutdown
 	shotdownFuncs []func() error
@@ -813,6 +826,66 @@ func (c *Container) createCache() cache.Cache {
 
 	default:
 		panic("invalid cache driver: " + c.config.Cache.Driver)
+	}
+}
+
+func (c *Container) PubSub() pubsub.PubSub {
+	if c.pubsub == nil {
+		c.pubsub = c.createPubSub()
+	}
+
+	return c.pubsub
+}
+
+func (c *Container) createPubSub() pubsub.PubSub {
+	switch c.config.PubSub.Driver {
+	case pubsubDriverMemory, "":
+		return pubsubmemory.New()
+
+	case pubsubDriverRedis:
+		addr := c.config.PubSub.Redis.Addr
+		if addr == "" {
+			addr = c.config.Cache.Redis.Addr
+		}
+
+		password := c.config.PubSub.Redis.Password
+		if password == "" {
+			password = c.config.Cache.Redis.Password
+		}
+
+		ps, err := pubsubredis.New(pubsubredis.Config{
+			Addr:       addr,
+			Password:   password,
+			DB:         c.config.PubSub.Redis.DB,
+			InstanceID: c.config.PubSub.InstanceID,
+		})
+		if err != nil {
+			panic(errors.WithMessage(err, "failed to create Redis pub-sub"))
+		}
+
+		c.appendShutdownFunc(func() error {
+			return ps.Close()
+		})
+
+		return ps
+
+	case pubsubDriverPostgres:
+		ps, err := pubsubpg.New(pubsubpg.Config{
+			ConnStr:    c.config.DatabaseURL,
+			InstanceID: c.config.PubSub.InstanceID,
+		})
+		if err != nil {
+			panic(errors.WithMessage(err, "failed to create PostgreSQL pub-sub"))
+		}
+
+		c.appendShutdownFunc(func() error {
+			return ps.Close()
+		})
+
+		return ps
+
+	default:
+		panic("invalid pub-sub driver: " + c.config.PubSub.Driver)
 	}
 }
 

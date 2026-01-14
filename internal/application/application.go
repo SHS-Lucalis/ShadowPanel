@@ -11,6 +11,7 @@ import (
 
 	"github.com/gameap/gameap/internal/application/defaults"
 	"github.com/gameap/gameap/internal/config"
+	"github.com/gameap/gameap/internal/pubsub/integration"
 	"github.com/gameap/gameap/migrations"
 	"github.com/pkg/errors"
 )
@@ -135,6 +136,8 @@ func Run(runParams RunParams) {
 		os.Exit(1)
 	}
 
+	startPubSub(ctx, container)
+
 	server := container.HTTPServer()
 
 	err = server.ListenAndServe()
@@ -169,6 +172,25 @@ func startHTTPSServer(ctx context.Context, cfg *config.Config, container *Contai
 		err := httpsServer.ListenAndServeTLS("", "")
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			slog.ErrorContext(ctx, "HTTPS server error", slog.String("error", err.Error()))
+		}
+	}()
+}
+
+func startPubSub(ctx context.Context, container *Container) {
+	ps := container.PubSub()
+
+	cacheInvalidator := integration.NewCacheInvalidator(ps, container.Cache())
+	if err := cacheInvalidator.Start(ctx); err != nil {
+		slog.ErrorContext(ctx, "Failed to start cache invalidator", slog.String("error", err.Error()))
+	}
+
+	go func() {
+		slog.InfoContext(ctx, "Starting pub-sub listener",
+			slog.String("driver", container.Config().PubSub.Driver),
+		)
+
+		if err := ps.Start(ctx); err != nil && !errors.Is(err, context.Canceled) {
+			slog.ErrorContext(ctx, "Pub-sub listener error", slog.String("error", err.Error()))
 		}
 	}()
 }
