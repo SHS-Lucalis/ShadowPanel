@@ -984,6 +984,7 @@ func (c *Container) createPluginManager() *pkgplugin.Manager {
 			hostlibrary.NewLogHostLibrary(slog.Default()),
 			hostlibrary.NewNodeFSHostLibrary(c.DaemonFiles(), c.NodeRepository()),
 			hostlibrary.NewNodeCmdHostLibrary(c.DaemonCommands(), c.NodeRepository()),
+			hostlibrary.NewCryptoHostLibrary(),
 		},
 		LibraryFactories: []pkgplugin.HostLibraryFactory{
 			hostlibrary.NewStorageHostLibraryFactory(c.PluginStorageRepository()),

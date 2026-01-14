@@ -124,6 +124,54 @@ if resp.StatusCode == 200 {
 }
 ```
 
+### gameap-crypto
+
+Provides cryptographic capabilities for secure random generation and password hashing.
+
+```go
+crypto := crypto.NewCryptoService()
+
+// Generate random uint64 in range [0, max)
+randResp, _ := crypto.RandomUint64(ctx, &crypto.RandomUint64Request{
+    Max: 1000,
+})
+randomNumber := randResp.Value
+
+// Generate random string
+strResp, _ := crypto.RandomString(ctx, &crypto.RandomStringRequest{
+    Length:  32,
+    Charset: proto.String("0123456789abcdef"), // optional, defaults to alphanumeric
+})
+randomString := strResp.Value
+
+// Hash password with Argon2id (OWASP recommended defaults)
+hashResp, _ := crypto.Argon2Hash(ctx, &crypto.Argon2HashRequest{
+    Password: "mysecretpassword",
+})
+passwordHash := hashResp.Hash // PHC format: $argon2id$v=19$m=19456,t=2,p=1$salt$hash
+
+// Hash with custom parameters
+hashResp, _ = crypto.Argon2Hash(ctx, &crypto.Argon2HashRequest{
+    Password: "mysecretpassword",
+    Params: &crypto.Argon2Params{
+        Memory:      32768, // KB
+        Time:        3,     // iterations
+        Parallelism: 2,
+        SaltLength:  32,    // bytes
+        KeyLength:   64,    // bytes
+    },
+})
+
+// Verify password against hash
+verifyResp, _ := crypto.Argon2Verify(ctx, &crypto.Argon2VerifyRequest{
+    Password: "mysecretpassword",
+    Hash:     passwordHash,
+})
+if verifyResp.Match {
+    // Password is correct
+}
+```
+
 ### gameap-servercontrol
 
 Provides server control capabilities.
@@ -554,6 +602,7 @@ pkg/plugin/
 │   ├── nodefs/               # gameap-nodefs module (file operations)
 │   ├── nodecmd/              # gameap-nodecmd module (command execution)
 │   ├── cache/                # gameap-cache module
+│   ├── crypto/               # gameap-crypto module (cryptography)
 │   ├── http/                 # gameap-http module
 │   └── log/                  # gameap-log module
 ├── examples/

@@ -88,7 +88,7 @@ func TestUint64ID_Scan(t *testing.T) {
 		},
 		{
 			name:  "max_uint64",
-			input: uint64(^uint64(0)),
+			input: uint64(^uint64(0)), //nolint:unconvert
 			want:  Uint64ID(^uint64(0)),
 		},
 		{
