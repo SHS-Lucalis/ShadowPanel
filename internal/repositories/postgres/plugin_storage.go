@@ -11,7 +11,6 @@ import (
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories/base"
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 )
 
 type PluginStorageRepository struct {
@@ -103,112 +102,32 @@ func (r *PluginStorageRepository) Save(ctx context.Context, entry *domain.Plugin
 	now := time.Now()
 	entry.UpdatedAt = &now
 
-	existingID, err := r.findExistingEntryID(ctx, entry)
-	if err != nil {
-		return errors.WithMessage(err, "failed to find existing entry")
+	if entry.CreatedAt == nil || entry.CreatedAt.IsZero() {
+		entry.CreatedAt = &now
 	}
 
-	if existingID > 0 {
-		return r.update(ctx, existingID, entry)
-	}
-
-	return r.insert(ctx, entry, &now)
-}
-
-func (r *PluginStorageRepository) findExistingEntryID(
-	ctx context.Context,
-	entry *domain.PluginStorageEntry,
-) (uint64, error) {
-	if entry.ID > 0 {
-		return entry.ID, nil
-	}
-
-	builder := sq.Select("id").
-		From(base.PluginStorageTable).
-		Where(sq.Eq{
-			"plugin_id":   entry.PluginID,
-			"key":         entry.Key,
-			"entity_type": entry.EntityType,
-			"entity_id":   entry.EntityID,
-		}).
-		Limit(1).
-		PlaceholderFormat(sq.Dollar)
-
-	query, args, err := builder.ToSql()
-	if err != nil {
-		return 0, errors.WithMessage(err, "failed to build query")
-	}
-
-	var id uint64
-	err = r.db.QueryRowContext(ctx, query, args...).Scan(&id)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return 0, nil
-		}
-
-		return 0, errors.WithMessage(err, "failed to execute query")
-	}
-
-	return id, nil
-}
-
-func (r *PluginStorageRepository) insert(
-	ctx context.Context,
-	entry *domain.PluginStorageEntry,
-	now *time.Time,
-) error {
-	entry.CreatedAt = now
-
-	query, args, err := sq.Insert(base.PluginStorageTable).
-		Columns("plugin_id", "key", "entity_type", "entity_id", "payload", "created_at", "updated_at").
-		Values(
-			entry.PluginID,
-			entry.Key,
-			entry.EntityType,
-			entry.EntityID,
-			entry.Payload,
-			entry.CreatedAt,
-			entry.UpdatedAt,
-		).
-		Suffix("RETURNING id").
-		PlaceholderFormat(sq.Dollar).
-		ToSql()
-	if err != nil {
-		return errors.WithMessage(err, "failed to build query")
-	}
+	query := `INSERT INTO ` + base.PluginStorageTable +
+		` (plugin_id, key, entity_type, entity_id, payload, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		ON CONFLICT (plugin_id, key, entity_type, entity_id)
+		DO UPDATE SET payload = EXCLUDED.payload, updated_at = EXCLUDED.updated_at
+		RETURNING id`
 
 	var returnedID uint64
-	err = r.db.QueryRowContext(ctx, query, args...).Scan(&returnedID)
+	err := r.db.QueryRowContext(ctx, query,
+		entry.PluginID,
+		entry.Key,
+		entry.EntityType,
+		entry.EntityID,
+		entry.Payload,
+		entry.CreatedAt,
+		entry.UpdatedAt,
+	).Scan(&returnedID)
 	if err != nil {
-		return errors.WithMessage(err, "failed to execute query")
+		return errors.WithMessage(err, "failed to execute upsert query")
 	}
 
 	entry.ID = returnedID
-
-	return nil
-}
-
-func (r *PluginStorageRepository) update(ctx context.Context, id uint64, entry *domain.PluginStorageEntry) error {
-	entry.ID = id
-
-	if entry.CreatedAt == nil || entry.CreatedAt.IsZero() {
-		entry.CreatedAt = lo.ToPtr(time.Now())
-	}
-
-	query, args, err := sq.Update(base.PluginStorageTable).
-		Set("payload", entry.Payload).
-		Set("updated_at", entry.UpdatedAt).
-		Where(sq.Eq{"id": id}).
-		PlaceholderFormat(sq.Dollar).
-		ToSql()
-	if err != nil {
-		return errors.WithMessage(err, "failed to build query")
-	}
-
-	_, err = r.db.ExecContext(ctx, query, args...)
-	if err != nil {
-		return errors.WithMessage(err, "failed to execute query")
-	}
 
 	return nil
 }
@@ -233,6 +152,27 @@ func (r *PluginStorageRepository) Delete(ctx context.Context, id uint64) error {
 func (r *PluginStorageRepository) DeleteByPlugin(ctx context.Context, pluginID uint64) error {
 	query, args, err := sq.Delete(base.PluginStorageTable).
 		Where(sq.Eq{"plugin_id": pluginID}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return errors.WithMessage(err, "failed to build query")
+	}
+
+	_, err = r.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return errors.WithMessage(err, "failed to execute query")
+	}
+
+	return nil
+}
+
+func (r *PluginStorageRepository) DeleteByFilter(ctx context.Context, filter *filters.FindPluginStorage) error {
+	if filter == nil {
+		return errors.New("filter is required for DeleteByFilter")
+	}
+
+	query, args, err := sq.Delete(base.PluginStorageTable).
+		Where(r.filterToSq(filter)).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {

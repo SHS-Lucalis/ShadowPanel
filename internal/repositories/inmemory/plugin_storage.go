@@ -145,6 +145,25 @@ func (r *PluginStorageRepository) DeleteByPlugin(_ context.Context, pluginID uin
 	return nil
 }
 
+func (r *PluginStorageRepository) DeleteByFilter(_ context.Context, filter *filters.FindPluginStorage) error {
+	if filter == nil {
+		return nil
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	candidateIDs := r.getFilteredEntryIDs(filter)
+	for entryID := range candidateIDs {
+		if entry, exists := r.entries[entryID]; exists {
+			r.removeFromIndexes(entry)
+			delete(r.entries, entryID)
+		}
+	}
+
+	return nil
+}
+
 func (r *PluginStorageRepository) findExistingEntry(
 	pluginID uint64,
 	key string,
