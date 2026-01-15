@@ -97,18 +97,7 @@ func (s *StorageServiceImpl) Delete(
 		},
 	}
 
-	entries, err := s.repo.Find(ctx, filter, nil, &filters.Pagination{Limit: 1})
-	if err != nil {
-		return nil, err
-	}
-
-	if len(entries) == 0 {
-		return &storage.StorageDeleteResponse{
-			Success: true,
-		}, nil
-	}
-
-	err = s.repo.Delete(ctx, entries[0].ID)
+	err := s.repo.DeleteByFilter(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
