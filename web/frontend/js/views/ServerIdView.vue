@@ -2,7 +2,16 @@
   <GBreadcrumbs :items="breadcrumbs"></GBreadcrumbs>
 
   <InactiveServer v-if="!loading && !isServerEnabled" :server="server"></InactiveServer>
-  <n-tabs v-else type="line" class="flex justify-between" :class="(!isServerEnabled) ? 'hidden': ''" animated display-directive="show:lazy">
+  <n-tabs
+    v-else
+    v-model:value="activeTab"
+    type="line"
+    class="flex justify-between"
+    :class="(!isServerEnabled) ? 'hidden': ''"
+    animated
+    display-directive="show:lazy"
+    @update:value="onTabChange"
+  >
     <n-tab-pane name="control">
       <template #tab>
         <GIcon name="play" class="mr-1" />
@@ -257,8 +266,8 @@
 </template>
 
 <script setup>
-import {computed, h, defineAsyncComponent, onMounted, ref} from "vue";
-import {useRoute} from "vue-router";
+import {computed, h, defineAsyncComponent, onMounted, ref, watch} from "vue";
+import {useRoute, useRouter} from "vue-router";
 import {storeToRefs} from "pinia";
 import ServerControlButton from "./servertabs/ServerControlButton.vue";
 
@@ -301,12 +310,21 @@ import {trans, pageLanguage} from "@/i18n/i18n";
 import InactiveServer from "./InactiveServer.vue";
 
 const route = useRoute()
+const router = useRouter()
 const serverStore = useServerStore()
 const serverRconStore = useServerRconStore()
 const authStore = useAuthStore()
 const pluginsStore = usePluginsStore()
 
 providePluginContext()
+
+const activeTab = ref('control')
+const initialHash = route.hash
+const initialTabName = (() => {
+  if (!initialHash || initialHash === '#' || initialHash === '#control') return 'control'
+  return initialHash.startsWith('#') ? initialHash.slice(1) : initialHash
+})()
+const pendingPluginTab = ref(initialTabName.startsWith('plugin-') ? initialTabName : '')
 
 const {
   serverId,
@@ -334,10 +352,16 @@ onMounted(() => {
         && server.value?.installed === 1
 
     if (isServerEnabled.value) {
-      serverRconStore.fetchRconSupportedFeatures()
+      serverRconStore.fetchRconSupportedFeatures().then(() => {
+        setInitialTabFromHash()
+      })
+    } else {
+      setInitialTabFromHash()
     }
   })
-  serverStore.fetchAbilities()
+  serverStore.fetchAbilities().then(() => {
+    setInitialTabFromHash()
+  })
 });
 
 const isServerEnabled = ref(true)
@@ -400,5 +424,80 @@ const pluginTabs = computed(() => {
     return true
   })
 })
+
+function hashToTabName(hash) {
+  if (!hash || hash === '#' || hash === '#control') {
+    return 'control'
+  }
+  return hash.startsWith('#') ? hash.slice(1) : hash
+}
+
+function tabNameToHash(tabName) {
+  if (!tabName || tabName === 'control') {
+    return ''
+  }
+  return '#' + tabName
+}
+
+function getAvailableTabNames() {
+  const tabs = ['control']
+  if (rconTabPossible.value) tabs.push('rcon')
+  if (serverStore.canManageFiles) tabs.push('files')
+  if (serverStore.canManageTasks) tabs.push('schedules')
+  if (serverStore.canManageSettings) tabs.push('settings')
+
+  pluginTabs.value.forEach(tab => {
+    tabs.push('plugin-' + tab.pluginId + '-' + (tab.name || 'tab'))
+  })
+  return tabs
+}
+
+function isValidTabName(tabName) {
+  return getAvailableTabNames().includes(tabName)
+}
+
+function onTabChange(tabName) {
+  activeTab.value = tabName
+  const hash = tabNameToHash(tabName)
+  if (hash !== (route.hash || '')) {
+    router.replace({ ...route, hash })
+  }
+}
+
+function setInitialTabFromHash() {
+  const tabName = hashToTabName(route.hash)
+  if (isValidTabName(tabName)) {
+    activeTab.value = tabName
+    pendingPluginTab.value = ''
+  } else if (tabName.startsWith('plugin-')) {
+    pendingPluginTab.value = tabName
+  } else {
+    activeTab.value = 'control'
+  }
+}
+
+watch(() => route.hash, (newHash) => {
+  const tabName = hashToTabName(newHash)
+  if (isValidTabName(tabName) && activeTab.value !== tabName) {
+    activeTab.value = tabName
+    pendingPluginTab.value = ''
+  } else if (tabName.startsWith('plugin-')) {
+    pendingPluginTab.value = tabName
+  }
+})
+
+watch(
+  [
+    () => pluginsStore.slots['server-tabs'].length,
+    () => Object.keys(serverStore.abilities).length
+  ],
+  () => {
+    if (pendingPluginTab.value && isValidTabName(pendingPluginTab.value)) {
+      activeTab.value = pendingPluginTab.value
+      pendingPluginTab.value = ''
+    }
+  },
+  { immediate: true }
+)
 
 </script>
