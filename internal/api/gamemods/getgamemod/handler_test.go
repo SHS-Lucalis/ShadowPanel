@@ -216,6 +216,7 @@ func TestHandler_GameModResponseFields(t *testing.T) {
 		ChmapCmd:                lo.ToPtr("changelevel #{map}"),
 		SendmsgCmd:              lo.ToPtr("say #{msg}"),
 		PasswdCmd:               lo.ToPtr("rcon_password #{password}"),
+		Metadata:                domain.Metadata{"docker_image": "ghcr.io/gameap/cs16:latest"},
 	}
 
 	require.NoError(t, repo.Save(context.Background(), gameMod))
@@ -249,6 +250,7 @@ func TestHandler_GameModResponseFields(t *testing.T) {
 	assert.Equal(t, "changelevel #{map}", lo.FromPtr(gameModResp.ChmapCmd))
 	assert.Equal(t, "say #{msg}", lo.FromPtr(gameModResp.SendmsgCmd))
 	assert.Equal(t, "rcon_password #{password}", lo.FromPtr(gameModResp.PasswdCmd))
+	assert.Equal(t, map[string]any{"docker_image": "ghcr.io/gameap/cs16:latest"}, gameModResp.Metadata)
 }
 
 func TestHandler_NewHandler(t *testing.T) {

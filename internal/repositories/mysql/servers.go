@@ -170,6 +170,7 @@ func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) erro
 			server.ProcessActive,
 			server.LastProcessCheck,
 			server.Vars,
+			server.Metadata,
 			server.CreatedAt,
 			server.UpdatedAt,
 			server.DeletedAt,
@@ -202,6 +203,7 @@ func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) erro
 			"process_active=VALUES(process_active)," +
 			"last_process_check=VALUES(last_process_check)," +
 			"vars=VALUES(vars)," +
+			"metadata=VALUES(metadata)," +
 			"updated_at=VALUES(updated_at)," +
 			"deleted_at=VALUES(deleted_at)").
 		PlaceholderFormat(sq.Question).
@@ -268,6 +270,7 @@ func (r *ServerRepository) SaveBulk(ctx context.Context, servers []*domain.Serve
 			server.ProcessActive,
 			server.LastProcessCheck,
 			server.Vars,
+			server.Metadata,
 			server.CreatedAt,
 			server.UpdatedAt,
 			server.DeletedAt,
@@ -303,6 +306,7 @@ func (r *ServerRepository) SaveBulk(ctx context.Context, servers []*domain.Serve
 			"process_active=VALUES(process_active)," +
 			"last_process_check=VALUES(last_process_check)," +
 			"vars=VALUES(vars)," +
+			"metadata=VALUES(metadata)," +
 			"updated_at=VALUES(updated_at)," +
 			"deleted_at=VALUES(deleted_at)").
 		PlaceholderFormat(sq.Question).
@@ -524,6 +528,7 @@ func (r *ServerRepository) scan(row base.Scanner) (*domain.Server, error) {
 		&server.ProcessActive,
 		&server.LastProcessCheck,
 		&server.Vars,
+		&server.Metadata,
 		&server.CreatedAt,
 		&server.UpdatedAt,
 		&server.DeletedAt,

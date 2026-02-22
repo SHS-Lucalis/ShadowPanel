@@ -124,6 +124,7 @@ func (r *GameRepository) Save(ctx context.Context, game *domain.Game) error {
 			game.LocalRepositoryLinux,
 			game.LocalRepositoryWindows,
 			game.Enabled != 0,
+			game.Metadata,
 		).
 		Suffix("ON CONFLICT(code) DO UPDATE SET " +
 			"name=excluded.name," +
@@ -136,7 +137,8 @@ func (r *GameRepository) Save(ctx context.Context, game *domain.Game) error {
 			"remote_repository_windows=excluded.remote_repository_windows," +
 			"local_repository_linux=excluded.local_repository_linux," +
 			"local_repository_windows=excluded.local_repository_windows," +
-			"enabled=excluded.enabled").
+			"enabled=excluded.enabled," +
+			"metadata=excluded.metadata").
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
@@ -185,6 +187,7 @@ func (r *GameRepository) scan(row base.Scanner) (*domain.Game, error) {
 		&game.LocalRepositoryLinux,
 		&game.LocalRepositoryWindows,
 		&enabled,
+		&game.Metadata,
 	)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to scan row")

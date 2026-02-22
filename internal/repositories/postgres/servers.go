@@ -172,6 +172,7 @@ func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) erro
 				"process_active",
 				"last_process_check",
 				"vars",
+				"metadata",
 				"created_at",
 				"updated_at",
 				"deleted_at",
@@ -204,6 +205,7 @@ func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) erro
 				server.ProcessActive,
 				server.LastProcessCheck,
 				server.Vars,
+				server.Metadata,
 				server.CreatedAt,
 				server.UpdatedAt,
 				server.DeletedAt,
@@ -241,6 +243,7 @@ func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) erro
 				server.ProcessActive,
 				server.LastProcessCheck,
 				server.Vars,
+				server.Metadata,
 				server.CreatedAt,
 				server.UpdatedAt,
 				server.DeletedAt,
@@ -273,6 +276,7 @@ func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) erro
 				"process_active=excluded.process_active," +
 				"last_process_check=excluded.last_process_check," +
 				"vars=excluded.vars," +
+				"metadata=excluded.metadata," +
 				"updated_at=excluded.updated_at," +
 				"deleted_at=excluded.deleted_at " +
 				"RETURNING id")
@@ -357,6 +361,7 @@ func (r *ServerRepository) bulkInsertNewServers(ctx context.Context, servers []*
 			"process_active",
 			"last_process_check",
 			"vars",
+			"metadata",
 			"created_at",
 			"updated_at",
 			"deleted_at",
@@ -391,6 +396,7 @@ func (r *ServerRepository) bulkInsertNewServers(ctx context.Context, servers []*
 			server.ProcessActive,
 			server.LastProcessCheck,
 			server.Vars,
+			server.Metadata,
 			server.CreatedAt,
 			server.UpdatedAt,
 			server.DeletedAt,
@@ -444,6 +450,7 @@ func (r *ServerRepository) bulkUpsertExistingServers(ctx context.Context, server
 			server.ProcessActive,
 			server.LastProcessCheck,
 			server.Vars,
+			server.Metadata,
 			server.CreatedAt,
 			server.UpdatedAt,
 			server.DeletedAt,
@@ -479,6 +486,7 @@ func (r *ServerRepository) bulkUpsertExistingServers(ctx context.Context, server
 			"process_active=excluded.process_active," +
 			"last_process_check=excluded.last_process_check," +
 			"vars=excluded.vars," +
+			"metadata=excluded.metadata," +
 			"updated_at=excluded.updated_at," +
 			"deleted_at=excluded.deleted_at").
 		PlaceholderFormat(sq.Dollar).
@@ -695,6 +703,7 @@ func (r *ServerRepository) scan(row base.Scanner) (*domain.Server, error) {
 		&server.ProcessActive,
 		&server.LastProcessCheck,
 		&server.Vars,
+		&server.Metadata,
 		&server.CreatedAt,
 		&server.UpdatedAt,
 		&server.DeletedAt,

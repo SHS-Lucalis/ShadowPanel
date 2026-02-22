@@ -34,6 +34,7 @@ type ServerResponse struct {
 	ProcessActive    bool                    `json:"process_active"`
 	LastProcessCheck *string                 `json:"last_process_check"`
 	Vars             *string                 `json:"vars"`
+	Metadata         map[string]any          `json:"metadata"`
 	CreatedAt        *string                 `json:"created_at"`
 	UpdatedAt        *string                 `json:"updated_at"`
 	DeletedAt        *string                 `json:"deleted_at"`
@@ -49,14 +50,15 @@ type ServerSettingResponse struct {
 }
 
 type GameResponse struct {
-	Code              string  `json:"code"`
-	Name              string  `json:"name"`
-	Engine            string  `json:"engine"`
-	EngineVersion     string  `json:"engine_version"`
-	RemoteRepository  *string `json:"remote_repository"`
-	LocalRepository   *string `json:"local_repository"`
-	SteamAppID        *uint   `json:"steam_app_id"`
-	SteamAppSetConfig *string `json:"steam_app_set_config"`
+	Code              string         `json:"code"`
+	Name              string         `json:"name"`
+	Engine            string         `json:"engine"`
+	EngineVersion     string         `json:"engine_version"`
+	RemoteRepository  *string        `json:"remote_repository"`
+	LocalRepository   *string        `json:"local_repository"`
+	SteamAppID        *uint          `json:"steam_app_id"`
+	SteamAppSetConfig *string        `json:"steam_app_set_config"`
+	Metadata          map[string]any `json:"metadata"`
 }
 
 type GameModResponse struct {
@@ -69,6 +71,7 @@ type GameModResponse struct {
 	DefaultStartCmd        *string             `json:"default_start_cmd"`
 	DefaultStartCmdLinux   *string             `json:"default_start_cmd_linux"`
 	DefaultStartCmdWindows *string             `json:"default_start_cmd_windows"`
+	Metadata               map[string]any      `json:"metadata"`
 }
 
 func newServerResponse(
@@ -154,6 +157,7 @@ func newServerResponse(
 		ProcessActive:    server.ProcessActive,
 		LastProcessCheck: lastProcessCheck,
 		Vars:             server.Vars,
+		Metadata:         server.Metadata,
 		CreatedAt:        createdAt,
 		UpdatedAt:        updatedAt,
 		DeletedAt:        deletedAt,
@@ -188,6 +192,7 @@ func newGameResponse(game *domain.Game, nodeOS domain.NodeOS) GameResponse {
 		LocalRepository:   localRepository,
 		SteamAppID:        steamAppID,
 		SteamAppSetConfig: game.SteamAppSetConfig,
+		Metadata:          game.Metadata,
 	}
 }
 
@@ -222,5 +227,6 @@ func newGameModResponse(gameMod *domain.GameMod, nodeOS domain.NodeOS) GameModRe
 		DefaultStartCmd:        defaultStartCmd,
 		DefaultStartCmdLinux:   gameMod.StartCmdLinux,
 		DefaultStartCmdWindows: gameMod.StartCmdWindows,
+		Metadata:               gameMod.Metadata,
 	}
 }

@@ -23,6 +23,7 @@ type GameModResponse struct {
 	ChmapCmd                *string           `json:"chmap_cmd"`
 	SendmsgCmd              *string           `json:"sendmsg_cmd"`
 	PasswdCmd               *string           `json:"passwd_cmd"`
+	Metadata                map[string]any    `json:"metadata"`
 }
 
 type gameModFastRcon struct {
@@ -67,6 +68,7 @@ func NewGameModResponseFromGameMod(gm *domain.GameMod) GameModResponse {
 		ChmapCmd:                gm.ChmapCmd,
 		SendmsgCmd:              gm.SendmsgCmd,
 		PasswdCmd:               gm.PasswdCmd,
+		Metadata:                gm.Metadata,
 	}
 }
 

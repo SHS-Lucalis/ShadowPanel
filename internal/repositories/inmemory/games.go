@@ -89,6 +89,7 @@ func (r *GameRepository) Save(_ context.Context, game *domain.Game) error {
 		LocalRepositoryLinux:    game.LocalRepositoryLinux,
 		LocalRepositoryWindows:  game.LocalRepositoryWindows,
 		Enabled:                 game.Enabled,
+		Metadata:                game.Metadata,
 	}
 
 	return nil

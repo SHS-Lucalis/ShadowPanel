@@ -19,6 +19,7 @@ type GlobalAPIGame struct {
 	SteamAppSetConfig       string             `json:"steam_app_set_config"`
 	RemoteRepositoryLinux   string             `json:"remote_repository_linux"`
 	RemoteRepositoryWindows string             `json:"remote_repository_windows"`
+	Metadata                Metadata           `json:"metadata"`
 	Mods                    []GlobalAPIGameMod `json:"mods"`
 }
 
@@ -29,6 +30,7 @@ func (g *GlobalAPIGame) ToDomainGame() *Game {
 		Engine:        g.Engine,
 		EngineVersion: g.EngineVersion,
 		Enabled:       1,
+		Metadata:      g.Metadata,
 	}
 
 	if g.SteamAppIDLinux != 0 {
@@ -77,6 +79,7 @@ type GlobalAPIGameMod struct {
 	ChmapCmd                string              `json:"chmap_cmd"`
 	SendmsgCmd              string              `json:"sendmsg_cmd"`
 	PasswdCmd               string              `json:"passwd_cmd"`
+	Metadata                Metadata            `json:"metadata"`
 }
 
 func (mod *GlobalAPIGameMod) ToDomainGameMod() *GameMod {
@@ -86,6 +89,7 @@ func (mod *GlobalAPIGameMod) ToDomainGameMod() *GameMod {
 	gameMod.Name = mod.Name
 	gameMod.FastRcon = mod.FastRcon
 	gameMod.Vars = mod.Vars
+	gameMod.Metadata = mod.Metadata
 
 	if mod.RemoteRepositoryLinux != "" {
 		remoteRepositoryLinux := mod.RemoteRepositoryLinux
