@@ -56,6 +56,7 @@ type Server struct {
 	ProcessActive    bool                  `db:"process_active"`
 	LastProcessCheck *time.Time            `db:"last_process_check"`
 	Vars             *string               `db:"vars"`
+	Metadata         Metadata              `db:"metadata"`
 	CreatedAt        *time.Time            `db:"created_at"`
 	UpdatedAt        *time.Time            `db:"updated_at"`
 	DeletedAt        *time.Time            `db:"deleted_at"`

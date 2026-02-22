@@ -130,6 +130,7 @@ func (r *GameModRepository) Save(ctx context.Context, gameMod *domain.GameMod) e
 			gameMod.ChmapCmd,
 			gameMod.SendmsgCmd,
 			gameMod.PasswdCmd,
+			gameMod.Metadata,
 		).
 		Suffix("ON DUPLICATE KEY UPDATE " +
 			"game_code=VALUES(game_code)," +
@@ -148,7 +149,8 @@ func (r *GameModRepository) Save(ctx context.Context, gameMod *domain.GameMod) e
 			"srestart_cmd=VALUES(srestart_cmd)," +
 			"chmap_cmd=VALUES(chmap_cmd)," +
 			"sendmsg_cmd=VALUES(sendmsg_cmd)," +
-			"passwd_cmd=VALUES(passwd_cmd)").
+			"passwd_cmd=VALUES(passwd_cmd)," +
+			"metadata=VALUES(metadata)").
 		PlaceholderFormat(sq.Question).
 		ToSql()
 	if err != nil {
@@ -213,6 +215,7 @@ func (r *GameModRepository) scan(row base.Scanner) (*domain.GameMod, error) {
 		&gameMod.ChmapCmd,
 		&gameMod.SendmsgCmd,
 		&gameMod.PasswdCmd,
+		&gameMod.Metadata,
 	)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to scan row")

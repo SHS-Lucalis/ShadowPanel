@@ -308,6 +308,7 @@ func TestHandler_ResponseStructure(t *testing.T) {
 		SteamAppIDLinux:       &steamAppIDLinux,
 		RemoteRepositoryLinux: lo.ToPtr("http://example.com/repo"),
 		LocalRepositoryLinux:  lo.ToPtr("/var/local/repo"),
+		Metadata:              domain.Metadata{"docker_image": "ghcr.io/gameap/cs16:latest"},
 	}
 	require.NoError(t, gameRepo.Save(context.Background(), game))
 
@@ -319,6 +320,7 @@ func TestHandler_ResponseStructure(t *testing.T) {
 		StartCmdWindows:       lo.ToPtr("hlds.exe -game cstrike"),
 		RemoteRepositoryLinux: lo.ToPtr("http://example.com/mod"),
 		LocalRepositoryLinux:  lo.ToPtr("/var/local/mod"),
+		Metadata:              domain.Metadata{"mod_type": "classic"},
 	}
 	require.NoError(t, gameModRepo.Save(context.Background(), gameMod))
 
@@ -342,6 +344,7 @@ func TestHandler_ResponseStructure(t *testing.T) {
 		Rcon:          &rcon,
 		Dir:           "/servers/cs16",
 		ProcessActive: true,
+		Metadata:      domain.Metadata{"custom_config": "enabled"},
 		CreatedAt:     &now,
 		UpdatedAt:     &now,
 	}
@@ -390,6 +393,7 @@ func TestHandler_ResponseStructure(t *testing.T) {
 	assert.Equal(t, "test_rcon", *serverResp.Rcon)
 	assert.Equal(t, "/servers/cs16", serverResp.Dir)
 	assert.True(t, serverResp.ProcessActive)
+	assert.Equal(t, map[string]any{"custom_config": "enabled"}, serverResp.Metadata)
 
 	assert.Equal(t, "cs16", serverResp.Game.Code)
 	assert.Equal(t, "Counter-Strike 1.6", serverResp.Game.Name)
@@ -398,6 +402,7 @@ func TestHandler_ResponseStructure(t *testing.T) {
 	assert.Equal(t, uint(90), *serverResp.Game.SteamAppID)
 	require.NotNil(t, serverResp.Game.RemoteRepository)
 	assert.Equal(t, "http://example.com/repo", *serverResp.Game.RemoteRepository)
+	assert.Equal(t, map[string]any{"docker_image": "ghcr.io/gameap/cs16:latest"}, serverResp.Game.Metadata)
 
 	assert.Equal(t, uint(1), serverResp.GameMod.ID)
 	assert.Equal(t, "cs16", serverResp.GameMod.GameCode)
@@ -410,6 +415,7 @@ func TestHandler_ResponseStructure(t *testing.T) {
 	assert.Equal(t, "hlds.exe -game cstrike", *serverResp.GameMod.DefaultStartCmdWindows)
 	require.NotNil(t, serverResp.GameMod.RemoteRepository)
 	assert.Equal(t, "http://example.com/mod", *serverResp.GameMod.RemoteRepository)
+	assert.Equal(t, map[string]any{"mod_type": "classic"}, serverResp.GameMod.Metadata)
 
 	require.Len(t, serverResp.Settings, 1)
 	assert.Equal(t, uint(1), serverResp.Settings[0].ServerID)

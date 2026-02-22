@@ -27,6 +27,7 @@ type GameMod struct {
 	ChmapCmd                *string             `db:"chmap_cmd"`
 	SendmsgCmd              *string             `db:"sendmsg_cmd"`
 	PasswdCmd               *string             `db:"passwd_cmd"`
+	Metadata                Metadata            `db:"metadata"`
 }
 
 func (gm *GameMod) Merge(other *GameMod) {

@@ -178,6 +178,7 @@ func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) erro
 			server.ProcessActive,
 			formatTime(server.LastProcessCheck),
 			server.Vars,
+			server.Metadata,
 			formatTime(server.CreatedAt),
 			formatTime(server.UpdatedAt),
 			formatTime(server.DeletedAt),
@@ -210,6 +211,7 @@ func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) erro
 			"process_active=excluded.process_active," +
 			"last_process_check=excluded.last_process_check," +
 			"vars=excluded.vars," +
+			"metadata=excluded.metadata," +
 			"updated_at=excluded.updated_at," +
 			"deleted_at=excluded.deleted_at " +
 			"RETURNING id").
@@ -277,6 +279,7 @@ func (r *ServerRepository) SaveBulk(ctx context.Context, servers []*domain.Serve
 			server.ProcessActive,
 			formatTime(server.LastProcessCheck),
 			server.Vars,
+			server.Metadata,
 			formatTime(server.CreatedAt),
 			formatTime(server.UpdatedAt),
 			formatTime(server.DeletedAt),
@@ -312,6 +315,7 @@ func (r *ServerRepository) SaveBulk(ctx context.Context, servers []*domain.Serve
 			"process_active=excluded.process_active," +
 			"last_process_check=excluded.last_process_check," +
 			"vars=excluded.vars," +
+			"metadata=excluded.metadata," +
 			"updated_at=excluded.updated_at," +
 			"deleted_at=excluded.deleted_at").
 		ToSql()
@@ -523,6 +527,7 @@ func (r *ServerRepository) scan(row base.Scanner) (*domain.Server, error) {
 		&server.ProcessActive,
 		&lastProcessCheckStr,
 		&server.Vars,
+		&server.Metadata,
 		&createdAtStr,
 		&updatedAtStr,
 		&deletedAtStr,

@@ -352,6 +352,7 @@ func TestHandler_ServerResponseFields(t *testing.T) {
 		ProcessActive:    true,
 		LastProcessCheck: &lastCheck,
 		Vars:             &vars,
+		Metadata:         domain.Metadata{"docker_image": "ghcr.io/gameap/cs16:latest", "default_port": float64(27015)},
 		CreatedAt:        &now,
 		UpdatedAt:        &now,
 	}
@@ -419,6 +420,7 @@ func TestHandler_ServerResponseFields(t *testing.T) {
 	assert.Equal(t, lastCheck.Unix(), serverResp.LastProcessCheck.Unix())
 	require.NotNil(t, serverResp.Vars)
 	assert.Equal(t, "{\"key\":\"value\"}", *serverResp.Vars)
+	assert.Equal(t, map[string]any{"docker_image": "ghcr.io/gameap/cs16:latest", "default_port": float64(27015)}, serverResp.Metadata)
 	assert.NotNil(t, serverResp.CreatedAt)
 	assert.NotNil(t, serverResp.UpdatedAt)
 }

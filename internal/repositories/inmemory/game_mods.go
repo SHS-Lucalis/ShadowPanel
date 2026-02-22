@@ -127,6 +127,7 @@ func (r *GameModRepository) Save(_ context.Context, gameMod *domain.GameMod) err
 		ChmapCmd:                gameMod.ChmapCmd,
 		SendmsgCmd:              gameMod.SendmsgCmd,
 		PasswdCmd:               gameMod.PasswdCmd,
+		Metadata:                gameMod.Metadata,
 	}
 
 	return nil

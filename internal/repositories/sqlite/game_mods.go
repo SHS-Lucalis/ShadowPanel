@@ -131,6 +131,7 @@ func (r *GameModRepository) Save(ctx context.Context, gameMod *domain.GameMod) e
 			gameMod.ChmapCmd,
 			gameMod.SendmsgCmd,
 			gameMod.PasswdCmd,
+			gameMod.Metadata,
 		).
 		Suffix("ON CONFLICT(id) DO UPDATE SET " +
 			"game_code=excluded.game_code," +
@@ -149,7 +150,8 @@ func (r *GameModRepository) Save(ctx context.Context, gameMod *domain.GameMod) e
 			"srestart_cmd=excluded.srestart_cmd," +
 			"chmap_cmd=excluded.chmap_cmd," +
 			"sendmsg_cmd=excluded.sendmsg_cmd," +
-			"passwd_cmd=excluded.passwd_cmd " +
+			"passwd_cmd=excluded.passwd_cmd," +
+			"metadata=excluded.metadata " +
 			"RETURNING id").
 		ToSql()
 	if err != nil {
@@ -207,6 +209,7 @@ func (r *GameModRepository) scan(row base.Scanner) (*domain.GameMod, error) {
 		&gameMod.ChmapCmd,
 		&gameMod.SendmsgCmd,
 		&gameMod.PasswdCmd,
+		&gameMod.Metadata,
 	)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to scan row")

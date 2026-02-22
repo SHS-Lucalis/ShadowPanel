@@ -55,6 +55,7 @@ type adminServerResponse struct {
 	ProcessActive    bool               `json:"process_active"`
 	Aliases          map[string]any     `json:"aliases"`
 	Vars             *string            `json:"vars"`
+	Metadata         map[string]any     `json:"metadata"`
 	CreatedAt        *time.Time         `json:"created_at"`
 	UpdatedAt        *time.Time         `json:"updated_at"`
 }
@@ -158,6 +159,7 @@ func newAdminServerResponseFromServer(s *domain.Server, game *domain.Game) admin
 		ProcessActive:    s.ProcessActive,
 		Aliases:          buildAliases(s),
 		Vars:             s.Vars,
+		Metadata:         s.Metadata,
 		CreatedAt:        s.CreatedAt,
 		UpdatedAt:        s.UpdatedAt,
 	}

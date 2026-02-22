@@ -52,7 +52,38 @@ func TestGames(t *testing.T) {
 					"remote_repository_windows": "http://example.com/windows",
 					"local_repository_linux": "/var/repo/linux",
 					"local_repository_windows": "C:\\repo\\windows",
-					"enabled": 1
+					"enabled": 1,
+					"metadata": null
+				}
+			]`,
+		},
+		{
+			name: "success_with_metadata",
+			games: []domain.Game{
+				{
+					Code:          "csgo",
+					Name:          "Counter-Strike: GO",
+					Engine:        "Source",
+					EngineVersion: "2.0",
+					Enabled:       1,
+					Metadata:      domain.Metadata{"docker_image": "ghcr.io/gameap/csgo:latest", "default_port": float64(27015)},
+				},
+			},
+			want: `[
+				{
+					"code": "csgo",
+					"name": "Counter-Strike: GO",
+					"engine": "Source",
+					"engine_version": "2.0",
+					"steam_app_id_linux": null,
+					"steam_app_id_windows": null,
+					"steam_app_set_config": null,
+					"remote_repository_linux": null,
+					"remote_repository_windows": null,
+					"local_repository_linux": null,
+					"local_repository_windows": null,
+					"enabled": 1,
+					"metadata": {"docker_image": "ghcr.io/gameap/csgo:latest", "default_port": 27015}
 				}
 			]`,
 		},
