@@ -465,6 +465,7 @@ func TestHandler_WindowsOS(t *testing.T) {
 		SteamAppIDWindows:       &steamAppIDWindows,
 		RemoteRepositoryWindows: lo.ToPtr("http://example.com/repo-win"),
 		LocalRepositoryWindows:  lo.ToPtr("C:\\local\\repo"),
+		Metadata:                domain.Metadata{"platform": "windows"},
 	}
 	require.NoError(t, gameRepo.Save(context.Background(), game))
 
@@ -476,6 +477,7 @@ func TestHandler_WindowsOS(t *testing.T) {
 		StartCmdWindows:         lo.ToPtr("hlds.exe -game cstrike"),
 		RemoteRepositoryWindows: lo.ToPtr("http://example.com/mod-win"),
 		LocalRepositoryWindows:  lo.ToPtr("C:\\local\\mod"),
+		Metadata:                domain.Metadata{"mod_platform": "windows"},
 	}
 	require.NoError(t, gameModRepo.Save(context.Background(), gameMod))
 
@@ -495,6 +497,7 @@ func TestHandler_WindowsOS(t *testing.T) {
 		ServerPort:    27015,
 		Dir:           "C:\\servers\\cs16",
 		ProcessActive: false,
+		Metadata:      domain.Metadata{"server_platform": "windows"},
 		CreatedAt:     &now,
 		UpdatedAt:     &now,
 	}
@@ -518,11 +521,13 @@ func TestHandler_WindowsOS(t *testing.T) {
 	require.Len(t, response, 1)
 
 	serverResp := response[0]
+	assert.Equal(t, map[string]any{"server_platform": "windows"}, serverResp.Metadata)
 
 	require.NotNil(t, serverResp.Game.RemoteRepository)
 	assert.Equal(t, "http://example.com/repo-win", *serverResp.Game.RemoteRepository)
 	require.NotNil(t, serverResp.Game.SteamAppID)
 	assert.Equal(t, uint(90), *serverResp.Game.SteamAppID)
+	assert.Equal(t, map[string]any{"platform": "windows"}, serverResp.Game.Metadata)
 
 	require.NotNil(t, serverResp.GameMod.DefaultStartCmd)
 	assert.Equal(t, "hlds.exe -game cstrike", *serverResp.GameMod.DefaultStartCmd)
@@ -532,6 +537,7 @@ func TestHandler_WindowsOS(t *testing.T) {
 	assert.Equal(t, "hlds.exe -game cstrike", *serverResp.GameMod.DefaultStartCmdWindows)
 	require.NotNil(t, serverResp.GameMod.RemoteRepository)
 	assert.Equal(t, "http://example.com/mod-win", *serverResp.GameMod.RemoteRepository)
+	assert.Equal(t, map[string]any{"mod_platform": "windows"}, serverResp.GameMod.Metadata)
 }
 
 func TestHandler_NewHandler(t *testing.T) {
