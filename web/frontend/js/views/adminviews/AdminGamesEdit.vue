@@ -88,6 +88,9 @@ onMounted(() => {
 
     gameUpdateModel.value.remoteRepositoryLinux = game.value.remote_repository_linux
     gameUpdateModel.value.remoteRepositoryWindows = game.value.remote_repository_windows
+
+    gameUpdateModel.value.metadata = Object.entries(game.value.metadata || {})
+        .map(([key, value]) => ({key, value: String(value)}))
   })
 
   gameStore.fetchMods()
@@ -187,6 +190,13 @@ const deleteModById = (id) => {
 }
 
 const onClickUpdate = () => {
+  const metadataObj = {}
+  for (const {key, value} of gameUpdateModel.value.metadata || []) {
+    if (key) {
+      metadataObj[key] = value
+    }
+  }
+
   const fields = {
     name: gameUpdateModel.value.name,
     engine: gameUpdateModel.value.engine,
@@ -198,6 +208,7 @@ const onClickUpdate = () => {
     local_repository_windows: gameUpdateModel.value.localRepositoryWindows,
     remote_repository_linux: gameUpdateModel.value.remoteRepositoryLinux,
     remote_repository_windows: gameUpdateModel.value.remoteRepositoryWindows,
+    metadata: metadataObj,
   }
 
   gameStore.saveGame(fields).then(() => {

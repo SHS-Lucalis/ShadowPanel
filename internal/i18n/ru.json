@@ -156,7 +156,8 @@
     "upgrade_success_msg": "Игры успешно обновлены",
     "upgrade_fail_msg": "Ошибка обновления",
     "delete_game_confirm_msg": "Вы уверены, что хотите удалить игру?",
-    "delete_mod_confirm_msg": "Вы уверены, что хотите удалить мод?"
+    "delete_mod_confirm_msg": "Вы уверены, что хотите удалить мод?",
+    "metadata": "Метаданные"
   },
   "gdaemon_tasks": {
     "title_list": "Список GDaemon заданий",
@@ -219,6 +220,7 @@
   },
   "labels": {
     "name": "Имя",
+    "key": "Ключ",
     "the_value": "Значение",
     "private_key_pass": "Пароль от приватного ключа",
     "enabled": "Включен",
@@ -576,7 +578,8 @@
     "select_game_filter_placeholder": "Выберите игры",
     "select_ip_filter_placeholder": "Выберите список IP",
     "select_server": "Выберите сервер",
-    "server_already_added": "Сервер уже добавлен"
+    "server_already_added": "Сервер уже добавлен",
+    "metadata": "Метаданные"
   },
   "servers_tasks": {
     "tasks_title": "Задания",

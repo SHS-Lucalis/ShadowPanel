@@ -214,6 +214,20 @@
           </div>
         </n-tab-pane>
 
+        <n-tab-pane name="metadata">
+          <template #tab>
+            {{ trans('games.metadata') }}
+          </template>
+
+          <InputManyList
+              v-model="form.metadata"
+              class="mb-4"
+              :labels="[trans('labels.key'), trans('labels.the_value')]"
+              :keys="['key', 'value']"
+              :input-types="['text', 'text']"
+          />
+        </n-tab-pane>
+
         <n-tab-pane name="vars">
           <template #tab>
             {{ trans('games.vars') }}
@@ -275,6 +289,7 @@ import {
   NTabPane,
 } from "naive-ui"
 import GButton from "../../../components/GButton.vue";
+import InputManyList from "../../../components/input/InputManyList.vue";
 
 const formRef = ref({})
 const form = defineModel({})
