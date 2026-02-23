@@ -178,6 +178,30 @@
         </n-card>
       </div>
 
+      <div class="md:w-full">
+        <n-card
+            :title="trans('servers.metadata')"
+            size="small"
+            class="mb-3"
+            header-class="g-card-header"
+            :segmented="{
+                            content: true,
+                            footer: 'soft'
+                          }"
+        >
+          <Loading v-if="loading"></Loading>
+          <div :class="loading ? 'hidden' : ''">
+            <InputManyList
+                v-model="serverForm.metadata"
+                class="mb-4"
+                :labels="[trans('labels.key'), trans('labels.the_value')]"
+                :keys="['key', 'value']"
+                :input-types="['text', 'text']"
+            />
+          </div>
+        </n-card>
+      </div>
+
       <GButton color="green" v-on:click="onClickSave">
         <GIcon name="save" />
         <span class="hidden lg:inline">&nbsp;{{ trans('main.save') }}</span>
@@ -190,8 +214,9 @@
 import { GBreadcrumbs, GIcon, Loading, GSwitch } from "@gameap/ui"
 import {computed, ref, onMounted} from "vue"
 import {trans} from "@/i18n/i18n"
-import {NForm, NFormItem} from "naive-ui"
+import {NForm, NFormItem, NCard} from "naive-ui"
 import GButton from "@/components/GButton.vue"
+import InputManyList from "@/components/input/InputManyList.vue"
 import {useRoute, useRouter} from "vue-router"
 import {storeToRefs} from "pinia"
 import { capitalize } from "lodash-es"
@@ -215,6 +240,7 @@ const serverForm = ref({
   rconPort: 27015,
   install: true,
   user: 'gameap',
+  metadata: [],
 })
 
 const {games} = storeToRefs(gamesStore)
@@ -246,6 +272,9 @@ onMounted(() => {
     serverForm.value.dir = server.value.dir
     serverForm.value.user = server.value.su_user
     serverForm.value.startCommand = server.value.start_command
+
+    serverForm.value.metadata = Object.entries(server.value.metadata || {})
+        .map(([key, value]) => ({key, value: String(value)}))
 
     fetchGames().then(() => {
       serverForm.value.game = server.value.game_id
@@ -374,6 +403,13 @@ const onClickSave = () => {
 }
 
 const saveServer = () => {
+  const metadataObj = {}
+  for (const {key, value} of serverForm.value.metadata || []) {
+    if (key) {
+      metadataObj[key] = value
+    }
+  }
+
   serverStore.save({
     name: serverForm.value.name,
     game_id: serverForm.value.game,
@@ -390,6 +426,7 @@ const saveServer = () => {
     dir: serverForm.value.dir,
     su_user: serverForm.value.user,
     start_command: serverForm.value.startCommand,
+    metadata: metadataObj,
   }).
   then(() => {
     notification({

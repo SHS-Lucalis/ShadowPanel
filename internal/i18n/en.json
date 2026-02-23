@@ -157,7 +157,8 @@
     "upgrade_success_msg": "Games upgraded sucessfully",
     "upgrade_fail_msg": "Unable to upgrade Games",
     "delete_game_confirm_msg": "Are you sure you want to delete the game?",
-    "delete_mod_confirm_msg": "Are you sure you want to delete the game modification?"
+    "delete_mod_confirm_msg": "Are you sure you want to delete the game modification?",
+    "metadata": "Metadata"
   },
   "gdaemon_tasks": {
     "title_list": "GDaemon Tasks List",
@@ -220,6 +221,7 @@
   },
   "labels": {
     "name": "Name",
+    "key": "Key",
     "the_value": "Value",
     "private_key_pass": "Private Key Password",
     "enabled": "Enabled",
@@ -575,7 +577,8 @@
     "select_game_filter_placeholder": "Choose games",
     "select_ip_filter_placeholder": "Choose IP list",
     "select_server": "Select server",
-    "server_already_added": "Server already added"
+    "server_already_added": "Server already added",
+    "metadata": "Metadata"
   },
   "servers_tasks": {
     "tasks_title": "Tasks",
