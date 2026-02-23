@@ -556,6 +556,7 @@ func TestHandler_WindowsOS(t *testing.T) {
 		SteamAppIDWindows:       &steamAppIDWindows,
 		RemoteRepositoryWindows: lo.ToPtr("http://example.com/repo-win"),
 		LocalRepositoryWindows:  lo.ToPtr("C:\\local\\repo"),
+		Metadata:                domain.Metadata{"platform": "windows"},
 	}
 	require.NoError(t, gameRepo.Save(context.Background(), game))
 
@@ -567,6 +568,7 @@ func TestHandler_WindowsOS(t *testing.T) {
 		StartCmdWindows:         lo.ToPtr("hlds.exe -game cstrike"),
 		RemoteRepositoryWindows: lo.ToPtr("http://example.com/mod-win"),
 		LocalRepositoryWindows:  lo.ToPtr("C:\\local\\mod"),
+		Metadata:                domain.Metadata{"mod_platform": "windows"},
 	}
 	require.NoError(t, gameModRepo.Save(context.Background(), gameMod))
 
@@ -586,6 +588,7 @@ func TestHandler_WindowsOS(t *testing.T) {
 		ServerPort:    27015,
 		Dir:           "C:\\servers\\cs16",
 		ProcessActive: false,
+		Metadata:      domain.Metadata{"server_platform": "windows"},
 		CreatedAt:     &now,
 		UpdatedAt:     &now,
 	}
@@ -607,11 +610,13 @@ func TestHandler_WindowsOS(t *testing.T) {
 
 	var response ServerResponse
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
+	assert.Equal(t, map[string]any{"server_platform": "windows"}, response.Metadata)
 
 	require.NotNil(t, response.Game.RemoteRepository)
 	assert.Equal(t, "http://example.com/repo-win", *response.Game.RemoteRepository)
 	require.NotNil(t, response.Game.SteamAppID)
 	assert.Equal(t, uint(90), *response.Game.SteamAppID)
+	assert.Equal(t, map[string]any{"platform": "windows"}, response.Game.Metadata)
 
 	require.NotNil(t, response.GameMod.DefaultStartCmd)
 	assert.Equal(t, "hlds.exe -game cstrike", *response.GameMod.DefaultStartCmd)
@@ -621,6 +626,7 @@ func TestHandler_WindowsOS(t *testing.T) {
 	assert.Equal(t, "hlds.exe -game cstrike", *response.GameMod.DefaultStartCmdWindows)
 	require.NotNil(t, response.GameMod.RemoteRepository)
 	assert.Equal(t, "http://example.com/mod-win", *response.GameMod.RemoteRepository)
+	assert.Equal(t, map[string]any{"mod_platform": "windows"}, response.GameMod.Metadata)
 }
 
 func TestHandler_EmptySettings(t *testing.T) {
