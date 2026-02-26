@@ -1,0 +1,19 @@
+type: object
+description: Result of importing a Pelican egg
+properties:
+  game_code:
+    type: string
+    description: The generated game code (slug)
+    example: "rage_mp"
+  game_name:
+    type: string
+    description: The game name from the egg
+    example: "Rage.MP"
+  game_mod_id:
+    type: integer
+    description: ID of the created GameMod
+    example: 42
+required:
+  - game_code
+  - game_name
+  - game_mod_id

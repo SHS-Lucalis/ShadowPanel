@@ -92,6 +92,54 @@
             schema:
               $ref: '../schemas/ErrorResponse.yaml'
 
+/api/games/import/pelican-egg:
+  post:
+    tags:
+      - Games
+    summary: Import Pelican egg
+    description: |
+      Imports a Pelican/Pterodactyl egg configuration file and creates a Game and GameMod entry.
+
+      The egg JSON should be sent as the request body. The importer will:
+      - Create a new Game with a generated code based on the egg name
+      - Create a "Default" GameMod with startup command and variables
+      - Store full Pelican egg data in metadata for future compatibility
+
+      **Note**: Installation scripts and Docker configuration from the egg are stored in metadata
+      but not currently executed by GameAP Daemon.
+    operationId: importPelicanEgg
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/requests/ImportPelicanEggRequest.yaml'
+    responses:
+      '200':
+        description: Egg imported successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/responses/ImportPelicanEggResponse.yaml'
+      '400':
+        description: Invalid egg format
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
 /api/games/{code}:
   get:
     tags:
