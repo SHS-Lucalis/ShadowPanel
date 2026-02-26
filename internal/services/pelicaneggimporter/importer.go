@@ -1,0 +1,272 @@
+package pelicaneggimporter
+
+import (
+	"context"
+	"maps"
+	"regexp"
+	"strings"
+	"unicode"
+
+	"github.com/gameap/gameap/internal/domain"
+	"github.com/gameap/gameap/internal/domain/gamesimport"
+	"github.com/gameap/gameap/internal/filters"
+	"github.com/gameap/gameap/internal/repositories"
+	"github.com/pkg/errors"
+	"github.com/samber/lo"
+	"golang.org/x/text/runes"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
+)
+
+type transactionManager interface {
+	Do(ctx context.Context, fn func(ctx context.Context) error) (err error)
+}
+
+type Importer struct {
+	gameRepo    repositories.GameRepository
+	gameModRepo repositories.GameModRepository
+	tm          transactionManager
+}
+
+func NewImporter(
+	gameRepo repositories.GameRepository,
+	gameModRepo repositories.GameModRepository,
+	tm transactionManager,
+) *Importer {
+	return &Importer{
+		gameRepo:    gameRepo,
+		gameModRepo: gameModRepo,
+		tm:          tm,
+	}
+}
+
+// ImportResult contains the result of importing a Pelican egg.
+type ImportResult struct {
+	Game    *domain.Game
+	GameMod *domain.GameMod
+}
+
+// Import imports a Pelican egg and creates/updates Game and GameMod entities.
+func (i *Importer) Import(ctx context.Context, egg *gamesimport.PelicanEgg) (*ImportResult, error) {
+	if egg == nil {
+		return nil, errors.New("egg cannot be nil")
+	}
+
+	if egg.Name == "" {
+		return nil, errors.New("egg name is required")
+	}
+
+	gameCode := generateGameCode(egg.Name)
+	startCmd := transformStartupCommand(egg.Startup)
+	vars := transformVariables(egg.Variables)
+
+	game := &domain.Game{
+		Code:    gameCode,
+		Name:    egg.Name,
+		Engine:  "pelican",
+		Enabled: 1,
+		Metadata: domain.Metadata{
+			"pelican_egg": map[string]any{
+				"uuid":   egg.UUID,
+				"author": egg.Author,
+			},
+		},
+	}
+
+	gameMod := &domain.GameMod{
+		GameCode:      gameCode,
+		Name:          "Default",
+		StartCmdLinux: lo.ToPtr(startCmd),
+		Vars:          vars,
+		Metadata:      buildGameModMetadata(egg),
+	}
+
+	var result ImportResult
+
+	err := i.tm.Do(ctx, func(ctx context.Context) error {
+		existingGames, err := i.gameRepo.Find(
+			ctx,
+			filters.FindGameByCodes(gameCode),
+			nil,
+			nil,
+		)
+		if err != nil {
+			return errors.WithMessage(err, "failed to find existing game")
+		}
+
+		if len(existingGames) > 0 {
+			game.Metadata = mergeMetadata(existingGames[0].Metadata, game.Metadata)
+		}
+
+		if err := i.gameRepo.Save(ctx, game); err != nil {
+			return errors.WithMessage(err, "failed to save game")
+		}
+
+		result.Game = game
+
+		existingMods, err := i.gameModRepo.Find(
+			ctx,
+			&filters.FindGameMod{
+				Names:     []string{"Default"},
+				GameCodes: []string{gameCode},
+			},
+			nil,
+			nil,
+		)
+		if err != nil {
+			return errors.WithMessage(err, "failed to find existing game mod")
+		}
+
+		if len(existingMods) > 0 {
+			gameMod.ID = existingMods[0].ID
+			gameMod.Metadata = mergeMetadata(existingMods[0].Metadata, gameMod.Metadata)
+		}
+
+		if err := i.gameModRepo.Save(ctx, gameMod); err != nil {
+			return errors.WithMessage(err, "failed to save game mod")
+		}
+
+		result.GameMod = gameMod
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func generateGameCode(name string) string {
+	code := slugify(name)
+
+	code = strings.ReplaceAll(code, "-", "_")
+
+	if len(code) > 16 {
+		code = code[:16]
+	}
+
+	code = strings.TrimRight(code, "_")
+
+	if len(code) < 2 {
+		code = "gm"
+	}
+
+	return code
+}
+
+func slugify(s string) string {
+	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
+	result, _, _ := transform.String(t, s)
+
+	result = strings.ToLower(result)
+
+	reg := regexp.MustCompile(`[^a-z0-9]+`)
+	result = reg.ReplaceAllString(result, "-")
+
+	result = strings.Trim(result, "-")
+
+	return result
+}
+
+// transformStartupCommand transforms Pelican startup command format to GameAP format.
+// Pelican format: ./server -port {{server.build.default.port}} -name {{SERVER_NAME}}.
+// GameAP format: ./server -port {port} -name {SERVER_NAME}.
+func transformStartupCommand(startup string) string {
+	result := startup
+
+	result = regexp.MustCompile(`\{\{server\.build\.default\.port\}\}`).ReplaceAllString(result, "{port}")
+	result = regexp.MustCompile(`\{\{server\.build\.env\.PORT\}\}`).ReplaceAllString(result, "{port}")
+	result = regexp.MustCompile(`\{\{server\.build\.default\.ip\}\}`).ReplaceAllString(result, "{ip}")
+	result = regexp.MustCompile(`\{\{server\.build\.env\.SERVER_IP\}\}`).ReplaceAllString(result, "{ip}")
+
+	envVarPattern := regexp.MustCompile(`\{\{([A-Z_][A-Z0-9_]*)\}\}`)
+	result = envVarPattern.ReplaceAllString(result, "{$1}")
+
+	serverEnvPattern := regexp.MustCompile(`\{\{server\.build\.env\.([A-Z_][A-Z0-9_]*)\}\}`)
+	result = serverEnvPattern.ReplaceAllString(result, "{$1}")
+
+	return result
+}
+
+// transformVariables transforms Pelican egg variables to GameAP GameModVar format.
+func transformVariables(variables []gamesimport.PelicanEggVariable) domain.GameModVarList {
+	vars := make(domain.GameModVarList, 0, len(variables))
+
+	for _, v := range variables {
+		vars = append(vars, domain.GameModVar{
+			Var:      v.EnvVariable,
+			Default:  domain.GameModVarDefault(v.DefaultValue),
+			Info:     buildVarInfo(v),
+			AdminVar: !v.UserEditable,
+		})
+	}
+
+	return vars
+}
+
+func buildVarInfo(v gamesimport.PelicanEggVariable) string {
+	if v.Description != "" {
+		return v.Description
+	}
+
+	return v.Name
+}
+
+func buildGameModMetadata(egg *gamesimport.PelicanEgg) domain.Metadata {
+	metadata := domain.Metadata{
+		"docker_image":                  egg.FirstDockerImage(),
+		"docker_installation_script":    egg.Scripts.Installation.Script,
+		"docker_installation_container": egg.Scripts.Installation.Container,
+		"docker_startup_done":           egg.Config.Startup.Done,
+	}
+
+	variablesRaw := make([]map[string]any, 0, len(egg.Variables))
+	for _, v := range egg.Variables {
+		variablesRaw = append(variablesRaw, map[string]any{
+			"name":          v.Name,
+			"env_variable":  v.EnvVariable,
+			"default_value": v.DefaultValue,
+			"user_viewable": v.UserViewable,
+			"user_editable": v.UserEditable,
+			"rules":         v.Rules,
+			"field_type":    v.FieldType,
+		})
+	}
+
+	configFiles := make(map[string]any)
+	for fileName, fileConfig := range egg.Config.Files {
+		configFiles[fileName] = map[string]any{
+			"parser": fileConfig.Parser,
+			"find":   fileConfig.Find,
+		}
+	}
+
+	metadata["pelican_egg"] = map[string]any{
+		"uuid":             egg.UUID,
+		"startup_template": egg.Startup,
+		"config": map[string]any{
+			"files": configFiles,
+			"stop":  egg.Config.Stop,
+		},
+		"variables_raw": variablesRaw,
+	}
+
+	return metadata
+}
+
+func mergeMetadata(existing, updated domain.Metadata) domain.Metadata {
+	if existing == nil {
+		return updated
+	}
+
+	if updated == nil {
+		return existing
+	}
+
+	result := make(domain.Metadata)
+	maps.Copy(result, existing)
+	maps.Copy(result, updated)
+
+	return result
+}

@@ -50,6 +50,7 @@ import (
 	"github.com/gameap/gameap/internal/api/games/getgame"
 	gamesgetgamemods "github.com/gameap/gameap/internal/api/games/getgamemods"
 	"github.com/gameap/gameap/internal/api/games/getgames"
+	"github.com/gameap/gameap/internal/api/games/importpelicanegg"
 	"github.com/gameap/gameap/internal/api/games/postgames"
 	"github.com/gameap/gameap/internal/api/games/putgame"
 	"github.com/gameap/gameap/internal/api/games/upgradegames"
@@ -130,6 +131,7 @@ import (
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/internal/repositories/base"
 	"github.com/gameap/gameap/internal/services"
+	"github.com/gameap/gameap/internal/services/pelicaneggimporter"
 	"github.com/gameap/gameap/internal/services/pluginstore"
 	"github.com/gameap/gameap/internal/services/servercontrol"
 	"github.com/gameap/gameap/pkg/api"
@@ -153,6 +155,7 @@ type container interface {
 	UserService() *services.UserService
 	ServerControlService() *servercontrol.Service
 	GameUpgradeService() *services.GameUpgradeService
+	PelicanEggImporter() *pelicaneggimporter.Importer
 	RBACRepository() repositories.RBACRepository
 	PersonalAccessTokenRepository() repositories.PersonalAccessTokenRepository
 	DaemonTaskRepository() repositories.DaemonTaskRepository
@@ -1268,6 +1271,15 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 			Path:   "/api/games/upgrade",
 			Handler: upgradegames.NewHandler(
 				c.GameUpgradeService(),
+				c.Responder(),
+			),
+			AdminOnly: true,
+		},
+		{
+			Method: http.MethodPost,
+			Path:   "/api/games/import/pelican-egg",
+			Handler: importpelicanegg.NewHandler(
+				c.PelicanEggImporter(),
 				c.Responder(),
 			),
 			AdminOnly: true,
