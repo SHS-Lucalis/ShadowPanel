@@ -97,6 +97,16 @@ export const useGameListStore = defineStore('games', () => {
         }
     }
 
+    async function importPelicanEgg(eggJson) {
+        apiProcesses.value++
+        try {
+            const response = await axios.post('/api/games/import/pelican-egg', eggJson)
+            return response.data
+        } finally {
+            apiProcesses.value--
+        }
+    }
+
     // From legacy gameMods.js
     async function fetchGameModsList(gameCode) {
         if (!gameCode) {
@@ -137,6 +147,7 @@ export const useGameListStore = defineStore('games', () => {
         upgradeGames,
         deleteGameByCode,
         deleteModById,
+        importPelicanEgg,
         fetchGameModsList,
         setSelectedGameMod,
     }

@@ -21,6 +21,7 @@ const AdminClientCertificatesView = () => import("./views/adminviews/AdminClient
 const AdminDaemonTaskListView = () => import("./views/adminviews/AdminDaemonTaskListView.vue");
 const AdminDaemonTaskOutputView = () => import("./views/adminviews/AdminDaemonTaskOutputView.vue");
 const AdminGamesEdit = () => import("./views/adminviews/AdminGamesEdit.vue");
+const AdminGamesImportView = () => import("./views/adminviews/AdminGamesImportView.vue");
 const AdminGamesList = () => import("./views/adminviews/AdminGamesList.vue");
 const AdminModEdit = () => import("./views/adminviews/AdminModEdit.vue");
 const AdminNodeShowView = () => import("./views/adminviews/AdminNodeShowView.vue");
@@ -145,6 +146,14 @@ const routes = [
         component: AdminGamesList,
         meta: {
             title: trans('games.title_games_list'),
+        }
+    },
+    {
+        path: '/admin/games/import',
+        name: 'admin.games.import',
+        component: AdminGamesImportView,
+        meta: {
+            title: trans('games.title_import'),
         }
     },
     {
