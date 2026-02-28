@@ -112,6 +112,7 @@
     "title_add_mod": "Add Game Mod",
     "title_edit": "Edit Game",
     "title_edit_mod": "Edit Game Mod",
+    "title_import": "Import Game",
     "game": "Game",
     "games": "Games",
     "add": "Add Game",
@@ -158,7 +159,19 @@
     "upgrade_fail_msg": "Unable to upgrade Games",
     "delete_game_confirm_msg": "Are you sure you want to delete the game?",
     "delete_mod_confirm_msg": "Are you sure you want to delete the game modification?",
-    "metadata": "Metadata"
+    "metadata": "Metadata",
+    "import_pelican_egg": "Import Pelican Egg",
+    "title_import_pelican_egg": "Import Pelican/Pterodactyl Egg",
+    "import_pelican_egg_description": "Upload a Pelican or Pterodactyl egg JSON file to create a game configuration.",
+    "pelican_egg_file": "Egg JSON File",
+    "import": "Import",
+    "author": "Author",
+    "import_pelican_egg_success_msg": "Successfully imported :game_name (:game_code)",
+    "invalid_file_type_json": "Please select a JSON file",
+    "pelican_egg_missing_name": "Invalid egg: missing 'name' field",
+    "pelican_egg_missing_startup": "Invalid egg: missing 'startup' field",
+    "invalid_json_format": "Invalid JSON format",
+    "file_read_error": "Error reading file"
   },
   "gdaemon_tasks": {
     "title_list": "GDaemon Tasks List",

@@ -13,6 +13,10 @@
     <GButton class="mr-1" color="black" v-on:click="onClickGamesUpgrade()">
       <GIcon name="sync" />&nbsp{{ trans('games.upgrade')}}
     </GButton>
+
+    <GButton class="mr-1" color="blue" :route="{name: 'admin.games.import'}">
+      <GIcon name="download" />&nbsp;{{ trans('games.import') }}
+    </GButton>
   </div>
 
   <div class="w-1/3 mb-1">
@@ -66,6 +70,7 @@
         v-on:create="onCreateMod"
     />
   </GModal>
+
 </template>
 
 <script setup>
@@ -204,7 +209,6 @@ const gameCreateModel = ref({
   remoteRepositoryLinux: '',
   remoteRepositoryWindows: '',
 })
-
 
 const columns = ref(createColumns())
 const pagination = {
@@ -411,4 +415,5 @@ const onClickGamesUpgrade = () => {
     onNegativeClick: () => {}
   })
 }
+
 </script>

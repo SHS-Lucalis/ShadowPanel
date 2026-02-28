@@ -90,7 +90,10 @@ onMounted(() => {
     gameUpdateModel.value.remoteRepositoryWindows = game.value.remote_repository_windows
 
     gameUpdateModel.value.metadata = Object.entries(game.value.metadata || {})
-        .map(([key, value]) => ({key, value: String(value)}))
+        .map(([key, value]) => ({
+          key,
+          value: typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)
+        }))
   })
 
   gameStore.fetchMods()
@@ -193,7 +196,11 @@ const onClickUpdate = () => {
   const metadataObj = {}
   for (const {key, value} of gameUpdateModel.value.metadata || []) {
     if (key) {
-      metadataObj[key] = value
+      try {
+        metadataObj[key] = JSON.parse(value)
+      } catch {
+        metadataObj[key] = value
+      }
     }
   }
 

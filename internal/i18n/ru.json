@@ -111,6 +111,7 @@
     "title_add_mod": "Добавление модификации",
     "title_edit": "Редактирование игры",
     "title_edit_mod": "Редактировать мод",
+    "title_import": "Импорт игры",
     "game": "Игра",
     "games": "Игры",
     "add": "Добавить игру",
@@ -157,7 +158,19 @@
     "upgrade_fail_msg": "Ошибка обновления",
     "delete_game_confirm_msg": "Вы уверены, что хотите удалить игру?",
     "delete_mod_confirm_msg": "Вы уверены, что хотите удалить мод?",
-    "metadata": "Метаданные"
+    "metadata": "Метаданные",
+    "import_pelican_egg": "Импорт Pelican Egg",
+    "title_import_pelican_egg": "Импорт Pelican/Pterodactyl Egg",
+    "import_pelican_egg_description": "Загрузите JSON файл Pelican или Pterodactyl egg для создания конфигурации игры.",
+    "pelican_egg_file": "JSON файл Egg",
+    "import": "Импортировать",
+    "author": "Автор",
+    "import_pelican_egg_success_msg": "Успешно импортировано :game_name (:game_code)",
+    "invalid_file_type_json": "Пожалуйста, выберите JSON файл",
+    "pelican_egg_missing_name": "Неверный egg: отсутствует поле 'name'",
+    "pelican_egg_missing_startup": "Неверный egg: отсутствует поле 'startup'",
+    "invalid_json_format": "Неверный формат JSON",
+    "file_read_error": "Ошибка чтения файла"
   },
   "gdaemon_tasks": {
     "title_list": "Список GDaemon заданий",

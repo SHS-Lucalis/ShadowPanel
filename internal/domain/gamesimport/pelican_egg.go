@@ -46,6 +46,64 @@ type PelicanEggConfigStartup struct {
 	UserInteraction []string `json:"userInteraction"`
 }
 
+// UnmarshalJSON handles Pelican Egg JSON where files, startup, and logs
+// can be either JSON strings containing serialized JSON or direct JSON objects.
+func (c *PelicanEggConfig) UnmarshalJSON(data []byte) error {
+	type rawConfig struct {
+		Files   json.RawMessage `json:"files"`
+		Startup json.RawMessage `json:"startup"`
+		Stop    string          `json:"stop"`
+		Logs    json.RawMessage `json:"logs"`
+	}
+
+	var raw rawConfig
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return errors.Wrap(err, "failed to unmarshal PelicanEggConfig")
+	}
+
+	c.Stop = raw.Stop
+
+	if len(raw.Files) > 0 {
+		c.Files = make(map[string]PelicanEggConfigFile)
+		if err := unmarshalFlexibleJSON(raw.Files, &c.Files); err != nil {
+			return errors.Wrap(err, "failed to unmarshal config.files")
+		}
+	}
+
+	if len(raw.Startup) > 0 {
+		if err := unmarshalFlexibleJSON(raw.Startup, &c.Startup); err != nil {
+			return errors.Wrap(err, "failed to unmarshal config.startup")
+		}
+	}
+
+	if len(raw.Logs) > 0 {
+		if err := unmarshalFlexibleJSON(raw.Logs, &c.Logs); err != nil {
+			return errors.Wrap(err, "failed to unmarshal config.logs")
+		}
+	}
+
+	return nil
+}
+
+// unmarshalFlexibleJSON handles JSON fields that can be either a string
+// containing JSON or a direct JSON object.
+func unmarshalFlexibleJSON(data []byte, target any) error {
+	if len(data) == 0 {
+		return nil
+	}
+
+	var str string
+	if err := json.Unmarshal(data, &str); err == nil {
+		if str == "" || str == "{}" {
+			return nil
+		}
+
+		return json.Unmarshal([]byte(str), target)
+	}
+
+	return json.Unmarshal(data, target)
+}
+
 type PelicanEggScripts struct {
 	Installation PelicanEggInstallationScript `json:"installation"`
 }

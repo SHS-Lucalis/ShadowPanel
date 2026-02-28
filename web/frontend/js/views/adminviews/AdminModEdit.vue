@@ -74,7 +74,10 @@ onMounted(() => {
       );
 
       modUpdateModel.value.metadata = Object.entries(mod.value.metadata || {})
-          .map(([key, value]) => ({key, value: String(value)}))
+          .map(([key, value]) => ({
+            key,
+            value: typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)
+          }))
     }).catch((error) => {
       errorNotification(error)
     })
@@ -90,7 +93,11 @@ const onUpdateMod = () => {
   const metadataObj = {}
   for (const {key, value} of modUpdateModel.value.metadata || []) {
     if (key) {
-      metadataObj[key] = value
+      try {
+        metadataObj[key] = JSON.parse(value)
+      } catch {
+        metadataObj[key] = value
+      }
     }
   }
 

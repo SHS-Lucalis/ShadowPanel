@@ -1,4 +1,5 @@
 import FileNetworkIcon from './svg/FileNetworkIcon.vue'
+import MaximizeIcon from './svg/MaximizeIcon.vue'
 
 export const defaultIconMap = {
   // ===== Action Icons =====
@@ -35,6 +36,7 @@ export const defaultIconMap = {
   "eraser": "fa-solid fa-eraser",
   "ban": "fa-solid fa-ban",
   "move": "fa-solid fa-dolly",
+  "maximize": MaximizeIcon,
 
   // ===== Navigation Icons =====
   "chevron-left": "fa-solid fa-chevron-left",
