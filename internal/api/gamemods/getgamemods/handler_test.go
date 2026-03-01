@@ -118,7 +118,8 @@ func TestGameMods(t *testing.T) {
 					"srestart_cmd": "restart",
 					"chmap_cmd": "changelevel",
 					"sendmsg_cmd": "say",
-					"passwd_cmd": "rcon_password"
+					"passwd_cmd": "rcon_password",
+					"metadata": null
 				},
 				{
 					"id": 1,
@@ -150,7 +151,8 @@ func TestGameMods(t *testing.T) {
 					"srestart_cmd": "restart",
 					"chmap_cmd": "changelevel",
 					"sendmsg_cmd": "say",
-					"passwd_cmd": "password"
+					"passwd_cmd": "password",
+					"metadata": null
 				}
 			]`,
 		},
