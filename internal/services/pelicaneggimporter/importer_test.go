@@ -60,6 +60,13 @@ func TestImporter_Import(t *testing.T) {
 						FieldType:    "text",
 					},
 				},
+				Raw: map[string]any{
+					"uuid":        "82c049db-06e3-416a-8ed3-805cc53105a9",
+					"author":      "test@example.com",
+					"name":        "Rage.MP",
+					"description": "Rage Multiplayer Server",
+					"_comment":    "DO NOT EDIT",
+				},
 			},
 			setupGame:    func(_ *inmemory.GameRepository) {},
 			setupGameMod: func(_ *inmemory.GameModRepository) {},
@@ -79,6 +86,7 @@ func TestImporter_Import(t *testing.T) {
 				pelicanEgg, ok := result.Game.Metadata["pelican_egg"].(map[string]any)
 				require.True(t, ok)
 				assert.Equal(t, "82c049db-06e3-416a-8ed3-805cc53105a9", pelicanEgg["uuid"])
+				assert.Equal(t, "DO NOT EDIT", pelicanEgg["_comment"])
 
 				assert.Equal(t, "Default", result.GameMod.Name)
 				assert.Equal(t, "rage_mp", result.GameMod.GameCode)
@@ -97,6 +105,10 @@ func TestImporter_Import(t *testing.T) {
 				startupDone, ok := result.GameMod.Metadata["docker_startup_done"].(string)
 				require.True(t, ok)
 				assert.Equal(t, "The server is ready to accept connections", startupDone)
+
+				gameModPelicanEgg, ok := result.GameMod.Metadata["pelican_egg"].(map[string]any)
+				require.True(t, ok)
+				assert.Equal(t, "82c049db-06e3-416a-8ed3-805cc53105a9", gameModPelicanEgg["uuid"])
 
 				games, err := gameRepo.FindAll(context.Background(), nil, nil)
 				require.NoError(t, err)
@@ -120,6 +132,10 @@ func TestImporter_Import(t *testing.T) {
 						UserEditable: false,
 					},
 				},
+				Raw: map[string]any{
+					"name":    "Test Game",
+					"startup": "./server -port {{server.build.default.port}} -ip {{server.build.env.SERVER_IP}} -name {{SERVER_NAME}}",
+				},
 			},
 			setupGame:    func(_ *inmemory.GameRepository) {},
 			setupGameMod: func(_ *inmemory.GameModRepository) {},
@@ -138,6 +154,10 @@ func TestImporter_Import(t *testing.T) {
 			egg: &gamesimport.PelicanEgg{
 				UUID: "new-uuid",
 				Name: "Existing Game",
+				Raw: map[string]any{
+					"uuid": "new-uuid",
+					"name": "Existing Game",
+				},
 			},
 			setupGame: func(repo *inmemory.GameRepository) {
 				_ = repo.Save(context.Background(), &domain.Game{
@@ -172,6 +192,10 @@ func TestImporter_Import(t *testing.T) {
 			egg: &gamesimport.PelicanEgg{
 				Name:    "Test Game",
 				Startup: "./new_server",
+				Raw: map[string]any{
+					"name":    "Test Game",
+					"startup": "./new_server",
+				},
 			},
 			setupGame: func(_ *inmemory.GameRepository) {},
 			setupGameMod: func(repo *inmemory.GameModRepository) {
@@ -222,6 +246,9 @@ func TestImporter_Import(t *testing.T) {
 			name: "short_name_gets_code_padding",
 			egg: &gamesimport.PelicanEgg{
 				Name: "X",
+				Raw: map[string]any{
+					"name": "X",
+				},
 			},
 			setupGame:    func(_ *inmemory.GameRepository) {},
 			setupGameMod: func(_ *inmemory.GameModRepository) {},
@@ -237,6 +264,9 @@ func TestImporter_Import(t *testing.T) {
 			name: "long_name_gets_truncated_code",
 			egg: &gamesimport.PelicanEgg{
 				Name: "This Is A Very Long Game Name That Should Be Truncated",
+				Raw: map[string]any{
+					"name": "This Is A Very Long Game Name That Should Be Truncated",
+				},
 			},
 			setupGame:    func(_ *inmemory.GameRepository) {},
 			setupGameMod: func(_ *inmemory.GameModRepository) {},
@@ -273,6 +303,10 @@ func TestImporter_Import(t *testing.T) {
 						DefaultValue: "123",
 						UserEditable: true,
 					},
+				},
+				Raw: map[string]any{
+					"name":    "Multi Var Game",
+					"startup": "./server",
 				},
 			},
 			setupGame:    func(_ *inmemory.GameRepository) {},
@@ -562,6 +596,10 @@ func TestParsePelicanEgg(t *testing.T) {
 				assert.Equal(t, "image1:latest", egg.DockerImages["image1"])
 				require.Len(t, egg.Variables, 1)
 				assert.Equal(t, "SERVER_NAME", egg.Variables[0].EnvVariable)
+
+				require.NotNil(t, egg.Raw)
+				assert.Equal(t, "test-uuid", egg.Raw["uuid"])
+				assert.Equal(t, "Test Game", egg.Raw["name"])
 			},
 		},
 		{
@@ -579,6 +617,8 @@ func TestParsePelicanEgg(t *testing.T) {
 
 				assert.Empty(t, egg.UUID)
 				assert.Empty(t, egg.Name)
+				require.NotNil(t, egg.Raw)
+				assert.Empty(t, egg.Raw)
 			},
 		},
 	}

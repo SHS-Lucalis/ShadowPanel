@@ -189,6 +189,66 @@ func TestParsePelicanEgg_WithStringConfigFields(t *testing.T) {
 	assert.Equal(t, "Test Game", egg.Name)
 	assert.Equal(t, "^C", egg.Config.Stop)
 	assert.Equal(t, "Server started", egg.Config.Startup.Done)
+
+	require.NotNil(t, egg.Raw)
+	assert.Equal(t, "test-uuid", egg.Raw["uuid"])
+	assert.Equal(t, "Test Game", egg.Raw["name"])
+}
+
+func TestParsePelicanEgg_RawPreservesUnknownFields(t *testing.T) {
+	input := `{
+		"_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL",
+		"meta": {
+			"version": "PTDL_v2",
+			"update_url": null
+		},
+		"exported_at": "2024-04-02T14:13:31+02:00",
+		"uuid": "preserve-uuid",
+		"name": "Test Preserve",
+		"author": "test@example.com",
+		"description": "Test description",
+		"features": ["feature1"],
+		"docker_images": {
+			"Nodejs 18": "ghcr.io/parkervcp/yolks:nodejs_18"
+		},
+		"file_denylist": ["secret.txt"],
+		"startup": "./start.sh",
+		"config": {},
+		"scripts": {
+			"installation": {
+				"script": "#!/bin/bash",
+				"container": "alpine",
+				"entrypoint": "bash"
+			}
+		},
+		"variables": []
+	}`
+
+	egg, err := ParsePelicanEgg([]byte(input))
+	require.NoError(t, err)
+
+	require.NotNil(t, egg.Raw)
+	assert.Equal(t, "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL", egg.Raw["_comment"])
+	assert.Equal(t, "2024-04-02T14:13:31+02:00", egg.Raw["exported_at"])
+	assert.Equal(t, "preserve-uuid", egg.Raw["uuid"])
+
+	meta, ok := egg.Raw["meta"].(map[string]any)
+	require.True(t, ok)
+	assert.Equal(t, "PTDL_v2", meta["version"])
+
+	dockerImages, ok := egg.Raw["docker_images"].(map[string]any)
+	require.True(t, ok)
+	assert.Equal(t, "ghcr.io/parkervcp/yolks:nodejs_18", dockerImages["Nodejs 18"])
+
+	features, ok := egg.Raw["features"].([]any)
+	require.True(t, ok)
+	require.Len(t, features, 1)
+	assert.Equal(t, "feature1", features[0])
+
+	fileDenylist, ok := egg.Raw["file_denylist"].([]any)
+	require.True(t, ok)
+	require.Len(t, fileDenylist, 1)
+	assert.Equal(t, "secret.txt", fileDenylist[0])
 }
 
 func TestParsePelicanEgg_WithObjectConfigFields(t *testing.T) {

@@ -14,7 +14,7 @@
       <GIcon name="sync" />&nbsp{{ trans('games.upgrade')}}
     </GButton>
 
-    <GButton class="mr-1" color="blue" :route="{name: 'admin.games.import'}">
+    <GButton class="mr-1" color="black" :route="{name: 'admin.games.import'}">
       <GIcon name="download" />&nbsp;{{ trans('games.import') }}
     </GButton>
   </div>
