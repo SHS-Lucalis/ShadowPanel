@@ -308,6 +308,8 @@ paths:
     $ref: './paths/games.yaml#/~1api~1games'
   /api/games/upgrade:
     $ref: './paths/games.yaml#/~1api~1games~1upgrade'
+  /api/games/import/pelican-egg:
+    $ref: './paths/games.yaml#/~1api~1games~1import~1pelican-egg'
   /api/games/{code}:
     $ref: './paths/games.yaml#/~1api~1games~1{code}'
   /api/games/{code}/mods:
