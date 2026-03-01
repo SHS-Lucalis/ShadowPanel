@@ -21,6 +21,10 @@ type PelicanEgg struct {
 	Config       PelicanEggConfig     `json:"config"`
 	Scripts      PelicanEggScripts    `json:"scripts"`
 	Variables    []PelicanEggVariable `json:"variables"`
+
+	// Raw contains the original JSON as a map for metadata storage.
+	// This preserves all fields including unknown ones like _comment.
+	Raw map[string]any `json:"-"`
 }
 
 type PelicanEggMeta struct {
@@ -132,13 +136,19 @@ func ParsePelicanEgg(data []byte) (*PelicanEgg, error) {
 		return nil, errors.Wrap(err, "failed to parse pelican egg JSON")
 	}
 
+	var raw map[string]any
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return nil, errors.Wrap(err, "failed to parse pelican egg raw JSON")
+	}
+	egg.Raw = raw
+
 	return &egg, nil
 }
 
 // FirstDockerImage returns the first docker image key from the egg configuration.
 func (e *PelicanEgg) FirstDockerImage() string {
-	for key := range e.DockerImages {
-		return key
+	for _, val := range e.DockerImages {
+		return val
 	}
 
 	return ""

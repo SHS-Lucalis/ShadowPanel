@@ -66,10 +66,7 @@ func (i *Importer) Import(ctx context.Context, egg *gamesimport.PelicanEgg) (*Im
 		Engine:  "pelican",
 		Enabled: 1,
 		Metadata: domain.Metadata{
-			"pelican_egg": map[string]any{
-				"uuid":   egg.UUID,
-				"author": egg.Author,
-			},
+			"pelican_egg": egg.Raw,
 		},
 	}
 
@@ -214,45 +211,13 @@ func buildVarInfo(v gamesimport.PelicanEggVariable) string {
 }
 
 func buildGameModMetadata(egg *gamesimport.PelicanEgg) domain.Metadata {
-	metadata := domain.Metadata{
-		"docker_image":                  egg.FirstDockerImage(),
-		"docker_installation_script":    egg.Scripts.Installation.Script,
-		"docker_installation_container": egg.Scripts.Installation.Container,
-		"docker_startup_done":           egg.Config.Startup.Done,
+	return domain.Metadata{
+		"docker_image":               egg.FirstDockerImage(),
+		"docker_installation_script": egg.Scripts.Installation.Script,
+		"docker_installation_image":  egg.Scripts.Installation.Container,
+		"docker_startup_done":        egg.Config.Startup.Done,
+		"pelican_egg":                egg.Raw,
 	}
-
-	variablesRaw := make([]map[string]any, 0, len(egg.Variables))
-	for _, v := range egg.Variables {
-		variablesRaw = append(variablesRaw, map[string]any{
-			"name":          v.Name,
-			"env_variable":  v.EnvVariable,
-			"default_value": v.DefaultValue,
-			"user_viewable": v.UserViewable,
-			"user_editable": v.UserEditable,
-			"rules":         v.Rules,
-			"field_type":    v.FieldType,
-		})
-	}
-
-	configFiles := make(map[string]any)
-	for fileName, fileConfig := range egg.Config.Files {
-		configFiles[fileName] = map[string]any{
-			"parser": fileConfig.Parser,
-			"find":   fileConfig.Find,
-		}
-	}
-
-	metadata["pelican_egg"] = map[string]any{
-		"uuid":             egg.UUID,
-		"startup_template": egg.Startup,
-		"config": map[string]any{
-			"files": configFiles,
-			"stop":  egg.Config.Stop,
-		},
-		"variables_raw": variablesRaw,
-	}
-
-	return metadata
 }
 
 func mergeMetadata(existing, updated domain.Metadata) domain.Metadata {

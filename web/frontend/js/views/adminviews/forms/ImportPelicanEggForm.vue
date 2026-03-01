@@ -50,8 +50,8 @@
 <script setup>
 import { GIcon } from "@gameap/ui"
 import { ref } from "vue"
-import { trans } from "../../../i18n/i18n"
-import GButton from "../../../components/GButton.vue"
+import { trans } from "@/i18n/i18n"
+import GButton from "@/components/GButton.vue"
 import {
   NForm,
   NFormItem,
