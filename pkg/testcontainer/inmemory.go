@@ -18,6 +18,7 @@ import (
 	"github.com/gameap/gameap/internal/repositories/base"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/internal/services"
+	"github.com/gameap/gameap/internal/services/pelicaneggimporter"
 	"github.com/gameap/gameap/internal/services/pluginstore"
 	"github.com/gameap/gameap/internal/services/servercontrol"
 	pkgapi "github.com/gameap/gameap/pkg/api"
@@ -103,9 +104,10 @@ func (c *InmemoryContainer) PluginManager() *plugin.Manager               { retu
 func (c *InmemoryContainer) PluginRepository() repositories.PluginRepository {
 	return inmemory.NewPluginRepository()
 }
-func (c *InmemoryContainer) PluginLoader() *internalplugin.Loader     { return nil }
-func (c *InmemoryContainer) PluginStoreService() *pluginstore.Service { return nil }
-func (c *InmemoryContainer) PluginsDir() string                       { return "plugins" }
+func (c *InmemoryContainer) PluginLoader() *internalplugin.Loader             { return nil }
+func (c *InmemoryContainer) PluginStoreService() *pluginstore.Service         { return nil }
+func (c *InmemoryContainer) PluginsDir() string                               { return "plugins" }
+func (c *InmemoryContainer) PelicanEggImporter() *pelicaneggimporter.Importer { return nil }
 
 func LoadInmemoryContainer() (*InmemoryContainer, error) {
 	c := buildInmemoryTestContainer()
