@@ -52,3 +52,9 @@ properties:
   enabled:
     type: integer
     description: Enable/disable game (1 or 0)
+  metadata:
+    type:
+      - object
+      - "null"
+    description: Game metadata (arbitrary key-value pairs)
+    additionalProperties: true

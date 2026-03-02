@@ -89,3 +89,9 @@ properties:
     type:
       - string
       - "null"
+  metadata:
+    type:
+      - object
+      - "null"
+    description: Game mod metadata (arbitrary key-value pairs)
+    additionalProperties: true

@@ -68,6 +68,7 @@ type updateGameModInput struct {
 	ChmapCmd                *string         `json:"chmap_cmd,omitempty"`
 	SendmsgCmd              *string         `json:"sendmsg_cmd,omitempty"`
 	PasswdCmd               *string         `json:"passwd_cmd,omitempty"`
+	Metadata                domain.Metadata `json:"metadata,omitempty"`
 }
 
 func (g *updateGameModInput) Validate() error {
@@ -166,6 +167,7 @@ func (g *updateGameModInput) Apply(gameMod *domain.GameMod) {
 		varList = append(varList, v.ToDomain())
 	}
 	gameMod.Vars = varList
+	gameMod.Metadata = g.Metadata
 }
 
 type fastRconInput struct {
