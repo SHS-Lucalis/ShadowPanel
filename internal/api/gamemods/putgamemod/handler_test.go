@@ -642,6 +642,103 @@ func TestHandler_MinecraftGameModUpdate(t *testing.T) {
 	assert.Nil(t, gameMod.PasswdCmd)
 }
 
+func TestHandler_GameModUpdateMetadataPersistence(t *testing.T) {
+	repo := inmemory.NewGameModRepository()
+	responder := api.NewResponder()
+	handler := NewHandler(repo, responder)
+
+	originalGameMod := &domain.GameMod{
+		ID:       1,
+		GameCode: "minecraft",
+		Name:     "Default",
+		Metadata: domain.Metadata{
+			"old_key": "old_value",
+		},
+	}
+
+	err := repo.Save(context.Background(), originalGameMod)
+	require.NoError(t, err)
+
+	updateData := map[string]any{
+		"game_code": "minecraft",
+		"name":      "Multicore",
+		"metadata": map[string]any{
+			"docker_image": "itzg/minecraft-server",
+			"version":      "1.20.4",
+		},
+	}
+
+	body, err := json.Marshal(updateData)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPut, "/api/game_mods/1", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = mux.SetURLVars(req, map[string]string{"id": "1"})
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+
+	gameMods, err := repo.FindAll(context.Background(), nil, nil)
+	require.NoError(t, err)
+	require.Len(t, gameMods, 1)
+
+	gameMod := gameMods[0]
+	assert.Equal(t, uint(1), gameMod.ID)
+	assert.Equal(t, "Multicore", gameMod.Name)
+	require.NotNil(t, gameMod.Metadata)
+	assert.Equal(t, "itzg/minecraft-server", gameMod.Metadata["docker_image"])
+	assert.Equal(t, "1.20.4", gameMod.Metadata["version"])
+	_, hasOldKey := gameMod.Metadata["old_key"]
+	assert.False(t, hasOldKey, "old metadata should be replaced, not merged")
+}
+
+func TestHandler_GameModUpdateWithNilMetadata(t *testing.T) {
+	repo := inmemory.NewGameModRepository()
+	responder := api.NewResponder()
+	handler := NewHandler(repo, responder)
+
+	originalGameMod := &domain.GameMod{
+		ID:       1,
+		GameCode: "minecraft",
+		Name:     "Default",
+		Metadata: domain.Metadata{
+			"docker_image": "itzg/minecraft-server",
+		},
+	}
+
+	err := repo.Save(context.Background(), originalGameMod)
+	require.NoError(t, err)
+
+	updateData := map[string]any{
+		"game_code": "minecraft",
+		"name":      "Multicore",
+		"metadata":  nil,
+	}
+
+	body, err := json.Marshal(updateData)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPut, "/api/game_mods/1", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = mux.SetURLVars(req, map[string]string{"id": "1"})
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+
+	gameMods, err := repo.FindAll(context.Background(), nil, nil)
+	require.NoError(t, err)
+	require.Len(t, gameMods, 1)
+
+	gameMod := gameMods[0]
+	assert.Equal(t, uint(1), gameMod.ID)
+	assert.Equal(t, "Multicore", gameMod.Name)
+	assert.Nil(t, gameMod.Metadata, "metadata should be nil when updated with nil")
+}
+
 func TestHandler_GameModChangeGameCode(t *testing.T) {
 	repo := inmemory.NewGameModRepository()
 	responder := api.NewResponder()

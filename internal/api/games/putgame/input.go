@@ -45,17 +45,18 @@ var (
 )
 
 type updateGameInput struct {
-	Name                    string         `json:"name"`                                // required, minlen=2, maxlen=128
-	Engine                  string         `json:"engine"`                              // required, maxlen=128
-	EngineVersion           string         `json:"engine_version,omitempty"`            // maxlen=128
-	SteamAppIDLinux         *flexible.Uint `json:"steam_app_id_linux,omitempty"`        //
-	SteamAppIDWindows       *flexible.Uint `json:"steam_app_id_windows,omitempty"`      //
-	SteamAppSetConfig       *string        `json:"steam_app_set_config,omitempty"`      // maxlen=128
-	RemoteRepositoryLinux   *string        `json:"remote_repository_linux,omitempty"`   // maxlen=128
-	RemoteRepositoryWindows *string        `json:"remote_repository_windows,omitempty"` // maxlen=128
-	LocalRepositoryLinux    *string        `json:"local_repository_linux,omitempty"`    // maxlen=128
-	LocalRepositoryWindows  *string        `json:"local_repository_windows,omitempty"`  // maxlen=128
-	Enabled                 int            `json:"enabled"`                             //
+	Name                    string          `json:"name"`                                // required, minlen=2, maxlen=128
+	Engine                  string          `json:"engine"`                              // required, maxlen=128
+	EngineVersion           string          `json:"engine_version,omitempty"`            // maxlen=128
+	SteamAppIDLinux         *flexible.Uint  `json:"steam_app_id_linux,omitempty"`        //
+	SteamAppIDWindows       *flexible.Uint  `json:"steam_app_id_windows,omitempty"`      //
+	SteamAppSetConfig       *string         `json:"steam_app_set_config,omitempty"`      // maxlen=128
+	RemoteRepositoryLinux   *string         `json:"remote_repository_linux,omitempty"`   // maxlen=128
+	RemoteRepositoryWindows *string         `json:"remote_repository_windows,omitempty"` // maxlen=128
+	LocalRepositoryLinux    *string         `json:"local_repository_linux,omitempty"`    // maxlen=128
+	LocalRepositoryWindows  *string         `json:"local_repository_windows,omitempty"`  // maxlen=128
+	Enabled                 int             `json:"enabled"`                             //
+	Metadata                domain.Metadata `json:"metadata,omitempty"`
 }
 
 func (g *updateGameInput) Validate() error {
@@ -119,4 +120,5 @@ func (g *updateGameInput) Apply(game *domain.Game) {
 	game.LocalRepositoryLinux = g.LocalRepositoryLinux
 	game.LocalRepositoryWindows = g.LocalRepositoryWindows
 	game.Enabled = g.Enabled
+	game.Metadata = g.Metadata
 }
