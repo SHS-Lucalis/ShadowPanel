@@ -142,7 +142,7 @@
         >
           <Loading v-if="loading"></Loading>
           <div :class="loading ? 'hidden' : ''">
-            <div class="grid md:grid-cols-2 gap-4">
+            <div class="grid lg:grid-cols-2 lg:gap-4">
               <n-form-item :label="trans('labels.cpu_limit')">
                 <CpuInput v-model="cpuLimit" />
               </n-form-item>
