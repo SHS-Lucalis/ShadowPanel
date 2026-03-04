@@ -6,7 +6,37 @@
       </GButton>
     </div>
 
-    <GDataTable :columns="columns" :data="items" />
+    <n-table :bordered="false" :single-line="true">
+      <thead>
+        <tr>
+          <th v-for="label in labels" :key="label">{{ label }}</th>
+          <th>{{ trans('main.actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(row, rowIndex) in items" :key="rowIndex">
+          <td v-for="(key, colIndex) in keys" :key="key">
+            <template v-if="inputTypes[colIndex] === 'text'">
+              <n-input-group>
+                <n-input v-model:value="items[rowIndex][key]" />
+                <n-button type="default" ghost @click="openTextareaModal(rowIndex, key, row[key])">
+                  <GIcon name="maximize" />
+                </n-button>
+              </n-input-group>
+            </template>
+            <template v-else-if="inputTypes[colIndex] === 'checkbox'">
+              <n-switch v-model:value="items[rowIndex][key]" />
+            </template>
+          </td>
+          <td>
+            <GButton color="red" size="small" @click="removeItem(rowIndex)">
+              <GIcon name="close" class="mr-0.5" />
+              <span class="hidden lg:inline">{{ trans('main.delete') }}</span>
+            </GButton>
+          </td>
+        </tr>
+      </tbody>
+    </n-table>
 
     <div class="flex justify-center mt-2">
       <GButton color="green" size="small" v-on:click="addItem">
@@ -45,15 +75,16 @@
 
 <script setup>
 import GButton from "../GButton.vue";
-import { GIcon, GDataTable } from '@gameap/ui';
+import { GIcon } from '@gameap/ui';
 import {
   NInput,
   NSwitch,
   NInputGroup,
   NButton,
   NModal,
+  NTable,
 } from "naive-ui"
-import { ref, reactive, computed, defineModel, h } from 'vue';
+import { ref, defineModel } from 'vue';
 import {trans} from "@/i18n/i18n";
 
 const props = defineProps({
@@ -70,12 +101,6 @@ const editingRowIndex = ref(null)
 const editingKey = ref(null)
 const textareaValue = ref('')
 
-const classes = reactive({
-  'text': 'form-control',
-  'checkbox': '',
-});
-
-// Methods
 const removeItem = (index) => {
   items.value.splice(index, 1);
 };
@@ -109,65 +134,4 @@ const closeTextareaModal = () => {
   editingKey.value = null
   textareaValue.value = ''
 }
-
-const columns = computed(() => {
-  let result = [];
-
-  for (let i = 0; i < props.labels.length; i++) {
-    result.push({
-      title: props.labels[i],
-      key: props.keys[i],
-      render(row, index) {
-        switch (props.inputTypes[i]) {
-          case 'text':
-            return h(NInputGroup, {}, {
-              default: () => [
-                h(NInput, {
-                  value: row[props.keys[i]],
-                  onUpdateValue(v) {
-                    items.value[index][props.keys[i]] = v
-                  }
-                }),
-                h(NButton, {
-                  type: 'default',
-                  ghost: true,
-                  onClick: () => openTextareaModal(index, props.keys[i], row[props.keys[i]])
-                }, {
-                  default: () => h(GIcon, { name: 'maximize' })
-                })
-              ]
-            })
-          case 'checkbox':
-            return h(NSwitch, {
-              value: row[props.keys[i]],
-              onUpdateValue(v) {
-                items.value[index][props.keys[i]] = v;
-              }
-            });
-        }
-      }
-    });
-  }
-
-  result.push({
-    title: trans('main.actions'),
-    render(row, index) {
-      return [
-        h(GButton, {
-          color: 'red',
-          size: 'small',
-          text: trans('main.delete'),
-          onClick: () => {
-            removeItem(index)
-          },
-        }, { default: () => [
-          h(GIcon, {name: 'close', class: 'mr-0.5'}),
-          h("span", {class: 'hidden lg:inline'}, trans('main.delete')),
-        ]}),
-      ]
-    },
-  })
-
-  return result;
-});
 </script>
