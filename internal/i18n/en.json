@@ -506,6 +506,8 @@
     "title_server": "Game Server",
     "servers": "Servers",
     "game_servers": "Game Servers",
+    "resource_limits": "Resource Limits",
+    "server_vars": "Server Variables",
     "file_manager": "File Manager",
     "start": "Start",
     "restart": "Restart",

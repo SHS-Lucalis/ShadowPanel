@@ -156,7 +156,7 @@ func newServerResponse(
 		RestartCommand:   server.RestartCommand,
 		ProcessActive:    server.ProcessActive,
 		LastProcessCheck: lastProcessCheck,
-		Vars:             server.Vars,
+		Vars:             server.Vars.StringPtr(),
 		Metadata:         server.Metadata,
 		CreatedAt:        createdAt,
 		UpdatedAt:        updatedAt,

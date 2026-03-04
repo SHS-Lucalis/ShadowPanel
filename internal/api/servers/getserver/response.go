@@ -1,8 +1,6 @@
 package getserver
 
 import (
-	"encoding/json"
-	"maps"
 	"time"
 
 	"github.com/gameap/gameap/internal/domain"
@@ -54,7 +52,7 @@ type adminServerResponse struct {
 	RestartCommand   *string            `json:"restart_command"`
 	ProcessActive    bool               `json:"process_active"`
 	Aliases          map[string]any     `json:"aliases"`
-	Vars             *string            `json:"vars"`
+	Vars             map[string]string  `json:"vars"`
 	Metadata         map[string]any     `json:"metadata"`
 	CreatedAt        *time.Time         `json:"created_at"`
 	UpdatedAt        *time.Time         `json:"updated_at"`
@@ -116,11 +114,8 @@ func buildAliases(s *domain.Server) map[string]any {
 		aliases["rcon_password"] = *s.Rcon
 	}
 
-	if s.Vars != nil && *s.Vars != "" {
-		var varsMap map[string]any
-		if err := json.Unmarshal([]byte(*s.Vars), &varsMap); err == nil {
-			maps.Copy(aliases, varsMap)
-		}
+	for key, value := range s.Vars {
+		aliases[key] = value
 	}
 
 	return aliases

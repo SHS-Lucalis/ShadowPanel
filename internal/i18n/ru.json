@@ -507,6 +507,8 @@
     "title_server": "Игровой сервер",
     "servers": "Серверы",
     "game_servers": "Игровые Серверы",
+    "resource_limits": "Лимиты ресурсов",
+    "server_vars": "Переменные сервера",
     "file_manager": "Файловый менеджер",
     "start": "Запуск",
     "restart": "Перезапуск",

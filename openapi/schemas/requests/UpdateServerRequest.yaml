@@ -77,16 +77,28 @@ properties:
   su_user:
     type: string
     description: System user
+  vars:
+    type: object
+    additionalProperties:
+      type: string
+    description: Server variables as key-value pairs
+    example:
+      maxplayers: "32"
+      hostname: "My Server"
   cpu_limit:
     oneOf:
       - type: integer
       - type: string
-    description: CPU limit percentage
+    description: CPU limit in millicores (1000 = 1 CPU core)
+    minimum: 0
+    example: 2000
   ram_limit:
     oneOf:
       - type: integer
       - type: string
-    description: RAM limit in MB
+    description: RAM limit in bytes
+    minimum: 0
+    example: 4294967296
   net_limit:
     oneOf:
       - type: integer

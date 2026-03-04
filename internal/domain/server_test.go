@@ -333,8 +333,6 @@ func TestServer_Fields(t *testing.T) {
 	stopCmd := "./stop.sh"
 	forceStopCmd := "pkill -9 server"
 	restartCmd := "./restart.sh"
-	vars := testJSONPayload
-
 	server := Server{
 		ID:               42,
 		UUID:             testUUID,
@@ -363,7 +361,7 @@ func TestServer_Fields(t *testing.T) {
 		RestartCommand:   &restartCmd,
 		ProcessActive:    true,
 		LastProcessCheck: &now,
-		Vars:             &vars,
+		Vars:             ServerVars{"key": "value"},
 		CreatedAt:        &now,
 		UpdatedAt:        &now,
 		DeletedAt:        nil,
@@ -396,7 +394,7 @@ func TestServer_Fields(t *testing.T) {
 	assert.Equal(t, &restartCmd, server.RestartCommand)
 	assert.True(t, server.ProcessActive)
 	assert.Equal(t, &now, server.LastProcessCheck)
-	assert.Equal(t, &vars, server.Vars)
+	assert.Equal(t, ServerVars{"key": "value"}, server.Vars)
 	assert.Equal(t, &now, server.CreatedAt)
 	assert.Equal(t, &now, server.UpdatedAt)
 	assert.Nil(t, server.DeletedAt)

@@ -169,6 +169,7 @@ func slugify(s string) string {
 // transformStartupCommand transforms Pelican startup command format to GameAP format.
 // Pelican format: ./server -port {{server.build.default.port}} -name {{SERVER_NAME}}.
 // GameAP format: ./server -port {port} -name {SERVER_NAME}.
+// If command contains shell operators (&&, ;, |, etc.), it wraps command in /bin/sh -c "...".
 func transformStartupCommand(startup string) string {
 	result := startup
 
@@ -183,7 +184,28 @@ func transformStartupCommand(startup string) string {
 	serverEnvPattern := regexp.MustCompile(`\{\{server\.build\.env\.([A-Z_][A-Z0-9_]*)\}\}`)
 	result = serverEnvPattern.ReplaceAllString(result, "{$1}")
 
+	if needsShellWrapper(result) {
+		result = wrapInShell(result)
+	}
+
 	return result
+}
+
+func needsShellWrapper(cmd string) bool {
+	shellOperators := []string{"&&", "||", ";", "|", ">", "<", ">>", "<<", "&", "`", "$("}
+	for _, op := range shellOperators {
+		if strings.Contains(cmd, op) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func wrapInShell(cmd string) string {
+	escaped := strings.ReplaceAll(cmd, `"`, `\"`)
+
+	return `/bin/sh -c "` + escaped + `"`
 }
 
 // transformVariables transforms Pelican egg variables to GameAP GameModVar format.
@@ -212,11 +234,14 @@ func buildVarInfo(v gamesimport.PelicanEggVariable) string {
 
 func buildGameModMetadata(egg *gamesimport.PelicanEgg) domain.Metadata {
 	return domain.Metadata{
-		"docker_image":               egg.FirstDockerImage(),
-		"docker_installation_script": egg.Scripts.Installation.Script,
-		"docker_installation_image":  egg.Scripts.Installation.Container,
-		"docker_startup_done":        egg.Config.Startup.Done,
-		"pelican_egg":                egg.Raw,
+		"docker_image":                   egg.FirstDockerImage(),
+		"docker_installation_script":     egg.Scripts.Installation.Script,
+		"docker_installation_image":      egg.Scripts.Installation.Container,
+		"docker_installation_entrypoint": egg.Scripts.Installation.Entrypoint,
+		"docker_installation_user":       "root",
+		"docker_startup_done":            egg.Config.Startup.Done,
+		"docker_workdir":                 "/home/container",
+		"pelican_egg":                    egg.Raw,
 	}
 }
 
