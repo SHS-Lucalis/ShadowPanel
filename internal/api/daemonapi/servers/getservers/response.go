@@ -33,7 +33,7 @@ type ServerResponse struct {
 	RestartCommand   *string                      `json:"restart_command"`
 	ProcessActive    bool                         `json:"process_active"`
 	LastProcessCheck *string                      `json:"last_process_check"`
-	Vars             *string                      `json:"vars"`
+	Vars             map[string]string            `json:"vars"`
 	Metadata         map[string]any               `json:"metadata"`
 	CreatedAt        *string                      `json:"created_at"`
 	UpdatedAt        *string                      `json:"updated_at"`
@@ -156,7 +156,7 @@ func newServerResponse(
 		RestartCommand:   server.RestartCommand,
 		ProcessActive:    server.ProcessActive,
 		LastProcessCheck: lastProcessCheck,
-		Vars:             server.Vars.StringPtr(),
+		Vars:             server.Vars,
 		Metadata:         server.Metadata,
 		CreatedAt:        createdAt,
 		UpdatedAt:        updatedAt,

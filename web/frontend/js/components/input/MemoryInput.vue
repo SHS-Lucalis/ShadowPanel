@@ -3,7 +3,7 @@
     <n-input-number
       v-model:value="displayValue"
       :min="0"
-      :precision="2"
+      :precision="precision"
       style="flex: 1"
     />
     <n-select
@@ -39,6 +39,23 @@ const unitOptions = [
 const unit = ref('M')
 const displayValue = ref(null)
 const isInternalUpdate = ref(false)
+const isUnitChangeFromLoad = ref(false)
+
+const precision = computed(() => unit.value === 'B' ? 0 : 2)
+
+const smartRound = (value) => {
+  const nearestInt = Math.round(value)
+  if (Math.abs(value - nearestInt) < 0.05) {
+    return nearestInt
+  }
+
+  const nearestHalf = Math.round(value * 2) / 2
+  if (Math.abs(value - nearestHalf) < 0.02) {
+    return nearestHalf
+  }
+
+  return Math.round(value * 100) / 100
+}
 
 const determineUnit = (bytes) => {
   if (bytes === null || bytes === undefined || bytes === 0) {
@@ -93,8 +110,10 @@ watch(() => props.modelValue, (newValue) => {
     return
   }
   const newUnit = determineUnit(newValue)
+  isUnitChangeFromLoad.value = true
   unit.value = newUnit
-  displayValue.value = convertToDisplay(newValue, newUnit)
+  const rawDisplayValue = convertToDisplay(newValue, newUnit)
+  displayValue.value = newUnit === 'B' ? Math.round(rawDisplayValue) : smartRound(rawDisplayValue)
 }, { immediate: true })
 
 watch([displayValue, unit], ([newDisplayValue, newUnit]) => {
@@ -106,10 +125,14 @@ watch([displayValue, unit], ([newDisplayValue, newUnit]) => {
 })
 
 watch(unit, (newUnit, oldUnit) => {
+  if (isUnitChangeFromLoad.value) {
+    isUnitChangeFromLoad.value = false
+    return
+  }
   if (displayValue.value !== null) {
     const bytes = convertToBytes(displayValue.value, oldUnit)
     const newDisplayValue = convertToDisplay(bytes, newUnit)
-    displayValue.value = newUnit === 'B' ? Math.round(newDisplayValue) : Math.ceil(newDisplayValue)
+    displayValue.value = newUnit === 'B' ? Math.round(newDisplayValue) : smartRound(newDisplayValue)
   }
 })
 </script>
