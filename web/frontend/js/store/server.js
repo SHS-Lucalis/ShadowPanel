@@ -43,6 +43,9 @@ export const useServerStore = defineStore('server', () => {
         su_user: '',
         start_command: '',
         aliases: null,
+        cpu_limit: null,
+        ram_limit: null,
+        vars: null,
     })
     const settings = ref([])
     const apiProcesses = ref(0)

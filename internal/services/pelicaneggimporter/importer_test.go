@@ -110,6 +110,10 @@ func TestImporter_Import(t *testing.T) {
 				require.True(t, ok)
 				assert.Equal(t, "82c049db-06e3-416a-8ed3-805cc53105a9", gameModPelicanEgg["uuid"])
 
+				dockerEntrypoint, ok := result.GameMod.Metadata["docker_installation_entrypoint"].(string)
+				require.True(t, ok)
+				assert.Equal(t, "bash", dockerEntrypoint)
+
 				games, err := gameRepo.FindAll(context.Background(), nil, nil)
 				require.NoError(t, err)
 				require.Len(t, games, 1)
@@ -457,6 +461,56 @@ func TestTransformStartupCommand(t *testing.T) {
 			name:     "no_variables",
 			startup:  "./server",
 			expected: "./server",
+		},
+		{
+			name:     "shell_and_operator",
+			startup:  "cd /app && ./server",
+			expected: `/bin/sh -c "cd /app && ./server"`,
+		},
+		{
+			name:     "shell_semicolon",
+			startup:  "echo starting; ./server",
+			expected: `/bin/sh -c "echo starting; ./server"`,
+		},
+		{
+			name:     "shell_pipe",
+			startup:  "cat config.txt | ./server",
+			expected: `/bin/sh -c "cat config.txt | ./server"`,
+		},
+		{
+			name:     "shell_or_operator",
+			startup:  "./server || exit 1",
+			expected: `/bin/sh -c "./server || exit 1"`,
+		},
+		{
+			name:     "shell_redirect_output",
+			startup:  "./server > log.txt",
+			expected: `/bin/sh -c "./server > log.txt"`,
+		},
+		{
+			name:     "shell_redirect_input",
+			startup:  "./server < input.txt",
+			expected: `/bin/sh -c "./server < input.txt"`,
+		},
+		{
+			name:     "shell_subshell",
+			startup:  "./server -dir=$(pwd)",
+			expected: `/bin/sh -c "./server -dir=$(pwd)"`,
+		},
+		{
+			name:     "shell_background",
+			startup:  "./watcher & ./server",
+			expected: `/bin/sh -c "./watcher & ./server"`,
+		},
+		{
+			name:     "shell_with_quotes_escaped",
+			startup:  `echo "hello" && ./server`,
+			expected: `/bin/sh -c "echo \"hello\" && ./server"`,
+		},
+		{
+			name:     "shell_complex_with_variables",
+			startup:  "cd /app && ./server -port {{server.build.default.port}} -name {{SERVER_NAME}}",
+			expected: `/bin/sh -c "cd /app && ./server -port {port} -name {SERVER_NAME}"`,
 		},
 	}
 

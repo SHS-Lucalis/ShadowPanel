@@ -93,14 +93,16 @@ properties:
     type:
       - integer
       - "null"
-    description: CPU limit percentage
-    example: 100
+    description: CPU limit in millicores (1000 = 1 CPU core)
+    minimum: 0
+    example: 2000
   ram_limit:
     type:
       - integer
       - "null"
-    description: RAM limit in MB
-    example: 2048
+    description: RAM limit in bytes
+    minimum: 0
+    example: 4294967296
   net_limit:
     type:
       - integer
@@ -139,9 +141,14 @@ properties:
     description: Last process check timestamp
   vars:
     type:
-      - string
+      - object
       - "null"
-    description: Server variables (JSON)
+    additionalProperties:
+      type: string
+    description: Server variables as key-value pairs
+    example:
+      maxplayers: "32"
+      hostname: "My Server"
   created_at:
     type:
       - string

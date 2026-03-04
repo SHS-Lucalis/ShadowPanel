@@ -129,6 +129,29 @@
           </div>
 
         </n-card>
+
+        <n-card
+            :title="trans('servers.resource_limits')"
+            size="small"
+            class="mb-3"
+            header-class="g-card-header"
+            :segmented="{
+                            content: true,
+                            footer: 'soft'
+                          }"
+        >
+          <Loading v-if="loading"></Loading>
+          <div :class="loading ? 'hidden' : ''">
+            <div class="grid md:grid-cols-2 gap-4">
+              <n-form-item :label="trans('labels.cpu_limit')">
+                <CpuInput v-model="cpuLimit" />
+              </n-form-item>
+              <n-form-item :label="trans('labels.ram_limit')">
+                <MemoryInput v-model="ramLimit" />
+              </n-form-item>
+            </div>
+          </div>
+        </n-card>
       </div>
 
       <div class="md:w-full">
@@ -180,6 +203,30 @@
 
       <div class="md:w-full">
         <n-card
+            :title="trans('servers.server_vars')"
+            size="small"
+            class="mb-3"
+            header-class="g-card-header"
+            :segmented="{
+                            content: true,
+                            footer: 'soft'
+                          }"
+        >
+          <Loading v-if="loading"></Loading>
+          <div :class="loading ? 'hidden' : ''">
+            <InputManyList
+                v-model="vars"
+                class="mb-4"
+                :labels="[trans('labels.key'), trans('labels.the_value')]"
+                :keys="['key', 'value']"
+                :input-types="['text', 'text']"
+            />
+          </div>
+        </n-card>
+      </div>
+
+      <div class="md:w-full">
+        <n-card
             :title="trans('servers.metadata')"
             size="small"
             class="mb-3"
@@ -202,10 +249,12 @@
         </n-card>
       </div>
 
-      <GButton color="green" v-on:click="onClickSave">
-        <GIcon name="save" />
-        <span class="hidden lg:inline">&nbsp;{{ trans('main.save') }}</span>
-      </GButton>
+      <div class="w-full">
+        <GButton color="green" v-on:click="onClickSave">
+          <GIcon name="save" />
+          <span class="hidden lg:inline">&nbsp;{{ trans('main.save') }}</span>
+        </GButton>
+      </div>
     </div>
   </n-form>
 </template>
@@ -217,6 +266,8 @@ import {trans} from "@/i18n/i18n"
 import {NForm, NFormItem, NCard} from "naive-ui"
 import GButton from "@/components/GButton.vue"
 import InputManyList from "@/components/input/InputManyList.vue"
+import MemoryInput from "@/components/input/MemoryInput.vue"
+import CpuInput from "@/components/input/CpuInput.vue"
 import {useRoute, useRouter} from "vue-router"
 import {storeToRefs} from "pinia"
 import { capitalize } from "lodash-es"
@@ -242,6 +293,10 @@ const serverForm = ref({
   user: 'gameap',
   metadata: [],
 })
+
+const cpuLimit = ref(null)
+const ramLimit = ref(null)
+const vars = ref([])
 
 const {games} = storeToRefs(gamesStore)
 const {nodes} = storeToRefs(nodeListStore)
@@ -274,6 +329,11 @@ onMounted(() => {
     serverForm.value.startCommand = server.value.start_command
 
     serverForm.value.metadata = Object.entries(server.value.metadata || {})
+        .map(([key, value]) => ({key, value: String(value)}))
+
+    cpuLimit.value = server.value.cpu_limit
+    ramLimit.value = server.value.ram_limit
+    vars.value = Object.entries(server.value.vars || {})
         .map(([key, value]) => ({key, value: String(value)}))
 
     fetchGames().then(() => {
@@ -410,6 +470,13 @@ const saveServer = () => {
     }
   }
 
+  const varsObj = {}
+  for (const {key, value} of vars.value || []) {
+    if (key) {
+      varsObj[key] = value
+    }
+  }
+
   serverStore.save({
     name: serverForm.value.name,
     game_id: serverForm.value.game,
@@ -426,6 +493,9 @@ const saveServer = () => {
     dir: serverForm.value.dir,
     su_user: serverForm.value.user,
     start_command: serverForm.value.startCommand,
+    cpu_limit: cpuLimit.value,
+    ram_limit: ramLimit.value,
+    vars: varsObj,
     metadata: metadataObj,
   }).
   then(() => {

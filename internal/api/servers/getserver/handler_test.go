@@ -319,7 +319,6 @@ func TestHandler_ServerResponseFields(t *testing.T) {
 	stopCmd := "./stop.sh"
 	forceStopCmd := "./force_stop.sh"
 	restartCmd := "./restart.sh"
-	vars := "{\"key\":\"value\"}"
 	expires := now.Add(30 * 24 * time.Hour)
 	lastCheck := now.Add(-1 * time.Hour)
 
@@ -351,7 +350,7 @@ func TestHandler_ServerResponseFields(t *testing.T) {
 		RestartCommand:   &restartCmd,
 		ProcessActive:    true,
 		LastProcessCheck: &lastCheck,
-		Vars:             &vars,
+		Vars:             domain.ServerVars{"key": "value"},
 		Metadata:         domain.Metadata{"docker_image": "ghcr.io/gameap/cs16:latest", "default_port": float64(27015)},
 		CreatedAt:        &now,
 		UpdatedAt:        &now,
@@ -419,7 +418,7 @@ func TestHandler_ServerResponseFields(t *testing.T) {
 	require.NotNil(t, serverResp.LastProcessCheck)
 	assert.Equal(t, lastCheck.Unix(), serverResp.LastProcessCheck.Unix())
 	require.NotNil(t, serverResp.Vars)
-	assert.Equal(t, "{\"key\":\"value\"}", *serverResp.Vars)
+	assert.Equal(t, map[string]string{"key": "value"}, serverResp.Vars)
 	assert.Equal(t, map[string]any{"docker_image": "ghcr.io/gameap/cs16:latest", "default_port": float64(27015)}, serverResp.Metadata)
 	assert.NotNil(t, serverResp.CreatedAt)
 	assert.NotNil(t, serverResp.UpdatedAt)
