@@ -402,6 +402,7 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 				c.NodeRepository(),
 				c.GameModRepository(),
 				c.DaemonTaskRepository(),
+				c.ServerSettingRepository(),
 				c.Responder(),
 			),
 			AdminOnly: true,

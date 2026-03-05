@@ -353,7 +353,9 @@
     "error": "Error",
     "success": "Success",
     "info": "Info",
-    "never": "Never"
+    "never": "Never",
+    "show": "Show",
+    "hide": "Hide"
   },
   "modules": {
     "modules": "Modules",
@@ -593,7 +595,8 @@
     "select_ip_filter_placeholder": "Choose IP list",
     "select_server": "Select server",
     "server_already_added": "Server already added",
-    "metadata": "Metadata"
+    "metadata": "Metadata",
+    "additional_settings": "Additional Settings"
   },
   "servers_tasks": {
     "tasks_title": "Tasks",

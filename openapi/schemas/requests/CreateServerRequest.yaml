@@ -65,6 +65,11 @@ properties:
       - type: string
     description: Auto-install server after creation
     example: true
+  settings:
+    type: array
+    description: Initial server settings (optional)
+    items:
+      $ref: '../ServerSetting.yaml'
 required:
   - name
   - ds_id
