@@ -4,13 +4,17 @@
             <input type="hidden" name="game_id" v-model="gameModel">
 
             <n-form-item :label="trans('labels.game_id')" :path="gamePath">
-              <n-select
-                  filterable
-                  :disabled="gameSelectDisabled"
-                  v-model:value="gameModel"
-                  :options="gamesOptions"
-                  :render-label="renderGameLabel"
-              />
+              <div class="flex items-center gap-2 w-full">
+                <n-select
+                    class="flex-1"
+                    filterable
+                    :disabled="gameSelectDisabled"
+                    v-model:value="gameModel"
+                    :options="gamesOptions"
+                    :render-label="renderGameLabel"
+                />
+                <slot name="game-actions"></slot>
+              </div>
             </n-form-item>
 
         </div>
@@ -19,12 +23,16 @@
             <input type="hidden" name="game_mod_id" v-model="gameModModel">
 
             <n-form-item :label="trans('labels.game_mod_id')" :path="gameModPath">
-              <n-select
-                  filterable
-                  v-model:value="gameModModel"
-                  :disabled="!gameModel"
-                  :options="gameModOptions"
-              />
+              <div class="flex items-center gap-2 w-full">
+                <n-select
+                    class="flex-1"
+                    filterable
+                    v-model:value="gameModModel"
+                    :disabled="!gameModel"
+                    :options="gameModOptions"
+                />
+                <slot name="mod-actions"></slot>
+              </div>
             </n-form-item>
         </div>
     </div>

@@ -43,7 +43,12 @@ properties:
     description: Files that users cannot access
   startup:
     type: string
-    description: Startup command template
+    description: Startup command template (legacy format)
+  startup_commands:
+    type: object
+    additionalProperties:
+      type: string
+    description: Startup commands map (PLCN_v3 format, key "Default" is used)
   config:
     type: object
     description: Configuration settings
@@ -116,11 +121,14 @@ properties:
           type: boolean
           description: Whether users can edit this variable
         rules:
-          type: string
-          description: Laravel validation rules
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+          description: Laravel validation rules (string in legacy format, array in PLCN_v3)
         field_type:
           type: string
           description: Input field type (text, password, select, etc.)
 required:
   - name
-  - startup

@@ -9,22 +9,33 @@ import (
 // PelicanEgg represents a Pelican/Pterodactyl egg configuration.
 // Eggs define how game servers are installed, configured, and run within the panel.
 type PelicanEgg struct {
-	Meta         PelicanEggMeta       `json:"meta"`
-	UUID         string               `json:"uuid"`
-	Author       string               `json:"author"`
-	Name         string               `json:"name"`
-	Description  string               `json:"description"`
-	Features     []string             `json:"features"`
-	DockerImages map[string]string    `json:"docker_images"`
-	FileDenylist []string             `json:"file_denylist"`
-	Startup      string               `json:"startup"`
-	Config       PelicanEggConfig     `json:"config"`
-	Scripts      PelicanEggScripts    `json:"scripts"`
-	Variables    []PelicanEggVariable `json:"variables"`
+	Meta            PelicanEggMeta       `json:"meta"`
+	UUID            string               `json:"uuid"`
+	Author          string               `json:"author"`
+	Name            string               `json:"name"`
+	Description     string               `json:"description"`
+	Features        []string             `json:"features"`
+	DockerImages    map[string]string    `json:"docker_images"`
+	FileDenylist    []string             `json:"file_denylist"`
+	Startup         string               `json:"startup"`
+	StartupCommands map[string]string    `json:"startup_commands"`
+	Config          PelicanEggConfig     `json:"config"`
+	Scripts         PelicanEggScripts    `json:"scripts"`
+	Variables       []PelicanEggVariable `json:"variables"`
 
 	// Raw contains the original JSON as a map for metadata storage.
 	// This preserves all fields including unknown ones like _comment.
 	Raw map[string]any `json:"-"`
+}
+
+// GetStartupCommand returns the startup command, preferring startup_commands["Default"]
+// (PLCN_v3 format) over the legacy startup field.
+func (e *PelicanEgg) GetStartupCommand() string {
+	if cmd, ok := e.StartupCommands["Default"]; ok && cmd != "" {
+		return cmd
+	}
+
+	return e.Startup
 }
 
 type PelicanEggMeta struct {
@@ -119,14 +130,41 @@ type PelicanEggInstallationScript struct {
 }
 
 type PelicanEggVariable struct {
-	Name         string `json:"name"`
-	Description  string `json:"description"`
-	EnvVariable  string `json:"env_variable"`
-	DefaultValue string `json:"default_value"`
-	UserViewable bool   `json:"user_viewable"`
-	UserEditable bool   `json:"user_editable"`
-	Rules        string `json:"rules"`
-	FieldType    string `json:"field_type"`
+	Name         string        `json:"name"`
+	Description  string        `json:"description"`
+	EnvVariable  string        `json:"env_variable"`
+	DefaultValue string        `json:"default_value"`
+	UserViewable bool          `json:"user_viewable"`
+	UserEditable bool          `json:"user_editable"`
+	Rules        FlexibleRules `json:"rules"`
+	FieldType    string        `json:"field_type"`
+}
+
+// FlexibleRules handles both string and array formats for rules field.
+// Legacy format: "required|string|max:64".
+// PLCN_v3 format: ["required", "string", "max:64"].
+type FlexibleRules []string
+
+func (r *FlexibleRules) UnmarshalJSON(data []byte) error {
+	var str string
+	if err := json.Unmarshal(data, &str); err == nil {
+		if str == "" {
+			*r = []string{}
+		} else {
+			*r = []string{str}
+		}
+
+		return nil
+	}
+
+	var arr []string
+	if err := json.Unmarshal(data, &arr); err != nil {
+		return errors.Wrap(err, "rules must be string or array of strings")
+	}
+
+	*r = arr
+
+	return nil
 }
 
 // ParsePelicanEgg parses JSON data into a PelicanEgg struct.
