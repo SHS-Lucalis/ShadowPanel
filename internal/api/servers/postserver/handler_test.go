@@ -449,12 +449,13 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			nodeRepo := inmemory.NewNodeRepository()
 			gameModRepo := inmemory.NewGameModRepository()
 			daemonTaskRepo := inmemory.NewDaemonTaskRepository()
+			serverSettingsRepo := inmemory.NewServerSettingRepository()
 			responder := api.NewResponder()
 
 			_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
 			_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
 
-			handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, responder)
+			handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, responder)
 
 			body := []byte(tt.requestBody)
 			req := httptest.NewRequest(http.MethodPost, "/api/servers", bytes.NewBuffer(body))
@@ -499,12 +500,13 @@ func TestHandler_ServerPersistence(t *testing.T) {
 	nodeRepo := inmemory.NewNodeRepository()
 	gameModRepo := inmemory.NewGameModRepository()
 	daemonTaskRepo := inmemory.NewDaemonTaskRepository()
+	serverSettingsRepo := inmemory.NewServerSettingRepository()
 	responder := api.NewResponder()
 
 	_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
 	_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
 
-	handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, responder)
+	handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, responder)
 
 	serverData := map[string]any{
 		"install":     true,
@@ -568,6 +570,7 @@ func TestHandler_MultipleServers(t *testing.T) {
 	nodeRepo := inmemory.NewNodeRepository()
 	gameModRepo := inmemory.NewGameModRepository()
 	daemonTaskRepo := inmemory.NewDaemonTaskRepository()
+	serverSettingsRepo := inmemory.NewServerSettingRepository()
 	responder := api.NewResponder()
 
 	_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
@@ -575,7 +578,7 @@ func TestHandler_MultipleServers(t *testing.T) {
 	_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
 	_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 2, GameCode: "valve"})
 
-	handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, responder)
+	handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, responder)
 
 	servers := []map[string]any{
 		{
@@ -620,4 +623,244 @@ func TestHandler_MultipleServers(t *testing.T) {
 
 	assert.Equal(t, "Server 1", allServers[0].Name)
 	assert.Equal(t, "Server 2", allServers[1].Name)
+}
+
+func TestHandler_ServerWithSettings(t *testing.T) {
+	// ARRANGE
+	serverRepo := inmemory.NewServerRepository()
+	nodeRepo := inmemory.NewNodeRepository()
+	gameModRepo := inmemory.NewGameModRepository()
+	daemonTaskRepo := inmemory.NewDaemonTaskRepository()
+	serverSettingsRepo := inmemory.NewServerSettingRepository()
+	responder := api.NewResponder()
+
+	_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
+	_ = gameModRepo.Save(context.Background(), &domain.GameMod{
+		ID:       1,
+		GameCode: "cstrike",
+		Vars: []domain.GameModVar{
+			{Var: "maxplayers"},
+			{Var: "hostname"},
+		},
+	})
+
+	handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, responder)
+
+	serverData := map[string]any{
+		"name":        "Server with settings",
+		"game_id":     "cstrike",
+		"ds_id":       1,
+		"game_mod_id": 1,
+		"server_ip":   "192.168.1.100",
+		"server_port": 27015,
+		"settings": []map[string]any{
+			{"name": "autostart", "value": true},
+			{"name": "maxplayers", "value": "32"},
+			{"name": "hostname", "value": "My Server"},
+		},
+	}
+
+	body, err := json.Marshal(serverData)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/servers", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	// ACT
+	handler.ServeHTTP(w, req)
+
+	// ASSERT
+	require.Equal(t, http.StatusCreated, w.Code)
+
+	var response createServerResponse
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
+
+	servers, err := serverRepo.FindAll(context.Background(), nil, nil)
+	require.NoError(t, err)
+	require.Len(t, servers, 1)
+
+	settings, err := serverSettingsRepo.Find(context.Background(), nil, nil, nil)
+	require.NoError(t, err)
+	require.Len(t, settings, 3)
+
+	settingsMap := make(map[string]domain.ServerSettingValue)
+	for _, s := range settings {
+		settingsMap[s.Name] = s.Value
+	}
+
+	autostartVal, ok := settingsMap["autostart"].Bool()
+	require.True(t, ok)
+	assert.Equal(t, true, autostartVal)
+
+	maxplayersVal, ok := settingsMap["maxplayers"].String()
+	require.True(t, ok)
+	assert.Equal(t, "32", maxplayersVal)
+
+	hostnameVal, ok := settingsMap["hostname"].String()
+	require.True(t, ok)
+	assert.Equal(t, "My Server", hostnameVal)
+}
+
+func TestHandler_ServerWithoutSettings_BackwardCompatibility(t *testing.T) {
+	// ARRANGE
+	serverRepo := inmemory.NewServerRepository()
+	nodeRepo := inmemory.NewNodeRepository()
+	gameModRepo := inmemory.NewGameModRepository()
+	daemonTaskRepo := inmemory.NewDaemonTaskRepository()
+	serverSettingsRepo := inmemory.NewServerSettingRepository()
+	responder := api.NewResponder()
+
+	_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
+	_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
+
+	handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, responder)
+
+	serverData := map[string]any{
+		"name":        "Server without settings",
+		"game_id":     "cstrike",
+		"ds_id":       1,
+		"game_mod_id": 1,
+		"server_ip":   "192.168.1.100",
+		"server_port": 27015,
+	}
+
+	body, err := json.Marshal(serverData)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/servers", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	// ACT
+	handler.ServeHTTP(w, req)
+
+	// ASSERT
+	require.Equal(t, http.StatusCreated, w.Code)
+
+	servers, err := serverRepo.FindAll(context.Background(), nil, nil)
+	require.NoError(t, err)
+	require.Len(t, servers, 1)
+
+	settings, err := serverSettingsRepo.Find(context.Background(), nil, nil, nil)
+	require.NoError(t, err)
+	assert.Empty(t, settings)
+}
+
+func TestHandler_SettingEmptyName_ValidationError(t *testing.T) {
+	// ARRANGE
+	serverRepo := inmemory.NewServerRepository()
+	nodeRepo := inmemory.NewNodeRepository()
+	gameModRepo := inmemory.NewGameModRepository()
+	daemonTaskRepo := inmemory.NewDaemonTaskRepository()
+	serverSettingsRepo := inmemory.NewServerSettingRepository()
+	responder := api.NewResponder()
+
+	_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
+	_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
+
+	handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, responder)
+
+	serverData := map[string]any{
+		"name":        "Server with invalid setting",
+		"game_id":     "cstrike",
+		"ds_id":       1,
+		"game_mod_id": 1,
+		"server_ip":   "192.168.1.100",
+		"server_port": 27015,
+		"settings": []map[string]any{
+			{"name": "", "value": "some value"},
+		},
+	}
+
+	body, err := json.Marshal(serverData)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/servers", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	// ACT
+	handler.ServeHTTP(w, req)
+
+	// ASSERT
+	assert.Equal(t, http.StatusUnprocessableEntity, w.Code)
+
+	var response map[string]any
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
+	assert.Equal(t, "error", response["status"])
+	assert.Contains(t, response["error"], "setting name is required")
+}
+
+func TestHandler_DisallowedSettings_Ignored(t *testing.T) {
+	// ARRANGE
+	serverRepo := inmemory.NewServerRepository()
+	nodeRepo := inmemory.NewNodeRepository()
+	gameModRepo := inmemory.NewGameModRepository()
+	daemonTaskRepo := inmemory.NewDaemonTaskRepository()
+	serverSettingsRepo := inmemory.NewServerSettingRepository()
+	responder := api.NewResponder()
+
+	_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
+	_ = gameModRepo.Save(context.Background(), &domain.GameMod{
+		ID:       1,
+		GameCode: "cstrike",
+		Vars: []domain.GameModVar{
+			{Var: "maxplayers"},
+		},
+	})
+
+	handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, responder)
+
+	serverData := map[string]any{
+		"name":        "Server with disallowed settings",
+		"game_id":     "cstrike",
+		"ds_id":       1,
+		"game_mod_id": 1,
+		"server_ip":   "192.168.1.100",
+		"server_port": 27015,
+		"settings": []map[string]any{
+			{"name": "autostart", "value": true},
+			{"name": "maxplayers", "value": "32"},
+			{"name": "unknown_setting", "value": "ignored"},
+			{"name": "another_unknown", "value": "also_ignored"},
+		},
+	}
+
+	body, err := json.Marshal(serverData)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/servers", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	// ACT
+	handler.ServeHTTP(w, req)
+
+	// ASSERT
+	require.Equal(t, http.StatusCreated, w.Code)
+
+	servers, err := serverRepo.FindAll(context.Background(), nil, nil)
+	require.NoError(t, err)
+	require.Len(t, servers, 1)
+
+	settings, err := serverSettingsRepo.Find(context.Background(), nil, nil, nil)
+	require.NoError(t, err)
+	require.Len(t, settings, 2)
+
+	settingsMap := make(map[string]domain.ServerSettingValue)
+	for _, s := range settings {
+		settingsMap[s.Name] = s.Value
+	}
+
+	autostartVal, ok := settingsMap["autostart"].Bool()
+	require.True(t, ok)
+	assert.Equal(t, true, autostartVal)
+
+	maxplayersVal, ok := settingsMap["maxplayers"].String()
+	require.True(t, ok)
+	assert.Equal(t, "32", maxplayersVal)
+
+	_, hasUnknown := settingsMap["unknown_setting"]
+	assert.False(t, hasUnknown, "unknown_setting should not be saved")
 }

@@ -39,42 +39,6 @@
               v-model:game="serverForm.game"
               v-model:game-mod="serverForm.gameMod"
           ></GameModSelector>
-
-          <n-form-item :label="trans('servers.install')" path="install">
-            <GSwitch v-model:value="serverForm.install" />
-          </n-form-item>
-
-          <n-collapse>
-            <n-collapse-item :title="trans('main.more')">
-
-              <n-form-item :label="trans('labels.rcon')" path="rcon">
-                <n-input
-                    v-model:value="serverForm.rcon"
-                    type="password"
-                    show-password-on="click"
-                />
-              </n-form-item>
-
-              <n-form-item :label="trans('labels.dir')" class="mb-4" path="dir">
-                <n-input
-                    v-model:value="serverForm.dir"
-                    type="text"
-                >
-                </n-input>
-                <template #feedback>
-                  <small v-html="trans('servers.d_dir')"></small>
-                </template>
-              </n-form-item>
-
-              <n-form-item :label="trans('labels.su_user')" path="user">
-                <n-input
-                    v-model:value="serverForm.user"
-                    type="text"
-                />
-              </n-form-item>
-
-            </n-collapse-item>
-          </n-collapse>
         </n-card>
       </div>
 
@@ -108,6 +72,72 @@
         </n-card>
       </div>
 
+      <div class="md:w-full">
+        <n-card
+            :title="trans('servers.additional_settings')"
+            size="small"
+            class="mb-3"
+            header-class="g-card-header"
+            :segmented="{
+                            content: true,
+                            footer: 'soft'
+                          }"
+        >
+          <template #header-extra>
+            <n-button text @click="showAdditionSettings = !showAdditionSettings">
+              {{ showAdditionSettings ? trans('main.hide') : trans('main.show') }}
+            </n-button>
+          </template>
+
+          <n-collapse-transition :show="showAdditionSettings">
+            <n-form-item :label="trans('servers.install')" path="install">
+              <GSwitch v-model:value="serverForm.install" />
+            </n-form-item>
+
+            <n-form-item :label="trans('labels.rcon')" path="rcon">
+              <n-input
+                  v-model:value="serverForm.rcon"
+                  type="password"
+                  show-password-on="click"
+              />
+            </n-form-item>
+
+            <n-form-item :label="trans('labels.dir')" class="mb-4" path="dir">
+              <n-input
+                  v-model:value="serverForm.dir"
+                  type="text"
+              >
+              </n-input>
+              <template #feedback>
+                <small v-html="trans('servers.d_dir')"></small>
+              </template>
+            </n-form-item>
+
+            <n-form-item :label="trans('labels.su_user')" path="user">
+              <n-input
+                  v-model:value="serverForm.user"
+                  type="text"
+              />
+            </n-form-item>
+
+            <div v-if="gameModSettings.length > 0">
+              <n-divider>{{ trans('games.vars') }}</n-divider>
+              <div v-for="varDef in gameModSettings" :key="varDef.var" class="mb-3">
+                <n-form-item :label="varDef.info">
+                  <n-input
+                      v-model:value="serverForm.settings[varDef.var]"
+                      :placeholder="varDef.default || ''"
+                  />
+                  <template #feedback v-if="varDef.info">
+                    <small>{{ varDef.info }}</small>
+                  </template>
+                </n-form-item>
+              </div>
+            </div>
+          </n-collapse-transition>
+        </n-card>
+      </div>
+
       <GButton color="green" v-on:click="onClickCreate">
         <GIcon name="add-square" />
         <span class="hidden lg:inline">&nbsp;{{ trans('main.create') }}</span>
@@ -125,20 +155,26 @@ import {useNodeListStore} from "@/store/nodeList"
 import {useServerListStore} from "@/store/serverList"
 import {storeToRefs} from "pinia"
 import {errorNotification, notification} from "@/parts/dialogs"
-import {NForm, NFormItem, NInputGroup} from "naive-ui"
+import {NForm, NFormItem, NInputGroup, NDivider} from "naive-ui"
 import {generateServerName} from "@/parts/nameGenerator"
 import GButton from "@/components/GButton.vue"
 import {useRouter} from "vue-router";
 import {requiredValidator} from "@/parts/validators";
+import {useGameModStore} from "@/store/gameMod"
+import DsIpSelector from "@/components/servers/DsIpSelector.vue";
+import SmartPortSelector from "@/components/servers/SmartPortSelector.vue";
+import GameModSelector from "@/components/servers/GameModSelector.vue";
 
 const router = useRouter()
 
 const gamesStore = useGameListStore()
 const nodeListStore = useNodeListStore()
 const serverListStore = useServerListStore()
+const gameModStore = useGameModStore()
 
 const {games} = storeToRefs(gamesStore)
 const {nodes} = storeToRefs(nodeListStore)
+const {mod: gameMod} = storeToRefs(gameModStore)
 
 const formRef = ref({})
 const serverForm = ref({
@@ -147,7 +183,9 @@ const serverForm = ref({
   rconPort: 27015,
   install: true,
   user: 'gameap',
+  settings: {},
 })
+const showAdditionSettings = ref(false)
 
 const breadcrumbs = computed(() => {
   return [
@@ -230,6 +268,19 @@ watch(() => serverForm.value.name, (newName) => {
   }
 })
 
+watch(() => serverForm.value.gameMod, async (newModId) => {
+  serverForm.value.settings = {}
+  if (newModId) {
+    gameModStore.setModId(newModId)
+    await gameModStore.fetchMod()
+  }
+})
+
+const gameModSettings = computed(() => {
+  if (!gameMod.value?.vars) return []
+  return gameMod.value.vars
+})
+
 const generateRandomName = () => {
   const gameName = gamesCodeName.value[serverForm.value.game] || 'Server'
   serverForm.value.name = generateServerName(gameName)
@@ -288,6 +339,10 @@ const onClickCreate = () => {
 }
 
 const createServer = () => {
+  const settings = Object.entries(serverForm.value.settings || {})
+    .filter(([_, value]) => value && value.trim() !== '')
+    .map(([name, value]) => ({name, value}))
+
   serverListStore.create({
     name: serverForm.value.name,
     game_id: serverForm.value.game,
@@ -301,6 +356,7 @@ const createServer = () => {
     query_port: serverForm.value.queryPort,
     rcon_port: serverForm.value.rconPort,
     dir: serverForm.value.dir,
+    settings: settings.length > 0 ? settings : undefined,
   }).
   then(() => {
     notification({

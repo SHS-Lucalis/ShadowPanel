@@ -354,7 +354,9 @@
     "error": "Ошибка",
     "success": "Успешно",
     "info": "Информация",
-    "never": "Никогда"
+    "never": "Никогда",
+    "show": "Показать",
+    "hide": "Скрыть"
   },
   "modules": {
     "modules": "Модули",
@@ -594,7 +596,8 @@
     "select_ip_filter_placeholder": "Выберите список IP",
     "select_server": "Выберите сервер",
     "server_already_added": "Сервер уже добавлен",
-    "metadata": "Метаданные"
+    "metadata": "Метаданные",
+    "additional_settings": "Дополнительные настройки"
   },
   "servers_tasks": {
     "tasks_title": "Задания",
