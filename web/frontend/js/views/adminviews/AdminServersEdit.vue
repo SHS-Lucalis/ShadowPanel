@@ -142,7 +142,7 @@
         >
           <Loading v-if="loading"></Loading>
           <div :class="loading ? 'hidden' : ''">
-            <div class="grid lg:grid-cols-2 lg:gap-4">
+            <div class="grid">
               <n-form-item :label="trans('labels.cpu_limit')">
                 <CpuInput v-model="cpuLimit" />
               </n-form-item>
@@ -276,6 +276,9 @@ import {useServerStore} from "@/store/server"
 import {useGameListStore} from "@/store/gameList"
 import {useNodeListStore} from "@/store/nodeList"
 import {requiredValidator} from "@/parts/validators";
+import SmartPortSelector from "@/components/servers/SmartPortSelector.vue";
+import DsIpSelector from "@/components/servers/DsIpSelector.vue";
+import GameModSelector from "@/components/servers/GameModSelector.vue";
 
 const route = useRoute()
 const router = useRouter()
