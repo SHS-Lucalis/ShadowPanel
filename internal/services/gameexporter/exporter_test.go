@@ -184,8 +184,6 @@ func TestExporter_Export(t *testing.T) {
 
 				require.NotNil(t, export.Game.Metadata)
 				assert.Equal(t, "keep_me", export.Game.Metadata["custom_key"])
-				assert.Nil(t, export.Game.Metadata["pelican_egg"])
-				assert.Nil(t, export.Game.Metadata["gameap_import"])
 
 				require.Len(t, export.Mods, 1)
 				assert.Nil(t, export.Mods[0].Metadata)

@@ -2,7 +2,6 @@ package gamesimport
 
 import (
 	"regexp"
-	"slices"
 	"time"
 
 	"github.com/gameap/gameap/internal/domain"
@@ -316,11 +315,6 @@ func NewGameExportFromDomain(game *domain.Game, mods []domain.GameMod, version s
 		exportedBy = "GameAP " + version
 	}
 
-	metadata := game.Metadata
-	if metadata != nil {
-		metadata = filterExportMetadata(metadata)
-	}
-
 	return &GameExport{
 		SchemaVersion: CurrentSchemaVersion,
 		ExportedAt:    exportedAt,
@@ -337,7 +331,7 @@ func NewGameExportFromDomain(game *domain.Game, mods []domain.GameMod, version s
 			RemoteRepositoryWindows: game.RemoteRepositoryWindows,
 			LocalRepositoryLinux:    game.LocalRepositoryLinux,
 			LocalRepositoryWindows:  game.LocalRepositoryWindows,
-			Metadata:                metadata,
+			Metadata:                game.Metadata,
 		},
 		Mods: exportMods,
 	}
@@ -362,11 +356,6 @@ func newGameExportModFromDomain(mod *domain.GameMod) GameExportMod {
 		})
 	}
 
-	metadata := mod.Metadata
-	if metadata != nil {
-		metadata = filterExportMetadata(metadata)
-	}
-
 	return GameExportMod{
 		Name:                    mod.Name,
 		FastRcon:                lo.Ternary(len(fastRcon) > 0, fastRcon, nil),
@@ -384,26 +373,6 @@ func newGameExportModFromDomain(mod *domain.GameMod) GameExportMod {
 		ChmapCmd:                mod.ChmapCmd,
 		SendmsgCmd:              mod.SendmsgCmd,
 		PasswdCmd:               mod.PasswdCmd,
-		Metadata:                metadata,
+		Metadata:                mod.Metadata,
 	}
-}
-
-func filterExportMetadata(metadata domain.Metadata) domain.Metadata {
-	keysToExclude := []string{
-		"gameap_import",
-		"pelican_egg",
-	}
-
-	result := make(domain.Metadata)
-	for k, v := range metadata {
-		if !slices.Contains(keysToExclude, k) {
-			result[k] = v
-		}
-	}
-
-	if len(result) == 0 {
-		return nil
-	}
-
-	return result
 }

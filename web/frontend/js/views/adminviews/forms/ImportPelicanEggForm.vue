@@ -11,7 +11,7 @@
     >
       <n-form-item :label="trans('games.pelican_egg_file')">
         <n-upload
-            accept=".json"
+            accept=".json,.yaml,.yml"
             :max="1"
             :default-upload="false"
             @change="onFileChange"
@@ -40,6 +40,9 @@
             <p v-if="eggPreview.description" class="text-sm text-gray-600 dark:text-gray-400 mt-1">
               {{ eggPreview.description }}
             </p>
+            <p class="text-xs text-gray-500 dark:text-gray-500 mt-2">
+              {{ trans('games.format') }}: {{ fileFormat.toUpperCase() }}
+            </p>
           </div>
         </div>
       </div>
@@ -62,6 +65,7 @@ import { GIcon } from "@gameap/ui"
 import { ref } from "vue"
 import { trans } from "@/i18n/i18n"
 import GButton from "@/components/GButton.vue"
+import yaml from "js-yaml"
 import {
   NForm,
   NFormItem,
@@ -72,15 +76,32 @@ import {
 const formRef = ref({})
 const errorMessage = ref('')
 const eggPreview = ref(null)
-const eggJson = ref(null)
+const eggContent = ref(null)
+const fileFormat = ref('')
 const importing = ref(false)
 
 const emits = defineEmits(['import'])
 
+const detectFormat = (content) => {
+  const trimmed = content.trim()
+  if (trimmed.startsWith('{')) {
+    return 'json'
+  }
+  return 'yaml'
+}
+
+const parseEggContent = (content, format) => {
+  if (format === 'json') {
+    return JSON.parse(content)
+  }
+  return yaml.load(content)
+}
+
 const onFileChange = ({ file }) => {
   errorMessage.value = ''
   eggPreview.value = null
-  eggJson.value = null
+  eggContent.value = null
+  fileFormat.value = ''
 
   if (!file || file.status === 'removed') {
     return
@@ -90,15 +111,18 @@ const onFileChange = ({ file }) => {
     return
   }
 
-  if (!file.name.endsWith('.json')) {
-    errorMessage.value = trans('games.invalid_file_type_json')
+  const fileName = file.name.toLowerCase()
+  if (!fileName.endsWith('.json') && !fileName.endsWith('.yaml') && !fileName.endsWith('.yml')) {
+    errorMessage.value = trans('games.invalid_file_type_json_yaml')
     return
   }
 
   const reader = new FileReader()
   reader.onload = (e) => {
     try {
-      const parsed = JSON.parse(e.target.result)
+      const content = e.target.result
+      const format = detectFormat(content)
+      const parsed = parseEggContent(content, format)
 
       if (!parsed.name) {
         errorMessage.value = trans('games.pelican_egg_missing_name')
@@ -116,9 +140,10 @@ const onFileChange = ({ file }) => {
         description: parsed.description || '',
         image: parsed.images?.icon?.url || parsed.image || '',
       }
-      eggJson.value = parsed
+      eggContent.value = content
+      fileFormat.value = format
     } catch {
-      errorMessage.value = trans('games.invalid_json_format')
+      errorMessage.value = trans('games.invalid_egg_format')
     }
   }
   reader.onerror = () => {
@@ -128,18 +153,19 @@ const onFileChange = ({ file }) => {
 }
 
 const onClickImport = () => {
-  if (!eggJson.value) {
+  if (!eggContent.value) {
     return
   }
 
   importing.value = true
-  emits('import', eggJson.value)
+  emits('import', { content: eggContent.value, format: fileFormat.value })
 }
 
 const resetForm = () => {
   errorMessage.value = ''
   eggPreview.value = null
-  eggJson.value = null
+  eggContent.value = null
+  fileFormat.value = ''
   importing.value = false
 }
 

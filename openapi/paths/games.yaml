@@ -100,10 +100,17 @@
     description: |
       Imports a Pelican/Pterodactyl egg configuration file and creates a Game and GameMod entry.
 
-      The egg JSON should be sent as the request body. The importer will:
+      The egg file (JSON or YAML) should be sent as the request body. The format is auto-detected
+      based on content: JSON starts with `{`, otherwise YAML is assumed.
+
+      The importer will:
       - Create a new Game with a generated code based on the egg name
       - Create a "Default" GameMod with startup command and variables
       - Store full Pelican egg data in metadata for future compatibility
+
+      **Supported formats**:
+      - JSON: Legacy Pterodactyl format (PTDL_v2) and Pelican format (PLCN_v3)
+      - YAML: Pelican PLCN_v3 format
 
       **Note**: Installation scripts and Docker configuration from the egg are stored in metadata
       but not currently executed by GameAP Daemon.
@@ -114,6 +121,14 @@
         application/json:
           schema:
             $ref: '../schemas/requests/ImportPelicanEggRequest.yaml'
+        application/x-yaml:
+          schema:
+            type: string
+            format: binary
+        text/yaml:
+          schema:
+            type: string
+            format: binary
     responses:
       '200':
         description: Egg imported successfully
@@ -329,8 +344,6 @@
       - exported_by: GameAP version
       - game: game configuration
       - mods: all mods for the game
-
-      **Note**: Internal metadata fields (pelican_egg, gameap_import) are excluded from export.
     operationId: exportGame
     parameters:
       - $ref: '../parameters/PathGameCode.yaml'
