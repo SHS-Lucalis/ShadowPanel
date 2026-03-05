@@ -170,7 +170,20 @@
     "pelican_egg_missing_name": "Неверный egg: отсутствует поле 'name'",
     "pelican_egg_missing_startup": "Неверный egg: отсутствует поле 'startup'",
     "invalid_json_format": "Неверный формат JSON",
-    "file_read_error": "Ошибка чтения файла"
+    "file_read_error": "Ошибка чтения файла",
+    "import_gameap": "Импорт GameAP YAML",
+    "import_gameap_description": "Загрузите YAML файл конфигурации GameAP для создания или обновления игры и её модов.",
+    "gameap_yaml_file": "YAML файл GameAP",
+    "import_gameap_success_msg": "Успешно импортировано :game_name (:game_code) с :mods_imported модами",
+    "invalid_file_type_yaml": "Пожалуйста, выберите YAML файл",
+    "invalid_yaml_format": "Неверный формат YAML",
+    "gameap_yaml_missing_schema_version": "Неверный GameAP YAML: отсутствует поле 'schema_version'",
+    "gameap_yaml_unsupported_schema_version": "Неподдерживаемая версия схемы. Поддерживается только версия 1.0",
+    "gameap_yaml_missing_game_code": "Неверный GameAP YAML: отсутствует поле 'game.code'",
+    "gameap_yaml_missing_game_name": "Неверный GameAP YAML: отсутствует поле 'game.name'",
+    "gameap_yaml_missing_game_engine": "Неверный GameAP YAML: отсутствует поле 'game.engine'",
+    "export": "Экспорт",
+    "export_success_msg": "Игра успешно экспортирована"
   },
   "gdaemon_tasks": {
     "title_list": "Список GDaemon заданий",

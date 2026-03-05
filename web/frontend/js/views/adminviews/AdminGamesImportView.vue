@@ -3,9 +3,13 @@
 
   <div class="w-full">
     <n-tabs v-model:value="activeTab" type="line" animated>
+      <n-tab-pane name="gameap">
+        <template #tab>GameAP</template>
+        <ImportGameAPForm ref="gameapFormRef" @import="onImportGameAP" />
+      </n-tab-pane>
       <n-tab-pane name="pelican">
         <template #tab>Pelican/Pterodactyl</template>
-        <ImportPelicanEggForm @import="onImportPelicanEgg" />
+        <ImportPelicanEggForm ref="pelicanFormRef" @import="onImportPelicanEgg" />
       </n-tab-pane>
     </n-tabs>
   </div>
@@ -20,11 +24,14 @@ import { useRouter } from "vue-router"
 import { useGameListStore } from "@/store/gameList"
 import { errorNotification, notification } from "@/parts/dialogs"
 import ImportPelicanEggForm from "./forms/ImportPelicanEggForm.vue"
+import ImportGameAPForm from "./forms/ImportGameAPForm.vue"
 
 const router = useRouter()
 const gamesStore = useGameListStore()
 
-const activeTab = ref('pelican')
+const activeTab = ref('gameap')
+const pelicanFormRef = ref(null)
+const gameapFormRef = ref(null)
 
 const breadcrumbs = computed(() => {
   return [
@@ -33,6 +40,27 @@ const breadcrumbs = computed(() => {
     { route: { name: 'admin.games.import' }, text: trans('games.title_import') },
   ]
 })
+
+const onImportGameAP = (yamlContent) => {
+  gamesStore.importGameAP(yamlContent).then((response) => {
+    const msg = trans('games.import_gameap_success_msg')
+        .replace(':game_name', response.game_name)
+        .replace(':game_code', response.game_code)
+        .replace(':mods_imported', response.mods_imported)
+
+    notification({
+      content: msg,
+      type: "success",
+    })
+
+    router.push({ name: 'admin.games.index' })
+  }).catch((error) => {
+    if (gameapFormRef.value) {
+      gameapFormRef.value.setImporting(false)
+    }
+    errorNotification(error)
+  })
+}
 
 const onImportPelicanEgg = (eggJson) => {
   gamesStore.importPelicanEgg(eggJson).then((response) => {
@@ -47,6 +75,9 @@ const onImportPelicanEgg = (eggJson) => {
 
     router.push({ name: 'admin.games.index' })
   }).catch((error) => {
+    if (pelicanFormRef.value) {
+      pelicanFormRef.value.setImporting(false)
+    }
     errorNotification(error)
   })
 }

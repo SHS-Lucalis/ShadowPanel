@@ -1,0 +1,161 @@
+<template>
+  <div>
+    <p class="mb-4 text-gray-600 dark:text-gray-400">
+      {{ trans('games.import_gameap_description') }}
+    </p>
+
+    <n-form
+        label-placement="top"
+        label-width="auto"
+        ref="formRef"
+    >
+      <n-form-item :label="trans('games.gameap_yaml_file')">
+        <n-upload
+            accept=".yaml,.yml"
+            :max="1"
+            :default-upload="false"
+            @change="onFileChange"
+        >
+          <n-button>{{ trans('main.upload_file') }}</n-button>
+        </n-upload>
+      </n-form-item>
+
+      <div v-if="errorMessage" class="mb-4 p-3 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded">
+        {{ errorMessage }}
+      </div>
+
+      <div v-if="yamlPreview" class="mb-4 p-4 bg-gray-100 dark:bg-gray-800 rounded">
+        <div>
+          <h4 class="font-semibold mb-2">{{ yamlPreview.gameName }}</h4>
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            {{ trans('labels.code') }}: {{ yamlPreview.gameCode }}
+          </p>
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            {{ trans('labels.engine') }}: {{ yamlPreview.engine }}
+          </p>
+          <p v-if="yamlPreview.modsCount > 0" class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            {{ trans('games.mods') }}: {{ yamlPreview.modsCount }}
+          </p>
+        </div>
+      </div>
+    </n-form>
+
+    <GButton
+        color="blue"
+        :disabled="!yamlContent || importing"
+        :loading="importing"
+        v-on:click="onClickImport"
+    >
+      <GIcon name="download" />
+      <span>&nbsp;{{ trans('games.import') }}</span>
+    </GButton>
+  </div>
+</template>
+
+<script setup>
+import { GIcon } from "@gameap/ui"
+import { ref } from "vue"
+import { trans } from "@/i18n/i18n"
+import GButton from "@/components/GButton.vue"
+import {
+  NForm,
+  NFormItem,
+  NUpload,
+  NButton,
+} from "naive-ui"
+import jsyaml from "js-yaml"
+
+const formRef = ref({})
+const errorMessage = ref('')
+const yamlPreview = ref(null)
+const yamlContent = ref(null)
+const importing = ref(false)
+
+const emits = defineEmits(['import'])
+
+const onFileChange = ({ file }) => {
+  errorMessage.value = ''
+  yamlPreview.value = null
+  yamlContent.value = null
+
+  if (!file || file.status === 'removed') {
+    return
+  }
+
+  if (!file.file) {
+    return
+  }
+
+  if (!file.name.endsWith('.yaml') && !file.name.endsWith('.yml')) {
+    errorMessage.value = trans('games.invalid_file_type_yaml')
+    return
+  }
+
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    try {
+      const parsed = jsyaml.load(e.target.result)
+
+      if (!parsed.schema_version) {
+        errorMessage.value = trans('games.gameap_yaml_missing_schema_version')
+        return
+      }
+
+      if (parsed.schema_version !== '1.0') {
+        errorMessage.value = trans('games.gameap_yaml_unsupported_schema_version')
+        return
+      }
+
+      if (!parsed.game || !parsed.game.code) {
+        errorMessage.value = trans('games.gameap_yaml_missing_game_code')
+        return
+      }
+
+      if (!parsed.game.name) {
+        errorMessage.value = trans('games.gameap_yaml_missing_game_name')
+        return
+      }
+
+      if (!parsed.game.engine) {
+        errorMessage.value = trans('games.gameap_yaml_missing_game_engine')
+        return
+      }
+
+      yamlPreview.value = {
+        gameName: parsed.game.name,
+        gameCode: parsed.game.code,
+        engine: parsed.game.engine,
+        modsCount: parsed.mods ? parsed.mods.length : 0,
+      }
+      yamlContent.value = e.target.result
+    } catch {
+      errorMessage.value = trans('games.invalid_yaml_format')
+    }
+  }
+  reader.onerror = () => {
+    errorMessage.value = trans('games.file_read_error')
+  }
+  reader.readAsText(file.file)
+}
+
+const onClickImport = () => {
+  if (!yamlContent.value) {
+    return
+  }
+
+  importing.value = true
+  emits('import', yamlContent.value)
+}
+
+const resetForm = () => {
+  errorMessage.value = ''
+  yamlPreview.value = null
+  yamlContent.value = null
+  importing.value = false
+}
+
+defineExpose({
+  resetForm,
+  setImporting: (value) => { importing.value = value },
+})
+</script>

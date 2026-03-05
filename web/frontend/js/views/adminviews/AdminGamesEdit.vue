@@ -5,6 +5,10 @@
     <GIcon name="cat" />&nbsp;{{ trans('games.add_mod') }}
   </GButton>
 
+  <GButton class="mr-1" color="green" v-on:click="onClickExport()">
+    <GIcon name="export" />&nbsp;{{ trans('games.export') }}
+  </GButton>
+
   <UpdateGameForm :loading="loading" v-model="gameUpdateModel" v-on:update="onClickUpdate">
     <template #mods>
       <n-card
@@ -224,6 +228,17 @@ const onClickUpdate = () => {
       type: "success",
     }, () => {
       router.push({name: 'admin.games.index'})
+    })
+  }).catch((error) => {
+    errorNotification(error)
+  })
+}
+
+const onClickExport = () => {
+  gameListStore.exportGame(gameCode.value).then(() => {
+    notification({
+      content: trans('games.export_success_msg'),
+      type: "success",
     })
   }).catch((error) => {
     errorNotification(error)
