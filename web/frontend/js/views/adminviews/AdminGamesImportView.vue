@@ -1,7 +1,7 @@
 <template>
   <GBreadcrumbs :items="breadcrumbs" />
 
-  <div class="max-w-2xl">
+  <div class="w-full">
     <n-tabs v-model:value="activeTab" type="line" animated>
       <n-tab-pane name="pelican">
         <template #tab>Pelican/Pterodactyl</template>
@@ -14,11 +14,11 @@
 <script setup>
 import { GBreadcrumbs } from "@gameap/ui"
 import { computed, ref } from "vue"
-import { trans } from "../../i18n/i18n"
+import { trans } from "@/i18n/i18n"
 import { NTabs, NTabPane } from "naive-ui"
 import { useRouter } from "vue-router"
-import { useGameListStore } from "../../store/gameList"
-import { errorNotification, notification } from "../../parts/dialogs"
+import { useGameListStore } from "@/store/gameList"
+import { errorNotification, notification } from "@/parts/dialogs"
 import ImportPelicanEggForm from "./forms/ImportPelicanEggForm.vue"
 
 const router = useRouter()

@@ -25,13 +25,23 @@
       </div>
 
       <div v-if="eggPreview" class="mb-4 p-4 bg-gray-100 dark:bg-gray-800 rounded">
-        <h4 class="font-semibold mb-2">{{ eggPreview.name }}</h4>
-        <p v-if="eggPreview.author" class="text-sm text-gray-600 dark:text-gray-400">
-          {{ trans('games.author') }}: {{ eggPreview.author }}
-        </p>
-        <p v-if="eggPreview.description" class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-          {{ eggPreview.description }}
-        </p>
+        <div class="flex gap-4">
+          <img
+              v-if="eggPreview.image"
+              :src="eggPreview.image"
+              :alt="eggPreview.name"
+              class="w-16 h-16 object-contain rounded"
+          />
+          <div>
+            <h4 class="font-semibold mb-2">{{ eggPreview.name }}</h4>
+            <p v-if="eggPreview.author" class="text-sm text-gray-600 dark:text-gray-400">
+              {{ trans('games.author') }}: {{ eggPreview.author }}
+            </p>
+            <p v-if="eggPreview.description" class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              {{ eggPreview.description }}
+            </p>
+          </div>
+        </div>
       </div>
     </n-form>
 
@@ -95,7 +105,7 @@ const onFileChange = ({ file }) => {
         return
       }
 
-      if (!parsed.startup) {
+      if (!parsed.startup && !parsed.startup_commands?.Default) {
         errorMessage.value = trans('games.pelican_egg_missing_startup')
         return
       }
@@ -104,6 +114,7 @@ const onFileChange = ({ file }) => {
         name: parsed.name,
         author: parsed.author || '',
         description: parsed.description || '',
+        image: parsed.images?.icon?.url || parsed.image || '',
       }
       eggJson.value = parsed
     } catch {
