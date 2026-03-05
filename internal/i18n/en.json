@@ -171,7 +171,20 @@
     "pelican_egg_missing_name": "Invalid egg: missing 'name' field",
     "pelican_egg_missing_startup": "Invalid egg: missing 'startup' field",
     "invalid_json_format": "Invalid JSON format",
-    "file_read_error": "Error reading file"
+    "file_read_error": "Error reading file",
+    "import_gameap": "Import GameAP YAML",
+    "import_gameap_description": "Upload a GameAP YAML configuration file to create or update a game and its mods.",
+    "gameap_yaml_file": "GameAP YAML File",
+    "import_gameap_success_msg": "Successfully imported :game_name (:game_code) with :mods_imported mods",
+    "invalid_file_type_yaml": "Please select a YAML file",
+    "invalid_yaml_format": "Invalid YAML format",
+    "gameap_yaml_missing_schema_version": "Invalid GameAP YAML: missing 'schema_version' field",
+    "gameap_yaml_unsupported_schema_version": "Unsupported schema version. Only version 1.0 is supported",
+    "gameap_yaml_missing_game_code": "Invalid GameAP YAML: missing 'game.code' field",
+    "gameap_yaml_missing_game_name": "Invalid GameAP YAML: missing 'game.name' field",
+    "gameap_yaml_missing_game_engine": "Invalid GameAP YAML: missing 'game.engine' field",
+    "export": "Export",
+    "export_success_msg": "Game exported successfully"
   },
   "gdaemon_tasks": {
     "title_list": "GDaemon Tasks List",

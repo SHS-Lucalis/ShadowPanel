@@ -140,6 +140,66 @@
             schema:
               $ref: '../schemas/ErrorResponse.yaml'
 
+/api/games/import/gameap:
+  post:
+    tags:
+      - Games
+    summary: Import GameAP YAML
+    description: |
+      Imports a GameAP YAML configuration file and creates or updates a Game and its mods.
+
+      The YAML file should be sent as the request body and must contain:
+      - schema_version: "1.0"
+      - game: object with code, name, and engine fields
+      - mods: optional array of game modifications
+
+      **Upsert behavior**:
+      - If a game with the same code exists, it will be updated
+      - If a mod with the same name exists for the game, it will be updated
+      - Existing mods that are not in the import file are preserved
+
+      **Validation**:
+      - Maximum body size: 1 MB
+      - game.code: 2-16 characters, pattern: ^[a-z0-9_-]+$
+      - Duplicate mod names in the same file are not allowed
+    operationId: importGameAP
+    requestBody:
+      required: true
+      content:
+        application/x-yaml:
+          schema:
+            type: string
+            format: binary
+        text/yaml:
+          schema:
+            type: string
+            format: binary
+    responses:
+      '200':
+        description: GameAP config imported successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/responses/ImportGameAPResponse.yaml'
+      '400':
+        description: Invalid YAML format or validation error
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
 /api/games/{code}:
   get:
     tags:
@@ -236,6 +296,58 @@
           application/json:
             schema:
               $ref: '../schemas/SuccessResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Game not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/games/{code}/export:
+  get:
+    tags:
+      - Games
+    summary: Export game
+    description: |
+      Exports a game and all its mods to GameAP YAML format.
+
+      The exported YAML file contains:
+      - schema_version: "1.0"
+      - exported_at: timestamp of export
+      - exported_by: GameAP version
+      - game: game configuration
+      - mods: all mods for the game
+
+      **Note**: Internal metadata fields (pelican_egg, gameap_import) are excluded from export.
+    operationId: exportGame
+    parameters:
+      - $ref: '../parameters/PathGameCode.yaml'
+    responses:
+      '200':
+        description: Game exported as YAML
+        content:
+          application/x-yaml:
+            schema:
+              type: string
+              format: binary
+        headers:
+          Content-Disposition:
+            description: Filename for download
+            schema:
+              type: string
+              example: 'attachment; filename="cstrike.gameap.yaml"'
       '401':
         description: Unauthorized
         content:

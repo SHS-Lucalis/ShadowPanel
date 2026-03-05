@@ -107,6 +107,49 @@ export const useGameListStore = defineStore('games', () => {
         }
     }
 
+    async function importGameAP(yamlContent) {
+        apiProcesses.value++
+        try {
+            const response = await axios.post('/api/games/import/gameap', yamlContent, {
+                headers: {
+                    'Content-Type': 'application/x-yaml',
+                },
+            })
+            return response.data
+        } finally {
+            apiProcesses.value--
+        }
+    }
+
+    async function exportGame(gameCode) {
+        apiProcesses.value++
+        try {
+            const response = await axios.get('/api/games/' + gameCode + '/export', {
+                responseType: 'blob',
+            })
+
+            const contentDisposition = response.headers['content-disposition']
+            let filename = gameCode + '.gameap.yaml'
+            if (contentDisposition) {
+                const match = contentDisposition.match(/filename="(.+)"/)
+                if (match) {
+                    filename = match[1]
+                }
+            }
+
+            const url = window.URL.createObjectURL(new Blob([response.data]))
+            const link = document.createElement('a')
+            link.href = url
+            link.setAttribute('download', filename)
+            document.body.appendChild(link)
+            link.click()
+            link.remove()
+            window.URL.revokeObjectURL(url)
+        } finally {
+            apiProcesses.value--
+        }
+    }
+
     // From legacy gameMods.js
     async function fetchGameModsList(gameCode) {
         if (!gameCode) {
@@ -148,6 +191,8 @@ export const useGameListStore = defineStore('games', () => {
         deleteGameByCode,
         deleteModById,
         importPelicanEgg,
+        importGameAP,
+        exportGame,
         fetchGameModsList,
         setSelectedGameMod,
     }

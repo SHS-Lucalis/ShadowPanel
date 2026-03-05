@@ -32,6 +32,8 @@ import (
 	"github.com/gameap/gameap/internal/repositories/postgres"
 	"github.com/gameap/gameap/internal/repositories/sqlite"
 	"github.com/gameap/gameap/internal/services"
+	"github.com/gameap/gameap/internal/services/gameapimporter"
+	"github.com/gameap/gameap/internal/services/gameexporter"
 	"github.com/gameap/gameap/internal/services/pelicaneggimporter"
 	"github.com/gameap/gameap/internal/services/pluginstore"
 	"github.com/gameap/gameap/internal/services/servercontrol"
@@ -93,6 +95,8 @@ type Container struct {
 	pluginStoreService   *pluginstore.Service
 	gameUpgrader         *services.GameUpgradeService
 	pelicanEggImporter   *pelicaneggimporter.Importer
+	gameAPImporter       *gameapimporter.Importer
+	gameExporter         *gameexporter.Exporter
 	rbac                 *rbac.RBAC
 	cache                cache.Cache
 	fileManager          files.FileManager
@@ -932,6 +936,30 @@ func (c *Container) PelicanEggImporter() *pelicaneggimporter.Importer {
 	}
 
 	return c.pelicanEggImporter
+}
+
+func (c *Container) GameAPImporter() *gameapimporter.Importer {
+	if c.gameAPImporter == nil {
+		c.gameAPImporter = gameapimporter.NewImporter(
+			c.GameRepository(),
+			c.GameModRepository(),
+			c.TransactionManager(),
+		)
+	}
+
+	return c.gameAPImporter
+}
+
+func (c *Container) GameExporter() *gameexporter.Exporter {
+	if c.gameExporter == nil {
+		c.gameExporter = gameexporter.NewExporter(
+			c.GameRepository(),
+			c.GameModRepository(),
+			"",
+		)
+	}
+
+	return c.gameExporter
 }
 
 func (c *Container) DaemonStatus() *daemon.StatusService {

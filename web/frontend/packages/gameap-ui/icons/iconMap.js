@@ -27,6 +27,7 @@ export const defaultIconMap = {
   "redo": "fa-solid fa-redo",
   "download": "fa-solid fa-download",
   "upload": "fa-solid fa-upload",
+  "export": "fa-solid fa-arrow-up-right-from-square",
   "search": "fa-solid fa-magnifying-glass",
   "magnifying-glass": "fa-solid fa-magnifying-glass",
   "view": "fa-solid fa-eye",
