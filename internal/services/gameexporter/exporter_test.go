@@ -150,7 +150,7 @@ func TestExporter_Export(t *testing.T) {
 			wantError:    "game with code \"notexist\" not found",
 		},
 		{
-			name:     "export_excludes_pelican_egg_metadata",
+			name:     "export_preserves_metadata",
 			gameCode: "pelican",
 			setupGame: func(repo *inmemory.GameRepository) {
 				_ = repo.Save(context.Background(), &domain.Game{
@@ -159,9 +159,8 @@ func TestExporter_Export(t *testing.T) {
 					Engine:  "pelican",
 					Enabled: 1,
 					Metadata: domain.Metadata{
-						"pelican_egg":   map[string]any{"uuid": "test-uuid"},
-						"gameap_import": "2024-01-01",
-						"custom_key":    "keep_me",
+						"pelican_egg": map[string]any{"uuid": "test-uuid"},
+						"custom_key":  "keep_me",
 					},
 				})
 			},
@@ -171,8 +170,7 @@ func TestExporter_Export(t *testing.T) {
 					Name:          "Default",
 					StartCmdLinux: lo.ToPtr("./server"),
 					Metadata: domain.Metadata{
-						"pelican_egg":   map[string]any{"data": "value"},
-						"gameap_import": "2024-01-01",
+						"pelican_egg": map[string]any{"data": "value"},
 					},
 				})
 			},
@@ -184,9 +182,11 @@ func TestExporter_Export(t *testing.T) {
 
 				require.NotNil(t, export.Game.Metadata)
 				assert.Equal(t, "keep_me", export.Game.Metadata["custom_key"])
+				assert.NotNil(t, export.Game.Metadata["pelican_egg"])
 
 				require.Len(t, export.Mods, 1)
-				assert.Nil(t, export.Mods[0].Metadata)
+				require.NotNil(t, export.Mods[0].Metadata)
+				assert.NotNil(t, export.Mods[0].Metadata["pelican_egg"])
 			},
 		},
 	}

@@ -487,9 +487,8 @@ func TestNewGameExportFromDomain(t *testing.T) {
 		RemoteRepositoryWindows: lo.ToPtr("http://example.com/windows"),
 		Enabled:                 1,
 		Metadata: domain.Metadata{
-			"custom":        "value",
-			"pelican_egg":   map[string]any{"should": "be excluded"},
-			"gameap_import": "2024-01-01",
+			"custom":      "value",
+			"pelican_egg": map[string]any{"should": "be excluded"},
 		},
 	}
 
@@ -507,8 +506,7 @@ func TestNewGameExportFromDomain(t *testing.T) {
 			StartCmdLinux: lo.ToPtr("./hlds_run"),
 			KickCmd:       lo.ToPtr("kick {name}"),
 			Metadata: domain.Metadata{
-				"pelican_egg":   map[string]any{"should": "be excluded"},
-				"gameap_import": "2024-01-01",
+				"pelican_egg": map[string]any{"should": "be excluded"},
 			},
 		},
 	}
@@ -524,12 +522,13 @@ func TestNewGameExportFromDomain(t *testing.T) {
 	assert.Equal(t, "GoldSource", export.Game.Engine)
 	assert.Equal(t, uint(90), *export.Game.SteamAppIDLinux)
 	assert.Equal(t, "value", export.Game.Metadata["custom"])
+	assert.NotNil(t, export.Game.Metadata["pelican_egg"])
 	require.Len(t, export.Mods, 1)
 	assert.Equal(t, "Classic", export.Mods[0].Name)
 	assert.Equal(t, "./hlds_run", *export.Mods[0].StartCmdLinux)
 	require.Len(t, export.Mods[0].FastRcon, 1)
 	require.Len(t, export.Mods[0].Vars, 1)
-	assert.Nil(t, export.Mods[0].Metadata)
+	assert.NotNil(t, export.Mods[0].Metadata["pelican_egg"])
 }
 
 func TestGameExport_ToYAML(t *testing.T) {
