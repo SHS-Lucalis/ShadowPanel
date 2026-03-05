@@ -113,6 +113,8 @@ func (s *Server) ReplaceServerShortcodes(node *Node, command string, extra map[s
 	// Replace all server shortcodes
 	for key, value := range replaceMap {
 		command = strings.ReplaceAll(command, "{"+key+"}", value)
+		command = strings.ReplaceAll(command, "{"+strings.ToLower(key)+"}", value)
+		command = strings.ReplaceAll(command, "{"+strings.ToUpper(key)+"}", value)
 	}
 
 	return command

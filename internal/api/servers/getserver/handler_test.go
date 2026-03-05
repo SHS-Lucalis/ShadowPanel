@@ -232,10 +232,12 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			serverRepo := inmemory.NewServerRepository()
 			gameRepo := inmemory.NewGameRepository()
+			gameModRepo := inmemory.NewGameModRepository()
+			serverSettingRepo := inmemory.NewServerSettingRepository()
 			rbacRepo := inmemory.NewRBACRepository()
 			rbacService := rbac.NewRBAC(services.NewNilTransactionManager(), rbacRepo, 0)
 			responder := api.NewResponder()
-			handler := NewHandler(serverRepo, gameRepo, rbacService, responder)
+			handler := NewHandler(serverRepo, gameRepo, gameModRepo, serverSettingRepo, rbacService, responder)
 
 			if tt.setupRepo != nil {
 				tt.setupRepo(serverRepo, rbacRepo)
@@ -285,10 +287,12 @@ func TestHandler_ServeHTTP(t *testing.T) {
 func TestHandler_ServerResponseFields(t *testing.T) {
 	serverRepo := inmemory.NewServerRepository()
 	gameRepo := inmemory.NewGameRepository()
+	gameModRepo := inmemory.NewGameModRepository()
+	serverSettingRepo := inmemory.NewServerSettingRepository()
 	rbacRepo := inmemory.NewRBACRepository()
 	rbacService := rbac.NewRBAC(services.NewNilTransactionManager(), rbacRepo, 0)
 	responder := api.NewResponder()
-	handler := NewHandler(serverRepo, gameRepo, rbacService, responder)
+	handler := NewHandler(serverRepo, gameRepo, gameModRepo, serverSettingRepo, rbacService, responder)
 
 	now := time.Now()
 	userName := "Admin User"
@@ -427,11 +431,13 @@ func TestHandler_ServerResponseFields(t *testing.T) {
 func TestHandler_NewHandler(t *testing.T) {
 	serverRepo := inmemory.NewServerRepository()
 	gameRepo := inmemory.NewGameRepository()
+	gameModRepo := inmemory.NewGameModRepository()
+	serverSettingRepo := inmemory.NewServerSettingRepository()
 	rbacRepo := inmemory.NewRBACRepository()
 	rbacService := rbac.NewRBAC(services.NewNilTransactionManager(), rbacRepo, 0)
 	responder := api.NewResponder()
 
-	handler := NewHandler(serverRepo, gameRepo, rbacService, responder)
+	handler := NewHandler(serverRepo, gameRepo, gameModRepo, serverSettingRepo, rbacService, responder)
 
 	require.NotNil(t, handler)
 	assert.NotNil(t, handler.serverFinder)
@@ -461,7 +467,7 @@ func TestNewServerResponseFromServer(t *testing.T) {
 		UpdatedAt:     &now,
 	}
 
-	response := newAdminServerResponseFromServer(server, nil)
+	response := newAdminServerResponseFromServer(server, nil, nil, nil)
 
 	assert.Equal(t, uint(1), response.ID)
 	assert.Equal(t, "44444444-4444-4444-4444-444444444444", response.UUID)

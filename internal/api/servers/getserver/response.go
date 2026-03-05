@@ -94,7 +94,11 @@ func newAdminGameResponse(g *domain.Game) *adminGameResponse {
 	}
 }
 
-func buildAliases(s *domain.Server) map[string]any {
+func buildAliases(
+	s *domain.Server,
+	gameMod *domain.GameMod,
+	settings []domain.ServerSetting,
+) map[string]any {
 	aliases := map[string]any{
 		"ip":         s.ServerIP,
 		"port":       s.ServerPort,
@@ -114,14 +118,36 @@ func buildAliases(s *domain.Server) map[string]any {
 		aliases["rcon_password"] = *s.Rcon
 	}
 
+	// Game mod default values (lowest priority)
+	if gameMod != nil {
+		for _, v := range gameMod.Vars {
+			if v.Default != "" {
+				aliases[v.Var] = string(v.Default)
+			}
+		}
+	}
+
+	// Server vars override game mod defaults
 	for key, value := range s.Vars {
 		aliases[key] = value
+	}
+
+	// Server settings override everything
+	for _, setting := range settings {
+		if value := setting.Value.Any(); value != nil {
+			aliases[setting.Name] = value
+		}
 	}
 
 	return aliases
 }
 
-func newAdminServerResponseFromServer(s *domain.Server, game *domain.Game) adminServerResponse {
+func newAdminServerResponseFromServer(
+	s *domain.Server,
+	game *domain.Game,
+	gameMod *domain.GameMod,
+	settings []domain.ServerSetting,
+) adminServerResponse {
 	return adminServerResponse{
 		ID:               s.ID,
 		UUID:             s.UUID.String(),
@@ -152,7 +178,7 @@ func newAdminServerResponseFromServer(s *domain.Server, game *domain.Game) admin
 		ForceStopCommand: s.ForceStopCommand,
 		RestartCommand:   s.RestartCommand,
 		ProcessActive:    s.ProcessActive,
-		Aliases:          buildAliases(s),
+		Aliases:          buildAliases(s, gameMod, settings),
 		Vars:             s.Vars,
 		Metadata:         s.Metadata,
 		CreatedAt:        s.CreatedAt,

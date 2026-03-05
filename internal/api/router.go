@@ -435,6 +435,8 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 			Handler: getserver.NewHandler(
 				c.ServerRepository(),
 				c.GameRepository(),
+				c.GameModRepository(),
+				c.ServerSettingRepository(),
 				c.RBAC(),
 				c.Responder(),
 			),
