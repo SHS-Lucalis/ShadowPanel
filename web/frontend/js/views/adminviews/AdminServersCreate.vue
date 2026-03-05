@@ -128,9 +128,6 @@
                       v-model:value="serverForm.settings[varDef.var]"
                       :placeholder="varDef.default || ''"
                   />
-                  <template #feedback v-if="varDef.info">
-                    <small>{{ varDef.info }}</small>
-                  </template>
                 </n-form-item>
               </div>
             </div>
