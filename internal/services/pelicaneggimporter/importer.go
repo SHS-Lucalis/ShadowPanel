@@ -57,7 +57,7 @@ func (i *Importer) Import(ctx context.Context, egg *gamesimport.PelicanEgg) (*Im
 	}
 
 	gameCode := generateGameCode(egg.Name)
-	startCmd := transformStartupCommand(egg.Startup)
+	startCmd := transformStartupCommand(egg.GetStartupCommand())
 	vars := transformVariables(egg.Variables)
 
 	game := &domain.Game{

@@ -251,6 +251,179 @@ func TestParsePelicanEgg_RawPreservesUnknownFields(t *testing.T) {
 	assert.Equal(t, "secret.txt", fileDenylist[0])
 }
 
+func TestPelicanEgg_GetStartupCommand(t *testing.T) {
+	tests := []struct {
+		name     string
+		egg      *PelicanEgg
+		expected string
+	}{
+		{
+			name: "startup_commands_Default_takes_priority",
+			egg: &PelicanEgg{
+				Startup: "./legacy_server",
+				StartupCommands: map[string]string{
+					"Default": "./new_server",
+				},
+			},
+			expected: "./new_server",
+		},
+		{
+			name: "falls_back_to_startup_when_no_startup_commands",
+			egg: &PelicanEgg{
+				Startup: "./legacy_server",
+			},
+			expected: "./legacy_server",
+		},
+		{
+			name: "falls_back_to_startup_when_Default_is_empty",
+			egg: &PelicanEgg{
+				Startup: "./legacy_server",
+				StartupCommands: map[string]string{
+					"Default": "",
+				},
+			},
+			expected: "./legacy_server",
+		},
+		{
+			name: "falls_back_to_startup_when_Default_key_missing",
+			egg: &PelicanEgg{
+				Startup: "./legacy_server",
+				StartupCommands: map[string]string{
+					"Other": "./other_server",
+				},
+			},
+			expected: "./legacy_server",
+		},
+		{
+			name: "empty_startup_commands_nil",
+			egg: &PelicanEgg{
+				Startup:         "./server",
+				StartupCommands: nil,
+			},
+			expected: "./server",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.egg.GetStartupCommand()
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestFlexibleRules_UnmarshalJSON(t *testing.T) {
+	tests := []struct {
+		name      string
+		input     string
+		expected  FlexibleRules
+		wantError string
+	}{
+		{
+			name:     "string_format",
+			input:    `"required|string|max:64"`,
+			expected: FlexibleRules{"required|string|max:64"},
+		},
+		{
+			name:     "array_format",
+			input:    `["required", "string", "max:64"]`,
+			expected: FlexibleRules{"required", "string", "max:64"},
+		},
+		{
+			name:     "empty_string",
+			input:    `""`,
+			expected: FlexibleRules{},
+		},
+		{
+			name:     "empty_array",
+			input:    `[]`,
+			expected: FlexibleRules{},
+		},
+		{
+			name:      "invalid_format",
+			input:     `123`,
+			wantError: "rules must be string or array of strings",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var rules FlexibleRules
+			err := json.Unmarshal([]byte(tt.input), &rules)
+
+			if tt.wantError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantError)
+
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tt.expected, rules)
+		})
+	}
+}
+
+func TestParsePelicanEgg_PLCN_v3_Format(t *testing.T) {
+	input := `{
+		"meta": {
+			"version": "PLCN_v3",
+			"update_url": "https://example.com",
+			"exported_at": "2024-01-01"
+		},
+		"uuid": "plcn-v3-uuid",
+		"author": "test@example.com",
+		"name": "Test PLCN v3 Game",
+		"description": "Test description",
+		"features": [],
+		"docker_images": {
+			"ghcr.io/test/image:latest": "ghcr.io/test/image:latest"
+		},
+		"file_denylist": [],
+		"startup_commands": {
+			"Default": "./start.sh -port {{server.build.default.port}}"
+		},
+		"config": {
+			"files": "{}",
+			"startup": "{\"done\": \"Server started\"}",
+			"logs": "{}",
+			"stop": "^C"
+		},
+		"scripts": {
+			"installation": {
+				"script": "#!/bin/bash",
+				"container": "alpine",
+				"entrypoint": "bash"
+			}
+		},
+		"variables": [
+			{
+				"name": "Server Name",
+				"description": "Name of the server",
+				"env_variable": "SERVER_NAME",
+				"default_value": "My Server",
+				"user_viewable": true,
+				"user_editable": true,
+				"rules": ["required", "string", "max:64"],
+				"field_type": "text"
+			}
+		]
+	}`
+
+	egg, err := ParsePelicanEgg([]byte(input))
+	require.NoError(t, err)
+
+	assert.Equal(t, "plcn-v3-uuid", egg.UUID)
+	assert.Equal(t, "Test PLCN v3 Game", egg.Name)
+	assert.Equal(t, "PLCN_v3", egg.Meta.Version)
+	assert.Equal(t, "", egg.Startup)
+	assert.Equal(t, "./start.sh -port {{server.build.default.port}}", egg.StartupCommands["Default"])
+	assert.Equal(t, "./start.sh -port {{server.build.default.port}}", egg.GetStartupCommand())
+
+	require.Len(t, egg.Variables, 1)
+	assert.Equal(t, FlexibleRules{"required", "string", "max:64"}, egg.Variables[0].Rules)
+}
+
 func TestParsePelicanEgg_WithObjectConfigFields(t *testing.T) {
 	input := `{
 		"meta": {

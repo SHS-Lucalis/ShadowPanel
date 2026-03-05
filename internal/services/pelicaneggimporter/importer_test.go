@@ -56,7 +56,7 @@ func TestImporter_Import(t *testing.T) {
 						DefaultValue: "My Rage.MP Server",
 						UserViewable: true,
 						UserEditable: true,
-						Rules:        "required|string|max:64",
+						Rules:        gamesimport.FlexibleRules{"required|string|max:64"},
 						FieldType:    "text",
 					},
 				},
@@ -151,6 +151,70 @@ func TestImporter_Import(t *testing.T) {
 				expectedCmd := "./server -port {port} -ip {ip} -name {SERVER_NAME}"
 				assert.Equal(t, expectedCmd, lo.FromPtr(result.GameMod.StartCmdLinux))
 				assert.True(t, result.GameMod.Vars[0].AdminVar)
+			},
+		},
+		{
+			name: "successful_import_PLCN_v3_format_with_startup_commands",
+			egg: &gamesimport.PelicanEgg{
+				UUID:   "plcn-v3-uuid",
+				Author: "test@example.com",
+				Name:   "PLCN v3 Game",
+				Meta: gamesimport.PelicanEggMeta{
+					Version: "PLCN_v3",
+				},
+				StartupCommands: map[string]string{
+					"Default": "./server -port {{server.build.default.port}} -name {{SERVER_NAME}}",
+				},
+				Variables: []gamesimport.PelicanEggVariable{
+					{
+						Name:         "Server Name",
+						EnvVariable:  "SERVER_NAME",
+						DefaultValue: "My Server",
+						UserEditable: true,
+						Rules:        gamesimport.FlexibleRules{"required", "string", "max:64"},
+					},
+				},
+				Raw: map[string]any{
+					"uuid": "plcn-v3-uuid",
+					"name": "PLCN v3 Game",
+					"startup_commands": map[string]any{
+						"Default": "./server -port {{server.build.default.port}} -name {{SERVER_NAME}}",
+					},
+				},
+			},
+			setupGame:    func(_ *inmemory.GameRepository) {},
+			setupGameMod: func(_ *inmemory.GameModRepository) {},
+			wantErr:      false,
+			validate: func(t *testing.T, _ *inmemory.GameRepository, _ *inmemory.GameModRepository, result *ImportResult) {
+				t.Helper()
+
+				require.NotNil(t, result)
+				expectedCmd := "./server -port {port} -name {SERVER_NAME}"
+				assert.Equal(t, expectedCmd, lo.FromPtr(result.GameMod.StartCmdLinux))
+				assert.Equal(t, "plcn_v3_game", result.Game.Code)
+			},
+		},
+		{
+			name: "PLCN_v3_format_with_legacy_startup_fallback",
+			egg: &gamesimport.PelicanEgg{
+				Name:    "Legacy Fallback Game",
+				Startup: "./legacy_server",
+				StartupCommands: map[string]string{
+					"Other": "./other_server",
+				},
+				Raw: map[string]any{
+					"name":    "Legacy Fallback Game",
+					"startup": "./legacy_server",
+				},
+			},
+			setupGame:    func(_ *inmemory.GameRepository) {},
+			setupGameMod: func(_ *inmemory.GameModRepository) {},
+			wantErr:      false,
+			validate: func(t *testing.T, _ *inmemory.GameRepository, _ *inmemory.GameModRepository, result *ImportResult) {
+				t.Helper()
+
+				require.NotNil(t, result)
+				assert.Equal(t, "./legacy_server", lo.FromPtr(result.GameMod.StartCmdLinux))
 			},
 		},
 		{
@@ -673,6 +737,37 @@ func TestParsePelicanEgg(t *testing.T) {
 				assert.Empty(t, egg.Name)
 				require.NotNil(t, egg.Raw)
 				assert.Empty(t, egg.Raw)
+			},
+		},
+		{
+			name: "PLCN_v3_format_with_startup_commands_and_array_rules",
+			jsonData: `{
+				"meta": {"version": "PLCN_v3"},
+				"uuid": "plcn-v3-test",
+				"name": "PLCN v3 Test",
+				"startup_commands": {
+					"Default": "./server -port {{server.build.default.port}}"
+				},
+				"variables": [
+					{
+						"name": "Test Var",
+						"env_variable": "TEST_VAR",
+						"default_value": "test",
+						"rules": ["required", "string"]
+					}
+				]
+			}`,
+			wantErr: false,
+			validate: func(t *testing.T, egg *gamesimport.PelicanEgg) {
+				t.Helper()
+
+				assert.Equal(t, "plcn-v3-test", egg.UUID)
+				assert.Equal(t, "PLCN_v3", egg.Meta.Version)
+				assert.Equal(t, "", egg.Startup)
+				assert.Equal(t, "./server -port {{server.build.default.port}}", egg.StartupCommands["Default"])
+				assert.Equal(t, "./server -port {{server.build.default.port}}", egg.GetStartupCommand())
+				require.Len(t, egg.Variables, 1)
+				assert.Equal(t, gamesimport.FlexibleRules{"required", "string"}, egg.Variables[0].Rules)
 			},
 		},
 	}

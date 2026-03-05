@@ -59,7 +59,30 @@
                 :game-select-disabled="true"
                 v-model:game="serverForm.game"
                 v-model:game-mod="serverForm.gameMod"
-            ></GameModSelector>
+            >
+              <template #game-actions>
+                <GButton
+                    v-if="serverForm.game"
+                    color="blue"
+                    size="small"
+                    :route="{name: 'admin.games.edit', params: {code: serverForm.game}}"
+                    :title="trans('main.edit')"
+                >
+                  <GIcon name="edit" />
+                </GButton>
+              </template>
+              <template #mod-actions>
+                <GButton
+                    v-if="serverForm.game && serverForm.gameMod"
+                    color="blue"
+                    size="small"
+                    :route="{name: 'admin.games.mods.edit', params: {code: serverForm.game, id: serverForm.gameMod}}"
+                    :title="trans('main.edit')"
+                >
+                  <GIcon name="edit" />
+                </GButton>
+              </template>
+            </GameModSelector>
 
             <n-form-item :label="trans('labels.rcon')" path="rcon">
               <n-input
