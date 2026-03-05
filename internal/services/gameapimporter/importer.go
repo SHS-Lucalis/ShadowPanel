@@ -3,7 +3,6 @@ package gameapimporter
 import (
 	"context"
 	"maps"
-	"time"
 
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/domain/gamesimport"
@@ -50,12 +49,10 @@ func (i *Importer) Import(ctx context.Context, export *gamesimport.GameExport) (
 	}
 
 	game := export.Game.ToDomainGame()
-	game.Metadata = addImportMetadata(game.Metadata)
 
 	mods := make([]*domain.GameMod, 0, len(export.Mods))
 	for _, modExport := range export.Mods {
 		mod := modExport.ToDomainGameMod(game.Code)
-		mod.Metadata = addImportMetadata(mod.Metadata)
 		mods = append(mods, mod)
 	}
 
@@ -116,16 +113,6 @@ func (i *Importer) Import(ctx context.Context, export *gamesimport.GameExport) (
 	}
 
 	return &result, nil
-}
-
-func addImportMetadata(metadata domain.Metadata) domain.Metadata {
-	if metadata == nil {
-		metadata = make(domain.Metadata)
-	}
-
-	metadata["gameap_import"] = time.Now().UTC().Format(time.RFC3339)
-
-	return metadata
 }
 
 func mergeMetadata(existing, updated domain.Metadata) domain.Metadata {

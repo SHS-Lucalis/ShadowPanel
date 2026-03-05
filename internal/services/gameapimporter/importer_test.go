@@ -65,7 +65,6 @@ func TestImporter_Import(t *testing.T) {
 				assert.Equal(t, "Counter-Strike 1.6", result.Game.Name)
 				assert.Equal(t, "GoldSource", result.Game.Engine)
 				assert.Equal(t, 1, result.Game.Enabled)
-				assert.NotNil(t, result.Game.Metadata["gameap_import"])
 
 				require.Len(t, result.ModsCreated, 2)
 				assert.Contains(t, result.ModsCreated, "Classic")
@@ -92,7 +91,6 @@ func TestImporter_Import(t *testing.T) {
 				assert.Equal(t, "kick {name}", *classic.KickCmd)
 				require.Len(t, classic.FastRcon, 1)
 				require.Len(t, classic.Vars, 1)
-				assert.NotNil(t, classic.Metadata["gameap_import"])
 			},
 		},
 		{
@@ -164,7 +162,6 @@ func TestImporter_Import(t *testing.T) {
 				assert.Equal(t, "2.0", game.EngineVersion)
 				assert.Equal(t, "old_value", game.Metadata["old_key"])
 				assert.Equal(t, "new_value", game.Metadata["new_key"])
-				assert.NotNil(t, game.Metadata["gameap_import"])
 			},
 		},
 		{
@@ -219,7 +216,6 @@ func TestImporter_Import(t *testing.T) {
 				mod := mods[0]
 				assert.Equal(t, "./new_command", *mod.StartCmdLinux)
 				assert.Equal(t, "keep_me", mod.Metadata["existing_key"])
-				assert.NotNil(t, mod.Metadata["gameap_import"])
 			},
 		},
 		{
@@ -415,7 +411,6 @@ func TestImporter_Import(t *testing.T) {
 				require.Len(t, mod.Vars, 2)
 				assert.True(t, mod.Vars[1].AdminVar)
 				assert.Equal(t, "value", mod.Metadata["custom"])
-				assert.NotNil(t, mod.Metadata["gameap_import"])
 			},
 		},
 	}
