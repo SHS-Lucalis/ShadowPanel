@@ -62,8 +62,8 @@ const onImportGameAP = (yamlContent) => {
   })
 }
 
-const onImportPelicanEgg = (eggJson) => {
-  gamesStore.importPelicanEgg(eggJson).then((response) => {
+const onImportPelicanEgg = ({ content, format }) => {
+  gamesStore.importPelicanEgg(content, format).then((response) => {
     const msg = trans('games.import_pelican_egg_success_msg')
         .replace(':game_name', response.game_name)
         .replace(':game_code', response.game_code)

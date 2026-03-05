@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/goccy/go-yaml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -472,4 +473,397 @@ func TestParsePelicanEgg_WithObjectConfigFields(t *testing.T) {
 	assert.Equal(t, "Ready!", egg.Config.Startup.Done)
 	require.Len(t, egg.Config.Files, 1)
 	assert.Equal(t, "yaml", egg.Config.Files["config.yml"].Parser)
+}
+
+func TestDetectFormat(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "JSON_format",
+			input:    `{"meta": {"version": "1.0"}}`,
+			expected: "json",
+		},
+		{
+			name:     "JSON_format_with_whitespace",
+			input:    `  { "meta": {"version": "1.0"}}`,
+			expected: "json",
+		},
+		{
+			name:     "JSON_format_with_newline",
+			input:    "\n{\n  \"meta\": {\"version\": \"1.0\"}}",
+			expected: "json",
+		},
+		{
+			name:     "YAML_format",
+			input:    "meta:\n  version: '1.0'",
+			expected: "yaml",
+		},
+		{
+			name:     "YAML_format_with_comment",
+			input:    "# Comment\nmeta:\n  version: '1.0'",
+			expected: "yaml",
+		},
+		{
+			name:     "empty_input_defaults_to_yaml",
+			input:    "",
+			expected: "yaml",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := detectFormat([]byte(tt.input))
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestFlexibleStringSlice_UnmarshalJSON(t *testing.T) {
+	tests := []struct {
+		name      string
+		input     string
+		expected  FlexibleStringSlice
+		wantError string
+	}{
+		{
+			name:     "array_with_values",
+			input:    `["file1.txt", "file2.txt"]`,
+			expected: FlexibleStringSlice{"file1.txt", "file2.txt"},
+		},
+		{
+			name:     "empty_array",
+			input:    `[]`,
+			expected: FlexibleStringSlice{},
+		},
+		{
+			name:      "invalid_format_object",
+			input:     `{}`,
+			wantError: "file_denylist must be an array of strings",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var result FlexibleStringSlice
+			err := json.Unmarshal([]byte(tt.input), &result)
+
+			if tt.wantError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantError)
+
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestFlexibleStringSlice_UnmarshalYAML(t *testing.T) {
+	tests := []struct {
+		name      string
+		input     string
+		expected  FlexibleStringSlice
+		wantError string
+	}{
+		{
+			name:     "array_with_values",
+			input:    "- file1.txt\n- file2.txt",
+			expected: FlexibleStringSlice{"file1.txt", "file2.txt"},
+		},
+		{
+			name:     "empty_array",
+			input:    "[]",
+			expected: FlexibleStringSlice{},
+		},
+		{
+			name:     "empty_object_treated_as_empty_array",
+			input:    "{}",
+			expected: FlexibleStringSlice{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var result FlexibleStringSlice
+			err := yaml.Unmarshal([]byte(tt.input), &result)
+
+			if tt.wantError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantError)
+
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestFlexibleRules_UnmarshalYAML(t *testing.T) {
+	tests := []struct {
+		name      string
+		input     string
+		expected  FlexibleRules
+		wantError string
+	}{
+		{
+			name:     "array_format",
+			input:    "- required\n- string\n- max:64",
+			expected: FlexibleRules{"required", "string", "max:64"},
+		},
+		{
+			name:     "string_format",
+			input:    "required|string|max:64",
+			expected: FlexibleRules{"required|string|max:64"},
+		},
+		{
+			name:     "empty_array",
+			input:    "[]",
+			expected: FlexibleRules{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var result FlexibleRules
+			err := yaml.Unmarshal([]byte(tt.input), &result)
+
+			if tt.wantError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantError)
+
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestPelicanEggConfig_UnmarshalYAML(t *testing.T) {
+	tests := []struct {
+		name       string
+		input      string
+		wantConfig PelicanEggConfig
+		wantError  string
+	}{
+		{
+			name: "direct_object_format",
+			input: `files:
+  server.properties:
+    parser: properties
+    find:
+      server-port: "{{server.build.default.port}}"
+startup:
+  done: "Server started"
+stop: stop`,
+			wantConfig: PelicanEggConfig{
+				Stop: "stop",
+				Startup: PelicanEggConfigStartup{
+					Done: "Server started",
+				},
+				Files: map[string]PelicanEggConfigFile{
+					"server.properties": {
+						Parser: "properties",
+						Find: map[string]any{
+							"server-port": "{{server.build.default.port}}",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "empty_files_and_startup",
+			input: `files: {}
+startup: {}
+stop: ^C`,
+			wantConfig: PelicanEggConfig{
+				Stop:    "^C",
+				Startup: PelicanEggConfigStartup{},
+				Files:   map[string]PelicanEggConfigFile{},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var config PelicanEggConfig
+			err := yaml.Unmarshal([]byte(tt.input), &config)
+
+			if tt.wantError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantError)
+
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tt.wantConfig.Stop, config.Stop)
+			assert.Equal(t, tt.wantConfig.Startup.Done, config.Startup.Done)
+			assert.Equal(t, len(tt.wantConfig.Files), len(config.Files))
+
+			for key, wantFile := range tt.wantConfig.Files {
+				gotFile, ok := config.Files[key]
+				require.True(t, ok, "expected file %s to exist", key)
+				assert.Equal(t, wantFile.Parser, gotFile.Parser)
+			}
+		})
+	}
+}
+
+func TestParsePelicanEgg_YAML_Format(t *testing.T) {
+	input := `meta:
+  version: PLCN_v3
+  update_url: https://example.com
+  exported_at: "2024-01-01"
+uuid: yaml-test-uuid
+author: test@example.com
+name: Vanilla Minecraft
+description: Minecraft server using the official Mojang binaries
+features:
+  - eula
+  - java_version
+docker_images:
+  Java 21: ghcr.io/pelican-eggs/yolks:java_21
+file_denylist: {}
+startup_commands:
+  Default: java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}
+config:
+  files:
+    server.properties:
+      parser: properties
+      find:
+        server-port: "{{server.build.default.port}}"
+  startup:
+    done: "Done"
+    userInteraction: []
+  stop: stop
+  logs: {}
+scripts:
+  installation:
+    script: |
+      #!/bin/bash
+      echo "Installing"
+    container: ghcr.io/pelican-eggs/installers:debian
+    entrypoint: bash
+variables:
+  - name: Server Jar File
+    description: The name of the server jar file
+    env_variable: SERVER_JARFILE
+    default_value: server.jar
+    user_viewable: true
+    user_editable: true
+    rules:
+      - required
+      - regex:/^[\w\d._-]+\.jar$/
+    field_type: text`
+
+	egg, err := ParsePelicanEgg([]byte(input))
+	require.NoError(t, err)
+
+	assert.Equal(t, "yaml-test-uuid", egg.UUID)
+	assert.Equal(t, "Vanilla Minecraft", egg.Name)
+	assert.Equal(t, "PLCN_v3", egg.Meta.Version)
+	assert.Equal(t, "test@example.com", egg.Author)
+	assert.Equal(t, "Minecraft server using the official Mojang binaries", egg.Description)
+
+	require.Len(t, egg.Features, 2)
+	assert.Contains(t, egg.Features, "eula")
+	assert.Contains(t, egg.Features, "java_version")
+
+	require.Len(t, egg.DockerImages, 1)
+	assert.Equal(t, "ghcr.io/pelican-eggs/yolks:java_21", egg.DockerImages["Java 21"])
+
+	assert.Equal(t, FlexibleStringSlice{}, egg.FileDenylist)
+
+	assert.Equal(t, "java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}", egg.StartupCommands["Default"])
+	assert.Equal(t, "java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}", egg.GetStartupCommand())
+
+	assert.Equal(t, "stop", egg.Config.Stop)
+	assert.Equal(t, "Done", egg.Config.Startup.Done)
+	require.Len(t, egg.Config.Files, 1)
+	assert.Equal(t, "properties", egg.Config.Files["server.properties"].Parser)
+
+	assert.Equal(t, "ghcr.io/pelican-eggs/installers:debian", egg.Scripts.Installation.Container)
+	assert.Equal(t, "bash", egg.Scripts.Installation.Entrypoint)
+	assert.Contains(t, egg.Scripts.Installation.Script, "Installing")
+
+	require.Len(t, egg.Variables, 1)
+	assert.Equal(t, "Server Jar File", egg.Variables[0].Name)
+	assert.Equal(t, "SERVER_JARFILE", egg.Variables[0].EnvVariable)
+	assert.Equal(t, "server.jar", egg.Variables[0].DefaultValue)
+	assert.True(t, egg.Variables[0].UserViewable)
+	assert.True(t, egg.Variables[0].UserEditable)
+	assert.Equal(t, FlexibleRules{"required", "regex:/^[\\w\\d._-]+\\.jar$/"}, egg.Variables[0].Rules)
+
+	require.NotNil(t, egg.Raw)
+	assert.Equal(t, "yaml-test-uuid", egg.Raw["uuid"])
+}
+
+func TestParsePelicanEgg_YAML_Format_WithFileDenylistArray(t *testing.T) {
+	input := `meta:
+  version: PLCN_v3
+uuid: yaml-denylist-test
+author: test@example.com
+name: Test Game
+description: Test
+features: []
+docker_images: {}
+file_denylist:
+  - secret.txt
+  - .env
+startup_commands:
+  Default: ./start.sh
+config:
+  files: {}
+  startup: {}
+  stop: ^C
+scripts:
+  installation:
+    script: "#!/bin/bash"
+    container: alpine
+    entrypoint: bash
+variables: []`
+
+	egg, err := ParsePelicanEgg([]byte(input))
+	require.NoError(t, err)
+
+	assert.Equal(t, "yaml-denylist-test", egg.UUID)
+	require.Len(t, egg.FileDenylist, 2)
+	assert.Contains(t, []string(egg.FileDenylist), "secret.txt")
+	assert.Contains(t, []string(egg.FileDenylist), ".env")
+}
+
+func TestParsePelicanEgg_EmptyInput(t *testing.T) {
+	tests := []struct {
+		name      string
+		input     string
+		wantError string
+	}{
+		{
+			name:      "empty_string",
+			input:     "",
+			wantError: "empty input data",
+		},
+		{
+			name:      "whitespace_only",
+			input:     "   \n\t  ",
+			wantError: "empty input data",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := ParsePelicanEgg([]byte(tt.input))
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), tt.wantError)
+		})
+	}
 }

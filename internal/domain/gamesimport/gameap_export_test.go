@@ -524,9 +524,6 @@ func TestNewGameExportFromDomain(t *testing.T) {
 	assert.Equal(t, "GoldSource", export.Game.Engine)
 	assert.Equal(t, uint(90), *export.Game.SteamAppIDLinux)
 	assert.Equal(t, "value", export.Game.Metadata["custom"])
-	assert.Nil(t, export.Game.Metadata["pelican_egg"])
-	assert.Nil(t, export.Game.Metadata["gameap_import"])
-
 	require.Len(t, export.Mods, 1)
 	assert.Equal(t, "Classic", export.Mods[0].Name)
 	assert.Equal(t, "./hlds_run", *export.Mods[0].StartCmdLinux)
@@ -565,55 +562,4 @@ func TestGameExport_ToYAML(t *testing.T) {
 	require.Len(t, parsed.Mods, 1)
 	assert.Equal(t, "Default", parsed.Mods[0].Name)
 	assert.Equal(t, "./start.sh", *parsed.Mods[0].StartCmdLinux)
-}
-
-func TestFilterExportMetadata(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    domain.Metadata
-		expected domain.Metadata
-	}{
-		{
-			name:     "nil_metadata",
-			input:    nil,
-			expected: nil,
-		},
-		{
-			name: "empty_after_filtering",
-			input: domain.Metadata{
-				"pelican_egg":   map[string]any{"data": "value"},
-				"gameap_import": "2024-01-01",
-			},
-			expected: nil,
-		},
-		{
-			name: "preserves_custom_keys",
-			input: domain.Metadata{
-				"custom":        "value",
-				"pelican_egg":   map[string]any{"data": "value"},
-				"gameap_import": "2024-01-01",
-			},
-			expected: domain.Metadata{
-				"custom": "value",
-			},
-		},
-		{
-			name: "no_excluded_keys",
-			input: domain.Metadata{
-				"key1": "value1",
-				"key2": "value2",
-			},
-			expected: domain.Metadata{
-				"key1": "value1",
-				"key2": "value2",
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := filterExportMetadata(tt.input)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
 }

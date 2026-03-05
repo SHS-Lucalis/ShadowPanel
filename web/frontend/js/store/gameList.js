@@ -97,10 +97,15 @@ export const useGameListStore = defineStore('games', () => {
         }
     }
 
-    async function importPelicanEgg(eggJson) {
+    async function importPelicanEgg(content, format = 'json') {
         apiProcesses.value++
         try {
-            const response = await axios.post('/api/games/import/pelican-egg', eggJson)
+            const contentType = format === 'yaml' ? 'application/x-yaml' : 'application/json'
+            const response = await axios.post('/api/games/import/pelican-egg', content, {
+                headers: {
+                    'Content-Type': contentType,
+                },
+            })
             return response.data
         } finally {
             apiProcesses.value--
