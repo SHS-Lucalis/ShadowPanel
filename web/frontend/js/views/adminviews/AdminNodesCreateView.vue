@@ -15,11 +15,7 @@
     </template>
   </UpdateNodeForm>
 
-  <CreateNodeModal
-      :link="autoSetupData.link"
-      :token="autoSetupData.token"
-      :host="autoSetupData.host"
-  />
+  <CreateNodeModal/>
 </template>
 
 <script setup>
@@ -53,14 +49,9 @@ onMounted(() => {
   clientCertificatesStore.fetchClientCertificates().catch((error) => {
     errorNotification(error)
   })
-
-  nodeListStore.fetchAutoSetupData().catch((error) => {
-    errorNotification(error)
-  })
 })
 
 const { certificates } = storeToRefs(clientCertificatesStore)
-const { autoSetupData } = storeToRefs(nodeListStore)
 
 const loading = computed(() => {
   return clientCertificatesStore.loading.value;
