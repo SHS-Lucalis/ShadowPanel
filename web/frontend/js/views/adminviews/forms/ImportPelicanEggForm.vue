@@ -46,6 +46,17 @@
           </div>
         </div>
       </div>
+
+      <n-collapse v-if="eggPreview" class="mb-4">
+        <n-collapse-item :title="trans('games.override_settings')" name="override">
+          <n-form-item :label="trans('labels.name')">
+            <n-input v-model:value="overrideName" :placeholder="trans('games.override_name_placeholder')" />
+          </n-form-item>
+          <n-form-item :label="trans('labels.code')">
+            <n-input v-model:value="overrideCode" :placeholder="trans('games.override_code_placeholder')" />
+          </n-form-item>
+        </n-collapse-item>
+      </n-collapse>
     </n-form>
 
     <GButton
@@ -71,6 +82,9 @@ import {
   NFormItem,
   NUpload,
   NButton,
+  NCollapse,
+  NCollapseItem,
+  NInput,
 } from "naive-ui"
 
 const formRef = ref({})
@@ -79,6 +93,8 @@ const eggPreview = ref(null)
 const eggContent = ref(null)
 const fileFormat = ref('')
 const importing = ref(false)
+const overrideName = ref('')
+const overrideCode = ref('')
 
 const emits = defineEmits(['import'])
 
@@ -158,7 +174,12 @@ const onClickImport = () => {
   }
 
   importing.value = true
-  emits('import', { content: eggContent.value, format: fileFormat.value })
+  emits('import', {
+    content: eggContent.value,
+    format: fileFormat.value,
+    name: overrideName.value || null,
+    code: overrideCode.value || null,
+  })
 }
 
 const resetForm = () => {
@@ -167,6 +188,8 @@ const resetForm = () => {
   eggContent.value = null
   fileFormat.value = ''
   importing.value = false
+  overrideName.value = ''
+  overrideCode.value = ''
 }
 
 defineExpose({

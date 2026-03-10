@@ -41,8 +41,8 @@ const breadcrumbs = computed(() => {
   ]
 })
 
-const onImportGameAP = (yamlContent) => {
-  gamesStore.importGameAP(yamlContent).then((response) => {
+const onImportGameAP = ({ content, name, code }) => {
+  gamesStore.importGameAP(content, { name, code }).then((response) => {
     const msg = trans('games.import_gameap_success_msg')
         .replace(':game_name', response.game_name)
         .replace(':game_code', response.game_code)
@@ -62,8 +62,8 @@ const onImportGameAP = (yamlContent) => {
   })
 }
 
-const onImportPelicanEgg = ({ content, format }) => {
-  gamesStore.importPelicanEgg(content, format).then((response) => {
+const onImportPelicanEgg = ({ content, format, name, code }) => {
+  gamesStore.importPelicanEgg(content, format, { name, code }).then((response) => {
     const msg = trans('games.import_pelican_egg_success_msg')
         .replace(':game_name', response.game_name)
         .replace(':game_code', response.game_code)

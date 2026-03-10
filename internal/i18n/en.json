@@ -187,7 +187,10 @@
     "gameap_yaml_missing_game_name": "Invalid GameAP YAML: missing 'game.name' field",
     "gameap_yaml_missing_game_engine": "Invalid GameAP YAML: missing 'game.engine' field",
     "export": "Export",
-    "export_success_msg": "Game exported successfully"
+    "export_success_msg": "Game exported successfully",
+    "override_settings": "Override settings",
+    "override_name_placeholder": "Leave empty to use original",
+    "override_code_placeholder": "Leave empty to generate automatically"
   },
   "gdaemon_tasks": {
     "title_list": "GDaemon Tasks List",

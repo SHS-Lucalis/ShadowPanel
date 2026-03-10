@@ -97,11 +97,16 @@ export const useGameListStore = defineStore('games', () => {
         }
     }
 
-    async function importPelicanEgg(content, format = 'json') {
+    async function importPelicanEgg(content, format = 'json', options = {}) {
         apiProcesses.value++
         try {
             const contentType = format === 'yaml' ? 'application/x-yaml' : 'application/json'
-            const response = await axios.post('/api/games/import/pelican-egg', content, {
+            const params = new URLSearchParams()
+            if (options.name) params.append('name', options.name)
+            if (options.code) params.append('code', options.code)
+            const query = params.toString() ? `?${params.toString()}` : ''
+
+            const response = await axios.post('/api/games/import/pelican-egg' + query, content, {
                 headers: {
                     'Content-Type': contentType,
                 },
@@ -112,10 +117,15 @@ export const useGameListStore = defineStore('games', () => {
         }
     }
 
-    async function importGameAP(yamlContent) {
+    async function importGameAP(yamlContent, options = {}) {
         apiProcesses.value++
         try {
-            const response = await axios.post('/api/games/import/gameap', yamlContent, {
+            const params = new URLSearchParams()
+            if (options.name) params.append('name', options.name)
+            if (options.code) params.append('code', options.code)
+            const query = params.toString() ? `?${params.toString()}` : ''
+
+            const response = await axios.post('/api/games/import/gameap' + query, yamlContent, {
                 headers: {
                     'Content-Type': 'application/x-yaml',
                 },

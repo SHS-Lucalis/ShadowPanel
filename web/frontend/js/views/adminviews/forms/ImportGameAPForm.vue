@@ -38,6 +38,17 @@
           </p>
         </div>
       </div>
+
+      <n-collapse v-if="yamlPreview" class="mb-4">
+        <n-collapse-item :title="trans('games.override_settings')" name="override">
+          <n-form-item :label="trans('labels.name')">
+            <n-input v-model:value="overrideName" :placeholder="trans('games.override_name_placeholder')" />
+          </n-form-item>
+          <n-form-item :label="trans('labels.code')">
+            <n-input v-model:value="overrideCode" :placeholder="trans('games.override_code_placeholder')" />
+          </n-form-item>
+        </n-collapse-item>
+      </n-collapse>
     </n-form>
 
     <GButton
@@ -62,6 +73,9 @@ import {
   NFormItem,
   NUpload,
   NButton,
+  NCollapse,
+  NCollapseItem,
+  NInput,
 } from "naive-ui"
 import jsyaml from "js-yaml"
 
@@ -70,6 +84,8 @@ const errorMessage = ref('')
 const yamlPreview = ref(null)
 const yamlContent = ref(null)
 const importing = ref(false)
+const overrideName = ref('')
+const overrideCode = ref('')
 
 const emits = defineEmits(['import'])
 
@@ -144,7 +160,11 @@ const onClickImport = () => {
   }
 
   importing.value = true
-  emits('import', yamlContent.value)
+  emits('import', {
+    content: yamlContent.value,
+    name: overrideName.value || null,
+    code: overrideCode.value || null,
+  })
 }
 
 const resetForm = () => {
@@ -152,6 +172,8 @@ const resetForm = () => {
   yamlPreview.value = null
   yamlContent.value = null
   importing.value = false
+  overrideName.value = ''
+  overrideCode.value = ''
 }
 
 defineExpose({

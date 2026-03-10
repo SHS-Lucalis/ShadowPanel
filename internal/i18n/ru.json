@@ -186,7 +186,10 @@
     "gameap_yaml_missing_game_name": "Неверный GameAP YAML: отсутствует поле 'game.name'",
     "gameap_yaml_missing_game_engine": "Неверный GameAP YAML: отсутствует поле 'game.engine'",
     "export": "Экспорт",
-    "export_success_msg": "Игра успешно экспортирована"
+    "export_success_msg": "Игра успешно экспортирована",
+    "override_settings": "Переопределение",
+    "override_name_placeholder": "Оставьте пустым для использования оригинала",
+    "override_code_placeholder": "Оставьте пустым для автогенерации"
   },
   "gdaemon_tasks": {
     "title_list": "Список GDaemon заданий",
