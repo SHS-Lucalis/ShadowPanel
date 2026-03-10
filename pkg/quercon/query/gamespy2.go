@@ -114,14 +114,15 @@ func parseGameSpy2ServerDetails(reader *bytes.Reader, result *Result) {
 		}
 
 		keyLower := strings.ToLower(key)
+		//nolint:goconst
 		switch keyLower {
 		case "hostname", "sv_hostname", "servername":
 			result.Name = valueUTF8
-		case "mapname", "map": //nolint:goconst
+		case "mapname", "map":
 			result.Map = valueUTF8
-		case "numplayers": //nolint:goconst
+		case "numplayers":
 			result.PlayersNum, _ = strconv.Atoi(valueUTF8)
-		case "maxplayers": //nolint:goconst
+		case "maxplayers":
 			result.MaxPlayersNum, _ = strconv.Atoi(valueUTF8)
 		}
 	}
