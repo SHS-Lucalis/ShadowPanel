@@ -54,19 +54,35 @@
 </template>
 
 <script setup>
-import {trans} from "../../i18n/i18n";
-import {onMounted, ref} from "vue";
+import {trans} from "@/i18n/i18n";
+import {computed, onMounted, ref} from "vue";
 import { GIcon } from '@gameap/ui';
+import {useNodeListStore} from "@/store/nodeList";
+import {storeToRefs} from "pinia"
 
-const props = defineProps({
-  link: '',
-  host: '',
-  token: '',
-});
+const nodeListStore = useNodeListStore()
+
+const { autoSetupData } = storeToRefs(nodeListStore)
+
+const link = computed(() => {
+  return autoSetupData.value.link
+})
+
+const host = computed(() => {
+  return autoSetupData.value.host
+})
+
+const token = computed(() => {
+  return autoSetupData.value.token
+})
 
 const showModal = ref(false);
 
 onMounted(() => {
+  nodeListStore.fetchAutoSetupData().catch((error) => {
+    errorNotification(error)
+  })
+
   showModal.value = true;
 });
 
