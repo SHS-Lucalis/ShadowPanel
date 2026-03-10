@@ -98,10 +98,24 @@
     "delete_success_msg": "Выделенный сервер успешно удалён",
     "delete_has_servers_error_msg": "Нельзя удалить выделенный сервер, на котором есть сервера",
     "autosetup_title": "Автоматическая настройка выделенного сервера",
-    "autosetup_description_linux": "<p>Можете использовать следующие хост и токен для настройки GDaemon используя gameapctl:</p>\n                    <ul class=\"list-disc\">\n                        <li>Хост: <code>:host</code></li>\n                        <li>Токен: <code>:token</code></li>\n                    </ul>\n                    <p>Или для автоматической настройки GDaemon запустите команду в консоли выделенного сервера:</p>",
-    "autosetup_description_windows": "<p>Только для Windows</p>\n<ul class=\"list-disc\">\n    <li>Перейдите на страницу <a target=\"_blank\" href=\"https://github.com/gameap/gameapctl/releases\">gameapctl релизов</a>\n        (<code>https://github.com/gameap/gameapctl/releases</code>)\n    </li>\n    <li>Выберите последнюю версию и скачайте архив для вашей архитектуры, скорее всего вам подойдёт gameapctl-vX.Y.Z-windows-amd64.zip</li>\n    <li>Запустите gameapctl.exe на вашем Windows хосте</li>\n    <li>Нажмите кнопку Install в секции GameAP Daemon</li>\n    <li>Заполните все поля:<br>\n        Host: <code>:host</code><br>\n        Token: <code>:token</code>\n    </li>\n    <li>Кликните по кнопке установки</li>\n</ul>",
+    "autosetup_gameapctl_hint": "Можете использовать хост и токен для настройки GDaemon через gameapctl:",
+    "autosetup_host": "Хост",
+    "autosetup_token": "Токен",
+    "autosetup_run_command": "Или запустите команду на выделенном сервере для автоматической настройки:",
     "autosetup_expire_msg": "Ваша ссылка будет действительна 5 минут.",
-    "autosetup_expire_token_msg": "Токен будет действителен 5 минут"
+    "autosetup_windows_only": "Только для Windows",
+    "autosetup_go_to": "Перейдите на",
+    "autosetup_releases_page": "страницу релизов gameapctl",
+    "autosetup_download_archive": "Скачайте последнюю версию для вашей архитектуры (скорее всего gameapctl-vX.Y.Z-windows-amd64.zip)",
+    "autosetup_run_gameapctl": "Запустите gameapctl.exe на вашем Windows хосте",
+    "autosetup_click_install": "Нажмите кнопку Install в секции GameAP Daemon",
+    "autosetup_fill_fields": "Заполните поля:",
+    "autosetup_push_install": "Нажмите кнопку установки",
+    "autosetup_expire_token_msg": "Токен будет действителен 5 минут",
+    "additional_settings": "Дополнительные настройки",
+    "process_manager": "Менеджер процессов",
+    "pm_auto": "Авто (Рекомендуется)",
+    "pm_simple": "Простой (Управление скриптами)"
   },
   "games": {
     "title_games_list": "Список игр",
@@ -375,7 +389,8 @@
     "info": "Информация",
     "never": "Никогда",
     "show": "Показать",
-    "hide": "Скрыть"
+    "hide": "Скрыть",
+    "copy": "Копировать"
   },
   "modules": {
     "modules": "Модули",
