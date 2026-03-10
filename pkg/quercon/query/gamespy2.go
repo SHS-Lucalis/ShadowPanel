@@ -114,7 +114,7 @@ func parseGameSpy2ServerDetails(reader *bytes.Reader, result *Result) {
 		}
 
 		keyLower := strings.ToLower(key)
-		//nolint:goconst
+		//nolint:goconst,nolintlint
 		switch keyLower {
 		case "hostname", "sv_hostname", "servername":
 			result.Name = valueUTF8
