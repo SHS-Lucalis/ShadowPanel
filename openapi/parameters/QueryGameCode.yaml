@@ -1,0 +1,9 @@
+name: code
+in: query
+description: Override game code during import
+required: false
+schema:
+  type: string
+  minLength: 2
+  maxLength: 16
+  pattern: '^[a-z0-9_-]+$'

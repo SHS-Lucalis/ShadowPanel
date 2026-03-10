@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/gameap/gameap/internal/domain"
-	"github.com/gameap/gameap/internal/domain/gamesimport"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/internal/services/gameexporter"
 	"github.com/gameap/gameap/pkg/api"
@@ -55,10 +54,10 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				assert.Equal(t, "application/x-yaml", resp.Header().Get("Content-Type"))
 				assert.Contains(t, resp.Header().Get("Content-Disposition"), "cstrike.gameap.yaml")
 
-				export, err := gamesimport.ParseGameExport(resp.Body.Bytes())
+				export, err := domain.ParseGameExport(resp.Body.Bytes())
 				require.NoError(t, err)
 
-				assert.Equal(t, gamesimport.CurrentSchemaVersion, export.SchemaVersion)
+				assert.Equal(t, domain.CurrentSchemaVersion, export.SchemaVersion)
 				assert.Equal(t, "cstrike", export.Game.Code)
 				assert.Equal(t, "Counter-Strike 1.6", export.Game.Name)
 				assert.Equal(t, "GoldSource", export.Game.Engine)
@@ -82,7 +81,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			validate: func(t *testing.T, resp *httptest.ResponseRecorder) {
 				t.Helper()
 
-				export, err := gamesimport.ParseGameExport(resp.Body.Bytes())
+				export, err := domain.ParseGameExport(resp.Body.Bytes())
 				require.NoError(t, err)
 
 				assert.Equal(t, "test", export.Game.Code)

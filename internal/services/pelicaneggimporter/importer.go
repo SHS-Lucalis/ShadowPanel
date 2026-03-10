@@ -47,7 +47,11 @@ type ImportResult struct {
 }
 
 // Import imports a Pelican egg and creates/updates Game and GameMod entities.
-func (i *Importer) Import(ctx context.Context, egg *gamesimport.PelicanEgg) (*ImportResult, error) {
+func (i *Importer) Import(
+	ctx context.Context,
+	egg *gamesimport.PelicanEgg,
+	opts *gamesimport.Options,
+) (*ImportResult, error) {
 	if egg == nil {
 		return nil, errors.New("egg cannot be nil")
 	}
@@ -56,13 +60,37 @@ func (i *Importer) Import(ctx context.Context, egg *gamesimport.PelicanEgg) (*Im
 		return nil, errors.New("egg name is required")
 	}
 
+	if err := opts.Validate(); err != nil {
+		return nil, errors.WithMessage(err, "options validation failed")
+	}
+
+	game, gameMod := i.buildEntities(egg, opts)
+
+	return i.saveEntities(ctx, game, gameMod)
+}
+
+func (i *Importer) buildEntities(
+	egg *gamesimport.PelicanEgg,
+	opts *gamesimport.Options,
+) (*domain.Game, *domain.GameMod) {
 	gameCode := generateGameCode(egg.Name)
+	gameName := egg.Name
+
+	if opts != nil {
+		if opts.Code != nil {
+			gameCode = *opts.Code
+		}
+		if opts.Name != nil {
+			gameName = *opts.Name
+		}
+	}
+
 	startCmd := transformStartupCommand(egg.GetStartupCommand())
 	vars := transformVariables(egg.Variables)
 
 	game := &domain.Game{
 		Code:    gameCode,
-		Name:    egg.Name,
+		Name:    gameName,
 		Engine:  "pelican",
 		Enabled: 1,
 		Metadata: domain.Metadata{
@@ -78,15 +106,18 @@ func (i *Importer) Import(ctx context.Context, egg *gamesimport.PelicanEgg) (*Im
 		Metadata:      buildGameModMetadata(egg),
 	}
 
+	return game, gameMod
+}
+
+func (i *Importer) saveEntities(
+	ctx context.Context,
+	game *domain.Game,
+	gameMod *domain.GameMod,
+) (*ImportResult, error) {
 	var result ImportResult
 
 	err := i.tm.Do(ctx, func(ctx context.Context) error {
-		existingGames, err := i.gameRepo.Find(
-			ctx,
-			filters.FindGameByCodes(gameCode),
-			nil,
-			nil,
-		)
+		existingGames, err := i.gameRepo.Find(ctx, filters.FindGameByCodes(game.Code), nil, nil)
 		if err != nil {
 			return errors.WithMessage(err, "failed to find existing game")
 		}
@@ -101,15 +132,10 @@ func (i *Importer) Import(ctx context.Context, egg *gamesimport.PelicanEgg) (*Im
 
 		result.Game = game
 
-		existingMods, err := i.gameModRepo.Find(
-			ctx,
-			&filters.FindGameMod{
-				Names:     []string{"Default"},
-				GameCodes: []string{gameCode},
-			},
-			nil,
-			nil,
-		)
+		existingMods, err := i.gameModRepo.Find(ctx, &filters.FindGameMod{
+			Names:     []string{"Default"},
+			GameCodes: []string{game.Code},
+		}, nil, nil)
 		if err != nil {
 			return errors.WithMessage(err, "failed to find existing game mod")
 		}
@@ -154,16 +180,24 @@ func generateGameCode(name string) string {
 
 func slugify(s string) string {
 	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
-	result, _, _ := transform.String(t, s)
+	normalized, _, _ := transform.String(t, s)
 
-	result = strings.ToLower(result)
+	normalized = strings.ToLower(normalized)
 
-	reg := regexp.MustCompile(`[^a-z0-9]+`)
-	result = reg.ReplaceAllString(result, "-")
+	var result strings.Builder
+	prevDash := false
 
-	result = strings.Trim(result, "-")
+	for _, c := range normalized {
+		if (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') {
+			result.WriteRune(c)
+			prevDash = false
+		} else if !prevDash {
+			result.WriteRune('-')
+			prevDash = true
+		}
+	}
 
-	return result
+	return strings.Trim(result.String(), "-")
 }
 
 // transformStartupCommand transforms Pelican startup command format to GameAP format.

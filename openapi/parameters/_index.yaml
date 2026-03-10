@@ -33,3 +33,7 @@ QuerySearch:
   $ref: './QuerySearch.yaml'
 QueryIds:
   $ref: './QueryIds.yaml'
+QueryGameName:
+  $ref: './QueryGameName.yaml'
+QueryGameCode:
+  $ref: './QueryGameCode.yaml'

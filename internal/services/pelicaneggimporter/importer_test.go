@@ -415,7 +415,178 @@ func TestImporter_Import(t *testing.T) {
 				services.NewNilTransactionManager(),
 			)
 
-			result, err := importer.Import(context.Background(), tt.egg)
+			result, err := importer.Import(context.Background(), tt.egg, nil)
+
+			if tt.wantErr {
+				require.Error(t, err)
+				if tt.wantErrContain != "" {
+					assert.Contains(t, err.Error(), tt.wantErrContain)
+				}
+			} else {
+				require.NoError(t, err)
+				if tt.validate != nil {
+					tt.validate(t, gameRepo, gameModRepo, result)
+				}
+			}
+		})
+	}
+}
+
+func TestImporter_Import_WithOptions(t *testing.T) {
+	tests := []struct {
+		name           string
+		egg            *gamesimport.PelicanEgg
+		opts           *gamesimport.Options
+		wantErr        bool
+		wantErrContain string
+		validate       func(t *testing.T, gameRepo *inmemory.GameRepository, gameModRepo *inmemory.GameModRepository, result *ImportResult)
+	}{
+		{
+			name: "override_name_only",
+			egg: &gamesimport.PelicanEgg{
+				Name:    "Original Name",
+				Startup: "./server",
+				Raw: map[string]any{
+					"name": "Original Name",
+				},
+			},
+			opts: &gamesimport.Options{
+				Name: lo.ToPtr("Overridden Name"),
+			},
+			validate: func(t *testing.T, gameRepo *inmemory.GameRepository, _ *inmemory.GameModRepository, result *ImportResult) {
+				t.Helper()
+
+				require.NotNil(t, result)
+				assert.Equal(t, "original_name", result.Game.Code)
+				assert.Equal(t, "Overridden Name", result.Game.Name)
+
+				games, err := gameRepo.FindAll(context.Background(), nil, nil)
+				require.NoError(t, err)
+				require.Len(t, games, 1)
+				assert.Equal(t, "Overridden Name", games[0].Name)
+			},
+		},
+		{
+			name: "override_code_only",
+			egg: &gamesimport.PelicanEgg{
+				Name:    "Original Name",
+				Startup: "./server",
+				Raw: map[string]any{
+					"name": "Original Name",
+				},
+			},
+			opts: &gamesimport.Options{
+				Code: lo.ToPtr("custom_code"),
+			},
+			validate: func(t *testing.T, gameRepo *inmemory.GameRepository, gameModRepo *inmemory.GameModRepository, result *ImportResult) {
+				t.Helper()
+
+				require.NotNil(t, result)
+				assert.Equal(t, "custom_code", result.Game.Code)
+				assert.Equal(t, "Original Name", result.Game.Name)
+
+				games, err := gameRepo.FindAll(context.Background(), nil, nil)
+				require.NoError(t, err)
+				require.Len(t, games, 1)
+				assert.Equal(t, "custom_code", games[0].Code)
+
+				mods, err := gameModRepo.FindAll(context.Background(), nil, nil)
+				require.NoError(t, err)
+				require.Len(t, mods, 1)
+				assert.Equal(t, "custom_code", mods[0].GameCode)
+			},
+		},
+		{
+			name: "override_both_code_and_name",
+			egg: &gamesimport.PelicanEgg{
+				Name:    "Original Name",
+				Startup: "./server",
+				Raw: map[string]any{
+					"name": "Original Name",
+				},
+			},
+			opts: &gamesimport.Options{
+				Code: lo.ToPtr("my_game"),
+				Name: lo.ToPtr("My Custom Game"),
+			},
+			validate: func(t *testing.T, gameRepo *inmemory.GameRepository, gameModRepo *inmemory.GameModRepository, result *ImportResult) {
+				t.Helper()
+
+				require.NotNil(t, result)
+				assert.Equal(t, "my_game", result.Game.Code)
+				assert.Equal(t, "My Custom Game", result.Game.Name)
+
+				games, err := gameRepo.FindAll(context.Background(), nil, nil)
+				require.NoError(t, err)
+				require.Len(t, games, 1)
+				assert.Equal(t, "my_game", games[0].Code)
+				assert.Equal(t, "My Custom Game", games[0].Name)
+
+				mods, err := gameModRepo.FindAll(context.Background(), nil, nil)
+				require.NoError(t, err)
+				require.Len(t, mods, 1)
+				assert.Equal(t, "my_game", mods[0].GameCode)
+			},
+		},
+		{
+			name: "invalid_code_in_options",
+			egg: &gamesimport.PelicanEgg{
+				Name:    "Test Game",
+				Startup: "./server",
+				Raw: map[string]any{
+					"name": "Test Game",
+				},
+			},
+			opts: &gamesimport.Options{
+				Code: lo.ToPtr("INVALID"),
+			},
+			wantErr:        true,
+			wantErrContain: "code must match pattern",
+		},
+		{
+			name: "code_too_short_in_options",
+			egg: &gamesimport.PelicanEgg{
+				Name:    "Test Game",
+				Startup: "./server",
+				Raw: map[string]any{
+					"name": "Test Game",
+				},
+			},
+			opts: &gamesimport.Options{
+				Code: lo.ToPtr("a"),
+			},
+			wantErr:        true,
+			wantErrContain: "code must be between 2 and 16 characters",
+		},
+		{
+			name: "name_too_short_in_options",
+			egg: &gamesimport.PelicanEgg{
+				Name:    "Test Game",
+				Startup: "./server",
+				Raw: map[string]any{
+					"name": "Test Game",
+				},
+			},
+			opts: &gamesimport.Options{
+				Name: lo.ToPtr("A"),
+			},
+			wantErr:        true,
+			wantErrContain: "name must be between 2 and 128 characters",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gameRepo := inmemory.NewGameRepository()
+			gameModRepo := inmemory.NewGameModRepository()
+
+			importer := NewImporter(
+				gameRepo,
+				gameModRepo,
+				services.NewNilTransactionManager(),
+			)
+
+			result, err := importer.Import(context.Background(), tt.egg, tt.opts)
 
 			if tt.wantErr {
 				require.Error(t, err)

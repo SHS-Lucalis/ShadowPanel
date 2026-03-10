@@ -115,6 +115,9 @@
       **Note**: Installation scripts and Docker configuration from the egg are stored in metadata
       but not currently executed by GameAP Daemon.
     operationId: importPelicanEgg
+    parameters:
+      - $ref: '../parameters/QueryGameName.yaml'
+      - $ref: '../parameters/QueryGameCode.yaml'
     requestBody:
       required: true
       content:
@@ -178,6 +181,9 @@
       - game.code: 2-16 characters, pattern: ^[a-z0-9_-]+$
       - Duplicate mod names in the same file are not allowed
     operationId: importGameAP
+    parameters:
+      - $ref: '../parameters/QueryGameName.yaml'
+      - $ref: '../parameters/QueryGameCode.yaml'
     requestBody:
       required: true
       content:
