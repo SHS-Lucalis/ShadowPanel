@@ -91,6 +91,10 @@ type Config struct {
 	Plugins struct {
 		Disabled bool     `env:"PLUGINS_DISABLED" envDefault:"false"`
 		AutoLoad []string `env:"PLUGINS_AUTOLOAD" envDefault:"" envSeparator:","`
+		Cache    struct {
+			Enabled bool   `env:"PLUGINS_CACHE_ENABLED" envDefault:"true"`
+			Dir     string `env:"PLUGINS_CACHE_DIR" envDefault:""`
+		}
 	}
 
 	PluginStore struct {
