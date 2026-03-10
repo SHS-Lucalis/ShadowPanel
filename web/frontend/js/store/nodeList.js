@@ -21,7 +21,7 @@ export const useNodeListStore = defineStore("nodeList",{
         async fetchNodesByFilter(filter) {
             this.apiProcesses++
             try {
-                const response = await axios.get('/api/dedicated_servers')
+                const response = await axios.get('/api/nodes')
                 this.nodes = response.data;
             } catch (error) {
                 throw error
@@ -32,7 +32,7 @@ export const useNodeListStore = defineStore("nodeList",{
         async fetchNodesSummary() {
             this.apiProcesses++
             try {
-                const response = await axios.get('/api/dedicated_servers/summary')
+                const response = await axios.get('/api/nodes/summary')
                 this.summary = response.data;
             } catch (error) {
                 throw error
@@ -43,7 +43,7 @@ export const useNodeListStore = defineStore("nodeList",{
         async createNode(node) {
             this.apiProcesses++
             try {
-                await axios.post('/api/dedicated_servers', node)
+                await axios.post('/api/nodes', node)
             } catch (error) {
                 throw error
             } finally {
@@ -53,7 +53,7 @@ export const useNodeListStore = defineStore("nodeList",{
         async deleteNode(id) {
             this.apiProcesses++
             try {
-                await axios.delete('/api/dedicated_servers/'+id)
+                await axios.delete('/api/nodes/'+id)
             } catch (error) {
                 throw error
             } finally {
@@ -63,7 +63,7 @@ export const useNodeListStore = defineStore("nodeList",{
         async fetchAutoSetupData() {
             this.apiProcesses++
             try {
-                const response = await axios.get('/api/dedicated_servers/setup')
+                const response = await axios.get('/api/nodes/setup')
                 this.autoSetupData = response.data
             } catch (error) {
                 throw error

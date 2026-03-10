@@ -114,7 +114,7 @@ All GameAP API endpoints are mocked using MSW:
 - **RCON**: `/api/servers/:id/rcon/*`
 - **File Manager**: `/api/servers/:id/filemanager/*`
 - **Games**: `/api/games`, `/api/game_mods`
-- **Nodes**: `/api/dedicated_servers`
+- **Nodes**: `/api/nodes`
 - **Users**: `/api/users`
 - **Tasks**: `/api/gdaemon_tasks`
 - **Plugins**: `/plugins.js`, `/plugins.css`
