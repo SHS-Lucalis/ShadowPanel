@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gameap/gameap/internal/api/base"
+	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/domain/gamesimport"
 	"github.com/gameap/gameap/internal/services/gameapimporter"
 	"github.com/gameap/gameap/pkg/api"
@@ -15,7 +16,11 @@ import (
 const maxBodySize = 1 << 20 // 1 MB
 
 type GameAPImporter interface {
-	Import(ctx context.Context, export *gamesimport.GameExport) (*gameapimporter.ImportResult, error)
+	Import(
+		ctx context.Context,
+		export *domain.GameExport,
+		opts *gamesimport.Options,
+	) (*gameapimporter.ImportResult, error)
 }
 
 type Handler struct {
@@ -32,6 +37,20 @@ func NewHandler(importer GameAPImporter, responder base.Responder) *Handler {
 
 func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+
+	inp, err := readInput(r)
+	if err != nil {
+		h.responder.WriteError(ctx, rw, api.WrapHTTPError(err, http.StatusBadRequest))
+
+		return
+	}
+
+	opts := inp.toImportOptions()
+	if err := opts.Validate(); err != nil {
+		h.responder.WriteError(ctx, rw, api.WrapHTTPError(err, http.StatusBadRequest))
+
+		return
+	}
 
 	r.Body = http.MaxBytesReader(rw, r.Body, maxBodySize)
 
@@ -56,7 +75,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	export, err := gamesimport.ParseGameExport(body)
+	export, err := domain.ParseGameExport(body)
 	if err != nil {
 		wrappedErr := errors.WithMessage(err, "failed to parse GameAP YAML")
 		h.responder.WriteError(ctx, rw, api.WrapHTTPError(wrappedErr, http.StatusBadRequest))
@@ -64,7 +83,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.importer.Import(ctx, export)
+	result, err := h.importer.Import(ctx, export, opts)
 	if err != nil {
 		h.responder.WriteError(ctx, rw, errors.WithMessage(err, "failed to import GameAP config"))
 

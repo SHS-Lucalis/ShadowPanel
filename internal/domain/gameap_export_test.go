@@ -1,9 +1,8 @@
-package gamesimport
+package domain
 
 import (
 	"testing"
 
-	"github.com/gameap/gameap/internal/domain"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -85,7 +84,7 @@ mods:
 					SteamAppSetConfig:       lo.ToPtr("mod cstrike"),
 					RemoteRepositoryLinux:   lo.ToPtr("http://example.com/linux"),
 					RemoteRepositoryWindows: lo.ToPtr("http://example.com/windows"),
-					Metadata: domain.Metadata{
+					Metadata: Metadata{
 						"custom_key": "custom_value",
 					},
 				},
@@ -409,7 +408,7 @@ func TestGameExportGame_ToDomainGame(t *testing.T) {
 		RemoteRepositoryWindows: lo.ToPtr("http://example.com/windows"),
 		LocalRepositoryLinux:    lo.ToPtr("/local/linux"),
 		LocalRepositoryWindows:  lo.ToPtr("C:\\local\\windows"),
-		Metadata: domain.Metadata{
+		Metadata: Metadata{
 			"custom": "value",
 		},
 	}
@@ -453,7 +452,7 @@ func TestGameExportMod_ToDomainGameMod(t *testing.T) {
 		ChmapCmd:                lo.ToPtr("changelevel {map}"),
 		SendmsgCmd:              lo.ToPtr("say {msg}"),
 		PasswdCmd:               lo.ToPtr("password {pass}"),
-		Metadata: domain.Metadata{
+		Metadata: Metadata{
 			"mod_key": "mod_value",
 		},
 	}
@@ -467,7 +466,7 @@ func TestGameExportMod_ToDomainGameMod(t *testing.T) {
 	assert.Equal(t, "restart", gameMod.FastRcon[0].Command)
 	require.Len(t, gameMod.Vars, 1)
 	assert.Equal(t, "maxplayers", gameMod.Vars[0].Var)
-	assert.Equal(t, domain.GameModVarDefault("32"), gameMod.Vars[0].Default)
+	assert.Equal(t, GameModVarDefault("32"), gameMod.Vars[0].Default)
 	assert.Equal(t, "http://mod.com/linux", *gameMod.RemoteRepositoryLinux)
 	assert.Equal(t, "./start.sh", *gameMod.StartCmdLinux)
 	assert.Equal(t, "kick {name}", *gameMod.KickCmd)
@@ -475,7 +474,7 @@ func TestGameExportMod_ToDomainGameMod(t *testing.T) {
 }
 
 func TestNewGameExportFromDomain(t *testing.T) {
-	game := &domain.Game{
+	game := &Game{
 		Code:                    "cstrike",
 		Name:                    "Counter-Strike 1.6",
 		Engine:                  "GoldSource",
@@ -486,26 +485,26 @@ func TestNewGameExportFromDomain(t *testing.T) {
 		RemoteRepositoryLinux:   lo.ToPtr("http://example.com/linux"),
 		RemoteRepositoryWindows: lo.ToPtr("http://example.com/windows"),
 		Enabled:                 1,
-		Metadata: domain.Metadata{
+		Metadata: Metadata{
 			"custom":      "value",
 			"pelican_egg": map[string]any{"should": "be excluded"},
 		},
 	}
 
-	mods := []domain.GameMod{
+	mods := []GameMod{
 		{
 			ID:       1,
 			GameCode: "cstrike",
 			Name:     "Classic",
-			FastRcon: domain.GameModFastRconList{
+			FastRcon: GameModFastRconList{
 				{Info: "Restart", Command: "restart"},
 			},
-			Vars: domain.GameModVarList{
+			Vars: GameModVarList{
 				{Var: "maxplayers", Default: "32", Info: "Max players"},
 			},
 			StartCmdLinux: lo.ToPtr("./hlds_run"),
 			KickCmd:       lo.ToPtr("kick {name}"),
-			Metadata: domain.Metadata{
+			Metadata: Metadata{
 				"pelican_egg": map[string]any{"should": "be excluded"},
 			},
 		},

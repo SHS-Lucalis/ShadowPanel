@@ -3,7 +3,7 @@ package gameexporter
 import (
 	"context"
 
-	"github.com/gameap/gameap/internal/domain/gamesimport"
+	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/pkg/errors"
@@ -53,7 +53,7 @@ func (e *Exporter) Export(ctx context.Context, gameCode string) ([]byte, error) 
 		return nil, errors.WithMessage(err, "failed to find game mods")
 	}
 
-	export := gamesimport.NewGameExportFromDomain(game, mods, e.version)
+	export := domain.NewGameExportFromDomain(game, mods, e.version)
 
 	yamlData, err := export.ToYAML()
 	if err != nil {
@@ -63,7 +63,7 @@ func (e *Exporter) Export(ctx context.Context, gameCode string) ([]byte, error) 
 	return yamlData, nil
 }
 
-func (e *Exporter) ExportToStruct(ctx context.Context, gameCode string) (*gamesimport.GameExport, error) {
+func (e *Exporter) ExportToStruct(ctx context.Context, gameCode string) (*domain.GameExport, error) {
 	if gameCode == "" {
 		return nil, errors.New("game code is required")
 	}
@@ -89,5 +89,5 @@ func (e *Exporter) ExportToStruct(ctx context.Context, gameCode string) (*gamesi
 		return nil, errors.WithMessage(err, "failed to find game mods")
 	}
 
-	return gamesimport.NewGameExportFromDomain(game, mods, e.version), nil
+	return domain.NewGameExportFromDomain(game, mods, e.version), nil
 }

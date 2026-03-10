@@ -1,0 +1,8 @@
+name: name
+in: query
+description: Override game name during import
+required: false
+schema:
+  type: string
+  minLength: 2
+  maxLength: 128

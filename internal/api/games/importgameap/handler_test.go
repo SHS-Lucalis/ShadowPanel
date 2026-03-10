@@ -360,3 +360,195 @@ mods:
 	assert.Equal(t, "Default", response.ModsCreated[0])
 	require.Len(t, response.ModsUpdated, 0)
 }
+
+func TestHandler_WithQueryParameters(t *testing.T) {
+	tests := []struct {
+		name           string
+		requestBody    string
+		queryParams    string
+		expectedStatus int
+		validate       func(t *testing.T, response Response, gameRepo *inmemory.GameRepository)
+	}{
+		{
+			name: "override_name_via_query",
+			requestBody: `
+schema_version: "1.0"
+game:
+  code: "test"
+  name: "Original Name"
+  engine: "Test"
+`,
+			queryParams:    "?name=Overridden%20Name",
+			expectedStatus: http.StatusOK,
+			validate: func(t *testing.T, response Response, gameRepo *inmemory.GameRepository) {
+				t.Helper()
+
+				assert.Equal(t, "test", response.GameCode)
+				assert.Equal(t, "Overridden Name", response.GameName)
+
+				games, err := gameRepo.FindAll(context.Background(), nil, nil)
+				require.NoError(t, err)
+				require.Len(t, games, 1)
+				assert.Equal(t, "Overridden Name", games[0].Name)
+			},
+		},
+		{
+			name: "override_code_via_query",
+			requestBody: `
+schema_version: "1.0"
+game:
+  code: "original"
+  name: "Test Game"
+  engine: "Test"
+`,
+			queryParams:    "?code=custom",
+			expectedStatus: http.StatusOK,
+			validate: func(t *testing.T, response Response, gameRepo *inmemory.GameRepository) {
+				t.Helper()
+
+				assert.Equal(t, "custom", response.GameCode)
+				assert.Equal(t, "Test Game", response.GameName)
+
+				games, err := gameRepo.FindAll(context.Background(), nil, nil)
+				require.NoError(t, err)
+				require.Len(t, games, 1)
+				assert.Equal(t, "custom", games[0].Code)
+			},
+		},
+		{
+			name: "override_both_code_and_name_via_query",
+			requestBody: `
+schema_version: "1.0"
+game:
+  code: "original"
+  name: "Original Name"
+  engine: "Test"
+`,
+			queryParams:    "?name=Custom%20Name&code=custom",
+			expectedStatus: http.StatusOK,
+			validate: func(t *testing.T, response Response, gameRepo *inmemory.GameRepository) {
+				t.Helper()
+
+				assert.Equal(t, "custom", response.GameCode)
+				assert.Equal(t, "Custom Name", response.GameName)
+
+				games, err := gameRepo.FindAll(context.Background(), nil, nil)
+				require.NoError(t, err)
+				require.Len(t, games, 1)
+				assert.Equal(t, "custom", games[0].Code)
+				assert.Equal(t, "Custom Name", games[0].Name)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gameRepo := inmemory.NewGameRepository()
+			gameModRepo := inmemory.NewGameModRepository()
+			responder := api.NewResponder()
+
+			importer := gameapimporter.NewImporter(
+				gameRepo,
+				gameModRepo,
+				services.NewNilTransactionManager(),
+			)
+
+			handler := NewHandler(importer, responder)
+
+			req := httptest.NewRequest(http.MethodPost, "/api/games/import/gameap"+tt.queryParams, bytes.NewBufferString(tt.requestBody))
+			req.Header.Set("Content-Type", "application/x-yaml")
+			w := httptest.NewRecorder()
+
+			handler.ServeHTTP(w, req)
+
+			assert.Equal(t, tt.expectedStatus, w.Code)
+
+			if tt.validate != nil {
+				var response Response
+				require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
+				tt.validate(t, response, gameRepo)
+			}
+		})
+	}
+}
+
+func TestHandler_InvalidQueryParameters(t *testing.T) {
+	tests := []struct {
+		name           string
+		requestBody    string
+		queryParams    string
+		expectedStatus int
+		wantError      string
+	}{
+		{
+			name: "invalid_code_uppercase",
+			requestBody: `
+schema_version: "1.0"
+game:
+  code: "test"
+  name: "Test"
+  engine: "Test"
+`,
+			queryParams:    "?code=INVALID",
+			expectedStatus: http.StatusBadRequest,
+			wantError:      "code must match pattern",
+		},
+		{
+			name: "code_too_short",
+			requestBody: `
+schema_version: "1.0"
+game:
+  code: "test"
+  name: "Test"
+  engine: "Test"
+`,
+			queryParams:    "?code=a",
+			expectedStatus: http.StatusBadRequest,
+			wantError:      "code must be between 2 and 16 characters",
+		},
+		{
+			name: "name_too_short",
+			requestBody: `
+schema_version: "1.0"
+game:
+  code: "test"
+  name: "Test"
+  engine: "Test"
+`,
+			queryParams:    "?name=A",
+			expectedStatus: http.StatusBadRequest,
+			wantError:      "name must be between 2 and 128 characters",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gameRepo := inmemory.NewGameRepository()
+			gameModRepo := inmemory.NewGameModRepository()
+			responder := api.NewResponder()
+
+			importer := gameapimporter.NewImporter(
+				gameRepo,
+				gameModRepo,
+				services.NewNilTransactionManager(),
+			)
+
+			handler := NewHandler(importer, responder)
+
+			req := httptest.NewRequest(http.MethodPost, "/api/games/import/gameap"+tt.queryParams, bytes.NewBufferString(tt.requestBody))
+			req.Header.Set("Content-Type", "application/x-yaml")
+			w := httptest.NewRecorder()
+
+			handler.ServeHTTP(w, req)
+
+			assert.Equal(t, tt.expectedStatus, w.Code)
+
+			var errorResp map[string]any
+			require.NoError(t, json.Unmarshal(w.Body.Bytes(), &errorResp))
+			assert.Equal(t, "error", errorResp["status"])
+			errorMsg, ok := errorResp["error"].(string)
+			require.True(t, ok)
+			assert.Contains(t, errorMsg, tt.wantError)
+		})
+	}
+}

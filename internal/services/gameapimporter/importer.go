@@ -39,7 +39,11 @@ type ImportResult struct {
 	ModsUpdated []string
 }
 
-func (i *Importer) Import(ctx context.Context, export *gamesimport.GameExport) (*ImportResult, error) {
+func (i *Importer) Import(
+	ctx context.Context,
+	export *domain.GameExport,
+	opts *gamesimport.Options,
+) (*ImportResult, error) {
 	if export == nil {
 		return nil, errors.New("export cannot be nil")
 	}
@@ -48,7 +52,20 @@ func (i *Importer) Import(ctx context.Context, export *gamesimport.GameExport) (
 		return nil, errors.WithMessage(err, "validation failed")
 	}
 
+	if err := opts.Validate(); err != nil {
+		return nil, errors.WithMessage(err, "options validation failed")
+	}
+
 	game := export.Game.ToDomainGame()
+
+	if opts != nil {
+		if opts.Name != nil {
+			game.Name = *opts.Name
+		}
+		if opts.Code != nil {
+			game.Code = *opts.Code
+		}
+	}
 
 	mods := make([]*domain.GameMod, 0, len(export.Mods))
 	for _, modExport := range export.Mods {

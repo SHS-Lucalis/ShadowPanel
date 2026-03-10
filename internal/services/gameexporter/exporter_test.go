@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/gameap/gameap/internal/domain"
-	"github.com/gameap/gameap/internal/domain/gamesimport"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
@@ -52,10 +51,10 @@ func TestExporter_Export(t *testing.T) {
 			validate: func(t *testing.T, yamlData []byte) {
 				t.Helper()
 
-				export, err := gamesimport.ParseGameExport(yamlData)
+				export, err := domain.ParseGameExport(yamlData)
 				require.NoError(t, err)
 
-				assert.Equal(t, gamesimport.CurrentSchemaVersion, export.SchemaVersion)
+				assert.Equal(t, domain.CurrentSchemaVersion, export.SchemaVersion)
 				assert.NotEmpty(t, export.ExportedAt)
 				assert.Contains(t, export.ExportedBy, "GameAP")
 
@@ -89,7 +88,7 @@ func TestExporter_Export(t *testing.T) {
 			validate: func(t *testing.T, yamlData []byte) {
 				t.Helper()
 
-				export, err := gamesimport.ParseGameExport(yamlData)
+				export, err := domain.ParseGameExport(yamlData)
 				require.NoError(t, err)
 
 				assert.Equal(t, "test", export.Game.Code)
@@ -128,7 +127,7 @@ func TestExporter_Export(t *testing.T) {
 			validate: func(t *testing.T, yamlData []byte) {
 				t.Helper()
 
-				export, err := gamesimport.ParseGameExport(yamlData)
+				export, err := domain.ParseGameExport(yamlData)
 				require.NoError(t, err)
 
 				assert.Equal(t, "multi", export.Game.Code)
@@ -177,7 +176,7 @@ func TestExporter_Export(t *testing.T) {
 			validate: func(t *testing.T, yamlData []byte) {
 				t.Helper()
 
-				export, err := gamesimport.ParseGameExport(yamlData)
+				export, err := domain.ParseGameExport(yamlData)
 				require.NoError(t, err)
 
 				require.NotNil(t, export.Game.Metadata)
@@ -242,7 +241,7 @@ func TestExporter_ExportToStruct(t *testing.T) {
 	export, err := exporter.ExportToStruct(context.Background(), "test")
 	require.NoError(t, err)
 
-	assert.Equal(t, gamesimport.CurrentSchemaVersion, export.SchemaVersion)
+	assert.Equal(t, domain.CurrentSchemaVersion, export.SchemaVersion)
 	assert.Equal(t, "test", export.Game.Code)
 	assert.Equal(t, "Test Game", export.Game.Name)
 	require.Len(t, export.Mods, 1)

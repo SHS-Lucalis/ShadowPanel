@@ -1,10 +1,9 @@
-package gamesimport
+package domain
 
 import (
-	"regexp"
 	"time"
 
-	"github.com/gameap/gameap/internal/domain"
+	"github.com/gameap/gameap/pkg/strings"
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
@@ -24,8 +23,6 @@ const (
 	maxSteamAppSetConfigLength = 128
 )
 
-var gameCodeRegex = regexp.MustCompile(`^[a-z0-9_-]+$`)
-
 type GameExport struct {
 	SchemaVersion string          `yaml:"schema_version"`
 	ExportedAt    string          `yaml:"exported_at,omitempty"`
@@ -35,18 +32,18 @@ type GameExport struct {
 }
 
 type GameExportGame struct {
-	Code                    string          `yaml:"code"`
-	Name                    string          `yaml:"name"`
-	Engine                  string          `yaml:"engine"`
-	EngineVersion           string          `yaml:"engine_version,omitempty"`
-	SteamAppIDLinux         *uint           `yaml:"steam_app_id_linux,omitempty"`
-	SteamAppIDWindows       *uint           `yaml:"steam_app_id_windows,omitempty"`
-	SteamAppSetConfig       *string         `yaml:"steam_app_set_config,omitempty"`
-	RemoteRepositoryLinux   *string         `yaml:"remote_repository_linux,omitempty"`
-	RemoteRepositoryWindows *string         `yaml:"remote_repository_windows,omitempty"`
-	LocalRepositoryLinux    *string         `yaml:"local_repository_linux,omitempty"`
-	LocalRepositoryWindows  *string         `yaml:"local_repository_windows,omitempty"`
-	Metadata                domain.Metadata `yaml:"metadata,omitempty"`
+	Code                    string   `yaml:"code"`
+	Name                    string   `yaml:"name"`
+	Engine                  string   `yaml:"engine"`
+	EngineVersion           string   `yaml:"engine_version,omitempty"`
+	SteamAppIDLinux         *uint    `yaml:"steam_app_id_linux,omitempty"`
+	SteamAppIDWindows       *uint    `yaml:"steam_app_id_windows,omitempty"`
+	SteamAppSetConfig       *string  `yaml:"steam_app_set_config,omitempty"`
+	RemoteRepositoryLinux   *string  `yaml:"remote_repository_linux,omitempty"`
+	RemoteRepositoryWindows *string  `yaml:"remote_repository_windows,omitempty"`
+	LocalRepositoryLinux    *string  `yaml:"local_repository_linux,omitempty"`
+	LocalRepositoryWindows  *string  `yaml:"local_repository_windows,omitempty"`
+	Metadata                Metadata `yaml:"metadata,omitempty"`
 }
 
 type GameExportMod struct {
@@ -66,7 +63,7 @@ type GameExportMod struct {
 	ChmapCmd                *string                 `yaml:"chmap_cmd,omitempty"`
 	SendmsgCmd              *string                 `yaml:"sendmsg_cmd,omitempty"`
 	PasswdCmd               *string                 `yaml:"passwd_cmd,omitempty"`
-	Metadata                domain.Metadata         `yaml:"metadata,omitempty"`
+	Metadata                Metadata                `yaml:"metadata,omitempty"`
 }
 
 type GameExportModFastRcon struct {
@@ -128,7 +125,7 @@ func (e *GameExport) validateGame() error {
 		return errors.Errorf("game.code must be between 2 and %d characters", maxGameCodeLength)
 	}
 
-	if !gameCodeRegex.MatchString(e.Game.Code) {
+	if !strings.IsSlug(e.Game.Code) {
 		return errors.New("game.code must match pattern: ^[a-z0-9_-]+$")
 	}
 
@@ -244,8 +241,8 @@ func validateModCommands(mod *GameExportMod, index int) error {
 	return nil
 }
 
-func (g *GameExportGame) ToDomainGame() *domain.Game {
-	return &domain.Game{
+func (g *GameExportGame) ToDomainGame() *Game {
+	return &Game{
 		Code:                    g.Code,
 		Name:                    g.Name,
 		Engine:                  g.Engine,
@@ -262,26 +259,26 @@ func (g *GameExportGame) ToDomainGame() *domain.Game {
 	}
 }
 
-func (m *GameExportMod) ToDomainGameMod(gameCode string) *domain.GameMod {
-	fastRcon := make(domain.GameModFastRconList, 0, len(m.FastRcon))
+func (m *GameExportMod) ToDomainGameMod(gameCode string) *GameMod {
+	fastRcon := make(GameModFastRconList, 0, len(m.FastRcon))
 	for _, fr := range m.FastRcon {
-		fastRcon = append(fastRcon, domain.GameModFastRcon{
+		fastRcon = append(fastRcon, GameModFastRcon{
 			Info:    fr.Info,
 			Command: fr.Command,
 		})
 	}
 
-	vars := make(domain.GameModVarList, 0, len(m.Vars))
+	vars := make(GameModVarList, 0, len(m.Vars))
 	for _, v := range m.Vars {
-		vars = append(vars, domain.GameModVar{
+		vars = append(vars, GameModVar{
 			Var:      v.Var,
-			Default:  domain.GameModVarDefault(v.Default),
+			Default:  GameModVarDefault(v.Default),
 			Info:     v.Info,
 			AdminVar: v.AdminVar,
 		})
 	}
 
-	return &domain.GameMod{
+	return &GameMod{
 		GameCode:                gameCode,
 		Name:                    m.Name,
 		FastRcon:                fastRcon,
@@ -303,7 +300,7 @@ func (m *GameExportMod) ToDomainGameMod(gameCode string) *domain.GameMod {
 	}
 }
 
-func NewGameExportFromDomain(game *domain.Game, mods []domain.GameMod, version string) *GameExport {
+func NewGameExportFromDomain(game *Game, mods []GameMod, version string) *GameExport {
 	exportMods := make([]GameExportMod, 0, len(mods))
 	for _, mod := range mods {
 		exportMods = append(exportMods, newGameExportModFromDomain(&mod))
@@ -337,7 +334,7 @@ func NewGameExportFromDomain(game *domain.Game, mods []domain.GameMod, version s
 	}
 }
 
-func newGameExportModFromDomain(mod *domain.GameMod) GameExportMod {
+func newGameExportModFromDomain(mod *GameMod) GameExportMod {
 	fastRcon := make([]GameExportModFastRcon, 0, len(mod.FastRcon))
 	for _, fr := range mod.FastRcon {
 		fastRcon = append(fastRcon, GameExportModFastRcon{

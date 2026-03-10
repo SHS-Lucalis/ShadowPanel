@@ -17,7 +17,7 @@ import (
 func TestImporter_Import(t *testing.T) {
 	tests := []struct {
 		name         string
-		export       *gamesimport.GameExport
+		export       *domain.GameExport
 		setupGame    func(*inmemory.GameRepository)
 		setupGameMod func(*inmemory.GameModRepository)
 		wantError    string
@@ -25,9 +25,9 @@ func TestImporter_Import(t *testing.T) {
 	}{
 		{
 			name: "successful_import_new_game_and_mods",
-			export: &gamesimport.GameExport{
+			export: &domain.GameExport{
 				SchemaVersion: "1.0",
-				Game: gamesimport.GameExportGame{
+				Game: domain.GameExportGame{
 					Code:              "cstrike",
 					Name:              "Counter-Strike 1.6",
 					Engine:            "GoldSource",
@@ -35,15 +35,15 @@ func TestImporter_Import(t *testing.T) {
 					SteamAppIDLinux:   lo.ToPtr(uint(90)),
 					SteamAppIDWindows: lo.ToPtr(uint(90)),
 				},
-				Mods: []gamesimport.GameExportMod{
+				Mods: []domain.GameExportMod{
 					{
 						Name:          "Classic",
 						StartCmdLinux: lo.ToPtr("./hlds_run -game cstrike +port {port}"),
 						KickCmd:       lo.ToPtr("kick {name}"),
-						FastRcon: []gamesimport.GameExportModFastRcon{
+						FastRcon: []domain.GameExportModFastRcon{
 							{Info: "Restart", Command: "changelevel {map}"},
 						},
-						Vars: []gamesimport.GameExportModVar{
+						Vars: []domain.GameExportModVar{
 							{Var: "maxplayers", Default: "32", Info: "Max players"},
 						},
 					},
@@ -95,9 +95,9 @@ func TestImporter_Import(t *testing.T) {
 		},
 		{
 			name: "successful_import_game_only_without_mods",
-			export: &gamesimport.GameExport{
+			export: &domain.GameExport{
 				SchemaVersion: "1.0",
-				Game: gamesimport.GameExportGame{
+				Game: domain.GameExportGame{
 					Code:   "test",
 					Name:   "Test Game",
 					Engine: "Test Engine",
@@ -124,9 +124,9 @@ func TestImporter_Import(t *testing.T) {
 		},
 		{
 			name: "successful_update_existing_game",
-			export: &gamesimport.GameExport{
+			export: &domain.GameExport{
 				SchemaVersion: "1.0",
-				Game: gamesimport.GameExportGame{
+				Game: domain.GameExportGame{
 					Code:          "existing",
 					Name:          "Updated Name",
 					Engine:        "New Engine",
@@ -166,14 +166,14 @@ func TestImporter_Import(t *testing.T) {
 		},
 		{
 			name: "successful_update_existing_mod",
-			export: &gamesimport.GameExport{
+			export: &domain.GameExport{
 				SchemaVersion: "1.0",
-				Game: gamesimport.GameExportGame{
+				Game: domain.GameExportGame{
 					Code:   "existing",
 					Name:   "Existing Game",
 					Engine: "Test",
 				},
-				Mods: []gamesimport.GameExportMod{
+				Mods: []domain.GameExportMod{
 					{
 						Name:          "Default",
 						StartCmdLinux: lo.ToPtr("./new_command"),
@@ -220,14 +220,14 @@ func TestImporter_Import(t *testing.T) {
 		},
 		{
 			name: "mixed_create_and_update_mods",
-			export: &gamesimport.GameExport{
+			export: &domain.GameExport{
 				SchemaVersion: "1.0",
-				Game: gamesimport.GameExportGame{
+				Game: domain.GameExportGame{
 					Code:   "mixed",
 					Name:   "Mixed Game",
 					Engine: "Test",
 				},
-				Mods: []gamesimport.GameExportMod{
+				Mods: []domain.GameExportMod{
 					{Name: "Existing", StartCmdLinux: lo.ToPtr("./updated")},
 					{Name: "NewMod", StartCmdLinux: lo.ToPtr("./new")},
 				},
@@ -270,8 +270,8 @@ func TestImporter_Import(t *testing.T) {
 		},
 		{
 			name: "missing_schema_version_returns_validation_error",
-			export: &gamesimport.GameExport{
-				Game: gamesimport.GameExportGame{
+			export: &domain.GameExport{
+				Game: domain.GameExportGame{
 					Code:   "test",
 					Name:   "Test",
 					Engine: "Test",
@@ -283,9 +283,9 @@ func TestImporter_Import(t *testing.T) {
 		},
 		{
 			name: "invalid_game_code_returns_validation_error",
-			export: &gamesimport.GameExport{
+			export: &domain.GameExport{
 				SchemaVersion: "1.0",
-				Game: gamesimport.GameExportGame{
+				Game: domain.GameExportGame{
 					Code:   "Invalid Code",
 					Name:   "Test",
 					Engine: "Test",
@@ -297,14 +297,14 @@ func TestImporter_Import(t *testing.T) {
 		},
 		{
 			name: "duplicate_mod_names_returns_validation_error",
-			export: &gamesimport.GameExport{
+			export: &domain.GameExport{
 				SchemaVersion: "1.0",
-				Game: gamesimport.GameExportGame{
+				Game: domain.GameExportGame{
 					Code:   "test",
 					Name:   "Test",
 					Engine: "Test",
 				},
-				Mods: []gamesimport.GameExportMod{
+				Mods: []domain.GameExportMod{
 					{Name: "Same"},
 					{Name: "Same"},
 				},
@@ -315,9 +315,9 @@ func TestImporter_Import(t *testing.T) {
 		},
 		{
 			name: "game_code_too_long_returns_validation_error",
-			export: &gamesimport.GameExport{
+			export: &domain.GameExport{
 				SchemaVersion: "1.0",
-				Game: gamesimport.GameExportGame{
+				Game: domain.GameExportGame{
 					Code:   "this_code_is_way_too_long_for_the_limit",
 					Name:   "Test",
 					Engine: "Test",
@@ -329,9 +329,9 @@ func TestImporter_Import(t *testing.T) {
 		},
 		{
 			name: "unsupported_schema_version_returns_error",
-			export: &gamesimport.GameExport{
+			export: &domain.GameExport{
 				SchemaVersion: "2.0",
-				Game: gamesimport.GameExportGame{
+				Game: domain.GameExportGame{
 					Code:   "test",
 					Name:   "Test",
 					Engine: "Test",
@@ -343,14 +343,14 @@ func TestImporter_Import(t *testing.T) {
 		},
 		{
 			name: "import_with_all_mod_fields",
-			export: &gamesimport.GameExport{
+			export: &domain.GameExport{
 				SchemaVersion: "1.0",
-				Game: gamesimport.GameExportGame{
+				Game: domain.GameExportGame{
 					Code:   "full",
 					Name:   "Full Game",
 					Engine: "Full",
 				},
-				Mods: []gamesimport.GameExportMod{
+				Mods: []domain.GameExportMod{
 					{
 						Name:                    "Complete",
 						RemoteRepositoryLinux:   lo.ToPtr("http://linux"),
@@ -366,11 +366,11 @@ func TestImporter_Import(t *testing.T) {
 						ChmapCmd:                lo.ToPtr("map"),
 						SendmsgCmd:              lo.ToPtr("say"),
 						PasswdCmd:               lo.ToPtr("pass"),
-						FastRcon: []gamesimport.GameExportModFastRcon{
+						FastRcon: []domain.GameExportModFastRcon{
 							{Info: "Info1", Command: "cmd1"},
 							{Info: "Info2", Command: "cmd2"},
 						},
-						Vars: []gamesimport.GameExportModVar{
+						Vars: []domain.GameExportModVar{
 							{Var: "var1", Default: "val1", Info: "Info1", AdminVar: false},
 							{Var: "var2", Default: "val2", Info: "Info2", AdminVar: true},
 						},
@@ -429,7 +429,181 @@ func TestImporter_Import(t *testing.T) {
 				services.NewNilTransactionManager(),
 			)
 
-			result, err := importer.Import(context.Background(), tt.export)
+			result, err := importer.Import(context.Background(), tt.export, nil)
+
+			if tt.wantError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantError)
+
+				return
+			}
+
+			require.NoError(t, err)
+			if tt.validate != nil {
+				tt.validate(t, gameRepo, gameModRepo, result)
+			}
+		})
+	}
+}
+
+func TestImporter_Import_WithOptions(t *testing.T) {
+	tests := []struct {
+		name      string
+		export    *domain.GameExport
+		opts      *gamesimport.Options
+		wantError string
+		validate  func(t *testing.T, gameRepo *inmemory.GameRepository, gameModRepo *inmemory.GameModRepository, result *ImportResult)
+	}{
+		{
+			name: "override_name_only",
+			export: &domain.GameExport{
+				SchemaVersion: "1.0",
+				Game: domain.GameExportGame{
+					Code:   "cstrike",
+					Name:   "Original Name",
+					Engine: "GoldSource",
+				},
+			},
+			opts: &gamesimport.Options{
+				Name: lo.ToPtr("Overridden Name"),
+			},
+			validate: func(t *testing.T, gameRepo *inmemory.GameRepository, _ *inmemory.GameModRepository, result *ImportResult) {
+				t.Helper()
+
+				require.NotNil(t, result)
+				assert.Equal(t, "cstrike", result.Game.Code)
+				assert.Equal(t, "Overridden Name", result.Game.Name)
+
+				games, err := gameRepo.FindAll(context.Background(), nil, nil)
+				require.NoError(t, err)
+				require.Len(t, games, 1)
+				assert.Equal(t, "Overridden Name", games[0].Name)
+			},
+		},
+		{
+			name: "override_code_only",
+			export: &domain.GameExport{
+				SchemaVersion: "1.0",
+				Game: domain.GameExportGame{
+					Code:   "original",
+					Name:   "Original Name",
+					Engine: "GoldSource",
+				},
+				Mods: []domain.GameExportMod{
+					{
+						Name:          "Default",
+						StartCmdLinux: lo.ToPtr("./server"),
+					},
+				},
+			},
+			opts: &gamesimport.Options{
+				Code: lo.ToPtr("overridden"),
+			},
+			validate: func(t *testing.T, gameRepo *inmemory.GameRepository, gameModRepo *inmemory.GameModRepository, result *ImportResult) {
+				t.Helper()
+
+				require.NotNil(t, result)
+				assert.Equal(t, "overridden", result.Game.Code)
+				assert.Equal(t, "Original Name", result.Game.Name)
+
+				games, err := gameRepo.FindAll(context.Background(), nil, nil)
+				require.NoError(t, err)
+				require.Len(t, games, 1)
+				assert.Equal(t, "overridden", games[0].Code)
+
+				mods, err := gameModRepo.FindAll(context.Background(), nil, nil)
+				require.NoError(t, err)
+				require.Len(t, mods, 1)
+				assert.Equal(t, "overridden", mods[0].GameCode)
+			},
+		},
+		{
+			name: "override_both_code_and_name",
+			export: &domain.GameExport{
+				SchemaVersion: "1.0",
+				Game: domain.GameExportGame{
+					Code:   "original",
+					Name:   "Original Name",
+					Engine: "GoldSource",
+				},
+			},
+			opts: &gamesimport.Options{
+				Code: lo.ToPtr("custom"),
+				Name: lo.ToPtr("Custom Name"),
+			},
+			validate: func(t *testing.T, gameRepo *inmemory.GameRepository, _ *inmemory.GameModRepository, result *ImportResult) {
+				t.Helper()
+
+				require.NotNil(t, result)
+				assert.Equal(t, "custom", result.Game.Code)
+				assert.Equal(t, "Custom Name", result.Game.Name)
+
+				games, err := gameRepo.FindAll(context.Background(), nil, nil)
+				require.NoError(t, err)
+				require.Len(t, games, 1)
+				assert.Equal(t, "custom", games[0].Code)
+				assert.Equal(t, "Custom Name", games[0].Name)
+			},
+		},
+		{
+			name: "invalid_code_in_options",
+			export: &domain.GameExport{
+				SchemaVersion: "1.0",
+				Game: domain.GameExportGame{
+					Code:   "original",
+					Name:   "Original Name",
+					Engine: "GoldSource",
+				},
+			},
+			opts: &gamesimport.Options{
+				Code: lo.ToPtr("INVALID"),
+			},
+			wantError: "code must match pattern",
+		},
+		{
+			name: "code_too_short_in_options",
+			export: &domain.GameExport{
+				SchemaVersion: "1.0",
+				Game: domain.GameExportGame{
+					Code:   "original",
+					Name:   "Original Name",
+					Engine: "GoldSource",
+				},
+			},
+			opts: &gamesimport.Options{
+				Code: lo.ToPtr("a"),
+			},
+			wantError: "code must be between 2 and 16 characters",
+		},
+		{
+			name: "name_too_short_in_options",
+			export: &domain.GameExport{
+				SchemaVersion: "1.0",
+				Game: domain.GameExportGame{
+					Code:   "original",
+					Name:   "Original Name",
+					Engine: "GoldSource",
+				},
+			},
+			opts: &gamesimport.Options{
+				Name: lo.ToPtr("A"),
+			},
+			wantError: "name must be between 2 and 128 characters",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gameRepo := inmemory.NewGameRepository()
+			gameModRepo := inmemory.NewGameModRepository()
+
+			importer := NewImporter(
+				gameRepo,
+				gameModRepo,
+				services.NewNilTransactionManager(),
+			)
+
+			result, err := importer.Import(context.Background(), tt.export, tt.opts)
 
 			if tt.wantError != "" {
 				require.Error(t, err)
