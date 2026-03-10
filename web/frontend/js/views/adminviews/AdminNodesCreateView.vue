@@ -28,14 +28,14 @@ import {computed, ref, onMounted} from "vue"
 import {trans} from "@/i18n/i18n"
 import {useClientCertificatesStore} from "@/store/clientCertificates";
 import {errorNotification, notification} from "@/parts/dialogs"
-import {useRoute, useRouter} from "vue-router"
+import {useRouter} from "vue-router"
 import {storeToRefs} from "pinia"
 import { snakeCase } from "lodash-es"
 import UpdateNodeForm from "./forms/UpdateNodeForm.vue";
 import GButton from "../../components/GButton.vue";
 import {useNodeListStore} from "@/store/nodeList";
+import CreateNodeModal from "@/components/blocks/CreateNodeModal.vue";
 
-const route = useRoute()
 const router = useRouter()
 
 const nodeListStore = useNodeListStore()

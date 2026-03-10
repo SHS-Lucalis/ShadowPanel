@@ -490,12 +490,12 @@ export const handlers = [
     }),
 
     // ==================== Nodes (Dedicated Servers) ====================
-    http.get('/api/dedicated_servers', async () => {
+    http.get('/api/nodes', async () => {
         await delay(debugState.networkDelay)
         return HttpResponse.json(mockNodes)
     }),
 
-    http.get('/api/dedicated_servers/summary', async () => {
+    http.get('/api/nodes/summary', async () => {
         await delay(debugState.networkDelay)
         return HttpResponse.json({
             total: mockNodes.length,
@@ -503,14 +503,14 @@ export const handlers = [
         })
     }),
 
-    http.get('/api/dedicated_servers/setup', async () => {
+    http.get('/api/nodes/setup', async () => {
         await delay(debugState.networkDelay)
         return HttpResponse.json({
             script: '#!/bin/bash\necho "Install GDaemon"',
         })
     }),
 
-    http.get('/api/dedicated_servers/:id', async ({ params }) => {
+    http.get('/api/nodes/:id', async ({ params }) => {
         await delay(debugState.networkDelay)
         const node = mockNodes.find(n => n.id === Number(params.id))
         if (!node) {
@@ -519,7 +519,7 @@ export const handlers = [
         return HttpResponse.json(node)
     }),
 
-    http.get('/api/dedicated_servers/:id/daemon', async () => {
+    http.get('/api/nodes/:id/daemon', async () => {
         await delay(debugState.networkDelay)
         return HttpResponse.json({
             version: '3.1.0',
@@ -528,27 +528,27 @@ export const handlers = [
         })
     }),
 
-    http.get('/api/dedicated_servers/:id/ip_list', async () => {
+    http.get('/api/nodes/:id/ip_list', async () => {
         await delay(debugState.networkDelay)
         return HttpResponse.json(['192.168.1.100', '192.168.1.101'])
     }),
 
-    http.get('/api/dedicated_servers/:id/busy_ports', async () => {
+    http.get('/api/nodes/:id/busy_ports', async () => {
         await delay(debugState.networkDelay)
         return HttpResponse.json([25565, 27015])
     }),
 
-    http.post('/api/dedicated_servers', async () => {
+    http.post('/api/nodes', async () => {
         await delay(debugState.networkDelay)
         return HttpResponse.json({ success: true, id: 2 })
     }),
 
-    http.put('/api/dedicated_servers/:id', async () => {
+    http.put('/api/nodes/:id', async () => {
         await delay(debugState.networkDelay)
         return HttpResponse.json({ success: true })
     }),
 
-    http.delete('/api/dedicated_servers/:id', async () => {
+    http.delete('/api/nodes/:id', async () => {
         await delay(debugState.networkDelay)
         return HttpResponse.json({ success: true })
     }),
