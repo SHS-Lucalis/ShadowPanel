@@ -5,7 +5,9 @@ import (
 	"database/sql"
 	"log/slog"
 	"net/http"
+	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -1098,7 +1100,7 @@ func (c *Container) PluginLoader() *internalplugin.Loader {
 	if c.pluginLoader == nil {
 		c.pluginLoader = internalplugin.NewLoader(
 			c.PluginManager(),
-			c.FileManager(),
+			c.createPluginFileManager(),
 			c.PluginRepository(),
 			c.config.Plugins.AutoLoad,
 			c.PluginsDir(),
@@ -1106,6 +1108,34 @@ func (c *Container) PluginLoader() *internalplugin.Loader {
 	}
 
 	return c.pluginLoader
+}
+
+func (c *Container) createPluginFileManager() files.FileManager {
+	fm := c.FileManager()
+
+	if !c.config.Plugins.Cache.Enabled {
+		return fm
+	}
+
+	if c.config.Files.Driver != "s3" && c.config.Files.Driver != "minio" {
+		return fm
+	}
+
+	cacheDir := c.config.Plugins.Cache.Dir
+	if cacheDir == "" {
+		cacheDir = filepath.Join(os.TempDir(), "gameap-plugin-cache")
+	}
+
+	if err := os.MkdirAll(cacheDir, 0755); err != nil {
+		slog.Warn("failed to create plugin cache directory, using direct access",
+			slog.String("error", err.Error()))
+
+		return fm
+	}
+
+	localCache := files.NewLocalFileManager(cacheDir)
+
+	return files.NewCachingFileManager(fm, localCache)
 }
 
 func (c *Container) PluginsDir() string {
