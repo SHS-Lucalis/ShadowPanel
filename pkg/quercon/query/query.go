@@ -15,6 +15,12 @@ type Protocol string
 const (
 	ProtocolSource    Protocol = "source"
 	ProtocolMinecraft Protocol = "minecraft"
+	ProtocolGameSpy2  Protocol = "gamespy2"
+	ProtocolGameSpy3  Protocol = "gamespy3"
+	ProtocolQuake2    Protocol = "quake2"
+	ProtocolQuake3    Protocol = "quake3"
+	ProtocolSAMP      Protocol = "samp"
+	ProtocolRakNet    Protocol = "raknet"
 )
 
 type Result struct {
@@ -35,6 +41,12 @@ type ResultPlayer struct {
 var queryProtocolFuncsMap = map[Protocol]func(ctx context.Context, host string, port int) (*Result, error){
 	"source":    querySource,
 	"minecraft": queryMinecraft,
+	"gamespy2":  queryGameSpy2,
+	"gamespy3":  queryGameSpy3,
+	"quake2":    queryQuake2,
+	"quake3":    queryQuake3,
+	"samp":      querySAMP,
+	"raknet":    queryRakNet,
 }
 
 func Query(ctx context.Context, host string, port int, protocol Protocol) (*Result, error) {
