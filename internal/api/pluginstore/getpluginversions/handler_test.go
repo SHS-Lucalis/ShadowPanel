@@ -63,8 +63,13 @@ func TestGetPluginVersions(t *testing.T) {
 			}`,
 		},
 		{
-			name:       "store_error",
+			name:       "not_found",
 			statusCode: http.StatusNotFound,
+			wantStatus: http.StatusNotFound,
+		},
+		{
+			name:       "store_error",
+			statusCode: http.StatusInternalServerError,
 			wantStatus: http.StatusInternalServerError,
 		},
 	}

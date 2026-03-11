@@ -72,7 +72,7 @@ func TestGetPlugin(t *testing.T) {
 		},
 		{
 			name:       "store_error",
-			statusCode: http.StatusNotFound,
+			statusCode: http.StatusInternalServerError,
 			wantStatus: http.StatusInternalServerError,
 		},
 	}
