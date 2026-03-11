@@ -262,10 +262,7 @@ func (g *GameExportGame) ToDomainGame() *Game {
 func (m *GameExportMod) ToDomainGameMod(gameCode string) *GameMod {
 	fastRcon := make(GameModFastRconList, 0, len(m.FastRcon))
 	for _, fr := range m.FastRcon {
-		fastRcon = append(fastRcon, GameModFastRcon{
-			Info:    fr.Info,
-			Command: fr.Command,
-		})
+		fastRcon = append(fastRcon, GameModFastRcon(fr))
 	}
 
 	vars := make(GameModVarList, 0, len(m.Vars))
@@ -337,10 +334,7 @@ func NewGameExportFromDomain(game *Game, mods []GameMod, version string) *GameEx
 func newGameExportModFromDomain(mod *GameMod) GameExportMod {
 	fastRcon := make([]GameExportModFastRcon, 0, len(mod.FastRcon))
 	for _, fr := range mod.FastRcon {
-		fastRcon = append(fastRcon, GameExportModFastRcon{
-			Info:    fr.Info,
-			Command: fr.Command,
-		})
+		fastRcon = append(fastRcon, GameExportModFastRcon(fr))
 	}
 
 	vars := make([]GameExportModVar, 0, len(mod.Vars))
