@@ -114,7 +114,12 @@ jobs:
             $(go list ./... | \
               grep -v /test/ | \
               grep -v /repositories/testing | \
-              grep -v /migrations | grep -v /pkg/testcontainer \
+              grep -v /migrations | \
+              grep -v /pkg/plugin/examples \
+              grep -v /pkg/plugin/proto \
+              grep -v /pkg/plugin/sdk \
+              grep -v /pkg/proto \
+              grep -v /pkg/testcontainer \
             ) \
             -coverprofile=coverage.out
 

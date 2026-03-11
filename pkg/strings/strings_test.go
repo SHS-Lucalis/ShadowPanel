@@ -106,3 +106,69 @@ func TestIsNumeric(t *testing.T) {
 		})
 	}
 }
+
+func TestIsSlug(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected bool
+	}{
+		{
+			name:     "empty_string",
+			input:    "",
+			expected: true,
+		},
+		{
+			name:     "lowercase_letters",
+			input:    "abc",
+			expected: true,
+		},
+		{
+			name:     "digits_only",
+			input:    "123",
+			expected: true,
+		},
+		{
+			name:     "with_underscore",
+			input:    "hello_world",
+			expected: true,
+		},
+		{
+			name:     "with_hyphen",
+			input:    "hello-world",
+			expected: true,
+		},
+		{
+			name:     "mixed_valid",
+			input:    "hello_world-123",
+			expected: true,
+		},
+		{
+			name:     "uppercase_letters",
+			input:    "Hello",
+			expected: false,
+		},
+		{
+			name:     "with_space",
+			input:    "hello world",
+			expected: false,
+		},
+		{
+			name:     "with_special_chars",
+			input:    "hello@world",
+			expected: false,
+		},
+		{
+			name:     "with_dot",
+			input:    "hello.world",
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := IsSlug(tt.input)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
