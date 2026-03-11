@@ -109,7 +109,14 @@ jobs:
           TEST_POSTGRES_DSN: 'host=127.0.0.1 port=5432 user=postgres password=testpassword dbname=gameap sslmode=disable'
           TEST_REDIS_ADDR: '127.0.0.1:6379'
           TEST_S3_DSN: 's3://minioadmin:minioadmin@127.0.0.1:9000/test-bucket?ssl=false'
-        run: go test -race -v $(go list ./... | grep -v /test/ | grep -v /repositories/testing | grep -v /migrations | grep -v /pkg/testcontainer ) -coverprofile=coverage.out
+        run: > 
+          go test -race -v 
+            $(go list ./... | 
+              grep -v /test/ | 
+              grep -v /repositories/testing | 
+              grep -v /migrations | grep -v /pkg/testcontainer 
+            ) 
+            -coverprofile=coverage.out
 
       - name: Coverage Report
         run: go tool cover -func=coverage.out
