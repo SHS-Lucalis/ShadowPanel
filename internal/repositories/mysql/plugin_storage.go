@@ -109,6 +109,10 @@ func (r *PluginStorageRepository) Save(ctx context.Context, entry *domain.Plugin
 		entry.CreatedAt = &now
 	}
 
+	if entry.ID != 0 {
+		return r.update(ctx, entry)
+	}
+
 	query := `INSERT INTO ` + base.PluginStorageTable +
 		` (plugin_id, ` + "`key`" + `, entity_type, entity_id, payload, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -127,14 +131,31 @@ func (r *PluginStorageRepository) Save(ctx context.Context, entry *domain.Plugin
 		return errors.WithMessage(err, "failed to execute upsert query")
 	}
 
-	if entry.ID == 0 {
-		lastID, err := result.LastInsertId()
-		if err != nil {
-			return errors.WithMessage(err, "failed to get last insert ID")
-		}
-		if lastID > 0 {
-			entry.ID = uint64(lastID)
-		}
+	lastID, err := result.LastInsertId()
+	if err != nil {
+		return errors.WithMessage(err, "failed to get last insert ID")
+	}
+	if lastID > 0 {
+		entry.ID = uint64(lastID)
+	}
+
+	return nil
+}
+
+func (r *PluginStorageRepository) update(ctx context.Context, entry *domain.PluginStorageEntry) error {
+	query, args, err := sq.Update(base.PluginStorageTable).
+		Set("payload", entry.Payload).
+		Set("updated_at", entry.UpdatedAt).
+		Where(sq.Eq{"id": entry.ID}).
+		PlaceholderFormat(sq.Question).
+		ToSql()
+	if err != nil {
+		return errors.WithMessage(err, "failed to build update query")
+	}
+
+	_, err = r.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return errors.WithMessage(err, "failed to execute update query")
 	}
 
 	return nil

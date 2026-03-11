@@ -106,6 +106,10 @@ func (r *PluginStorageRepository) Save(ctx context.Context, entry *domain.Plugin
 		entry.CreatedAt = &now
 	}
 
+	if entry.ID != 0 {
+		return r.update(ctx, entry)
+	}
+
 	query := `INSERT INTO ` + base.PluginStorageTable +
 		` (plugin_id, key, entity_type, entity_id, payload, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -128,6 +132,25 @@ func (r *PluginStorageRepository) Save(ctx context.Context, entry *domain.Plugin
 	}
 
 	entry.ID = returnedID
+
+	return nil
+}
+
+func (r *PluginStorageRepository) update(ctx context.Context, entry *domain.PluginStorageEntry) error {
+	query, args, err := sq.Update(base.PluginStorageTable).
+		Set("payload", entry.Payload).
+		Set("updated_at", entry.UpdatedAt).
+		Where(sq.Eq{"id": entry.ID}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return errors.WithMessage(err, "failed to build update query")
+	}
+
+	_, err = r.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return errors.WithMessage(err, "failed to execute update query")
+	}
 
 	return nil
 }
