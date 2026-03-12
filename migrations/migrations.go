@@ -172,11 +172,6 @@ func Run(ctx context.Context, c container) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to create migrator")
 	}
-	defer func() {
-		if err := migrator.Close(); err != nil {
-			slog.ErrorContext(ctx, "Failed to close migrator", slog.String("error", err.Error()))
-		}
-	}()
 
 	result, err := migrator.Up(ctx)
 	if err != nil {
