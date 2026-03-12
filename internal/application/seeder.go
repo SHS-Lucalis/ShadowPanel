@@ -10,6 +10,7 @@ import (
 
 	"github.com/gameap/gameap/internal/certificates"
 	"github.com/gameap/gameap/internal/domain"
+	"github.com/gameap/gameap/internal/services"
 	"github.com/gameap/gameap/pkg/auth"
 	"github.com/gameap/gameap/pkg/strings"
 	"github.com/pkg/errors"
@@ -198,7 +199,23 @@ func seedGamesAndMods(ctx context.Context, c *Container) error {
 
 		err = c.GameUpgradeService().UpgradeGames(ctx)
 		if err != nil {
-			return errors.WithMessage(err, "failed to upgrade games")
+			slog.WarnContext(
+				ctx,
+				"Failed to upgrade games using global API, falling back to local seeding",
+				slog.String("error", err.Error()),
+			)
+
+			fallbackUpgrader := services.NewGameUpgradeService(
+				services.NewFallbackGlobalAPIService(),
+				c.GameRepository(),
+				c.GameModRepository(),
+				c.TransactionManager(),
+			)
+
+			err = fallbackUpgrader.UpgradeGames(ctx)
+			if err != nil {
+				return errors.WithMessage(err, "failed to upgrade games from fallback")
+			}
 		}
 
 		slog.InfoContext(ctx, "Games and mods seeded successfully")
