@@ -392,7 +392,8 @@
     "hide": "Скрыть",
     "copy": "Копировать",
     "drag_file_here": "Перетащите файл сюда",
-    "or_click_to_select": "или нажмите для выбора"
+    "or_click_to_select": "или нажмите для выбора",
+    "details": "Подробности"
   },
   "modules": {
     "modules": "Модули",
