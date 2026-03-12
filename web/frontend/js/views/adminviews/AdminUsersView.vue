@@ -43,6 +43,12 @@
         </tr>
       </tbody>
     </GTable>
+
+    <PluginSlot
+        v-if="pluginsStore.isInitialized"
+        name="admin-user-info"
+        :context="{ userId: userStore.userId, user: userStore.user }"
+    />
   </GModal>
 
   <GModal
@@ -61,14 +67,17 @@ import {computed, h, ref, onMounted} from "vue"
 import {useUserListStore} from "@/store/userList";
 import {useUserStore} from "@/store/user";
 import {useAuthStore} from "@/store/auth";
+import {usePluginsStore} from "@/store/plugins";
 import {storeToRefs} from "pinia"
 import {errorNotification, notification} from "@/parts/dialogs";
 import GButton from "@/components/GButton.vue";
 import CreateUserForm from "./forms/CreateUserForm.vue";
+import PluginSlot from "@/plugins/components/PluginSlot.vue";
 
 const userListStore = useUserListStore()
 const userStore = useUserStore()
 const authStore = useAuthStore()
+const pluginsStore = usePluginsStore()
 
 const breadcrumbs = computed(() => {
   return [
