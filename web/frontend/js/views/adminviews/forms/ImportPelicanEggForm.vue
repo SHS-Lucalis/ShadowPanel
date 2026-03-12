@@ -1,6 +1,6 @@
 <template>
   <div>
-    <p class="mb-4 text-gray-600 dark:text-gray-400">
+    <p class="mb-4 text-stone-600 dark:text-stone-400">
       {{ trans('games.import_pelican_egg_description') }}
     </p>
 
@@ -18,14 +18,14 @@
         >
           <n-upload-dragger>
             <div class="flex flex-col items-center gap-2 py-4">
-              <GIcon name="upload" class="text-4xl text-gray-400" />
-              <p class="text-gray-600 dark:text-gray-400">
+              <GIcon name="upload" class="text-4xl text-stone-400" />
+              <p class="text-stone-600 dark:text-stone-400">
                 {{ trans('main.drag_file_here') }}
               </p>
-              <p class="text-sm text-gray-500 dark:text-gray-500">
+              <p class="text-sm text-stone-500 dark:text-stone-500">
                 {{ trans('main.or_click_to_select') }}
               </p>
-              <p class="text-xs text-gray-400 dark:text-gray-600">
+              <p class="text-xs text-stone-400 dark:text-stone-600">
                 .json, .yaml, .yml
               </p>
             </div>
@@ -47,13 +47,13 @@
           />
           <div>
             <h4 class="font-semibold mb-2">{{ eggPreview.name }}</h4>
-            <p v-if="eggPreview.author" class="text-sm text-gray-600 dark:text-gray-400">
+            <p v-if="eggPreview.author" class="text-sm text-stone-600 dark:text-stone-400">
               {{ trans('games.author') }}: {{ eggPreview.author }}
             </p>
-            <p v-if="eggPreview.description" class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            <p v-if="eggPreview.description" class="text-sm text-stone-600 dark:text-stone-400 mt-1">
               {{ eggPreview.description }}
             </p>
-            <p class="text-xs text-gray-500 dark:text-gray-500 mt-2">
+            <p class="text-xs text-stone-500 dark:text-stone-500 mt-2">
               {{ trans('games.format') }}: {{ fileFormat.toUpperCase() }}
             </p>
           </div>

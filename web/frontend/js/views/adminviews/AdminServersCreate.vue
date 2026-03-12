@@ -135,10 +135,12 @@
         </n-card>
       </div>
 
-      <GButton color="green" v-on:click="onClickCreate">
-        <GIcon name="add-square" />
-        <span class="hidden lg:inline">&nbsp;{{ trans('main.create') }}</span>
-      </GButton>
+      <GFixedBottomBar>
+        <GButton color="green" v-on:click="onClickCreate">
+          <GIcon name="add-square" class="mr-0.5" />
+          <span class="inline">{{ trans('main.create') }}</span>
+        </GButton>
+      </GFixedBottomBar>
     </div>
   </n-form>
 </template>
@@ -161,6 +163,7 @@ import {useGameModStore} from "@/store/gameMod"
 import DsIpSelector from "@/components/servers/DsIpSelector.vue";
 import SmartPortSelector from "@/components/servers/SmartPortSelector.vue";
 import GameModSelector from "@/components/servers/GameModSelector.vue";
+import GFixedBottomBar from "@/components/GFixedBottomBar.vue";
 
 const router = useRouter()
 
