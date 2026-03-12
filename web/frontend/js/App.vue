@@ -16,7 +16,7 @@
 
             <div class="sm:flex-1">
               <div class="max-w-full">
-                <div class="pt-3 pb-5 max-sm:pl-5 content">
+                <div class="pt-3 pb-16 max-sm:pl-5 content">
                   <content-view></content-view>
 
                   <div v-if="!$route.name">

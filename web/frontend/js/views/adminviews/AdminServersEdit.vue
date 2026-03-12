@@ -272,12 +272,12 @@
         </n-card>
       </div>
 
-      <div class="w-full">
+      <GFixedBottomBar>
         <GButton color="green" v-on:click="onClickSave">
           <GIcon name="save" />
-          <span class="hidden lg:inline">&nbsp;{{ trans('main.save') }}</span>
+          <span class="inline">{{ trans('main.save') }}</span>
         </GButton>
-      </div>
+      </GFixedBottomBar>
     </div>
   </n-form>
 </template>
@@ -288,6 +288,7 @@ import {computed, ref, onMounted} from "vue"
 import {trans} from "@/i18n/i18n"
 import {NForm, NFormItem, NCard} from "naive-ui"
 import GButton from "@/components/GButton.vue"
+import GFixedBottomBar from "@/components/GFixedBottomBar.vue"
 import InputManyList from "@/components/input/InputManyList.vue"
 import MemoryInput from "@/components/input/MemoryInput.vue"
 import CpuInput from "@/components/input/CpuInput.vue"

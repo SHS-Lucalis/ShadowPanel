@@ -347,10 +347,12 @@
     </n-form>
 
     <slot name="button">
-      <GButton class="mt-2" color="green" v-on:click="onClickSend">
-        <GIcon name="save" class="mr-0.5" />
-        <span class="hidden lg:inline">&nbsp;{{ trans('main.save') }}</span>
-      </GButton>
+      <GFixedBottomBar>
+        <GButton color="green" v-on:click="onClickSend">
+          <GIcon name="save" class="mr-0.5" />
+          <span class="inline">{{ trans('main.save') }}</span>
+        </GButton>
+      </GFixedBottomBar>
     </slot>
   </div>
 </template>
@@ -372,6 +374,7 @@ import {
   NUpload,
 } from "naive-ui"
 import GButton from "../../../components/GButton.vue";
+import GFixedBottomBar from "../../../components/GFixedBottomBar.vue";
 
 const osOptions = [
   {label: 'Linux', value: 'linux'},
