@@ -127,13 +127,12 @@ const createColumns = () => {
       render(row) {
         return h("div", {class: 'flex items-center'}, [
           h(GGameIcon, {game: row.code, class: "mr-2"}),
-          h("span", {class: ''}, row.name)
+          h("div", {}, [
+            h("span", {}, row.name),
+            h("small", {class: 'block text-gray-500'}, row.code)
+          ])
         ])
       },
-    },
-    {
-      title: trans('games.code'),
-      key: 'code',
     },
     {
       title: trans('games.mods'),
