@@ -129,7 +129,7 @@ const createColumns = () => {
           h(GGameIcon, {game: row.code, class: "mr-2"}),
           h("div", {}, [
             h("span", {}, row.name),
-            h("small", {class: 'block text-gray-500'}, row.code)
+            h("small", {class: 'block text-stone-500'}, row.code)
           ])
         ])
       },
