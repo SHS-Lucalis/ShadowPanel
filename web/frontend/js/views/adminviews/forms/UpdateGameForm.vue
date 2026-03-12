@@ -13,8 +13,8 @@
             {{ trans('games.main') }}
           </template>
 
-          <div class="flex flex-wrap mt-2">
-            <div class="md:w-1/2 pr-8">
+          <div class="md:flex md:flex-wrap mt-2">
+            <div class="md:w-1/2 md:pr-8">
               <n-card
                   :title="trans('games.basic_info')"
                   size="small"
@@ -181,10 +181,10 @@
 <script setup>
 import { GIcon, Loading } from "@gameap/ui"
 import {ref, defineModel, defineProps} from "vue"
-import {trans} from "../../../i18n/i18n";
-import GButton from "../../../components/GButton.vue";
-import GFixedBottomBar from "../../../components/GFixedBottomBar.vue";
-import InputManyList from "../../../components/input/InputManyList.vue";
+import {trans} from "@/i18n/i18n";
+import GButton from "@/components/GButton.vue";
+import GFixedBottomBar from "@/components/GFixedBottomBar.vue";
+import InputManyList from "@/components/input/InputManyList.vue";
 import {
   NCard,
   NForm,
@@ -193,7 +193,7 @@ import {
   NTabs,
   NTabPane,
 } from "naive-ui"
-import {allOfValidator, requiredValidator, stringLengthValidator} from "../../../parts/validators"
+import {allOfValidator, requiredValidator, stringLengthValidator} from "@/parts/validators"
 
 const props = defineProps({
   loading: {
