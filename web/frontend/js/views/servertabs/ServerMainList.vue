@@ -1,6 +1,6 @@
 <script setup>
     import { Loading, GIcon, GDataTable, GEmpty, GGameIcon } from "@gameap/ui";
-    import {h, ref, onMounted, computed} from 'vue'
+    import {h, ref, onMounted, onUnmounted, computed} from 'vue'
     import {storeToRefs} from 'pinia'
     import {trans} from "@/i18n/i18n";
     import {useAuthStore} from "@/store/auth";
@@ -12,6 +12,7 @@
     import ServerControlButton  from "./ServerControlButton.vue";
 
     import {errorNotification} from "@/parts/dialogs";
+    import {NTooltip} from "naive-ui";
 
     // Installed statuses
     const NOT_INSTALLED        = 0;
@@ -23,154 +24,178 @@
     const serverListStore = useServerListStore();
     const { servers: serversList } = storeToRefs(serverListStore);
 
-    const createColumns = () => {
-        return [
+    const isSmallScreen = ref(window.innerWidth < 768);
+
+    const handleResize = () => {
+        isSmallScreen.value = window.innerWidth < 768;
+    };
+
+    const columns = computed(() => {
+        const cols = [
             {
                 title: trans('servers.name'),
                 key: "name",
                 render(row) {
-                  return h("div", {class: 'flex items-center'}, [
-                    h(GGameIcon, {game: row.game.code, class: "mr-2"}),
-                    h("span", {class: ''}, row.name)
-                  ])
+                    return h("div", {class: 'flex items-center'}, [
+                        h(GGameIcon, {game: row.game.code, class: "mr-2"}),
+                        h("div", {}, [
+                            h("span", {}, row.name),
+                            isSmallScreen.value
+                                ? h("small", {class: "block text-stone-500 dark:text-stone-400"},
+                                    row.server_ip + ":" + row.server_port)
+                                : null
+                        ].filter(Boolean))
+                    ])
                 },
             },
-            {
+        ];
+
+        if (!isSmallScreen.value) {
+            cols.push({
                 title: trans('servers.ip_port'),
                 render(row) {
                     return row.server_ip + ":" + row.server_port;
                 }
-            },
-            {
-                title: trans('servers.status'),
-                key: "status",
-                render(row) {
-                    if (row.blocked) {
-                        return h('span', {class: "badge-stone"}, trans('servers.blocked'));
-                    }
+            });
+        }
 
-                    if (!row.enabled) {
-                        return h('span', {class: "badge-stone"}, trans('servers.disabled'));
-                    }
+        cols.push({
+            title: trans('servers.status'),
+            key: "status",
+            render(row) {
+                let badgeClass;
+                let circleClass;
+                let statusText;
 
-                    if (!row.installed) {
-                        return h('span', {class: "badge-stone"}, trans('servers.not_installed'));
-                    }
+                if (row.blocked) {
+                    badgeClass = "badge-stone";
+                    circleClass = "badge-circle-stone";
+                    statusText = trans('servers.blocked');
+                } else if (!row.enabled) {
+                    badgeClass = "badge-stone";
+                    circleClass = "badge-circle-stone";
+                    statusText = trans('servers.disabled');
+                } else if (!row.installed) {
+                    badgeClass = "badge-stone";
+                    circleClass = "badge-circle-stone";
+                    statusText = trans('servers.not_installed');
+                } else if (row.installed === INSTALLATION_PROCESS) {
+                    badgeClass = "badge-orange";
+                    circleClass = "badge-circle-orange";
+                    statusText = trans('servers.installation');
+                } else if (row.online) {
+                    badgeClass = "badge-green";
+                    circleClass = "badge-circle-green";
+                    statusText = trans('servers.online');
+                } else {
+                    badgeClass = "badge-red";
+                    circleClass = "badge-circle-red";
+                    statusText = trans('servers.offline');
+                }
 
-                    if (row.installed === INSTALLATION_PROCESS) {
-                        return h('span', {class: "badge-orange"}, trans('servers.installation'));
-                    }
+                if (isSmallScreen.value) {
+                    return h(NTooltip, {
+                        trigger: 'hover',
+                    }, {
+                        trigger: () => h('span', {class: circleClass}),
+                        default: () => statusText
+                    });
+                }
 
-                    if (row.online) {
-                        return h(
-                            "span",
-                            {
-                                class: "badge-green",
-                            },
-                            trans('servers.online'),
+                return h('span', {class: badgeClass}, statusText);
+            }
+        });
+
+        cols.push({
+            title: trans('servers.commands'),
+            render(row) {
+                if (!row.enabled || row.blocked) {
+                    return [];
+                }
+
+                if (row.installed === NOT_INSTALLED && canUpdate(row.id)) {
+                    return h(ServerControlButton,
+                        {
+                            "command": "install",
+                            "button-color": "orange",
+                            "button-size": "small",
+                            "icon": "download",
+                            "text": trans('servers.install'),
+                            "server-id": row.id,
+                        });
+                }
+
+                let buttons = [];
+
+                if (row.installed === INSTALLED) {
+                    if (row.online && canStop(row.id)) {
+                        buttons.push(
+                            h(ServerControlButton,
+                                {
+                                    "command": "stop",
+                                    "button-color": "red",
+                                    "button-size": "small",
+                                    "icon": "stop",
+                                    "text": trans('servers.stop'),
+                                    "server-id": row.id,
+                                }),
+                            " ",
                         );
                     }
 
-                    return h(
-                        "span",
-                        {
-                            class: "badge-red",
-                        },
-                        trans('servers.offline'),
-                    );
-                }
-            },
-            {
-                title: trans('servers.commands'),
-                render(row) {
-                    if (!row.enabled || row.blocked) {
-                        return [];
+                    if (!row.online && canStart(row.id)) {
+                        buttons.push(
+                            h(ServerControlButton,
+                                {
+                                    "command": "start",
+                                    "button-color": "green",
+                                    "button-size": "small",
+                                    "icon": "play",
+                                    "text": trans('servers.start'),
+                                    "server-id": row.id,
+                                }),
+                            " "
+                        );
                     }
 
-                    if (row.installed === NOT_INSTALLED && canUpdate(row.id)) {
-                        return h(ServerControlButton,
-                            {
-                                "command": "install",
-                                "button-color": "orange",
-                                "button-size": "small",
-                                "icon": "download",
-                                "text": trans('servers.install'),
-                                "server-id": row.id,
-                            });
-                    }
-
-                    let buttons = [];
-
-                    if (row.installed === INSTALLED) {
-                        if (row.online && canStop(row.id)) {
-                            buttons.push(
-                                h(ServerControlButton,
-                                    {
-                                        "command": "stop",
-                                        "button-color": "red",
-                                        "button-size": "small",
-                                        "icon": "stop",
-                                        "text": trans('servers.stop'),
-                                        "server-id": row.id,
-                                    }),
-                                " ",
-                            );
-                        }
-
-                        if (!row.online && canStart(row.id)) {
-                            buttons.push(
-                                h(ServerControlButton,
-                                    {
-                                        "command": "start",
-                                        "button-color": "green",
-                                        "button-size": "small",
-                                        "icon": "play",
-                                        "text": trans('servers.start'),
-                                        "server-id": row.id,
-                                    }),
-                                " "
-                            );
-                        }
-
-                        if (canRestart(row.id)) {
-                          buttons.push(
-                              h(ServerControlButton,
-                                  {
+                    if (canRestart(row.id)) {
+                        buttons.push(
+                            h(ServerControlButton,
+                                {
                                     "command": "restart",
                                     "button-color": "orange",
                                     "button-size": "small",
                                     "icon": "restart",
                                     "text": trans('servers.restart'),
                                     "server-id": row.id,
-                                  }),
-                              " ",
-                          );
-                        }
+                                }),
+                            " ",
+                        );
                     }
+                }
 
-                    if (canManage(row.id)) {
-                      buttons.push(
-                          h(GButton,
-                              {
+                if (canManage(row.id)) {
+                    buttons.push(
+                        h(GButton,
+                            {
                                 color: "black",
                                 size: "small",
                                 route: "/servers/" + row.id,
-                              },
-                              { default: () => [
+                            },
+                            { default: () => [
                                 h('span', {"class": "hidden lg:inline"}, trans('servers.control')),
                                 " ",
                                 h(GIcon, {name: "chevron-double-right"}),
-                              ]})
-                      );
-                    }
-
-                    return buttons;
+                            ]})
+                    );
                 }
-            },
-        ];
-    };
 
-    const columns = ref(createColumns());
+                return buttons;
+            }
+        });
+
+        return cols;
+    });
     const pagination = {
         pageSize: 20,
     };
@@ -188,15 +213,21 @@
     });
 
     onMounted(() => {
-      serverListStore.fetchServersByNode().finally(() => {
-        loading.value = false;
-      });
+        window.addEventListener('resize', handleResize);
 
-      if (!authStore.isAdmin) {
-        authStore.fetchServersAbilities().catch((error) =>{
-          errorNotification(error)
-        })
-      }
+        serverListStore.fetchServersByNode().finally(() => {
+            loading.value = false;
+        });
+
+        if (!authStore.isAdmin) {
+            authStore.fetchServersAbilities().catch((error) =>{
+                errorNotification(error)
+            })
+        }
+    });
+
+    onUnmounted(() => {
+        window.removeEventListener('resize', handleResize);
     });
 
     const data = computed(() => {
