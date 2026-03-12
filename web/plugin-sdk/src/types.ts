@@ -133,7 +133,8 @@ export type SlotName =
     | 'server-tabs'
     | 'dashboard-widgets'
     | 'sidebar-sections'
-    | 'admin-pages';
+    | 'admin-pages'
+    | 'admin-user-info';
 
 /**
  * Server data available to plugins.

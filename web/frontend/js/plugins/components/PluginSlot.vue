@@ -10,7 +10,7 @@
 <script setup>
 import { computed } from 'vue'
 import { usePluginsStore } from '@/store/plugins'
-import { providePluginContext } from '../context'
+import { providePluginContext } from '@/plugins'
 
 const props = defineProps({
     name: {
