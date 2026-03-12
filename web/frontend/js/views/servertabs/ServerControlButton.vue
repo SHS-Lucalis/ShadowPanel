@@ -66,6 +66,7 @@
   const progress = ref(PROGRESS_PERCENT_NULL);
   const progressModalTitle = ref('');
   const progressDetails = ref('');
+  const currentTaskId = ref(null);
 
   const props = defineProps([
       'button',
@@ -98,6 +99,7 @@
       axios.post('/api/servers/' + props.serverId + '/' + command)
           .then(function (response) {
               const taskId = response.data.gdaemonTaskId;
+              currentTaskId.value = taskId;
 
               showProgressbar.value = true
               progressModalTitle.value = commandConfiguration[command].title
@@ -267,6 +269,7 @@
       progress.value = 0;
       watchTaskData = {};
       statusTries = CHECK_SERVER_STATUS_TRIES;
+      currentTaskId.value = null;
   }
 
   function progressModalChanged(show) {
@@ -298,6 +301,12 @@
                 processing
         />
         <div id="additional-info" class="mt-3"></div>
+        <div v-if="authStore.isAdmin && currentTaskId" class="mt-6">
+          <GButton color="black" size="small" :route="'/admin/gdaemon_tasks/' + currentTaskId">
+            <span class="inline">{{ trans('main.details') }}</span>
+            <GIcon name="chevron-double-right" />
+          </GButton>
+        </div>
   </n-modal>
 
   <g-button :class="button" :color="buttonColor" :size="buttonSize" @click="run(command)">
