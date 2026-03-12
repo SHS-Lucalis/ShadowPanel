@@ -51,15 +51,17 @@
       </n-collapse>
     </n-form>
 
-    <GButton
-        color="blue"
-        :disabled="!yamlContent || importing"
-        :loading="importing"
-        v-on:click="onClickImport"
-    >
-      <GIcon name="download" />
-      <span>&nbsp;{{ trans('games.import') }}</span>
-    </GButton>
+    <GFixedBottomBar>
+      <GButton
+          color="blue"
+          :disabled="!yamlContent || importing"
+          :loading="importing"
+          v-on:click="onClickImport"
+      >
+        <GIcon name="download" />
+        <span class="inline">{{ trans('games.import') }}</span>
+      </GButton>
+    </GFixedBottomBar>
   </div>
 </template>
 
@@ -68,6 +70,7 @@ import { GIcon } from "@gameap/ui"
 import { ref } from "vue"
 import { trans } from "@/i18n/i18n"
 import GButton from "@/components/GButton.vue"
+import GFixedBottomBar from "@/components/GFixedBottomBar.vue"
 import {
   NForm,
   NFormItem,
