@@ -389,7 +389,9 @@
     "never": "Never",
     "show": "Show",
     "hide": "Hide",
-    "copy": "Copy"
+    "copy": "Copy",
+    "drag_file_here": "Drag file here",
+    "or_click_to_select": "or click to select"
   },
   "modules": {
     "modules": "Modules",

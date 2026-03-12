@@ -16,7 +16,20 @@
             :default-upload="false"
             @change="onFileChange"
         >
-          <n-button>{{ trans('main.upload_file') }}</n-button>
+          <n-upload-dragger>
+            <div class="flex flex-col items-center gap-2 py-4">
+              <GIcon name="upload" class="text-4xl text-gray-400" />
+              <p class="text-gray-600 dark:text-gray-400">
+                {{ trans('main.drag_file_here') }}
+              </p>
+              <p class="text-sm text-gray-500 dark:text-gray-500">
+                {{ trans('main.or_click_to_select') }}
+              </p>
+              <p class="text-xs text-gray-400 dark:text-gray-600">
+                .yaml, .yml
+              </p>
+            </div>
+          </n-upload-dragger>
         </n-upload>
       </n-form-item>
 
@@ -75,7 +88,7 @@ import {
   NForm,
   NFormItem,
   NUpload,
-  NButton,
+  NUploadDragger,
   NCollapse,
   NCollapseItem,
   NInput,
