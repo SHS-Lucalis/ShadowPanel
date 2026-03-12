@@ -19,10 +19,12 @@
         />
       </n-form-item>
 
-      <GButton color="green" v-on:click="saveSettings()">
-        <GIcon name="save" />
-        <span class="hidden lg:inline">&nbsp;{{ trans('main.save') }}</span>
-      </GButton>
+      <GFixedBottomBar>
+        <GButton color="green" v-on:click="saveSettings()">
+          <GIcon name="save" />
+          <span class="inline">{{ trans('main.save') }}</span>
+        </GButton>
+      </GFixedBottomBar>
   </n-form>
 </template>
 
@@ -38,6 +40,7 @@ import {
 } from "naive-ui"
 import { GIcon, GEmpty, GSwitch } from '@gameap/ui'
 import GButton from '@/components/GButton.vue'
+import GFixedBottomBar from '@/components/GFixedBottomBar.vue'
 import {errorNotification, notification} from "@/parts/dialogs";
 
 const serverStore = useServerStore()
