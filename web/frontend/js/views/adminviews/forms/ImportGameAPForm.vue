@@ -1,6 +1,6 @@
 <template>
   <div>
-    <p class="mb-4 text-gray-600 dark:text-gray-400">
+    <p class="mb-4 text-stone-600 dark:text-stone-400">
       {{ trans('games.import_gameap_description') }}
     </p>
 
@@ -18,14 +18,14 @@
         >
           <n-upload-dragger>
             <div class="flex flex-col items-center gap-2 py-4">
-              <GIcon name="upload" class="text-4xl text-gray-400" />
-              <p class="text-gray-600 dark:text-gray-400">
+              <GIcon name="upload" class="text-4xl text-stone-400" />
+              <p class="text-stone-600 dark:text-stone-400">
                 {{ trans('main.drag_file_here') }}
               </p>
-              <p class="text-sm text-gray-500 dark:text-gray-500">
+              <p class="text-sm text-stone-500 dark:text-stone-500">
                 {{ trans('main.or_click_to_select') }}
               </p>
-              <p class="text-xs text-gray-400 dark:text-gray-600">
+              <p class="text-xs text-stone-400 dark:text-stone-600">
                 .yaml, .yml
               </p>
             </div>
@@ -40,13 +40,13 @@
       <div v-if="yamlPreview" class="mb-4 p-4 bg-gray-100 dark:bg-gray-800 rounded">
         <div>
           <h4 class="font-semibold mb-2">{{ yamlPreview.gameName }}</h4>
-          <p class="text-sm text-gray-600 dark:text-gray-400">
+          <p class="text-sm text-stone-600 dark:text-stone-400">
             {{ trans('labels.code') }}: {{ yamlPreview.gameCode }}
           </p>
-          <p class="text-sm text-gray-600 dark:text-gray-400">
+          <p class="text-sm text-stone-600 dark:text-stone-400">
             {{ trans('labels.engine') }}: {{ yamlPreview.engine }}
           </p>
-          <p v-if="yamlPreview.modsCount > 0" class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          <p v-if="yamlPreview.modsCount > 0" class="text-sm text-stone-600 dark:text-stone-400 mt-1">
             {{ trans('games.mods') }}: {{ yamlPreview.modsCount }}
           </p>
         </div>

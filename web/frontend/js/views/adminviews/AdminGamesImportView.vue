@@ -5,13 +5,13 @@
     <n-tabs v-model:value="activeTab" type="line" animated>
       <n-tab-pane name="gameap">
         <template #tab>GameAP</template>
-        <div class="flex flex-wrap mt-2">
+        <div class="mt-2">
           <ImportGameAPForm ref="gameapFormRef" @import="onImportGameAP" />
         </div>
       </n-tab-pane>
       <n-tab-pane name="pelican">
         <template #tab>Pelican/Pterodactyl</template>
-        <div class="flex flex-wrap mt-2">
+        <div class="mt-2">
           <ImportPelicanEggForm ref="pelicanFormRef" @import="onImportPelicanEgg" />
         </div>
       </n-tab-pane>

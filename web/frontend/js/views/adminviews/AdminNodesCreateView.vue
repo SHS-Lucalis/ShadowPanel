@@ -8,10 +8,12 @@
       :client-certificate-options="certificateOptions"
   >
     <template #button>
-      <GButton class="mt-2" color="green" v-on:click="onCreate">
-        <GIcon name="add-square" class="mr-0.5" />
-        <span class="hidden lg:inline">&nbsp;{{ trans('main.create') }}</span>
-      </GButton>
+      <GFixedBottomBar>
+        <GButton class="mt-2" color="green" v-on:click="onCreate">
+          <GIcon name="add-square" class="mr-0.5" />
+          <span class="inline">{{ trans('main.create') }}</span>
+        </GButton>
+      </GFixedBottomBar>
     </template>
   </UpdateNodeForm>
 
@@ -31,6 +33,7 @@ import UpdateNodeForm from "./forms/UpdateNodeForm.vue";
 import GButton from "../../components/GButton.vue";
 import {useNodeListStore} from "@/store/nodeList";
 import CreateNodeModal from "@/components/blocks/CreateNodeModal.vue";
+import GFixedBottomBar from "@/components/GFixedBottomBar.vue";
 
 const router = useRouter()
 
