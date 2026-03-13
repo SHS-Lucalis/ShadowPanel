@@ -139,8 +139,3 @@ func TestServerVars_StringPtr(t *testing.T) {
 		})
 	}
 }
-
-//go:fix inline
-func ptrString(s string) *string {
-	return new(s)
-}

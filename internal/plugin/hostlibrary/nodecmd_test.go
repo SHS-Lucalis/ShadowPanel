@@ -88,11 +88,6 @@ func (s *nodeCmdServiceImplForTest) ExecuteCommand(
 	}, nil
 }
 
-//go:fix inline
-func ptrString(s string) *string {
-	return new(s)
-}
-
 func TestNodeCmdService_ExecuteCommand(t *testing.T) {
 	tests := []struct {
 		name         string
