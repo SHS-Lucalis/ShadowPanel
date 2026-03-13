@@ -121,6 +121,9 @@ linters:
         linters:
           - revive
         text: var-naming
+      - path: internal/plugin/hostlibrary/
+        linters:
+          - nilerr
     paths:
       - third_party$
       - builtin$

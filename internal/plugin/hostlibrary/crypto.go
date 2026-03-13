@@ -60,7 +60,6 @@ func (s *CryptoServiceImpl) RandomUint64(
 
 	n, err := rand.Int(rand.Reader, big.NewInt(0).SetUint64(req.Max))
 	if err != nil {
-		//nolint:nilerr // intentionally return nil error; error is passed in response struct
 		return &crypto.RandomUint64Response{
 			Error: new("failed to generate random number: " + err.Error()),
 		}, nil
@@ -103,7 +102,6 @@ func (s *CryptoServiceImpl) RandomString(
 	for range length {
 		n, err := rand.Int(rand.Reader, m)
 		if err != nil {
-			//nolint:nilerr // intentionally return nil error; error is passed in response struct
 			return &crypto.RandomStringResponse{
 				Error: new("failed to generate random number: " + err.Error()),
 			}, nil
@@ -136,7 +134,6 @@ func (s *CryptoServiceImpl) Argon2Hash(
 
 	salt := make([]byte, params.saltLength)
 	if _, err := rand.Read(salt); err != nil {
-		//nolint:nilerr // intentionally return nil error; error is passed in response struct
 		return &crypto.Argon2HashResponse{
 			Error: new("failed to generate salt: " + err.Error()),
 		}, nil
@@ -185,7 +182,6 @@ func (s *CryptoServiceImpl) Argon2Verify(
 
 	params, salt, hash, err := s.parseArgon2Hash(req.Hash)
 	if err != nil {
-		//nolint:nilerr // intentionally return nil error; error is passed in response struct
 		return &crypto.Argon2VerifyResponse{
 			Match: false,
 			Error: new("invalid hash format: " + err.Error()),

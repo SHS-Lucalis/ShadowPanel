@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -17,7 +18,7 @@ func loadLegacyEnv(legacyEnvFilePath string) error {
 		return nil
 	}
 
-	if _, err := os.Stat(legacyEnvPath); errors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat(filepath.Clean(legacyEnvPath)); errors.Is(err, os.ErrNotExist) {
 		return nil
 	}
 
@@ -32,13 +33,14 @@ func loadLegacyEnv(legacyEnvFilePath string) error {
 }
 
 func parseLegacyEnvFile(path string) (map[string]string, error) {
-	file, err := os.Open(path)
+	file, err := os.Open(filepath.Clean(path))
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to open legacy env file: %s", path)
 	}
 	defer func(file *os.File) {
 		err := file.Close()
 		if err != nil {
+			//nolint:gosec // G706: slog structured logging safely encodes values
 			slog.Warn(
 				"Failed to close file",
 				slog.String("path", path),
