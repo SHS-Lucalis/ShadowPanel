@@ -9,7 +9,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/files"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -365,8 +364,8 @@ func TestStatusService_Status_PoolReuse(t *testing.T) {
 		WorkPath:            "/srv/gameap",
 		GdaemonHost:         mockServer.Host(),
 		GdaemonPort:         mockServer.Port(),
-		GdaemonLogin:        lo.ToPtr("gameap"),
-		GdaemonPassword:     lo.ToPtr("gameap123"),
+		GdaemonLogin:        new("gameap"),
+		GdaemonPassword:     new("gameap123"),
 		GdaemonServerCert:   "certificates/server.crt",
 		ClientCertificateID: cert.ID,
 	}
@@ -444,8 +443,8 @@ func TestStatusService_Status_MultipleNodes(t *testing.T) {
 		WorkPath:            "/srv/gameap",
 		GdaemonHost:         mockServer.Host(),
 		GdaemonPort:         mockServer.Port(),
-		GdaemonLogin:        lo.ToPtr("gameap"),
-		GdaemonPassword:     lo.ToPtr("gameap123"),
+		GdaemonLogin:        new("gameap"),
+		GdaemonPassword:     new("gameap123"),
 		GdaemonServerCert:   "certificates/server.crt",
 		ClientCertificateID: cert.ID,
 	}
@@ -459,8 +458,8 @@ func TestStatusService_Status_MultipleNodes(t *testing.T) {
 		WorkPath:            "/srv/gameap",
 		GdaemonHost:         mockServer.Host(),
 		GdaemonPort:         mockServer.Port(),
-		GdaemonLogin:        lo.ToPtr("gameap"),
-		GdaemonPassword:     lo.ToPtr("gameap123"),
+		GdaemonLogin:        new("gameap"),
+		GdaemonPassword:     new("gameap123"),
 		GdaemonServerCert:   "certificates/server.crt",
 		ClientCertificateID: cert.ID,
 	}

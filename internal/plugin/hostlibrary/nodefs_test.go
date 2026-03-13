@@ -146,16 +146,16 @@ func (s *nodeFSServiceImplForTest) ReadDir(
 ) (*nodefs.ReadDirResponse, error) {
 	node, err := s.getNode(ctx, req.NodeId)
 	if err != nil {
-		return &nodefs.ReadDirResponse{Error: ptrString(err.Error())}, nil
+		return &nodefs.ReadDirResponse{Error: new(err.Error())}, nil
 	}
 
 	if node == nil {
-		return &nodefs.ReadDirResponse{Error: ptrString("node not found")}, nil
+		return &nodefs.ReadDirResponse{Error: new("node not found")}, nil
 	}
 
 	files, err := s.fileService.ReadDir(ctx, node, req.Path)
 	if err != nil {
-		return &nodefs.ReadDirResponse{Error: ptrString(err.Error())}, nil
+		return &nodefs.ReadDirResponse{Error: new(err.Error())}, nil
 	}
 
 	return &nodefs.ReadDirResponse{
@@ -169,16 +169,16 @@ func (s *nodeFSServiceImplForTest) MkDir(
 ) (*nodefs.MkDirResponse, error) {
 	node, err := s.getNode(ctx, req.NodeId)
 	if err != nil {
-		return &nodefs.MkDirResponse{Success: false, Error: ptrString(err.Error())}, nil
+		return &nodefs.MkDirResponse{Success: false, Error: new(err.Error())}, nil
 	}
 
 	if node == nil {
-		return &nodefs.MkDirResponse{Success: false, Error: ptrString("node not found")}, nil
+		return &nodefs.MkDirResponse{Success: false, Error: new("node not found")}, nil
 	}
 
 	err = s.fileService.MkDir(ctx, node, req.Path)
 	if err != nil {
-		return &nodefs.MkDirResponse{Success: false, Error: ptrString(err.Error())}, nil
+		return &nodefs.MkDirResponse{Success: false, Error: new(err.Error())}, nil
 	}
 
 	return &nodefs.MkDirResponse{Success: true}, nil
@@ -190,16 +190,16 @@ func (s *nodeFSServiceImplForTest) Download(
 ) (*nodefs.DownloadResponse, error) {
 	node, err := s.getNode(ctx, req.NodeId)
 	if err != nil {
-		return &nodefs.DownloadResponse{Error: ptrString(err.Error())}, nil
+		return &nodefs.DownloadResponse{Error: new(err.Error())}, nil
 	}
 
 	if node == nil {
-		return &nodefs.DownloadResponse{Error: ptrString("node not found")}, nil
+		return &nodefs.DownloadResponse{Error: new("node not found")}, nil
 	}
 
 	content, err := s.fileService.Download(ctx, node, req.Path)
 	if err != nil {
-		return &nodefs.DownloadResponse{Error: ptrString(err.Error())}, nil
+		return &nodefs.DownloadResponse{Error: new(err.Error())}, nil
 	}
 
 	return &nodefs.DownloadResponse{Content: content}, nil

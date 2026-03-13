@@ -122,7 +122,7 @@ func TestServerVars_StringPtr(t *testing.T) {
 		{
 			name: "valid_map",
 			vars: ServerVars{"maxplayers": "32"},
-			want: ptrString(`{"maxplayers":"32"}`),
+			want: new(`{"maxplayers":"32"}`),
 		},
 	}
 
@@ -140,6 +140,7 @@ func TestServerVars_StringPtr(t *testing.T) {
 	}
 }
 
+//go:fix inline
 func ptrString(s string) *string {
-	return &s
+	return new(s)
 }

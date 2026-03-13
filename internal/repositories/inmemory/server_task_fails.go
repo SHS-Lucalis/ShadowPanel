@@ -10,7 +10,6 @@ import (
 
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
-	"github.com/samber/lo"
 )
 
 type ServerTaskFailRepository struct {
@@ -74,10 +73,10 @@ func (r *ServerTaskFailRepository) Save(_ context.Context, fail *domain.ServerTa
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	fail.UpdatedAt = lo.ToPtr(time.Now())
+	fail.UpdatedAt = new(time.Now())
 
 	if fail.ID == 0 && (fail.CreatedAt == nil || fail.CreatedAt.IsZero()) {
-		fail.CreatedAt = lo.ToPtr(time.Now())
+		fail.CreatedAt = new(time.Now())
 	}
 
 	if fail.ID != 0 {

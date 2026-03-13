@@ -13,7 +13,6 @@ import (
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
 	"github.com/google/uuid"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -59,7 +58,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 					Name:                  "Test Game",
 					Engine:                "source",
 					EngineVersion:         "1.0",
-					RemoteRepositoryLinux: lo.ToPtr("http://example.com/repo"),
+					RemoteRepositoryLinux: new("http://example.com/repo"),
 				}
 				require.NoError(t, gameRepo.Save(context.Background(), game))
 
@@ -67,8 +66,8 @@ func TestHandler_ServeHTTP(t *testing.T) {
 					ID:                    1,
 					GameCode:              "test",
 					Name:                  "Test Mod",
-					StartCmdLinux:         lo.ToPtr("./start.sh"),
-					RemoteRepositoryLinux: lo.ToPtr("http://example.com/mod"),
+					StartCmdLinux:         new("./start.sh"),
+					RemoteRepositoryLinux: new("http://example.com/mod"),
 				}
 				require.NoError(t, gameModRepo.Save(context.Background(), gameMod))
 
@@ -306,8 +305,8 @@ func TestHandler_ResponseStructure(t *testing.T) {
 		Engine:                "goldsrc",
 		EngineVersion:         "48",
 		SteamAppIDLinux:       &steamAppIDLinux,
-		RemoteRepositoryLinux: lo.ToPtr("http://example.com/repo"),
-		LocalRepositoryLinux:  lo.ToPtr("/var/local/repo"),
+		RemoteRepositoryLinux: new("http://example.com/repo"),
+		LocalRepositoryLinux:  new("/var/local/repo"),
 		Metadata:              domain.Metadata{"docker_image": "ghcr.io/gameap/cs16:latest"},
 	}
 	require.NoError(t, gameRepo.Save(context.Background(), game))
@@ -316,10 +315,10 @@ func TestHandler_ResponseStructure(t *testing.T) {
 		ID:                    1,
 		GameCode:              "cs16",
 		Name:                  "Classic",
-		StartCmdLinux:         lo.ToPtr("./hlds_run -game cstrike"),
-		StartCmdWindows:       lo.ToPtr("hlds.exe -game cstrike"),
-		RemoteRepositoryLinux: lo.ToPtr("http://example.com/mod"),
-		LocalRepositoryLinux:  lo.ToPtr("/var/local/mod"),
+		StartCmdLinux:         new("./hlds_run -game cstrike"),
+		StartCmdWindows:       new("hlds.exe -game cstrike"),
+		RemoteRepositoryLinux: new("http://example.com/mod"),
+		LocalRepositoryLinux:  new("/var/local/mod"),
 		Metadata:              domain.Metadata{"mod_type": "classic"},
 	}
 	require.NoError(t, gameModRepo.Save(context.Background(), gameMod))
@@ -463,8 +462,8 @@ func TestHandler_WindowsOS(t *testing.T) {
 		Name:                    "Counter-Strike 1.6",
 		Engine:                  "goldsrc",
 		SteamAppIDWindows:       &steamAppIDWindows,
-		RemoteRepositoryWindows: lo.ToPtr("http://example.com/repo-win"),
-		LocalRepositoryWindows:  lo.ToPtr("C:\\local\\repo"),
+		RemoteRepositoryWindows: new("http://example.com/repo-win"),
+		LocalRepositoryWindows:  new("C:\\local\\repo"),
 		Metadata:                domain.Metadata{"platform": "windows"},
 	}
 	require.NoError(t, gameRepo.Save(context.Background(), game))
@@ -473,10 +472,10 @@ func TestHandler_WindowsOS(t *testing.T) {
 		ID:                      1,
 		GameCode:                "cs16",
 		Name:                    "Classic",
-		StartCmdLinux:           lo.ToPtr("./hlds_run -game cstrike"),
-		StartCmdWindows:         lo.ToPtr("hlds.exe -game cstrike"),
-		RemoteRepositoryWindows: lo.ToPtr("http://example.com/mod-win"),
-		LocalRepositoryWindows:  lo.ToPtr("C:\\local\\mod"),
+		StartCmdLinux:           new("./hlds_run -game cstrike"),
+		StartCmdWindows:         new("hlds.exe -game cstrike"),
+		RemoteRepositoryWindows: new("http://example.com/mod-win"),
+		LocalRepositoryWindows:  new("C:\\local\\mod"),
 		Metadata:                domain.Metadata{"mod_platform": "windows"},
 	}
 	require.NoError(t, gameModRepo.Save(context.Background(), gameMod))

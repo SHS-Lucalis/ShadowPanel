@@ -7,7 +7,6 @@ import (
 
 	intcache "github.com/gameap/gameap/internal/cache"
 	"github.com/gameap/gameap/pkg/plugin/sdk/cache"
-	"github.com/samber/lo"
 	"github.com/tetratelabs/wazero"
 )
 
@@ -68,7 +67,7 @@ func (s *CacheServiceImpl) Set(
 	if err != nil {
 		return &cache.CacheSetResponse{
 			Success: false,
-			Error:   lo.ToPtr(err.Error()),
+			Error:   new(err.Error()),
 		}, nil
 	}
 

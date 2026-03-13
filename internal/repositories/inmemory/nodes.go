@@ -11,7 +11,6 @@ import (
 
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
-	"github.com/samber/lo"
 )
 
 type NodeRepository struct {
@@ -82,10 +81,10 @@ func (r *NodeRepository) Save(_ context.Context, node *domain.Node) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	node.UpdatedAt = lo.ToPtr(time.Now())
+	node.UpdatedAt = new(time.Now())
 
 	if node.ID == 0 && (node.CreatedAt == nil || node.CreatedAt.IsZero()) {
-		node.CreatedAt = lo.ToPtr(time.Now())
+		node.CreatedAt = new(time.Now())
 	}
 
 	// Remove old indexes if updating existing node

@@ -101,8 +101,8 @@ func seedRoles(ctx context.Context, c *Container) error {
 			return nil
 		}
 
-		adminRole := domain.Role{Name: "admin", Title: lo.ToPtr("Administrator")}
-		userRole := domain.Role{Name: "user", Title: lo.ToPtr("User")}
+		adminRole := domain.Role{Name: "admin", Title: new("Administrator")}
+		userRole := domain.Role{Name: "user", Title: new("User")}
 
 		if err := repo.SaveRole(ctx, &adminRole); err != nil {
 			return errors.WithMessagef(err, "failed to save role %s", adminRole.Name)
@@ -116,7 +116,7 @@ func seedRoles(ctx context.Context, c *Container) error {
 			ctx, adminRole.ID, domain.EntityTypeRole, []domain.Ability{
 				{
 					Name:  domain.AbilityNameAdminRolesPermissions,
-					Title: lo.ToPtr("Common Admininstator Permissions"),
+					Title: new("Common Admininstator Permissions"),
 				},
 			},
 		)
@@ -146,7 +146,7 @@ func seedUsers(ctx context.Context, c *Container) error {
 		user := domain.User{
 			Login: lo.CoalesceOrEmpty(os.Getenv("ADMIN_LOGIN"), "admin"),
 			Email: lo.CoalesceOrEmpty(os.Getenv("ADMIN_EMAIL"), "admin@localhost"),
-			Name:  lo.ToPtr("Admin"),
+			Name:  new("Admin"),
 		}
 
 		pw := os.Getenv("ADMIN_PASSWORD")

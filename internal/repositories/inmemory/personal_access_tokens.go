@@ -12,7 +12,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 )
 
 type PersonalAccessTokenRepository struct {
@@ -87,10 +86,10 @@ func (r *PersonalAccessTokenRepository) Save(_ context.Context, token *domain.Pe
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	token.UpdatedAt = lo.ToPtr(time.Now())
+	token.UpdatedAt = new(time.Now())
 
 	if token.ID == 0 && (token.CreatedAt == nil || token.CreatedAt.IsZero()) {
-		token.CreatedAt = lo.ToPtr(time.Now())
+		token.CreatedAt = new(time.Now())
 	}
 
 	if token.ID == 0 {

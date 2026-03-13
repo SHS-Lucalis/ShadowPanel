@@ -156,10 +156,10 @@ func (r *ServerTaskRepository) find(
 }
 
 func (r *ServerTaskRepository) Save(ctx context.Context, task *domain.ServerTask) error {
-	task.UpdatedAt = lo.ToPtr(time.Now())
+	task.UpdatedAt = new(time.Now())
 
 	if task.ID == 0 && (task.CreatedAt == nil || task.CreatedAt.IsZero()) {
-		task.CreatedAt = lo.ToPtr(time.Now())
+		task.CreatedAt = new(time.Now())
 	}
 
 	query, args, err := sq.Insert(base.ServerTasksTable).

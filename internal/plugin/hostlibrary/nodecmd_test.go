@@ -65,11 +65,11 @@ func (s *nodeCmdServiceImplForTest) ExecuteCommand(
 ) (*nodecmd.ExecuteCommandResponse, error) {
 	node, err := s.getNode(ctx, req.NodeId)
 	if err != nil {
-		return &nodecmd.ExecuteCommandResponse{Error: ptrString(err.Error())}, nil
+		return &nodecmd.ExecuteCommandResponse{Error: new(err.Error())}, nil
 	}
 
 	if node == nil {
-		return &nodecmd.ExecuteCommandResponse{Error: ptrString("node not found")}, nil
+		return &nodecmd.ExecuteCommandResponse{Error: new("node not found")}, nil
 	}
 
 	var opts []daemon.CommandServiceOption
@@ -79,7 +79,7 @@ func (s *nodeCmdServiceImplForTest) ExecuteCommand(
 
 	result, err := s.commandService.ExecuteCommand(ctx, node, req.Command, opts...)
 	if err != nil {
-		return &nodecmd.ExecuteCommandResponse{Error: ptrString(err.Error())}, nil
+		return &nodecmd.ExecuteCommandResponse{Error: new(err.Error())}, nil
 	}
 
 	return &nodecmd.ExecuteCommandResponse{
@@ -88,8 +88,9 @@ func (s *nodeCmdServiceImplForTest) ExecuteCommand(
 	}, nil
 }
 
+//go:fix inline
 func ptrString(s string) *string {
-	return &s
+	return new(s)
 }
 
 func TestNodeCmdService_ExecuteCommand(t *testing.T) {
@@ -160,7 +161,7 @@ func TestNodeCmdService_ExecuteCommand(t *testing.T) {
 			request: &nodecmd.ExecuteCommandRequest{
 				NodeId:  1,
 				Command: "pwd",
-				WorkDir: ptrString("/home/user"),
+				WorkDir: new("/home/user"),
 			},
 			wantOutput:   "/home/user\n",
 			wantExitCode: 0,

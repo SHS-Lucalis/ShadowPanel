@@ -8,7 +8,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -42,7 +41,7 @@ func (s *UserRepositorySuite) TestUserRepositorySave() {
 			Login:    "testuser",
 			Email:    "test@example.com",
 			Password: "hashedpassword",
-			Name:     lo.ToPtr("Test User"),
+			Name:     new("Test User"),
 		}
 
 		err := s.repo.Save(ctx, user)
@@ -57,14 +56,14 @@ func (s *UserRepositorySuite) TestUserRepositorySave() {
 			Login:    "updateuser",
 			Email:    "update@example.com",
 			Password: "hashedpassword",
-			Name:     lo.ToPtr("Update User"),
+			Name:     new("Update User"),
 		}
 
 		err := s.repo.Save(ctx, user)
 		require.NoError(t, err)
 		originalID := user.ID
 
-		user.Name = lo.ToPtr("Updated Name")
+		user.Name = new("Updated Name")
 		user.Email = "updated@example.com"
 		err = s.repo.Save(ctx, user)
 		require.NoError(t, err)
@@ -83,7 +82,7 @@ func (s *UserRepositorySuite) TestUserRepositoryDelete() {
 			Login:    "deleteuser",
 			Email:    "delete@example.com",
 			Password: "hashedpassword",
-			Name:     lo.ToPtr("Delete User"),
+			Name:     new("Delete User"),
 		}
 
 		require.NoError(t, s.repo.Save(ctx, user))
@@ -102,7 +101,7 @@ func (s *UserRepositorySuite) TestUserRepositoryDelete() {
 			Login:    "deleteuser",
 			Email:    "delete@example.com",
 			Password: "hashedpassword",
-			Name:     lo.ToPtr("Delete User"),
+			Name:     new("Delete User"),
 		}
 
 		require.NoError(t, s.repo.Save(ctx, user))
@@ -134,7 +133,7 @@ func (s *UserRepositorySuite) TestUserRepositorySaveWithTimestamps() {
 			Login:    "timestampuser",
 			Email:    "timestamp@example.com",
 			Password: "hashedpassword",
-			Name:     lo.ToPtr("Timestamp User"),
+			Name:     new("Timestamp User"),
 		}
 
 		beforeSave := time.Now()
@@ -155,7 +154,7 @@ func (s *UserRepositorySuite) TestUserRepositorySaveWithTimestamps() {
 			Login:    "updatetimestamp",
 			Email:    "updatetimestamp@example.com",
 			Password: "hashedpassword",
-			Name:     lo.ToPtr("Update Timestamp User"),
+			Name:     new("Update Timestamp User"),
 		}
 
 		require.NoError(t, s.repo.Save(ctx, user))
@@ -163,7 +162,7 @@ func (s *UserRepositorySuite) TestUserRepositorySaveWithTimestamps() {
 
 		time.Sleep(100 * time.Millisecond)
 
-		user.Name = lo.ToPtr("Updated Name")
+		user.Name = new("Updated Name")
 		require.NoError(t, s.repo.Save(ctx, user))
 
 		assert.True(t, user.UpdatedAt.After(originalUpdatedAt))
@@ -175,9 +174,9 @@ func (s *UserRepositorySuite) TestUserRepositorySaveWithTimestamps() {
 			Login:     "customtime",
 			Email:     "customtime@example.com",
 			Password:  "hashedpassword",
-			Name:      lo.ToPtr("Custom Time User"),
-			CreatedAt: lo.ToPtr(customTime),
-			UpdatedAt: lo.ToPtr(customTime),
+			Name:      new("Custom Time User"),
+			CreatedAt: new(customTime),
+			UpdatedAt: new(customTime),
 		}
 
 		err := s.repo.Save(ctx, user)
@@ -194,19 +193,19 @@ func (s *UserRepositorySuite) TestUserRepositoryFindAll() {
 		Login:    "findall1",
 		Email:    "findall1@example.com",
 		Password: "hashedpassword1",
-		Name:     lo.ToPtr("FindAll User 1"),
+		Name:     new("FindAll User 1"),
 	}
 	user2 := &domain.User{
 		Login:    "findall2",
 		Email:    "findall2@example.com",
 		Password: "hashedpassword2",
-		Name:     lo.ToPtr("FindAll User 2"),
+		Name:     new("FindAll User 2"),
 	}
 	user3 := &domain.User{
 		Login:    "findall3",
 		Email:    "findall3@example.com",
 		Password: "hashedpassword3",
-		Name:     lo.ToPtr("FindAll User 3"),
+		Name:     new("FindAll User 3"),
 	}
 
 	require.NoError(s.T(), s.repo.Save(ctx, user1))
@@ -274,19 +273,19 @@ func (s *UserRepositorySuite) TestUserRepositoryFind() {
 		Login:    "testfind1",
 		Email:    "testfind1@example.com",
 		Password: "hashedpassword1",
-		Name:     lo.ToPtr("Test Find User 1"),
+		Name:     new("Test Find User 1"),
 	}
 	user2 := &domain.User{
 		Login:    "testfind2",
 		Email:    "testfind2@example.com",
 		Password: "hashedpassword2",
-		Name:     lo.ToPtr("Test Find User 2"),
+		Name:     new("Test Find User 2"),
 	}
 	user3 := &domain.User{
 		Login:    "testfind3",
 		Email:    "testfind3@example.com",
 		Password: "hashedpassword3",
-		Name:     lo.ToPtr("Test Find User 3"),
+		Name:     new("Test Find User 3"),
 	}
 
 	require.NoError(s.T(), s.repo.Save(ctx, user1))
@@ -418,7 +417,7 @@ func (s *UserRepositorySuite) TestUserRepositoryIntegration() {
 			Login:    "lifecycle",
 			Email:    "lifecycle@example.com",
 			Password: "hashedpassword",
-			Name:     lo.ToPtr("Lifecycle User"),
+			Name:     new("Lifecycle User"),
 		}
 
 		err := s.repo.Save(ctx, user)
@@ -435,7 +434,7 @@ func (s *UserRepositorySuite) TestUserRepositoryIntegration() {
 		assert.Equal(t, "lifecycle@example.com", results[0].Email)
 
 		user.Email = "updated@example.com"
-		user.Name = lo.ToPtr("Updated User")
+		user.Name = new("Updated User")
 		err = s.repo.Save(ctx, user)
 		require.NoError(t, err)
 
@@ -455,9 +454,9 @@ func (s *UserRepositorySuite) TestUserRepositoryIntegration() {
 
 	s.T().Run("multiple_users_operations", func(t *testing.T) {
 		users := []*domain.User{
-			{Login: "multi1", Email: "multi1@example.com", Password: "pass1", Name: lo.ToPtr("Multi User 1")},
-			{Login: "multi2", Email: "multi2@example.com", Password: "pass2", Name: lo.ToPtr("Multi User 2")},
-			{Login: "multi3", Email: "multi3@example.com", Password: "pass3", Name: lo.ToPtr("Multi User 3")},
+			{Login: "multi1", Email: "multi1@example.com", Password: "pass1", Name: new("Multi User 1")},
+			{Login: "multi2", Email: "multi2@example.com", Password: "pass2", Name: new("Multi User 2")},
+			{Login: "multi3", Email: "multi3@example.com", Password: "pass3", Name: new("Multi User 3")},
 		}
 
 		for _, user := range users {

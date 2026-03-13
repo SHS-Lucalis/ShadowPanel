@@ -9,7 +9,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories/base"
-	"github.com/samber/lo"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/pkg/errors"
@@ -133,10 +132,10 @@ func (r *ServerRepository) find(
 }
 
 func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) error {
-	server.UpdatedAt = lo.ToPtr(time.Now())
+	server.UpdatedAt = new(time.Now())
 
 	if server.ID == 0 && (server.CreatedAt == nil || server.CreatedAt.IsZero()) {
-		server.CreatedAt = lo.ToPtr(time.Now())
+		server.CreatedAt = new(time.Now())
 	}
 
 	query, args, err := sq.Insert(base.ServersTable).

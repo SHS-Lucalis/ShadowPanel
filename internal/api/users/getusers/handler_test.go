@@ -14,7 +14,6 @@ import (
 	"github.com/gameap/gameap/internal/services"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -37,7 +36,7 @@ func TestGetUsers(t *testing.T) {
 					ID:        1,
 					Login:     "admin",
 					Email:     "admin@yousite.local",
-					Name:      lo.ToPtr("New Name"),
+					Name:      new("New Name"),
 					CreatedAt: &createdAt,
 					UpdatedAt: &updatedAt,
 				},
@@ -45,9 +44,9 @@ func TestGetUsers(t *testing.T) {
 					ID:        2,
 					Login:     "Test",
 					Email:     "test@gameap.com",
-					Name:      lo.ToPtr("Test"),
-					CreatedAt: lo.ToPtr(time.Date(2025, 9, 18, 18, 31, 12, 0, time.UTC)),
-					UpdatedAt: lo.ToPtr(time.Date(2025, 9, 23, 22, 0, 14, 0, time.UTC)),
+					Name:      new("Test"),
+					CreatedAt: new(time.Date(2025, 9, 18, 18, 31, 12, 0, time.UTC)),
+					UpdatedAt: new(time.Date(2025, 9, 23, 22, 0, 14, 0, time.UTC)),
 				},
 			},
 			session: &auth.Session{

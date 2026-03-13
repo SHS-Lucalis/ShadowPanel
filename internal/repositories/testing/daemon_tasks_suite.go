@@ -8,7 +8,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -39,11 +38,11 @@ func (s *DaemonTaskRepositorySuite) TestDaemonTaskRepositorySave() {
 		// ARRANGE
 		task := &domain.DaemonTask{
 			DedicatedServerID: 1,
-			ServerID:          lo.ToPtr(uint(10)),
+			ServerID:          new(uint(10)),
 			Task:              domain.DaemonTaskTypeServerStart,
-			Data:              lo.ToPtr("test data"),
-			Cmd:               lo.ToPtr("start command"),
-			Output:            lo.ToPtr(""),
+			Data:              new("test data"),
+			Cmd:               new("start command"),
+			Output:            new(""),
 			Status:            domain.DaemonTaskStatusWaiting,
 		}
 
@@ -77,11 +76,11 @@ func (s *DaemonTaskRepositorySuite) TestDaemonTaskRepositorySave() {
 	s.T().Run("update_existing_task", func(t *testing.T) {
 		task := &domain.DaemonTask{
 			DedicatedServerID: 2,
-			ServerID:          lo.ToPtr(uint(20)),
+			ServerID:          new(uint(20)),
 			Task:              domain.DaemonTaskTypeServerStop,
-			Data:              lo.ToPtr("original data"),
-			Cmd:               lo.ToPtr("stop command"),
-			Output:            lo.ToPtr("original output"),
+			Data:              new("original data"),
+			Cmd:               new("stop command"),
+			Output:            new("original output"),
 			Status:            domain.DaemonTaskStatusWaiting,
 		}
 
@@ -94,8 +93,8 @@ func (s *DaemonTaskRepositorySuite) TestDaemonTaskRepositorySave() {
 		time.Sleep(10 * time.Millisecond)
 
 		task.Status = domain.DaemonTaskStatusSuccess
-		task.Output = lo.ToPtr("updated output")
-		task.Data = lo.ToPtr("updated data")
+		task.Output = new("updated output")
+		task.Data = new("updated data")
 
 		err = s.repo.Save(ctx, task)
 		require.NoError(t, err)
@@ -111,11 +110,11 @@ func (s *DaemonTaskRepositorySuite) TestDaemonTaskRepositorySave() {
 		// ARRANGE
 		task := &domain.DaemonTask{
 			DedicatedServerID: 2,
-			ServerID:          lo.ToPtr(uint(20)),
+			ServerID:          new(uint(20)),
 			Task:              domain.DaemonTaskTypeServerStop,
-			Data:              lo.ToPtr("original data"),
-			Cmd:               lo.ToPtr("stop command"),
-			Output:            lo.ToPtr("original output"),
+			Data:              new("original data"),
+			Cmd:               new("stop command"),
+			Output:            new("original output"),
 			Status:            domain.DaemonTaskStatusWaiting,
 		}
 
@@ -135,7 +134,7 @@ func (s *DaemonTaskRepositorySuite) TestDaemonTaskRepositorySave() {
 			DedicatedServerID: task.DedicatedServerID,
 			ServerID:          task.ServerID,
 			Task:              task.Task,
-			Data:              lo.ToPtr("updated data"),
+			Data:              new("updated data"),
 			Cmd:               task.Cmd,
 			Output:            nil, // Simulate not updating the output\
 			Status:            domain.DaemonTaskStatusSuccess,
@@ -174,7 +173,7 @@ func (s *DaemonTaskRepositorySuite) TestDaemonTaskRepositorySave() {
 			DedicatedServerID: 3,
 			ServerID:          nil,
 			Task:              domain.DaemonTaskTypeCmdExec,
-			Cmd:               lo.ToPtr("some command"),
+			Cmd:               new("some command"),
 			Status:            domain.DaemonTaskStatusWaiting,
 		}
 
@@ -211,24 +210,24 @@ func (s *DaemonTaskRepositorySuite) TestDaemonTaskRepositoryFindAll() {
 	tasks := []*domain.DaemonTask{
 		{
 			DedicatedServerID: 1,
-			ServerID:          lo.ToPtr(uint(100)),
+			ServerID:          new(uint(100)),
 			Task:              domain.DaemonTaskTypeServerStart,
 			Status:            domain.DaemonTaskStatusWaiting,
-			Output:            lo.ToPtr("output1"),
+			Output:            new("output1"),
 		},
 		{
 			DedicatedServerID: 2,
-			ServerID:          lo.ToPtr(uint(200)),
+			ServerID:          new(uint(200)),
 			Task:              domain.DaemonTaskTypeServerStop,
 			Status:            domain.DaemonTaskStatusWorking,
-			Output:            lo.ToPtr("output2"),
+			Output:            new("output2"),
 		},
 		{
 			DedicatedServerID: 3,
-			ServerID:          lo.ToPtr(uint(300)),
+			ServerID:          new(uint(300)),
 			Task:              domain.DaemonTaskTypeServerRestart,
 			Status:            domain.DaemonTaskStatusSuccess,
-			Output:            lo.ToPtr("output3"),
+			Output:            new("output3"),
 		},
 	}
 
@@ -273,24 +272,24 @@ func (s *DaemonTaskRepositorySuite) TestDaemonTaskRepositoryFind() {
 
 	task1 := &domain.DaemonTask{
 		DedicatedServerID: 10,
-		ServerID:          lo.ToPtr(uint(101)),
+		ServerID:          new(uint(101)),
 		Task:              domain.DaemonTaskTypeServerStart,
 		Status:            domain.DaemonTaskStatusWaiting,
-		Output:            lo.ToPtr("find_output1"),
+		Output:            new("find_output1"),
 	}
 	task2 := &domain.DaemonTask{
 		DedicatedServerID: 20,
-		ServerID:          lo.ToPtr(uint(102)),
+		ServerID:          new(uint(102)),
 		Task:              domain.DaemonTaskTypeServerStop,
 		Status:            domain.DaemonTaskStatusWorking,
-		Output:            lo.ToPtr("find_output2"),
+		Output:            new("find_output2"),
 	}
 	task3 := &domain.DaemonTask{
 		DedicatedServerID: 10,
-		ServerID:          lo.ToPtr(uint(103)),
+		ServerID:          new(uint(103)),
 		Task:              domain.DaemonTaskTypeServerRestart,
 		Status:            domain.DaemonTaskStatusSuccess,
-		Output:            lo.ToPtr("find_output3"),
+		Output:            new("find_output3"),
 	}
 
 	require.NoError(s.T(), s.repo.Save(ctx, task1))
@@ -338,7 +337,7 @@ func (s *DaemonTaskRepositorySuite) TestDaemonTaskRepositoryFind() {
 
 	s.T().Run("find_by_server_id", func(t *testing.T) {
 		filter := &filters.FindDaemonTask{
-			ServerIDs: []*uint{lo.ToPtr(uint(101))},
+			ServerIDs: []*uint{new(uint(101))},
 		}
 
 		results, err := s.repo.Find(ctx, filter, nil, nil)
@@ -490,7 +489,7 @@ func (s *DaemonTaskRepositorySuite) TestDaemonTaskRepositoryFind() {
 
 	s.T().Run("find_by_server_id_and_dedicated_server_id", func(t *testing.T) {
 		filter := &filters.FindDaemonTask{
-			ServerIDs:          []*uint{lo.ToPtr(uint(101))},
+			ServerIDs:          []*uint{new(uint(101))},
 			DedicatedServerIDs: []uint{10},
 		}
 
@@ -520,7 +519,7 @@ func (s *DaemonTaskRepositorySuite) TestDaemonTaskRepositoryFind() {
 		filter := &filters.FindDaemonTask{
 			IDs:                []uint{task1.ID, task2.ID, task3.ID},
 			DedicatedServerIDs: []uint{10},
-			ServerIDs:          []*uint{lo.ToPtr(uint(101))},
+			ServerIDs:          []*uint{new(uint(101))},
 			Tasks:              []domain.DaemonTaskType{domain.DaemonTaskTypeServerStart},
 			Statuses:           []domain.DaemonTaskStatus{domain.DaemonTaskStatusWaiting},
 		}
@@ -600,10 +599,10 @@ func (s *DaemonTaskRepositorySuite) TestDaemonTaskRepositoryFindWithOutput() {
 
 	task := &domain.DaemonTask{
 		DedicatedServerID: 5,
-		ServerID:          lo.ToPtr(uint(50)),
+		ServerID:          new(uint(50)),
 		Task:              domain.DaemonTaskTypeServerUpdate,
 		Status:            domain.DaemonTaskStatusWorking,
-		Output:            lo.ToPtr("test output data"),
+		Output:            new("test output data"),
 	}
 
 	require.NoError(s.T(), s.repo.Save(ctx, task))
@@ -676,7 +675,7 @@ func (s *DaemonTaskRepositorySuite) TestDaemonTaskRepositoryAppendOutput() {
 			DedicatedServerID: 7,
 			Task:              domain.DaemonTaskTypeCmdExec,
 			Status:            domain.DaemonTaskStatusWorking,
-			Output:            lo.ToPtr("Initial output\n"),
+			Output:            new("Initial output\n"),
 		}
 
 		require.NoError(t, s.repo.Save(ctx, task))
@@ -835,10 +834,10 @@ func (s *DaemonTaskRepositorySuite) TestDaemonTaskRepositoryIntegration() {
 	s.T().Run("full_lifecycle", func(t *testing.T) {
 		task := &domain.DaemonTask{
 			DedicatedServerID: 30,
-			ServerID:          lo.ToPtr(uint(300)),
+			ServerID:          new(uint(300)),
 			Task:              domain.DaemonTaskTypeServerStart,
 			Status:            domain.DaemonTaskStatusWaiting,
-			Output:            lo.ToPtr(""),
+			Output:            new(""),
 		}
 
 		err := s.repo.Save(ctx, task)

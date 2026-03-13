@@ -8,7 +8,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/repositories"
 	repotesting "github.com/gameap/gameap/internal/repositories/testing"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -24,9 +23,9 @@ func TestRBACRepository(t *testing.T) {
 				role := domain.Role{
 					ID:    uint(roleID),
 					Name:  name,
-					Title: lo.ToPtr(name + " Title"),
-					Level: lo.ToPtr(uint(1)),
-					Scope: lo.ToPtr(1),
+					Title: new(name + " Title"),
+					Level: new(uint(1)),
+					Scope: new(1),
 				}
 
 				repo.mu.Lock()

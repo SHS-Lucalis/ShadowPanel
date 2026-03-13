@@ -14,7 +14,6 @@ import (
 	"github.com/gameap/gameap/internal/repositories"
 	pkgplugin "github.com/gameap/gameap/pkg/plugin"
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 )
 
 type LoaderManager interface {
@@ -76,7 +75,7 @@ func (l *Loader) LoadAll(ctx context.Context) error {
 		l.pluginIDs[plugin.ID] = loaded.Info.Id
 		l.mu.Unlock()
 
-		plugin.LastLoadedAt = lo.ToPtr(time.Now())
+		plugin.LastLoadedAt = new(time.Now())
 		if err := l.pluginRepo.Save(ctx, &plugin); err != nil {
 			slog.Warn("failed to update plugin last_loaded_at",
 				slog.String("plugin", plugin.Name),
@@ -206,9 +205,9 @@ func (l *Loader) processAutoLoad(ctx context.Context) error {
 			Description: loaded.Info.Description,
 			Author:      loaded.Info.Author,
 			APIVersion:  loaded.Info.ApiVersion,
-			Filename:    lo.ToPtr(filename),
+			Filename:    new(filename),
 			Status:      domain.PluginStatusActive,
-			InstalledAt: lo.ToPtr(time.Now()),
+			InstalledAt: new(time.Now()),
 		}
 
 		if err := l.pluginRepo.Save(ctx, plugin); err != nil {

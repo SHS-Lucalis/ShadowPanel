@@ -13,7 +13,6 @@ import (
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gorilla/mux"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -345,13 +344,13 @@ func TestHandler_GameUpdatePersistence(t *testing.T) {
 		"name":                      "Half-Life 2 Updated",
 		"engine":                    "Source",
 		"engine_version":            "2.0",
-		"steam_app_id_linux":        lo.ToPtr(220),
-		"steam_app_id_windows":      lo.ToPtr(2220),
-		"steam_app_set_config":      lo.ToPtr("hl2_updated_config"),
-		"remote_repository_linux":   lo.ToPtr("https://example.com/hl2/linux/updated"),
-		"remote_repository_windows": lo.ToPtr("C:\\local\\hl2\\windows\\updated"),
-		"local_repository_linux":    lo.ToPtr("C:\\local\\hl2\\windows\\updated"),
-		"local_repository_windows":  lo.ToPtr("C:\\local\\hl2\\windows\\updated"),
+		"steam_app_id_linux":        new(220),
+		"steam_app_id_windows":      new(2220),
+		"steam_app_set_config":      new("hl2_updated_config"),
+		"remote_repository_linux":   new("https://example.com/hl2/linux/updated"),
+		"remote_repository_windows": new("C:\\local\\hl2\\windows\\updated"),
+		"local_repository_linux":    new("C:\\local\\hl2\\windows\\updated"),
+		"local_repository_windows":  new("C:\\local\\hl2\\windows\\updated"),
 		"enabled":                   0,
 	}
 
@@ -377,19 +376,19 @@ func TestHandler_GameUpdatePersistence(t *testing.T) {
 	assert.Equal(t, "Source", game.Engine)
 	assert.Equal(t, "2.0", game.EngineVersion)
 	require.NotNil(t, game.SteamAppIDLinux)
-	assert.Equal(t, lo.ToPtr(uint(220)), game.SteamAppIDLinux)
+	assert.Equal(t, new(uint(220)), game.SteamAppIDLinux)
 	require.NotNil(t, game.SteamAppIDWindows)
-	assert.Equal(t, lo.ToPtr(uint(2220)), game.SteamAppIDWindows)
+	assert.Equal(t, new(uint(2220)), game.SteamAppIDWindows)
 	require.NotNil(t, game.SteamAppSetConfig)
-	assert.Equal(t, lo.ToPtr("hl2_updated_config"), game.SteamAppSetConfig)
+	assert.Equal(t, new("hl2_updated_config"), game.SteamAppSetConfig)
 	require.NotNil(t, game.RemoteRepositoryLinux)
-	assert.Equal(t, lo.ToPtr("https://example.com/hl2/linux/updated"), game.RemoteRepositoryLinux)
+	assert.Equal(t, new("https://example.com/hl2/linux/updated"), game.RemoteRepositoryLinux)
 	require.NotNil(t, game.RemoteRepositoryWindows)
-	assert.Equal(t, lo.ToPtr("C:\\local\\hl2\\windows\\updated"), game.RemoteRepositoryWindows)
+	assert.Equal(t, new("C:\\local\\hl2\\windows\\updated"), game.RemoteRepositoryWindows)
 	require.NotNil(t, game.LocalRepositoryLinux)
-	assert.Equal(t, lo.ToPtr("C:\\local\\hl2\\windows\\updated"), game.LocalRepositoryLinux)
+	assert.Equal(t, new("C:\\local\\hl2\\windows\\updated"), game.LocalRepositoryLinux)
 	require.NotNil(t, game.LocalRepositoryWindows)
-	assert.Equal(t, lo.ToPtr("C:\\local\\hl2\\windows\\updated"), game.LocalRepositoryWindows)
+	assert.Equal(t, new("C:\\local\\hl2\\windows\\updated"), game.LocalRepositoryWindows)
 	assert.Equal(t, 0, game.Enabled)
 }
 

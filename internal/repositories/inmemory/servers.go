@@ -13,7 +13,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/google/uuid"
-	"github.com/samber/lo"
 )
 
 type ServerRepository struct {
@@ -254,10 +253,10 @@ func (r *ServerRepository) Save(_ context.Context, server *domain.Server) error 
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	server.UpdatedAt = lo.ToPtr(time.Now())
+	server.UpdatedAt = new(time.Now())
 
 	if server.ID == 0 && (server.CreatedAt == nil || server.CreatedAt.IsZero()) {
-		server.CreatedAt = lo.ToPtr(time.Now())
+		server.CreatedAt = new(time.Now())
 	}
 
 	// Remove old indexes if updating existing server

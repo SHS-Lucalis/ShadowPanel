@@ -62,8 +62,8 @@ func (p *pluginServiceWrapper) callFunction(
 		return nil, err
 	}
 
-	resPtr := uint32(ptrSize[0] >> 32) //nolint:gosec
-	resSize := uint32(ptrSize[0])      //nolint:gosec
+	resPtr := uint32(ptrSize[0] >> 32)
+	resSize := uint32(ptrSize[0]) //nolint:gosec
 	isErrResponse := (resSize & (1 << 31)) > 0
 
 	if isErrResponse {

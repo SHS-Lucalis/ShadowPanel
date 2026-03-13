@@ -91,7 +91,7 @@ func TestLoader_LoadAll_FromRepository(t *testing.T) {
 		ID:       456,
 		Name:     "test-plugin",
 		Version:  "1.0.0",
-		Filename: lo.ToPtr("test-plugin.wasm"),
+		Filename: new("test-plugin.wasm"),
 		Status:   domain.PluginStatusActive,
 	}
 	err := pluginRepo.Save(ctx, plugin)
@@ -312,7 +312,7 @@ func TestLoader_LoadAll_UpdatesLastLoadedAt(t *testing.T) {
 		ID:       789,
 		Name:     "test-plugin",
 		Version:  "1.0.0",
-		Filename: lo.ToPtr("test-plugin.wasm"),
+		Filename: new("test-plugin.wasm"),
 		Status:   domain.PluginStatusActive,
 	}
 	err := pluginRepo.Save(ctx, plugin)

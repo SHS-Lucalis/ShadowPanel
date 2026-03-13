@@ -8,7 +8,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -53,7 +52,7 @@ func (s *ServerTaskRepositorySuite) TestServerTaskRepositorySave() {
 			RepeatPeriod: 0,
 			Counter:      0,
 			ExecuteDate:  executeDate,
-			Payload:      lo.ToPtr("test payload"),
+			Payload:      new("test payload"),
 		}
 
 		err := s.repo.Save(ctx, task)
@@ -80,7 +79,7 @@ func (s *ServerTaskRepositorySuite) TestServerTaskRepositorySave() {
 			RepeatPeriod: 86400 * time.Second,
 			Counter:      0,
 			ExecuteDate:  executeDate,
-			Payload:      lo.ToPtr("test payload"),
+			Payload:      new("test payload"),
 		}
 
 		err := s.repo.Save(ctx, task)
@@ -572,7 +571,7 @@ func (s *ServerTaskRepositorySuite) TestServerTaskRepositoryIntegration() {
 			RepeatPeriod: 7200 * time.Second,
 			Counter:      0,
 			ExecuteDate:  executeDate,
-			Payload:      lo.ToPtr("test payload"),
+			Payload:      new("test payload"),
 		}
 
 		err := s.repo.Save(ctx, task)

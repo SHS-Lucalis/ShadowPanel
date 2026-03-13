@@ -860,9 +860,9 @@ func TestBulkUpdateServerInput_Validate(t *testing.T) {
 			name: "valid input with all fields",
 			input: &bulkUpdateServerInput{
 				ID:               1,
-				Installed:        lo.ToPtr(1),
+				Installed:        new(1),
 				ProcessActive:    lo.ToPtr(flexible.Bool(true)),
-				LastProcessCheck: lo.ToPtr(flexible.Time{Time: time.Now()}),
+				LastProcessCheck: new(flexible.Time{Time: time.Now()}),
 			},
 			wantError: false,
 		},
@@ -870,7 +870,7 @@ func TestBulkUpdateServerInput_Validate(t *testing.T) {
 			name: "valid input with installed only",
 			input: &bulkUpdateServerInput{
 				ID:        1,
-				Installed: lo.ToPtr(1),
+				Installed: new(1),
 			},
 			wantError: false,
 		},
@@ -886,7 +886,7 @@ func TestBulkUpdateServerInput_Validate(t *testing.T) {
 			name: "valid input with last_process_check only",
 			input: &bulkUpdateServerInput{
 				ID:               1,
-				LastProcessCheck: lo.ToPtr(flexible.Time{Time: time.Now()}),
+				LastProcessCheck: new(flexible.Time{Time: time.Now()}),
 			},
 			wantError: false,
 		},
@@ -901,7 +901,7 @@ func TestBulkUpdateServerInput_Validate(t *testing.T) {
 			name: "valid installed - zero",
 			input: &bulkUpdateServerInput{
 				ID:        1,
-				Installed: lo.ToPtr(0),
+				Installed: new(0),
 			},
 			wantError: false,
 		},
@@ -909,7 +909,7 @@ func TestBulkUpdateServerInput_Validate(t *testing.T) {
 			name: "valid installed - large value",
 			input: &bulkUpdateServerInput{
 				ID:        1,
-				Installed: lo.ToPtr(2),
+				Installed: new(2),
 			},
 			wantError: false,
 		},
@@ -917,7 +917,7 @@ func TestBulkUpdateServerInput_Validate(t *testing.T) {
 			name: "invalid - missing server ID",
 			input: &bulkUpdateServerInput{
 				ID:        0,
-				Installed: lo.ToPtr(1),
+				Installed: new(1),
 			},
 			wantError: true,
 			errorMsg:  "server ID is required",
@@ -926,7 +926,7 @@ func TestBulkUpdateServerInput_Validate(t *testing.T) {
 			name: "invalid installed status - negative",
 			input: &bulkUpdateServerInput{
 				ID:        1,
-				Installed: lo.ToPtr(-1),
+				Installed: new(-1),
 			},
 			wantError: true,
 			errorMsg:  "invalid installed status",
@@ -935,7 +935,7 @@ func TestBulkUpdateServerInput_Validate(t *testing.T) {
 			name: "invalid installed status - too large",
 			input: &bulkUpdateServerInput{
 				ID:        1,
-				Installed: lo.ToPtr(20),
+				Installed: new(20),
 			},
 			wantError: true,
 			errorMsg:  "invalid installed status",

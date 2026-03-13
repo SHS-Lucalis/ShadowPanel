@@ -9,7 +9,6 @@ import (
 	"github.com/gameap/gameap/internal/repositories/sqlite"
 	repotesting "github.com/gameap/gameap/internal/repositories/testing"
 	"github.com/gameap/gameap/internal/services"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
@@ -28,9 +27,9 @@ func TestRBACRepository(t *testing.T) {
 
 				role := domain.Role{
 					Name:  name,
-					Title: lo.ToPtr(name + " Title"),
-					Level: lo.ToPtr(uint(1)),
-					Scope: lo.ToPtr(1),
+					Title: new(name + " Title"),
+					Level: new(uint(1)),
+					Scope: new(1),
 				}
 
 				query := "INSERT INTO roles (name, title, level, scope) VALUES (?, ?, ?, ?) RETURNING id"

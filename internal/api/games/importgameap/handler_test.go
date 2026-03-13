@@ -14,7 +14,6 @@ import (
 	"github.com/gameap/gameap/internal/services"
 	"github.com/gameap/gameap/internal/services/gameapimporter"
 	"github.com/gameap/gameap/pkg/api"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -103,7 +102,7 @@ mods:
 				_ = repo.Save(context.Background(), &domain.GameMod{
 					GameCode:      "existing",
 					Name:          "Default",
-					StartCmdLinux: lo.ToPtr("./old_command"),
+					StartCmdLinux: new("./old_command"),
 				})
 			},
 			expectedStatus: http.StatusOK,

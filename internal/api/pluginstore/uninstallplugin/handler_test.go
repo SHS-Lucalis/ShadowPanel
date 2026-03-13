@@ -13,7 +13,6 @@ import (
 	"github.com/gameap/gameap/pkg/api"
 	pkgplugin "github.com/gameap/gameap/pkg/plugin"
 	"github.com/gorilla/mux"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -26,7 +25,7 @@ func TestUninstallPlugin(t *testing.T) {
 		ID:       pkgplugin.ParsePluginID("testplugin123"),
 		Name:     "Test Plugin",
 		Version:  "1.0.0",
-		Filename: lo.ToPtr("testplugin123.wasm"),
+		Filename: new("testplugin123.wasm"),
 		Status:   domain.PluginStatusActive,
 	}
 	err := pluginRepo.Save(context.Background(), &existingPlugin)

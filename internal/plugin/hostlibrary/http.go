@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/gameap/gameap/pkg/plugin/sdk/http"
-	"github.com/samber/lo"
 	"github.com/tetratelabs/wazero"
 )
 
@@ -49,7 +48,7 @@ func (s *HTTPServiceImpl) Fetch(
 	httpReq, err := stdhttp.NewRequestWithContext(ctx, req.Method, req.Url, body)
 	if err != nil {
 		return &http.HTTPFetchResponse{
-			Error: lo.ToPtr(err.Error()),
+			Error: new(err.Error()),
 		}, nil
 	}
 
@@ -60,7 +59,7 @@ func (s *HTTPServiceImpl) Fetch(
 	resp, err := s.client.Do(httpReq)
 	if err != nil {
 		return &http.HTTPFetchResponse{
-			Error: lo.ToPtr(err.Error()),
+			Error: new(err.Error()),
 		}, nil
 	}
 	defer resp.Body.Close()
@@ -69,7 +68,7 @@ func (s *HTTPServiceImpl) Fetch(
 	if err != nil {
 		return &http.HTTPFetchResponse{
 			StatusCode: int32(resp.StatusCode), //nolint:gosec
-			Error:      lo.ToPtr(err.Error()),
+			Error:      new(err.Error()),
 		}, nil
 	}
 

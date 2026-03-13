@@ -8,7 +8,6 @@ import (
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/pkg/plugin/sdk/common"
 	"github.com/gameap/gameap/pkg/plugin/sdk/gamemods"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -50,7 +49,7 @@ func TestGameModsService_FindGameMods(t *testing.T) {
 				_ = r.Save(context.Background(), &domain.GameMod{GameCode: "tf2", Name: "Standard"})
 			},
 			request: &gamemods.FindGameModsRequest{
-				Filter: &gamemods.GameModFilter{GameCode: lo.ToPtr("cs")},
+				Filter: &gamemods.GameModFilter{GameCode: new("cs")},
 			},
 			wantTotal: 2,
 		},
@@ -152,10 +151,10 @@ func TestConvertGameModToProto(t *testing.T) {
 		ID:              42,
 		GameCode:        "cs",
 		Name:            "Classic",
-		StartCmdLinux:   lo.ToPtr("./hlds_run -game cstrike"),
-		StartCmdWindows: lo.ToPtr("hlds.exe -game cstrike"),
-		KickCmd:         lo.ToPtr("kick %s"),
-		BanCmd:          lo.ToPtr("banid 0 %s"),
+		StartCmdLinux:   new("./hlds_run -game cstrike"),
+		StartCmdWindows: new("hlds.exe -game cstrike"),
+		KickCmd:         new("kick %s"),
+		BanCmd:          new("banid 0 %s"),
 	}
 
 	result := convertGameModToProto(gameMod)

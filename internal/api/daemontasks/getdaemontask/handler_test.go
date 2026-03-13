@@ -17,7 +17,6 @@ import (
 	"github.com/gameap/gameap/pkg/auth"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -774,10 +773,10 @@ func TestHandler_ServeHTTP_ResponseContent(t *testing.T) {
 
 	assert.Equal(t, uint(1), response.ID)
 	assert.Equal(t, uint(2), response.DedicatedServerID)
-	assert.Equal(t, lo.ToPtr(uint(2)), response.ServerID)
+	assert.Equal(t, new(uint(2)), response.ServerID)
 	assert.Equal(t, domain.DaemonTaskTypeServerInstall, response.Task)
 	assert.Equal(t, domain.DaemonTaskStatusSuccess, response.Status)
-	assert.Equal(t, lo.ToPtr(output), response.Output)
+	assert.Equal(t, new(output), response.Output)
 }
 
 func TestHandler_ServeHTTP_LargeOutput(t *testing.T) {

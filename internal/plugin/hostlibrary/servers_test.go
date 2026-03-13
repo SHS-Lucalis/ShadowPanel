@@ -10,7 +10,6 @@ import (
 	"github.com/gameap/gameap/pkg/plugin/sdk/servers"
 	"github.com/gameap/gameap/pkg/proto"
 	"github.com/google/uuid"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -81,7 +80,7 @@ func TestServersService_FindServers(t *testing.T) {
 				_ = r.Save(context.Background(), &domain.Server{Name: "Server3", GameID: "mc", DSID: 2, Enabled: true})
 			},
 			request: &servers.FindServersRequest{
-				Filter: &servers.ServerFilter{Enabled: lo.ToPtr(true)},
+				Filter: &servers.ServerFilter{Enabled: new(true)},
 			},
 			wantTotal: 2,
 			wantIDs:   []uint{1, 3},
@@ -305,11 +304,11 @@ func TestConvertServerToProto(t *testing.T) {
 		GameModID:     2,
 		ServerIP:      "192.168.1.100",
 		ServerPort:    27015,
-		QueryPort:     lo.ToPtr(27016),
-		RconPort:      lo.ToPtr(27017),
+		QueryPort:     new(27016),
+		RconPort:      new(27017),
 		Dir:           "/home/server",
-		SuUser:        lo.ToPtr("gameuser"),
-		StartCommand:  lo.ToPtr("./start.sh"),
+		SuUser:        new("gameuser"),
+		StartCommand:  new("./start.sh"),
 		ProcessActive: true,
 	}
 
@@ -369,11 +368,11 @@ func TestConvertServerFromProto(t *testing.T) {
 		GameModId:    2,
 		ServerIp:     "192.168.1.100",
 		ServerPort:   27015,
-		QueryPort:    lo.ToPtr(int32(27016)),
-		RconPort:     lo.ToPtr(int32(27017)),
+		QueryPort:    new(int32(27016)),
+		RconPort:     new(int32(27017)),
 		Dir:          "/home/server",
-		SuUser:       lo.ToPtr("gameuser"),
-		StartCommand: lo.ToPtr("./start.sh"),
+		SuUser:       new("gameuser"),
+		StartCommand: new("./start.sh"),
 	}
 
 	result := convertServerFromProto(protoServer)

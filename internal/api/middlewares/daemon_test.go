@@ -12,7 +12,6 @@ import (
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -33,7 +32,7 @@ func TestDaemonAuthMiddleware_Middleware(t *testing.T) {
 		GdaemonHost:     "localhost",
 		GdaemonPort:     8080,
 		GdaemonAPIKey:   "test-key",
-		GdaemonAPIToken: lo.ToPtr(validToken),
+		GdaemonAPIToken: new(validToken),
 		WorkPath:        "/var/gameap",
 		CreatedAt:       &now,
 		UpdatedAt:       &now,
@@ -141,7 +140,7 @@ func TestDaemonAuthMiddleware_MultipleNodes(t *testing.T) {
 		OS:              "linux",
 		GdaemonHost:     "node1.example.com",
 		GdaemonPort:     8080,
-		GdaemonAPIToken: lo.ToPtr(node1Token),
+		GdaemonAPIToken: new(node1Token),
 		WorkPath:        "/var/gameap",
 		CreatedAt:       &now,
 		UpdatedAt:       &now,
@@ -154,7 +153,7 @@ func TestDaemonAuthMiddleware_MultipleNodes(t *testing.T) {
 		OS:              "windows",
 		GdaemonHost:     "node2.example.com",
 		GdaemonPort:     8081,
-		GdaemonAPIToken: lo.ToPtr(node2Token),
+		GdaemonAPIToken: new(node2Token),
 		WorkPath:        "C:\\gameap",
 		CreatedAt:       &now,
 		UpdatedAt:       &now,

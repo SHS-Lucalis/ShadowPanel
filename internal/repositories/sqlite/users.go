@@ -111,18 +111,18 @@ func (r *UserRepository) find(
 }
 
 func (r *UserRepository) Save(ctx context.Context, user *domain.User) error {
-	user.UpdatedAt = lo.ToPtr(time.Now())
+	user.UpdatedAt = new(time.Now())
 
 	if user.ID == 0 && (user.CreatedAt == nil || user.CreatedAt.IsZero()) {
-		user.CreatedAt = lo.ToPtr(time.Now())
+		user.CreatedAt = new(time.Now())
 	}
 
 	var createdAtStr, updatedAtStr *string
 	if user.CreatedAt != nil {
-		createdAtStr = lo.ToPtr(user.CreatedAt.Format(time.RFC3339))
+		createdAtStr = new(user.CreatedAt.Format(time.RFC3339))
 	}
 	if user.UpdatedAt != nil {
-		updatedAtStr = lo.ToPtr(user.UpdatedAt.Format(time.RFC3339))
+		updatedAtStr = new(user.UpdatedAt.Format(time.RFC3339))
 	}
 
 	query, args, err := sq.Insert(base.UsersTable).

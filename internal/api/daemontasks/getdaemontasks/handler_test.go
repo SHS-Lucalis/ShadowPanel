@@ -13,7 +13,6 @@ import (
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -733,7 +732,7 @@ func TestNewDaemonTasksResponseFromDaemonTasks(t *testing.T) {
 		{
 			ID:                1,
 			DedicatedServerID: 1,
-			ServerID:          lo.ToPtr(uint(1)),
+			ServerID:          new(uint(1)),
 			Task:              domain.DaemonTaskTypeServerStart,
 			Status:            domain.DaemonTaskStatusSuccess,
 		},
@@ -752,7 +751,7 @@ func TestNewDaemonTasksResponseFromDaemonTasks(t *testing.T) {
 
 	assert.Equal(t, uint(1), responses[0].ID)
 	assert.Equal(t, uint(1), responses[0].DedicatedServerID)
-	assert.Equal(t, lo.ToPtr(uint(1)), responses[0].ServerID)
+	assert.Equal(t, new(uint(1)), responses[0].ServerID)
 	assert.Equal(t, domain.DaemonTaskTypeServerStart, responses[0].Task)
 	assert.Equal(t, domain.DaemonTaskStatusSuccess, responses[0].Status)
 

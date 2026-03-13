@@ -11,7 +11,6 @@ import (
 	"github.com/gameap/gameap/internal/services/gameexporter"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gorilla/mux"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -34,8 +33,8 @@ func TestHandler_ServeHTTP(t *testing.T) {
 					Name:              "Counter-Strike 1.6",
 					Engine:            "GoldSource",
 					EngineVersion:     "1.0",
-					SteamAppIDLinux:   lo.ToPtr(uint(90)),
-					SteamAppIDWindows: lo.ToPtr(uint(90)),
+					SteamAppIDLinux:   new(uint(90)),
+					SteamAppIDWindows: new(uint(90)),
 					Enabled:           1,
 				})
 			},
@@ -43,8 +42,8 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				_ = repo.Save(context.Background(), &domain.GameMod{
 					GameCode:      "cstrike",
 					Name:          "Classic",
-					StartCmdLinux: lo.ToPtr("./hlds_run -game cstrike +port {port}"),
-					KickCmd:       lo.ToPtr("kick {name}"),
+					StartCmdLinux: new("./hlds_run -game cstrike +port {port}"),
+					KickCmd:       new("kick {name}"),
 				})
 			},
 			expectedStatus: http.StatusOK,

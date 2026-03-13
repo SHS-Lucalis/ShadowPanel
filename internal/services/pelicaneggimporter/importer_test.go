@@ -270,7 +270,7 @@ func TestImporter_Import(t *testing.T) {
 				_ = repo.Save(context.Background(), &domain.GameMod{
 					GameCode:      "test_game",
 					Name:          "Default",
-					StartCmdLinux: lo.ToPtr("./old_server"),
+					StartCmdLinux: new("./old_server"),
 					Metadata: domain.Metadata{
 						"existing_field": "keep_me",
 					},
@@ -451,7 +451,7 @@ func TestImporter_Import_WithOptions(t *testing.T) {
 				},
 			},
 			opts: &gamesimport.Options{
-				Name: lo.ToPtr("Overridden Name"),
+				Name: new("Overridden Name"),
 			},
 			validate: func(t *testing.T, gameRepo *inmemory.GameRepository, _ *inmemory.GameModRepository, result *ImportResult) {
 				t.Helper()
@@ -476,7 +476,7 @@ func TestImporter_Import_WithOptions(t *testing.T) {
 				},
 			},
 			opts: &gamesimport.Options{
-				Code: lo.ToPtr("custom_code"),
+				Code: new("custom_code"),
 			},
 			validate: func(t *testing.T, gameRepo *inmemory.GameRepository, gameModRepo *inmemory.GameModRepository, result *ImportResult) {
 				t.Helper()
@@ -506,8 +506,8 @@ func TestImporter_Import_WithOptions(t *testing.T) {
 				},
 			},
 			opts: &gamesimport.Options{
-				Code: lo.ToPtr("my_game"),
-				Name: lo.ToPtr("My Custom Game"),
+				Code: new("my_game"),
+				Name: new("My Custom Game"),
 			},
 			validate: func(t *testing.T, gameRepo *inmemory.GameRepository, gameModRepo *inmemory.GameModRepository, result *ImportResult) {
 				t.Helper()
@@ -538,7 +538,7 @@ func TestImporter_Import_WithOptions(t *testing.T) {
 				},
 			},
 			opts: &gamesimport.Options{
-				Code: lo.ToPtr("INVALID"),
+				Code: new("INVALID"),
 			},
 			wantErr:        true,
 			wantErrContain: "code must match pattern",
@@ -553,7 +553,7 @@ func TestImporter_Import_WithOptions(t *testing.T) {
 				},
 			},
 			opts: &gamesimport.Options{
-				Code: lo.ToPtr("a"),
+				Code: new("a"),
 			},
 			wantErr:        true,
 			wantErrContain: "code must be between 2 and 16 characters",
@@ -568,7 +568,7 @@ func TestImporter_Import_WithOptions(t *testing.T) {
 				},
 			},
 			opts: &gamesimport.Options{
-				Name: lo.ToPtr("A"),
+				Name: new("A"),
 			},
 			wantErr:        true,
 			wantErrContain: "name must be between 2 and 128 characters",

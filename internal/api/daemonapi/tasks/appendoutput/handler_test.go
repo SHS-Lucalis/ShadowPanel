@@ -14,7 +14,6 @@ import (
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
 	"github.com/gorilla/mux"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -58,7 +57,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 					ServerID:          &serverID,
 					Task:              domain.DaemonTaskTypeServerStart,
 					Status:            domain.DaemonTaskStatusWorking,
-					Output:            lo.ToPtr("Previous output\n"),
+					Output:            new("Previous output\n"),
 					CreatedAt:         &now,
 					UpdatedAt:         &now,
 				}
@@ -162,7 +161,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 					ServerID:          &serverID,
 					Task:              domain.DaemonTaskTypeServerStart,
 					Status:            domain.DaemonTaskStatusWorking,
-					Output:            lo.ToPtr("Existing output"),
+					Output:            new("Existing output"),
 					CreatedAt:         &now,
 					UpdatedAt:         &now,
 				}

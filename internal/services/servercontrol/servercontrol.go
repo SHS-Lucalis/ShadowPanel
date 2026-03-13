@@ -10,7 +10,6 @@ import (
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/internal/repositories/base"
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 )
 
 const (
@@ -331,13 +330,13 @@ func (s *Service) addServerStart(
 	}
 
 	task := &domain.DaemonTask{
-		RunAftID:          lo.ToPtr(runAftID),
+		RunAftID:          new(runAftID),
 		DedicatedServerID: server.DSID,
 		ServerID:          &server.ID,
 		Task:              domain.DaemonTaskTypeServerStart,
 		Status:            domain.DaemonTaskStatusWaiting,
-		CreatedAt:         lo.ToPtr(time.Now()),
-		UpdatedAt:         lo.ToPtr(time.Now()),
+		CreatedAt:         new(time.Now()),
+		UpdatedAt:         new(time.Now()),
 	}
 
 	if err := s.daemonTaskRepo.Save(ctx, task); err != nil {
@@ -370,12 +369,12 @@ func (s *Service) addServerStop(
 		ServerID:          &server.ID,
 		Task:              domain.DaemonTaskTypeServerStop,
 		Status:            domain.DaemonTaskStatusWaiting,
-		CreatedAt:         lo.ToPtr(time.Now()),
-		UpdatedAt:         lo.ToPtr(time.Now()),
+		CreatedAt:         new(time.Now()),
+		UpdatedAt:         new(time.Now()),
 	}
 
 	if runAftID > 0 {
-		task.RunAftID = lo.ToPtr(runAftID)
+		task.RunAftID = new(runAftID)
 	}
 
 	if err := s.daemonTaskRepo.Save(ctx, task); err != nil {
@@ -412,12 +411,12 @@ func (s *Service) addServerRestart(
 		ServerID:          &server.ID,
 		Task:              domain.DaemonTaskTypeServerRestart,
 		Status:            domain.DaemonTaskStatusWaiting,
-		CreatedAt:         lo.ToPtr(time.Now()),
-		UpdatedAt:         lo.ToPtr(time.Now()),
+		CreatedAt:         new(time.Now()),
+		UpdatedAt:         new(time.Now()),
 	}
 
 	if runAftID > 0 {
-		task.RunAftID = lo.ToPtr(runAftID)
+		task.RunAftID = new(runAftID)
 	}
 
 	if err := s.daemonTaskRepo.Save(ctx, task); err != nil {
@@ -453,12 +452,12 @@ func (s *Service) addServerUpdate(
 		ServerID:          &server.ID,
 		Task:              domain.DaemonTaskTypeServerUpdate,
 		Status:            domain.DaemonTaskStatusWaiting,
-		CreatedAt:         lo.ToPtr(time.Now()),
-		UpdatedAt:         lo.ToPtr(time.Now()),
+		CreatedAt:         new(time.Now()),
+		UpdatedAt:         new(time.Now()),
 	}
 
 	if runAftID > 0 {
-		task.RunAftID = lo.ToPtr(runAftID)
+		task.RunAftID = new(runAftID)
 	}
 
 	if err := s.daemonTaskRepo.Save(ctx, task); err != nil {
@@ -494,12 +493,12 @@ func (s *Service) addServerInstall(
 		ServerID:          &server.ID,
 		Task:              domain.DaemonTaskTypeServerInstall,
 		Status:            domain.DaemonTaskStatusWaiting,
-		CreatedAt:         lo.ToPtr(time.Now()),
-		UpdatedAt:         lo.ToPtr(time.Now()),
+		CreatedAt:         new(time.Now()),
+		UpdatedAt:         new(time.Now()),
 	}
 
 	if runAftID > 0 {
-		task.RunAftID = lo.ToPtr(runAftID)
+		task.RunAftID = new(runAftID)
 	}
 
 	if err := s.daemonTaskRepo.Save(ctx, task); err != nil {
@@ -532,12 +531,12 @@ func (s *Service) addServerDelete(
 		ServerID:          &server.ID,
 		Task:              domain.DaemonTaskTypeServerDelete,
 		Status:            domain.DaemonTaskStatusWaiting,
-		CreatedAt:         lo.ToPtr(time.Now()),
-		UpdatedAt:         lo.ToPtr(time.Now()),
+		CreatedAt:         new(time.Now()),
+		UpdatedAt:         new(time.Now()),
 	}
 
 	if runAftID > 0 {
-		task.RunAftID = lo.ToPtr(runAftID)
+		task.RunAftID = new(runAftID)
 	}
 
 	if err := s.daemonTaskRepo.Save(ctx, task); err != nil {

@@ -18,7 +18,6 @@ import (
 	"github.com/gameap/gameap/pkg/auth"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -424,7 +423,7 @@ func TestHandler_DeleteFiles(t *testing.T) {
 			ServerIP:         "192.168.1.1",
 			ServerPort:       27015,
 			ProcessActive:    true,
-			LastProcessCheck: lo.ToPtr(time.Now()),
+			LastProcessCheck: new(time.Now()),
 			CreatedAt:        &now,
 			UpdatedAt:        &now,
 		}
@@ -496,7 +495,7 @@ func TestHandler_DeleteFiles(t *testing.T) {
 			ServerIP:         "192.168.1.1",
 			ServerPort:       27015,
 			ProcessActive:    true,
-			LastProcessCheck: lo.ToPtr(time.Now()),
+			LastProcessCheck: new(time.Now()),
 			CreatedAt:        &now,
 			UpdatedAt:        &now,
 		}
@@ -561,11 +560,11 @@ func TestHandler_DeleteFiles(t *testing.T) {
 
 		pendingTask := &domain.DaemonTask{
 			DedicatedServerID: server.DSID,
-			ServerID:          lo.ToPtr(server.ID),
+			ServerID:          new(server.ID),
 			Task:              domain.DaemonTaskTypeServerUpdate,
 			Status:            domain.DaemonTaskStatusWaiting,
-			CreatedAt:         lo.ToPtr(time.Now()),
-			UpdatedAt:         lo.ToPtr(time.Now()),
+			CreatedAt:         new(time.Now()),
+			UpdatedAt:         new(time.Now()),
 		}
 		require.NoError(t, daemonTaskRepo.Save(context.Background(), pendingTask))
 
@@ -621,7 +620,7 @@ func TestHandler_DeleteFiles(t *testing.T) {
 			ServerIP:         "192.168.1.1",
 			ServerPort:       27015,
 			ProcessActive:    true,
-			LastProcessCheck: lo.ToPtr(time.Now()),
+			LastProcessCheck: new(time.Now()),
 			CreatedAt:        &now,
 			UpdatedAt:        &now,
 		}
@@ -684,11 +683,11 @@ func TestHandler_DeleteFiles(t *testing.T) {
 
 		workingTask := &domain.DaemonTask{
 			DedicatedServerID: server.DSID,
-			ServerID:          lo.ToPtr(server.ID),
+			ServerID:          new(server.ID),
 			Task:              domain.DaemonTaskTypeServerStart,
 			Status:            domain.DaemonTaskStatusWorking,
-			CreatedAt:         lo.ToPtr(time.Now()),
-			UpdatedAt:         lo.ToPtr(time.Now()),
+			CreatedAt:         new(time.Now()),
+			UpdatedAt:         new(time.Now()),
 		}
 		require.NoError(t, daemonTaskRepo.Save(context.Background(), workingTask))
 
@@ -742,7 +741,7 @@ func TestHandler_DeleteFiles(t *testing.T) {
 			ServerIP:         "192.168.1.1",
 			ServerPort:       27015,
 			ProcessActive:    true,
-			LastProcessCheck: lo.ToPtr(time.Now()),
+			LastProcessCheck: new(time.Now()),
 			CreatedAt:        &now,
 			UpdatedAt:        &now,
 		}

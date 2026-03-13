@@ -10,7 +10,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/pkg/api"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -29,13 +28,13 @@ func TestGames(t *testing.T) {
 					Name:                    "Half-Life 1",
 					Engine:                  "GoldSource",
 					EngineVersion:           "1.0",
-					SteamAppIDLinux:         lo.ToPtr(uint(90)),
-					SteamAppIDWindows:       lo.ToPtr(uint(190)),
-					SteamAppSetConfig:       lo.ToPtr("some-config"),
-					RemoteRepositoryLinux:   lo.ToPtr("http://example.com/linux"),
-					RemoteRepositoryWindows: lo.ToPtr("http://example.com/windows"),
-					LocalRepositoryLinux:    lo.ToPtr("/var/repo/linux"),
-					LocalRepositoryWindows:  lo.ToPtr("C:\\repo\\windows"),
+					SteamAppIDLinux:         new(uint(90)),
+					SteamAppIDWindows:       new(uint(190)),
+					SteamAppSetConfig:       new("some-config"),
+					RemoteRepositoryLinux:   new("http://example.com/linux"),
+					RemoteRepositoryWindows: new("http://example.com/windows"),
+					LocalRepositoryLinux:    new("/var/repo/linux"),
+					LocalRepositoryWindows:  new("C:\\repo\\windows"),
 					Enabled:                 1,
 				},
 			},

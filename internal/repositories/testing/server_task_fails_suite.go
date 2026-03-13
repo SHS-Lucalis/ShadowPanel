@@ -8,7 +8,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -140,8 +139,8 @@ func (s *ServerTaskFailRepositorySuite) TestServerTaskFailRepositoryFind() {
 	taskFail1 := &domain.ServerTaskFail{
 		ServerTaskID: 100,
 		Output:       "Task fail 1",
-		CreatedAt:    lo.ToPtr(now.Add(-24 * time.Hour)),
-		UpdatedAt:    lo.ToPtr(now.Add(-24 * time.Hour)),
+		CreatedAt:    new(now.Add(-24 * time.Hour)),
+		UpdatedAt:    new(now.Add(-24 * time.Hour)),
 	}
 	require.NoError(s.T(), s.repo.Save(ctx, taskFail1))
 
@@ -150,14 +149,14 @@ func (s *ServerTaskFailRepositorySuite) TestServerTaskFailRepositoryFind() {
 	taskFail2 := &domain.ServerTaskFail{
 		ServerTaskID: 100,
 		Output:       "Task fail 2",
-		CreatedAt:    lo.ToPtr(timeBetweenTaskFail1and2.Add(1 * time.Minute)),
-		UpdatedAt:    lo.ToPtr(timeBetweenTaskFail1and2.Add(1 * time.Minute)),
+		CreatedAt:    new(timeBetweenTaskFail1and2.Add(1 * time.Minute)),
+		UpdatedAt:    new(timeBetweenTaskFail1and2.Add(1 * time.Minute)),
 	}
 	taskFail3 := &domain.ServerTaskFail{
 		ServerTaskID: 200,
 		Output:       "Task fail 3",
-		CreatedAt:    lo.ToPtr(timeBetweenTaskFail1and2.Add(30 * time.Minute)),
-		UpdatedAt:    lo.ToPtr(timeBetweenTaskFail1and2.Add(30 * time.Minute)),
+		CreatedAt:    new(timeBetweenTaskFail1and2.Add(30 * time.Minute)),
+		UpdatedAt:    new(timeBetweenTaskFail1and2.Add(30 * time.Minute)),
 	}
 	require.NoError(s.T(), s.repo.Save(ctx, taskFail2))
 	require.NoError(s.T(), s.repo.Save(ctx, taskFail3))

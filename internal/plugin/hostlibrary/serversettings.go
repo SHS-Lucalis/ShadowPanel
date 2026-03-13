@@ -56,7 +56,7 @@ func (s *ServerSettingsServiceImpl) SaveServerSetting(
 	if err := s.serverSettingRepo.Save(ctx, setting); err != nil {
 		return &serversettings.SaveServerSettingResponse{
 			Success: false,
-			Error:   lo.ToPtr(err.Error()),
+			Error:   new(err.Error()),
 		}, nil
 	}
 

@@ -12,7 +12,6 @@ import (
 	"github.com/gameap/gameap/internal/repositories/cached"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	repotesting "github.com/gameap/gameap/internal/repositories/testing"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -34,9 +33,9 @@ func TestRBACRepository(t *testing.T) {
 				role := domain.Role{
 					ID:    nextRoleID,
 					Name:  name,
-					Title: lo.ToPtr(name + " Title"),
-					Level: lo.ToPtr(uint(1)),
-					Scope: lo.ToPtr(1),
+					Title: new(name + " Title"),
+					Level: new(uint(1)),
+					Scope: new(1),
 				}
 
 				err := repo.SaveRole(ctx, &role)
@@ -58,9 +57,9 @@ func TestRBACRepository(t *testing.T) {
 				role := domain.Role{
 					ID:    1,
 					Name:  "test",
-					Title: lo.ToPtr("Test Role"),
-					Level: lo.ToPtr(uint(1)),
-					Scope: lo.ToPtr(1),
+					Title: new("Test Role"),
+					Level: new(uint(1)),
+					Scope: new(1),
 				}
 
 				err := repo.SaveRole(ctx, &role)
@@ -110,9 +109,9 @@ func TestRBACRepositoryWithRedisCache(t *testing.T) {
 				role := domain.Role{
 					ID:    nextRoleID,
 					Name:  name,
-					Title: lo.ToPtr(name + " Title"),
-					Level: lo.ToPtr(uint(1)),
-					Scope: lo.ToPtr(1),
+					Title: new(name + " Title"),
+					Level: new(uint(1)),
+					Scope: new(1),
 				}
 
 				err := repo.SaveRole(ctx, &role)
@@ -134,9 +133,9 @@ func TestRBACRepositoryWithRedisCache(t *testing.T) {
 				role := domain.Role{
 					ID:    1,
 					Name:  "test",
-					Title: lo.ToPtr("Test Role"),
-					Level: lo.ToPtr(uint(1)),
-					Scope: lo.ToPtr(1),
+					Title: new("Test Role"),
+					Level: new(uint(1)),
+					Scope: new(1),
 				}
 
 				err := repo.SaveRole(ctx, &role)

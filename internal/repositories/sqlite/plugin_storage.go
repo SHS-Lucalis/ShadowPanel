@@ -11,7 +11,6 @@ import (
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories/base"
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 )
 
 type PluginStorageRepository struct {
@@ -108,7 +107,7 @@ func (r *PluginStorageRepository) Save(ctx context.Context, entry *domain.Plugin
 
 	var updatedAtStr *string
 	if entry.UpdatedAt != nil {
-		updatedAtStr = lo.ToPtr(entry.UpdatedAt.Format(time.RFC3339Nano))
+		updatedAtStr = new(entry.UpdatedAt.Format(time.RFC3339Nano))
 	}
 
 	if entry.ID != 0 {
@@ -117,7 +116,7 @@ func (r *PluginStorageRepository) Save(ctx context.Context, entry *domain.Plugin
 
 	var createdAtStr *string
 	if entry.CreatedAt != nil {
-		createdAtStr = lo.ToPtr(entry.CreatedAt.Format(time.RFC3339Nano))
+		createdAtStr = new(entry.CreatedAt.Format(time.RFC3339Nano))
 	}
 
 	upsertQuery := `INSERT INTO ` + base.PluginStorageTable +

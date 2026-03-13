@@ -8,7 +8,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -41,32 +40,32 @@ func (s *NodeRepositorySuite) TestNodeRepositorySave() {
 			Name:                "Test Node 1",
 			OS:                  domain.NodeOSLinux,
 			Location:            "US-East",
-			Provider:            lo.ToPtr("AWS"),
+			Provider:            new("AWS"),
 			IPs:                 domain.IPList{"192.168.1.1", "10.0.0.1"},
-			RAM:                 lo.ToPtr("16GB"),
-			CPU:                 lo.ToPtr("8 cores"),
+			RAM:                 new("16GB"),
+			CPU:                 new("8 cores"),
 			WorkPath:            "/var/gameap",
-			SteamcmdPath:        lo.ToPtr("/usr/games/steamcmd"),
+			SteamcmdPath:        new("/usr/games/steamcmd"),
 			GdaemonHost:         "localhost",
 			GdaemonPort:         31717,
 			GdaemonAPIKey:       "test-api-key-1",
 			GdaemonServerCert:   "cert-data",
 			ClientCertificateID: 1,
 			PreferInstallMethod: domain.NodePreferInstallMethodAuto,
-			ScriptInstall:       lo.ToPtr("script-install"),
-			ScriptReinstall:     lo.ToPtr("script-reinstall"),
-			ScriptUpdate:        lo.ToPtr("script-update"),
-			ScriptStart:         lo.ToPtr("script-start"),
-			ScriptPause:         lo.ToPtr("script-pause"),
-			ScriptUnpause:       lo.ToPtr("script-unpause"),
-			ScriptStop:          lo.ToPtr("script-stop"),
-			ScriptKill:          lo.ToPtr("script-kill"),
-			ScriptRestart:       lo.ToPtr("script-restart"),
-			ScriptStatus:        lo.ToPtr("script-status"),
-			ScriptStats:         lo.ToPtr("script-stats"),
-			ScriptGetConsole:    lo.ToPtr("script-get-console"),
-			ScriptSendCommand:   lo.ToPtr("script-send-command"),
-			ScriptDelete:        lo.ToPtr("script-delete"),
+			ScriptInstall:       new("script-install"),
+			ScriptReinstall:     new("script-reinstall"),
+			ScriptUpdate:        new("script-update"),
+			ScriptStart:         new("script-start"),
+			ScriptPause:         new("script-pause"),
+			ScriptUnpause:       new("script-unpause"),
+			ScriptStop:          new("script-stop"),
+			ScriptKill:          new("script-kill"),
+			ScriptRestart:       new("script-restart"),
+			ScriptStatus:        new("script-status"),
+			ScriptStats:         new("script-stats"),
+			ScriptGetConsole:    new("script-get-console"),
+			ScriptSendCommand:   new("script-send-command"),
+			ScriptDelete:        new("script-delete"),
 		}
 
 		// ACT
@@ -262,7 +261,7 @@ func (s *NodeRepositorySuite) TestNodeRepositoryFind() {
 	node1 := &domain.Node{
 		Name: "Find Node 1", OS: domain.NodeOSLinux, Location: "US", IPs: domain.IPList{"10.1.1.1"},
 		WorkPath: "/var/gameap", GdaemonHost: "find1", GdaemonPort: 31717,
-		GdaemonAPIKey: "find-key-1", GdaemonAPIToken: lo.ToPtr("token-1"),
+		GdaemonAPIKey: "find-key-1", GdaemonAPIToken: new("token-1"),
 		GdaemonServerCert: "cert-1", ClientCertificateID: 1,
 		PreferInstallMethod: domain.NodePreferInstallMethodAuto,
 	}
@@ -284,14 +283,14 @@ func (s *NodeRepositorySuite) TestNodeRepositoryFind() {
 	})
 
 	s.T().Run("find_by_gdaemon_api_key", func(t *testing.T) {
-		results, err := s.repo.Find(ctx, &filters.FindNode{GDaemonAPIKey: lo.ToPtr("find-key-1")}, nil, nil)
+		results, err := s.repo.Find(ctx, &filters.FindNode{GDaemonAPIKey: new("find-key-1")}, nil, nil)
 		require.NoError(t, err)
 		assert.Len(t, results, 1)
 		assert.Equal(t, node1.ID, results[0].ID)
 	})
 
 	s.T().Run("find_by_gdaemon_api_token", func(t *testing.T) {
-		results, err := s.repo.Find(ctx, &filters.FindNode{GDaemonAPIToken: lo.ToPtr("token-1")}, nil, nil)
+		results, err := s.repo.Find(ctx, &filters.FindNode{GDaemonAPIToken: new("token-1")}, nil, nil)
 		require.NoError(t, err)
 		assert.Len(t, results, 1)
 		assert.Equal(t, node1.ID, results[0].ID)

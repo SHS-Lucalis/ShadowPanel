@@ -70,14 +70,14 @@ func TestStorageService_Get(t *testing.T) {
 					PluginID:   1,
 					Key:        "config",
 					EntityType: lo.ToPtr(string(domain.EntityTypeUser)),
-					EntityID:   lo.ToPtr(uint(42)),
+					EntityID:   new(uint(42)),
 					Payload:    []byte("userconfig"),
 				})
 			},
 			request: &storage.StorageGetRequest{
 				Key:        "config",
 				EntityType: lo.ToPtr(proto.EntityType_ENTITY_TYPE_USER),
-				EntityId:   lo.ToPtr(uint64(42)),
+				EntityId:   new(uint64(42)),
 			},
 			wantFound:   true,
 			wantPayload: []byte("userconfig"),
@@ -90,14 +90,14 @@ func TestStorageService_Get(t *testing.T) {
 					PluginID:   1,
 					Key:        "config",
 					EntityType: lo.ToPtr(string(domain.EntityTypeUser)),
-					EntityID:   lo.ToPtr(uint(42)),
+					EntityID:   new(uint(42)),
 					Payload:    []byte("userconfig"),
 				})
 			},
 			request: &storage.StorageGetRequest{
 				Key:        "config",
 				EntityType: lo.ToPtr(proto.EntityType_ENTITY_TYPE_SERVER),
-				EntityId:   lo.ToPtr(uint64(42)),
+				EntityId:   new(uint64(42)),
 			},
 			wantFound: false,
 		},
@@ -142,7 +142,7 @@ func TestStorageService_Set(t *testing.T) {
 			request: &storage.StorageSetRequest{
 				Key:        "entitykey",
 				EntityType: lo.ToPtr(proto.EntityType_ENTITY_TYPE_SERVER),
-				EntityId:   lo.ToPtr(uint64(100)),
+				EntityId:   new(uint64(100)),
 				Payload:    []byte("serverpayload"),
 			},
 		},
@@ -255,14 +255,14 @@ func TestStorageService_Delete(t *testing.T) {
 					PluginID:   1,
 					Key:        "entitykey",
 					EntityType: lo.ToPtr(string(domain.EntityTypeServer)),
-					EntityID:   lo.ToPtr(uint(50)),
+					EntityID:   new(uint(50)),
 					Payload:    []byte("data"),
 				})
 			},
 			request: &storage.StorageDeleteRequest{
 				Key:        "entitykey",
 				EntityType: lo.ToPtr(proto.EntityType_ENTITY_TYPE_SERVER),
-				EntityId:   lo.ToPtr(uint64(50)),
+				EntityId:   new(uint64(50)),
 			},
 		},
 	}
@@ -318,20 +318,20 @@ func TestStorageService_List(t *testing.T) {
 					PluginID:   1,
 					Key:        "userkey",
 					EntityType: lo.ToPtr(string(domain.EntityTypeUser)),
-					EntityID:   lo.ToPtr(uint(1)),
+					EntityID:   new(uint(1)),
 					Payload:    []byte("1"),
 				})
 				_ = r.Save(context.Background(), &domain.PluginStorageEntry{
 					PluginID:   1,
 					Key:        "serverkey",
 					EntityType: lo.ToPtr(string(domain.EntityTypeServer)),
-					EntityID:   lo.ToPtr(uint(2)),
+					EntityID:   new(uint(2)),
 					Payload:    []byte("2"),
 				})
 			},
 			request: &storage.StorageListRequest{
 				EntityType: lo.ToPtr(proto.EntityType_ENTITY_TYPE_USER),
-				EntityId:   lo.ToPtr(uint64(1)),
+				EntityId:   new(uint64(1)),
 			},
 			wantCount: 1,
 			wantKeys:  []string{"userkey"},
@@ -345,7 +345,7 @@ func TestStorageService_List(t *testing.T) {
 				_ = r.Save(context.Background(), &domain.PluginStorageEntry{PluginID: 1, Key: "data:other", Payload: []byte("3")})
 			},
 			request: &storage.StorageListRequest{
-				KeyPrefix: lo.ToPtr("config:"),
+				KeyPrefix: new("config:"),
 			},
 			wantCount: 2,
 			wantKeys:  []string{"config:app", "config:user"},

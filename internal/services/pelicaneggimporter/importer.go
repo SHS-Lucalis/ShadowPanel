@@ -12,7 +12,6 @@ import (
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 	"golang.org/x/text/runes"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
@@ -101,7 +100,7 @@ func (i *Importer) buildEntities(
 	gameMod := &domain.GameMod{
 		GameCode:      gameCode,
 		Name:          "Default",
-		StartCmdLinux: lo.ToPtr(startCmd),
+		StartCmdLinux: new(startCmd),
 		Vars:          vars,
 		Metadata:      buildGameModMetadata(egg),
 	}

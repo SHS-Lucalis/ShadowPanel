@@ -9,7 +9,6 @@ import (
 	"github.com/gameap/gameap/internal/repositories"
 	pkgplugin "github.com/gameap/gameap/pkg/plugin"
 	"github.com/gameap/gameap/pkg/plugin/sdk/storage"
-	"github.com/samber/lo"
 	"github.com/tetratelabs/wazero"
 )
 
@@ -73,7 +72,7 @@ func (s *StorageServiceImpl) Set(
 	if err != nil {
 		return &storage.StorageSetResponse{
 			Success: false,
-			Error:   lo.ToPtr(err.Error()),
+			Error:   new(err.Error()),
 		}, nil
 	}
 

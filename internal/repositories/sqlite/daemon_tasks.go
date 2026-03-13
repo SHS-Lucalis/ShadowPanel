@@ -135,18 +135,18 @@ func (r *DaemonTaskRepository) find(
 }
 
 func (r *DaemonTaskRepository) Save(ctx context.Context, task *domain.DaemonTask) error {
-	task.UpdatedAt = lo.ToPtr(time.Now())
+	task.UpdatedAt = new(time.Now())
 
 	if task.ID == 0 && (task.CreatedAt == nil || task.CreatedAt.IsZero()) {
-		task.CreatedAt = lo.ToPtr(time.Now())
+		task.CreatedAt = new(time.Now())
 	}
 
 	var createdAtStr, updatedAtStr *string
 	if task.CreatedAt != nil {
-		createdAtStr = lo.ToPtr(task.CreatedAt.Format(time.RFC3339))
+		createdAtStr = new(task.CreatedAt.Format(time.RFC3339))
 	}
 	if task.UpdatedAt != nil {
-		updatedAtStr = lo.ToPtr(task.UpdatedAt.Format(time.RFC3339))
+		updatedAtStr = new(task.UpdatedAt.Format(time.RFC3339))
 	}
 
 	query, args, err := sq.Insert(base.DaemonTasksTable).

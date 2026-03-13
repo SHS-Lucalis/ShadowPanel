@@ -7,7 +7,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -76,9 +75,9 @@ func (s *GameRepositorySuite) TestGameRepositorySave() {
 			Name:              "Team Fortress 2",
 			Engine:            "source",
 			EngineVersion:     "1",
-			SteamAppIDLinux:   lo.ToPtr(uint(440)),
-			SteamAppIDWindows: lo.ToPtr(uint(440)),
-			SteamAppSetConfig: lo.ToPtr("90 mod tf"),
+			SteamAppIDLinux:   new(uint(440)),
+			SteamAppIDWindows: new(uint(440)),
+			SteamAppSetConfig: new("90 mod tf"),
 			Enabled:           1,
 		}
 
@@ -88,9 +87,9 @@ func (s *GameRepositorySuite) TestGameRepositorySave() {
 		games, err := s.repo.Find(ctx, &filters.FindGame{Codes: []string{"tf2"}}, nil, nil)
 		require.NoError(t, err)
 		require.Len(t, games, 1)
-		assert.Equal(t, lo.ToPtr(uint(440)), games[0].SteamAppIDLinux)
-		assert.Equal(t, lo.ToPtr(uint(440)), games[0].SteamAppIDWindows)
-		assert.Equal(t, lo.ToPtr("90 mod tf"), games[0].SteamAppSetConfig)
+		assert.Equal(t, new(uint(440)), games[0].SteamAppIDLinux)
+		assert.Equal(t, new(uint(440)), games[0].SteamAppIDWindows)
+		assert.Equal(t, new("90 mod tf"), games[0].SteamAppSetConfig)
 	})
 }
 
@@ -269,13 +268,13 @@ func (s *GameRepositorySuite) TestGameRepositoryCompleteGameData() {
 			Name:                    "Half-Life 2: Deathmatch",
 			Engine:                  "source",
 			EngineVersion:           "1",
-			SteamAppIDLinux:         lo.ToPtr(uint(320)),
-			SteamAppIDWindows:       lo.ToPtr(uint(320)),
-			SteamAppSetConfig:       lo.ToPtr("90 mod hl2mp"),
-			RemoteRepositoryLinux:   lo.ToPtr("https://example.com/hl2dm-linux"),
-			RemoteRepositoryWindows: lo.ToPtr("https://example.com/hl2dm-windows"),
-			LocalRepositoryLinux:    lo.ToPtr("/srv/games/hl2dm-linux"),
-			LocalRepositoryWindows:  lo.ToPtr("C:\\games\\hl2dm-windows"),
+			SteamAppIDLinux:         new(uint(320)),
+			SteamAppIDWindows:       new(uint(320)),
+			SteamAppSetConfig:       new("90 mod hl2mp"),
+			RemoteRepositoryLinux:   new("https://example.com/hl2dm-linux"),
+			RemoteRepositoryWindows: new("https://example.com/hl2dm-windows"),
+			LocalRepositoryLinux:    new("/srv/games/hl2dm-linux"),
+			LocalRepositoryWindows:  new("C:\\games\\hl2dm-windows"),
 			Enabled:                 1,
 		}
 

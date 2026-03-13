@@ -151,18 +151,18 @@ func TestUintPtrFromUint64Ptr(t *testing.T) {
 		},
 		{
 			name:     "zero_value",
-			input:    lo.ToPtr(uint64(0)),
-			expected: lo.ToPtr(uint(0)),
+			input:    new(uint64(0)),
+			expected: new(uint(0)),
 		},
 		{
 			name:     "positive_value",
-			input:    lo.ToPtr(uint64(42)),
-			expected: lo.ToPtr(uint(42)),
+			input:    new(uint64(42)),
+			expected: new(uint(42)),
 		},
 		{
 			name:     "large_value",
-			input:    lo.ToPtr(uint64(1000000)),
-			expected: lo.ToPtr(uint(1000000)),
+			input:    new(uint64(1000000)),
+			expected: new(uint(1000000)),
 		},
 	}
 
@@ -192,18 +192,18 @@ func TestUint64PtrFromUintPtr(t *testing.T) {
 		},
 		{
 			name:     "zero_value",
-			input:    lo.ToPtr(uint(0)),
-			expected: lo.ToPtr(uint64(0)),
+			input:    new(uint(0)),
+			expected: new(uint64(0)),
 		},
 		{
 			name:     "positive_value",
-			input:    lo.ToPtr(uint(42)),
-			expected: lo.ToPtr(uint64(42)),
+			input:    new(uint(42)),
+			expected: new(uint64(42)),
 		},
 		{
 			name:     "large_value",
-			input:    lo.ToPtr(uint(1000000)),
-			expected: lo.ToPtr(uint64(1000000)),
+			input:    new(uint(1000000)),
+			expected: new(uint64(1000000)),
 		},
 	}
 
@@ -329,7 +329,7 @@ func TestEntityTypeToProtoPtr(t *testing.T) {
 		},
 		{
 			name:     "unknown_type_returns_nil",
-			input:    lo.ToPtr("unknown_type"),
+			input:    new("unknown_type"),
 			expected: nil,
 		},
 	}

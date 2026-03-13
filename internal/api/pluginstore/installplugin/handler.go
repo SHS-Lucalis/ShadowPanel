@@ -17,7 +17,6 @@ import (
 	"github.com/gameap/gameap/pkg/api"
 	pkgplugin "github.com/gameap/gameap/pkg/plugin"
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 )
 
 type Handler struct {
@@ -263,10 +262,10 @@ func (h *Handler) buildPluginRecord(
 		Version:     version.Version,
 		Description: details.Description,
 		Author:      details.Author.Username,
-		Filename:    lo.ToPtr(filename),
-		Source:      lo.ToPtr(h.storeService.BaseURL() + "/plugins/" + storePluginID),
+		Filename:    new(filename),
+		Source:      new(h.storeService.BaseURL() + "/plugins/" + storePluginID),
 		Status:      domain.PluginStatusActive,
-		InstalledAt: lo.ToPtr(time.Now()),
+		InstalledAt: new(time.Now()),
 	}
 }
 

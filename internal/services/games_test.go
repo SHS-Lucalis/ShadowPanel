@@ -106,7 +106,7 @@ func TestGameUpgradeService_UpgradeGames(t *testing.T) {
 				_ = repo.Save(context.Background(), &domain.GameMod{
 					GameCode:      "cstrike",
 					Name:          "Classic",
-					StartCmdLinux: lo.ToPtr("./hlds_run -game cstrike"),
+					StartCmdLinux: new("./hlds_run -game cstrike"),
 				})
 			},
 			wantErr: false,
@@ -146,12 +146,12 @@ func TestGameUpgradeService_UpgradeGames(t *testing.T) {
 				_ = repo.Save(context.Background(), &domain.GameMod{
 					GameCode:      "cstrike",
 					Name:          "Classic",
-					StartCmdLinux: lo.ToPtr("./hlds_run -game cstrike"),
+					StartCmdLinux: new("./hlds_run -game cstrike"),
 				})
 				_ = repo.Save(context.Background(), &domain.GameMod{
 					GameCode:      "cstrike",
 					Name:          "Classic",
-					StartCmdLinux: lo.ToPtr("./hlds_run -game cstrike -duplicate"),
+					StartCmdLinux: new("./hlds_run -game cstrike -duplicate"),
 				})
 			},
 			wantErr: false,

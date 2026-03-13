@@ -6,7 +6,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/flexible"
-	"github.com/samber/lo"
 )
 
 const (
@@ -112,8 +111,8 @@ func (g *updateGameInput) Apply(game *domain.Game) {
 	game.Name = g.Name
 	game.Engine = g.Engine
 	game.EngineVersion = g.EngineVersion
-	game.SteamAppIDLinux = lo.ToPtr(g.SteamAppIDLinux.Uint())
-	game.SteamAppIDWindows = lo.ToPtr(g.SteamAppIDWindows.Uint())
+	game.SteamAppIDLinux = new(g.SteamAppIDLinux.Uint())
+	game.SteamAppIDWindows = new(g.SteamAppIDWindows.Uint())
 	game.SteamAppSetConfig = g.SteamAppSetConfig
 	game.RemoteRepositoryLinux = g.RemoteRepositoryLinux
 	game.RemoteRepositoryWindows = g.RemoteRepositoryWindows

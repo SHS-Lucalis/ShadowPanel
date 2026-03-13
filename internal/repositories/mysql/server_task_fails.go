@@ -124,10 +124,10 @@ func (r *ServerTaskFailRepository) find(
 }
 
 func (r *ServerTaskFailRepository) Save(ctx context.Context, taskFail *domain.ServerTaskFail) error {
-	taskFail.UpdatedAt = lo.ToPtr(time.Now())
+	taskFail.UpdatedAt = new(time.Now())
 
 	if taskFail.ID == 0 && (taskFail.CreatedAt == nil || taskFail.CreatedAt.IsZero()) {
-		taskFail.CreatedAt = lo.ToPtr(time.Now())
+		taskFail.CreatedAt = new(time.Now())
 	}
 
 	query, args, err := sq.Insert(base.ServerTaskFailsTable).

@@ -69,7 +69,7 @@ var defaultSetupRepos = func(
 		RepeatPeriod: 0,
 		Counter:      0,
 		ExecuteDate:  now.Add(time.Hour),
-		Payload:      lo.ToPtr("original payload"),
+		Payload:      new("original payload"),
 		CreatedAt:    &now,
 		UpdatedAt:    &now,
 	}
@@ -87,7 +87,7 @@ var defaultSetupRepos = func(
 		RepeatPeriod: 0,
 		Counter:      0,
 		ExecuteDate:  now.Add(2 * time.Hour),
-		Payload:      lo.ToPtr("another task"),
+		Payload:      new("another task"),
 		CreatedAt:    &now,
 		UpdatedAt:    &now,
 	}
@@ -98,8 +98,8 @@ var defaultSetupRepos = func(
 
 	adminRole := &domain.Role{
 		Name:  "admin",
-		Title: lo.ToPtr("Administrator"),
-		Level: lo.ToPtr(uint(100)),
+		Title: new("Administrator"),
+		Level: new(uint(100)),
 	}
 	err = rbacRepo.SaveRole(context.Background(), adminRole)
 	if err != nil {
@@ -118,7 +118,7 @@ var defaultSetupRepos = func(
 
 	ability := &domain.Ability{
 		Name:  domain.AbilityNameAdminRolesPermissions,
-		Title: lo.ToPtr("Admin Permissions"),
+		Title: new("Admin Permissions"),
 	}
 	err = rbacRepo.SaveAbility(context.Background(), ability)
 	if err != nil {
@@ -127,7 +127,7 @@ var defaultSetupRepos = func(
 
 	permission := &domain.Permission{
 		AbilityID:  ability.ID,
-		EntityID:   lo.ToPtr(uint(1)),
+		EntityID:   new(uint(1)),
 		EntityType: lo.ToPtr(domain.EntityTypeUser),
 		Forbidden:  false,
 	}
@@ -517,7 +517,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				ability := &domain.Ability{
 					Name:       domain.AbilityNameGameServerTasks,
 					EntityType: lo.ToPtr(domain.EntityTypeServer),
-					EntityID:   lo.ToPtr(uint(1)),
+					EntityID:   new(uint(1)),
 				}
 				err = rbacRepo.SaveAbility(context.Background(), ability)
 				if err != nil {
@@ -526,7 +526,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				permission := &domain.Permission{
 					AbilityID:  ability.ID,
-					EntityID:   lo.ToPtr(uint(3)),
+					EntityID:   new(uint(3)),
 					EntityType: lo.ToPtr(domain.EntityTypeUser),
 					Forbidden:  false,
 				}
@@ -671,7 +671,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				ability := &domain.Ability{
 					Name:       domain.AbilityNameGameServerTasks,
 					EntityType: lo.ToPtr(domain.EntityTypeServer),
-					EntityID:   lo.ToPtr(uint(1)),
+					EntityID:   new(uint(1)),
 				}
 				err = rbacRepo.SaveAbility(context.Background(), ability)
 				if err != nil {
@@ -680,7 +680,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				permission := &domain.Permission{
 					AbilityID:  ability.ID,
-					EntityID:   lo.ToPtr(uint(5)),
+					EntityID:   new(uint(5)),
 					EntityType: lo.ToPtr(domain.EntityTypeUser),
 					Forbidden:  true,
 				}
@@ -758,7 +758,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				serverRole := &domain.Role{
 					Name:  "server_manager",
-					Title: lo.ToPtr("Server Manager"),
+					Title: new("Server Manager"),
 				}
 				err = rbacRepo.SaveRole(context.Background(), serverRole)
 				if err != nil {
@@ -778,7 +778,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				ability := &domain.Ability{
 					Name:       domain.AbilityNameGameServerTasks,
 					EntityType: lo.ToPtr(domain.EntityTypeServer),
-					EntityID:   lo.ToPtr(uint(1)),
+					EntityID:   new(uint(1)),
 				}
 				err = rbacRepo.SaveAbility(context.Background(), ability)
 				if err != nil {
@@ -787,7 +787,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				permission := &domain.Permission{
 					AbilityID:  ability.ID,
-					EntityID:   lo.ToPtr(serverRole.ID),
+					EntityID:   new(serverRole.ID),
 					EntityType: lo.ToPtr(domain.EntityTypeRole),
 					Forbidden:  false,
 				}
@@ -862,7 +862,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				ability := &domain.Ability{
 					Name:  domain.AbilityNameAdminRolesPermissions,
-					Title: lo.ToPtr("Admin Permissions"),
+					Title: new("Admin Permissions"),
 				}
 				err = rbacRepo.SaveAbility(context.Background(), ability)
 				if err != nil {
@@ -871,7 +871,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				permission := &domain.Permission{
 					AbilityID:  ability.ID,
-					EntityID:   lo.ToPtr(uint(7)),
+					EntityID:   new(uint(7)),
 					EntityType: lo.ToPtr(domain.EntityTypeUser),
 					Forbidden:  false,
 				}

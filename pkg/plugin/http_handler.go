@@ -14,7 +14,6 @@ import (
 	gameapProto "github.com/gameap/gameap/pkg/proto"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 )
 
 const (
@@ -296,10 +295,10 @@ func (h *HTTPHandler) buildProtoSession(ctx context.Context) *proto.Session {
 	}
 
 	if authSession.User.CreatedAt != nil {
-		protoSession.User.CreatedAt = lo.ToPtr(authSession.User.CreatedAt.Unix())
+		protoSession.User.CreatedAt = new(authSession.User.CreatedAt.Unix())
 	}
 	if authSession.User.UpdatedAt != nil {
-		protoSession.User.UpdatedAt = lo.ToPtr(authSession.User.UpdatedAt.Unix())
+		protoSession.User.UpdatedAt = new(authSession.User.UpdatedAt.Unix())
 	}
 
 	if authSession.IsTokenSession() {
@@ -331,10 +330,10 @@ func buildProtoToken(token *domain.PersonalAccessToken) *gameapProto.PersonalAcc
 	}
 
 	if token.LastUsedAt != nil {
-		protoToken.LastUsedAt = lo.ToPtr(token.LastUsedAt.Unix())
+		protoToken.LastUsedAt = new(token.LastUsedAt.Unix())
 	}
 	if token.CreatedAt != nil {
-		protoToken.CreatedAt = lo.ToPtr(token.CreatedAt.Unix())
+		protoToken.CreatedAt = new(token.CreatedAt.Unix())
 	}
 
 	return protoToken

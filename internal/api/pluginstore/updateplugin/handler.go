@@ -17,7 +17,6 @@ import (
 	"github.com/gameap/gameap/pkg/api"
 	pkgplugin "github.com/gameap/gameap/pkg/plugin"
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 )
 
 type Handler struct {
@@ -222,9 +221,9 @@ func (h *Handler) downloadAndVerify(
 
 func (h *Handler) updatePluginRecord(record *domain.Plugin, version *pluginstore.PluginVersion, filename string) {
 	record.Version = version.Version
-	record.Filename = lo.ToPtr(filename)
+	record.Filename = new(filename)
 	record.Status = domain.PluginStatusActive
-	record.UpdatedAt = lo.ToPtr(time.Now())
+	record.UpdatedAt = new(time.Now())
 }
 
 func (h *Handler) tryLoadPlugin(ctx context.Context, pluginRecord *domain.Plugin, filename string) {

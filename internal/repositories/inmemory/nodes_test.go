@@ -10,7 +10,6 @@ import (
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	repotesting "github.com/gameap/gameap/internal/repositories/testing"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -328,7 +327,7 @@ func TestNodeRepository_FilterByNodeIDs(t *testing.T) {
 		key := "key1"
 		filter := &filters.FindNode{
 			IDs:           []uint{1, 2},
-			GDaemonAPIKey: lo.ToPtr(key),
+			GDaemonAPIKey: new(key),
 		}
 		nodes, err := repo.Find(context.Background(), filter, nil, nil)
 		require.NoError(t, err)

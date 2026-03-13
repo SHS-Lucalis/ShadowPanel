@@ -133,8 +133,8 @@ func (mgr *ValvePlayerManager) stripPort(addr string) string {
 		return addr
 	}
 
-	if colonIndex := strings.Index(addr, ":"); colonIndex != -1 {
-		return addr[:colonIndex]
+	if before, _, ok := strings.Cut(addr, ":"); ok {
+		return before
 	}
 
 	return addr

@@ -8,7 +8,6 @@ import (
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/pkg/plugin/sdk/common"
 	"github.com/gameap/gameap/pkg/plugin/sdk/users"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -52,7 +51,7 @@ func TestUsersService_FindUsers(t *testing.T) {
 				_ = r.Save(context.Background(), &domain.User{Login: "user", Email: "user@test.com"})
 			},
 			request: &users.FindUsersRequest{
-				Filter: &users.UserFilter{Login: lo.ToPtr("admin")},
+				Filter: &users.UserFilter{Login: new("admin")},
 			},
 			wantTotal: 1,
 			wantIDs:   []uint{1},
@@ -64,7 +63,7 @@ func TestUsersService_FindUsers(t *testing.T) {
 				_ = r.Save(context.Background(), &domain.User{Login: "user2", Email: "other@test.com"})
 			},
 			request: &users.FindUsersRequest{
-				Filter: &users.UserFilter{Email: lo.ToPtr("specific@test.com")},
+				Filter: &users.UserFilter{Email: new("specific@test.com")},
 			},
 			wantTotal: 1,
 			wantIDs:   []uint{1},
@@ -140,7 +139,7 @@ func TestUsersService_GetUser(t *testing.T) {
 				_ = r.Save(context.Background(), &domain.User{
 					Login: "testuser",
 					Email: "test@test.com",
-					Name:  lo.ToPtr("Test User"),
+					Name:  new("Test User"),
 				})
 			},
 			userID:    1,
@@ -190,7 +189,7 @@ func TestConvertUserToProto(t *testing.T) {
 		ID:    42,
 		Login: "testlogin",
 		Email: "test@example.com",
-		Name:  lo.ToPtr("Test Name"),
+		Name:  new("Test Name"),
 	}
 
 	result := convertUserToProto(user)

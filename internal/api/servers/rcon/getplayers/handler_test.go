@@ -8,8 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/samber/lo"
-
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/rbac"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
@@ -520,7 +518,7 @@ func TestGetRconPort(t *testing.T) {
 			name: "custom_rcon_port",
 			server: &domain.Server{
 				ServerPort: 27015,
-				RconPort:   lo.ToPtr(27020),
+				RconPort:   new(27020),
 			},
 			want: 27020,
 		},

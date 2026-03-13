@@ -3,7 +3,6 @@ package domain
 import (
 	"testing"
 
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -79,11 +78,11 @@ mods:
 					Name:                    "Counter-Strike 1.6",
 					Engine:                  "GoldSource",
 					EngineVersion:           "1.0",
-					SteamAppIDLinux:         lo.ToPtr(uint(90)),
-					SteamAppIDWindows:       lo.ToPtr(uint(90)),
-					SteamAppSetConfig:       lo.ToPtr("mod cstrike"),
-					RemoteRepositoryLinux:   lo.ToPtr("http://example.com/linux"),
-					RemoteRepositoryWindows: lo.ToPtr("http://example.com/windows"),
+					SteamAppIDLinux:         new(uint(90)),
+					SteamAppIDWindows:       new(uint(90)),
+					SteamAppSetConfig:       new("mod cstrike"),
+					RemoteRepositoryLinux:   new("http://example.com/linux"),
+					RemoteRepositoryWindows: new("http://example.com/windows"),
 					Metadata: Metadata{
 						"custom_key": "custom_value",
 					},
@@ -91,14 +90,14 @@ mods:
 				Mods: []GameExportMod{
 					{
 						Name:            "Classic",
-						StartCmdLinux:   lo.ToPtr("./hlds_run -game cstrike +port {port}"),
-						StartCmdWindows: lo.ToPtr("hlds.exe -game cstrike +port {port}"),
-						KickCmd:         lo.ToPtr("kick {name}"),
-						BanCmd:          lo.ToPtr("banid 0 {name} kick"),
-						SrestartCmd:     lo.ToPtr("restart"),
-						ChmapCmd:        lo.ToPtr("changelevel {map}"),
-						SendmsgCmd:      lo.ToPtr("say {msg}"),
-						PasswdCmd:       lo.ToPtr("sv_password {password}"),
+						StartCmdLinux:   new("./hlds_run -game cstrike +port {port}"),
+						StartCmdWindows: new("hlds.exe -game cstrike +port {port}"),
+						KickCmd:         new("kick {name}"),
+						BanCmd:          new("banid 0 {name} kick"),
+						SrestartCmd:     new("restart"),
+						ChmapCmd:        new("changelevel {map}"),
+						SendmsgCmd:      new("say {msg}"),
+						PasswdCmd:       new("sv_password {password}"),
 						FastRcon: []GameExportModFastRcon{
 							{Info: "Restart Map", Command: "changelevel {map}"},
 						},
@@ -353,7 +352,7 @@ func TestGameExport_Validate(t *testing.T) {
 				Mods: []GameExportMod{
 					{
 						Name:          "Mod1",
-						StartCmdLinux: lo.ToPtr(string(make([]byte, 1001))),
+						StartCmdLinux: new(string(make([]byte, 1001))),
 					},
 				},
 			},
@@ -371,7 +370,7 @@ func TestGameExport_Validate(t *testing.T) {
 				Mods: []GameExportMod{
 					{
 						Name:    "Mod1",
-						KickCmd: lo.ToPtr(string(make([]byte, 201))),
+						KickCmd: new(string(make([]byte, 201))),
 					},
 				},
 			},
@@ -401,13 +400,13 @@ func TestGameExportGame_ToDomainGame(t *testing.T) {
 		Name:                    "Counter-Strike 1.6",
 		Engine:                  "GoldSource",
 		EngineVersion:           "1.0",
-		SteamAppIDLinux:         lo.ToPtr(uint(90)),
-		SteamAppIDWindows:       lo.ToPtr(uint(90)),
-		SteamAppSetConfig:       lo.ToPtr("mod cstrike"),
-		RemoteRepositoryLinux:   lo.ToPtr("http://example.com/linux"),
-		RemoteRepositoryWindows: lo.ToPtr("http://example.com/windows"),
-		LocalRepositoryLinux:    lo.ToPtr("/local/linux"),
-		LocalRepositoryWindows:  lo.ToPtr("C:\\local\\windows"),
+		SteamAppIDLinux:         new(uint(90)),
+		SteamAppIDWindows:       new(uint(90)),
+		SteamAppSetConfig:       new("mod cstrike"),
+		RemoteRepositoryLinux:   new("http://example.com/linux"),
+		RemoteRepositoryWindows: new("http://example.com/windows"),
+		LocalRepositoryLinux:    new("/local/linux"),
+		LocalRepositoryWindows:  new("C:\\local\\windows"),
 		Metadata: Metadata{
 			"custom": "value",
 		},
@@ -439,19 +438,19 @@ func TestGameExportMod_ToDomainGameMod(t *testing.T) {
 		Vars: []GameExportModVar{
 			{Var: "maxplayers", Default: "32", Info: "Max players", AdminVar: false},
 		},
-		RemoteRepositoryLinux:   lo.ToPtr("http://mod.com/linux"),
-		RemoteRepositoryWindows: lo.ToPtr("http://mod.com/windows"),
-		LocalRepositoryLinux:    lo.ToPtr("/mod/linux"),
-		LocalRepositoryWindows:  lo.ToPtr("C:\\mod\\windows"),
-		StartCmdLinux:           lo.ToPtr("./start.sh"),
-		StartCmdWindows:         lo.ToPtr("start.exe"),
-		KickCmd:                 lo.ToPtr("kick {name}"),
-		BanCmd:                  lo.ToPtr("ban {name}"),
-		ChnameCmd:               lo.ToPtr("rename {name}"),
-		SrestartCmd:             lo.ToPtr("restart"),
-		ChmapCmd:                lo.ToPtr("changelevel {map}"),
-		SendmsgCmd:              lo.ToPtr("say {msg}"),
-		PasswdCmd:               lo.ToPtr("password {pass}"),
+		RemoteRepositoryLinux:   new("http://mod.com/linux"),
+		RemoteRepositoryWindows: new("http://mod.com/windows"),
+		LocalRepositoryLinux:    new("/mod/linux"),
+		LocalRepositoryWindows:  new("C:\\mod\\windows"),
+		StartCmdLinux:           new("./start.sh"),
+		StartCmdWindows:         new("start.exe"),
+		KickCmd:                 new("kick {name}"),
+		BanCmd:                  new("ban {name}"),
+		ChnameCmd:               new("rename {name}"),
+		SrestartCmd:             new("restart"),
+		ChmapCmd:                new("changelevel {map}"),
+		SendmsgCmd:              new("say {msg}"),
+		PasswdCmd:               new("password {pass}"),
 		Metadata: Metadata{
 			"mod_key": "mod_value",
 		},
@@ -479,11 +478,11 @@ func TestNewGameExportFromDomain(t *testing.T) {
 		Name:                    "Counter-Strike 1.6",
 		Engine:                  "GoldSource",
 		EngineVersion:           "1.0",
-		SteamAppIDLinux:         lo.ToPtr(uint(90)),
-		SteamAppIDWindows:       lo.ToPtr(uint(90)),
-		SteamAppSetConfig:       lo.ToPtr("mod cstrike"),
-		RemoteRepositoryLinux:   lo.ToPtr("http://example.com/linux"),
-		RemoteRepositoryWindows: lo.ToPtr("http://example.com/windows"),
+		SteamAppIDLinux:         new(uint(90)),
+		SteamAppIDWindows:       new(uint(90)),
+		SteamAppSetConfig:       new("mod cstrike"),
+		RemoteRepositoryLinux:   new("http://example.com/linux"),
+		RemoteRepositoryWindows: new("http://example.com/windows"),
 		Enabled:                 1,
 		Metadata: Metadata{
 			"custom":      "value",
@@ -502,8 +501,8 @@ func TestNewGameExportFromDomain(t *testing.T) {
 			Vars: GameModVarList{
 				{Var: "maxplayers", Default: "32", Info: "Max players"},
 			},
-			StartCmdLinux: lo.ToPtr("./hlds_run"),
-			KickCmd:       lo.ToPtr("kick {name}"),
+			StartCmdLinux: new("./hlds_run"),
+			KickCmd:       new("kick {name}"),
 			Metadata: Metadata{
 				"pelican_egg": map[string]any{"should": "be excluded"},
 			},
@@ -543,7 +542,7 @@ func TestGameExport_ToYAML(t *testing.T) {
 		Mods: []GameExportMod{
 			{
 				Name:          "Default",
-				StartCmdLinux: lo.ToPtr("./start.sh"),
+				StartCmdLinux: new("./start.sh"),
 			},
 		},
 	}

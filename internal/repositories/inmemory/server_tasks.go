@@ -12,7 +12,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
-	"github.com/samber/lo"
 )
 
 type ServerTaskRepository struct {
@@ -85,10 +84,10 @@ func (r *ServerTaskRepository) Save(_ context.Context, task *domain.ServerTask) 
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	task.UpdatedAt = lo.ToPtr(time.Now())
+	task.UpdatedAt = new(time.Now())
 
 	if task.ID == 0 && (task.CreatedAt == nil || task.CreatedAt.IsZero()) {
-		task.CreatedAt = lo.ToPtr(time.Now())
+		task.CreatedAt = new(time.Now())
 	}
 
 	if task.ID != 0 {

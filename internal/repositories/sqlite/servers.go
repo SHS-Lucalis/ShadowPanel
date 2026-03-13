@@ -133,15 +133,15 @@ func (r *ServerRepository) find(
 }
 
 func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) error {
-	server.UpdatedAt = lo.ToPtr(time.Now())
+	server.UpdatedAt = new(time.Now())
 
 	if server.ID == 0 && (server.CreatedAt == nil || server.CreatedAt.IsZero()) {
-		server.CreatedAt = lo.ToPtr(time.Now())
+		server.CreatedAt = new(time.Now())
 	}
 
 	formatTime := func(t *time.Time) *string {
 		if t != nil {
-			return lo.ToPtr(t.Format(time.RFC3339))
+			return new(t.Format(time.RFC3339))
 		}
 
 		return nil
@@ -240,7 +240,7 @@ func (r *ServerRepository) SaveBulk(ctx context.Context, servers []*domain.Serve
 
 	formatTime := func(t *time.Time) *string {
 		if t != nil {
-			return lo.ToPtr(t.Format(time.RFC3339))
+			return new(t.Format(time.RFC3339))
 		}
 
 		return nil

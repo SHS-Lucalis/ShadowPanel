@@ -11,7 +11,6 @@ import (
 	"github.com/gameap/gameap/internal/rbac"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/internal/services"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -31,7 +30,7 @@ func createAdminRole(t *testing.T, repo *inmemory.RBACRepository) domain.Role {
 
 	role := domain.Role{
 		Name:  "admin",
-		Title: lo.ToPtr("Administrator"),
+		Title: new("Administrator"),
 	}
 
 	err := repo.SaveRole(context.Background(), &role)

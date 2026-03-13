@@ -15,7 +15,6 @@ import (
 	"github.com/gameap/gameap/pkg/auth"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -890,19 +889,19 @@ func TestHandler_ServerUpdatePersistence(t *testing.T) {
 	require.NoError(t, err)
 
 	updateData := map[string]any{
-		"enabled":       lo.ToPtr(int8(1)),
-		"installed":     lo.ToPtr(int8(1)),
-		"blocked":       lo.ToPtr(int8(0)),
+		"enabled":       new(int8(1)),
+		"installed":     new(int8(1)),
+		"blocked":       new(int8(0)),
 		"name":          "Updated Server Name",
 		"game_id":       "valve",
 		"ds_id":         2,
 		"game_mod_id":   2,
 		"server_ip":     "10.0.0.1",
 		"server_port":   27016,
-		"query_port":    lo.ToPtr(27017),
-		"rcon_port":     lo.ToPtr(27018),
-		"start_command": lo.ToPtr("./hlds_run -game valve"),
-		"dir":           lo.ToPtr("/servers/valve"),
+		"query_port":    new(27017),
+		"rcon_port":     new(27018),
+		"start_command": new("./hlds_run -game valve"),
+		"dir":           new("/servers/valve"),
 	}
 
 	body, err := json.Marshal(updateData)
@@ -939,11 +938,11 @@ func TestHandler_ServerUpdatePersistence(t *testing.T) {
 	assert.Equal(t, "10.0.0.1", server.ServerIP)
 	assert.Equal(t, 27016, server.ServerPort)
 	require.NotNil(t, server.QueryPort)
-	assert.Equal(t, lo.ToPtr(27017), server.QueryPort)
+	assert.Equal(t, new(27017), server.QueryPort)
 	require.NotNil(t, server.RconPort)
-	assert.Equal(t, lo.ToPtr(27018), server.RconPort)
+	assert.Equal(t, new(27018), server.RconPort)
 	require.NotNil(t, server.StartCommand)
-	assert.Equal(t, lo.ToPtr("./hlds_run -game valve"), server.StartCommand)
+	assert.Equal(t, new("./hlds_run -game valve"), server.StartCommand)
 	assert.Equal(t, "/servers/valve", server.Dir)
 }
 

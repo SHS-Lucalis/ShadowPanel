@@ -9,7 +9,6 @@ import (
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/internal/services"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -32,14 +31,14 @@ func TestImporter_Import(t *testing.T) {
 					Name:              "Counter-Strike 1.6",
 					Engine:            "GoldSource",
 					EngineVersion:     "1.0",
-					SteamAppIDLinux:   lo.ToPtr(uint(90)),
-					SteamAppIDWindows: lo.ToPtr(uint(90)),
+					SteamAppIDLinux:   new(uint(90)),
+					SteamAppIDWindows: new(uint(90)),
 				},
 				Mods: []domain.GameExportMod{
 					{
 						Name:          "Classic",
-						StartCmdLinux: lo.ToPtr("./hlds_run -game cstrike +port {port}"),
-						KickCmd:       lo.ToPtr("kick {name}"),
+						StartCmdLinux: new("./hlds_run -game cstrike +port {port}"),
+						KickCmd:       new("kick {name}"),
 						FastRcon: []domain.GameExportModFastRcon{
 							{Info: "Restart", Command: "changelevel {map}"},
 						},
@@ -49,7 +48,7 @@ func TestImporter_Import(t *testing.T) {
 					},
 					{
 						Name:          "Deathmatch",
-						StartCmdLinux: lo.ToPtr("./hlds_run -game cstrike_dm +port {port}"),
+						StartCmdLinux: new("./hlds_run -game cstrike_dm +port {port}"),
 					},
 				},
 			},
@@ -176,7 +175,7 @@ func TestImporter_Import(t *testing.T) {
 				Mods: []domain.GameExportMod{
 					{
 						Name:          "Default",
-						StartCmdLinux: lo.ToPtr("./new_command"),
+						StartCmdLinux: new("./new_command"),
 					},
 				},
 			},
@@ -192,7 +191,7 @@ func TestImporter_Import(t *testing.T) {
 				_ = repo.Save(context.Background(), &domain.GameMod{
 					GameCode:      "existing",
 					Name:          "Default",
-					StartCmdLinux: lo.ToPtr("./old_command"),
+					StartCmdLinux: new("./old_command"),
 					Metadata: domain.Metadata{
 						"existing_key": "keep_me",
 					},
@@ -228,8 +227,8 @@ func TestImporter_Import(t *testing.T) {
 					Engine: "Test",
 				},
 				Mods: []domain.GameExportMod{
-					{Name: "Existing", StartCmdLinux: lo.ToPtr("./updated")},
-					{Name: "NewMod", StartCmdLinux: lo.ToPtr("./new")},
+					{Name: "Existing", StartCmdLinux: new("./updated")},
+					{Name: "NewMod", StartCmdLinux: new("./new")},
 				},
 			},
 			setupGame: func(repo *inmemory.GameRepository) {
@@ -244,7 +243,7 @@ func TestImporter_Import(t *testing.T) {
 				_ = repo.Save(context.Background(), &domain.GameMod{
 					GameCode:      "mixed",
 					Name:          "Existing",
-					StartCmdLinux: lo.ToPtr("./old"),
+					StartCmdLinux: new("./old"),
 				})
 			},
 			validate: func(t *testing.T, _ *inmemory.GameRepository, gameModRepo *inmemory.GameModRepository, result *ImportResult) {
@@ -353,19 +352,19 @@ func TestImporter_Import(t *testing.T) {
 				Mods: []domain.GameExportMod{
 					{
 						Name:                    "Complete",
-						RemoteRepositoryLinux:   lo.ToPtr("http://linux"),
-						RemoteRepositoryWindows: lo.ToPtr("http://windows"),
-						LocalRepositoryLinux:    lo.ToPtr("/linux"),
-						LocalRepositoryWindows:  lo.ToPtr("C:\\windows"),
-						StartCmdLinux:           lo.ToPtr("./linux"),
-						StartCmdWindows:         lo.ToPtr("start.exe"),
-						KickCmd:                 lo.ToPtr("kick"),
-						BanCmd:                  lo.ToPtr("ban"),
-						ChnameCmd:               lo.ToPtr("name"),
-						SrestartCmd:             lo.ToPtr("restart"),
-						ChmapCmd:                lo.ToPtr("map"),
-						SendmsgCmd:              lo.ToPtr("say"),
-						PasswdCmd:               lo.ToPtr("pass"),
+						RemoteRepositoryLinux:   new("http://linux"),
+						RemoteRepositoryWindows: new("http://windows"),
+						LocalRepositoryLinux:    new("/linux"),
+						LocalRepositoryWindows:  new("C:\\windows"),
+						StartCmdLinux:           new("./linux"),
+						StartCmdWindows:         new("start.exe"),
+						KickCmd:                 new("kick"),
+						BanCmd:                  new("ban"),
+						ChnameCmd:               new("name"),
+						SrestartCmd:             new("restart"),
+						ChmapCmd:                new("map"),
+						SendmsgCmd:              new("say"),
+						PasswdCmd:               new("pass"),
 						FastRcon: []domain.GameExportModFastRcon{
 							{Info: "Info1", Command: "cmd1"},
 							{Info: "Info2", Command: "cmd2"},
@@ -465,7 +464,7 @@ func TestImporter_Import_WithOptions(t *testing.T) {
 				},
 			},
 			opts: &gamesimport.Options{
-				Name: lo.ToPtr("Overridden Name"),
+				Name: new("Overridden Name"),
 			},
 			validate: func(t *testing.T, gameRepo *inmemory.GameRepository, _ *inmemory.GameModRepository, result *ImportResult) {
 				t.Helper()
@@ -492,12 +491,12 @@ func TestImporter_Import_WithOptions(t *testing.T) {
 				Mods: []domain.GameExportMod{
 					{
 						Name:          "Default",
-						StartCmdLinux: lo.ToPtr("./server"),
+						StartCmdLinux: new("./server"),
 					},
 				},
 			},
 			opts: &gamesimport.Options{
-				Code: lo.ToPtr("overridden"),
+				Code: new("overridden"),
 			},
 			validate: func(t *testing.T, gameRepo *inmemory.GameRepository, gameModRepo *inmemory.GameModRepository, result *ImportResult) {
 				t.Helper()
@@ -528,8 +527,8 @@ func TestImporter_Import_WithOptions(t *testing.T) {
 				},
 			},
 			opts: &gamesimport.Options{
-				Code: lo.ToPtr("custom"),
-				Name: lo.ToPtr("Custom Name"),
+				Code: new("custom"),
+				Name: new("Custom Name"),
 			},
 			validate: func(t *testing.T, gameRepo *inmemory.GameRepository, _ *inmemory.GameModRepository, result *ImportResult) {
 				t.Helper()
@@ -556,7 +555,7 @@ func TestImporter_Import_WithOptions(t *testing.T) {
 				},
 			},
 			opts: &gamesimport.Options{
-				Code: lo.ToPtr("INVALID"),
+				Code: new("INVALID"),
 			},
 			wantError: "code must match pattern",
 		},
@@ -571,7 +570,7 @@ func TestImporter_Import_WithOptions(t *testing.T) {
 				},
 			},
 			opts: &gamesimport.Options{
-				Code: lo.ToPtr("a"),
+				Code: new("a"),
 			},
 			wantError: "code must be between 2 and 16 characters",
 		},
@@ -586,7 +585,7 @@ func TestImporter_Import_WithOptions(t *testing.T) {
 				},
 			},
 			opts: &gamesimport.Options{
-				Name: lo.ToPtr("A"),
+				Name: new("A"),
 			},
 			wantError: "name must be between 2 and 128 characters",
 		},

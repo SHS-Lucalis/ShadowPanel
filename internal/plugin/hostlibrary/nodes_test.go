@@ -8,7 +8,6 @@ import (
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/pkg/plugin/sdk/common"
 	"github.com/gameap/gameap/pkg/plugin/sdk/nodes"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -112,7 +111,7 @@ func TestNodesService_GetNode(t *testing.T) {
 					Name:        "MainNode",
 					OS:          domain.NodeOSLinux,
 					Location:    "US-East",
-					Provider:    lo.ToPtr("AWS"),
+					Provider:    new("AWS"),
 					GdaemonHost: "192.168.1.1",
 					GdaemonPort: 31717,
 				})
@@ -166,7 +165,7 @@ func TestConvertNodeToProto(t *testing.T) {
 		Enabled:     true,
 		OS:          domain.NodeOSLinux,
 		Location:    "US-East",
-		Provider:    lo.ToPtr("DigitalOcean"),
+		Provider:    new("DigitalOcean"),
 		IPs:         []string{"192.168.1.1", "10.0.0.1"},
 		WorkPath:    "/home/gameap",
 		GdaemonHost: "node.example.com",

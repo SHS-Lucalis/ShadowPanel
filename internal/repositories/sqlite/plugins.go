@@ -12,7 +12,6 @@ import (
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories/base"
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 )
 
 var pluginFields = []string{
@@ -134,7 +133,7 @@ func (r *PluginRepository) find(
 }
 
 func (r *PluginRepository) Save(ctx context.Context, plugin *domain.Plugin) error {
-	plugin.UpdatedAt = lo.ToPtr(time.Now())
+	plugin.UpdatedAt = new(time.Now())
 
 	jsonFields, err := r.marshalJSONFields(plugin)
 	if err != nil {
@@ -151,7 +150,7 @@ func (r *PluginRepository) Save(ctx context.Context, plugin *domain.Plugin) erro
 	}
 
 	if plugin.CreatedAt == nil || plugin.CreatedAt.IsZero() {
-		plugin.CreatedAt = lo.ToPtr(time.Now())
+		plugin.CreatedAt = new(time.Now())
 	}
 
 	return r.insert(ctx, plugin, jsonFields)
@@ -403,7 +402,7 @@ func formatTimePtr(t *time.Time) *string {
 		return nil
 	}
 
-	return lo.ToPtr(t.Format(time.RFC3339Nano))
+	return new(t.Format(time.RFC3339Nano))
 }
 
 func parseTimePtr(s *string) (*time.Time, error) {

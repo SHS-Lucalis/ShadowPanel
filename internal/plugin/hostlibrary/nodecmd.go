@@ -8,7 +8,6 @@ import (
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/pkg/plugin/sdk/nodecmd"
-	"github.com/samber/lo"
 	"github.com/tetratelabs/wazero"
 )
 
@@ -46,11 +45,11 @@ func (s *NodeCmdServiceImpl) ExecuteCommand(
 ) (*nodecmd.ExecuteCommandResponse, error) {
 	node, err := s.getNode(ctx, req.NodeId)
 	if err != nil {
-		return &nodecmd.ExecuteCommandResponse{Error: lo.ToPtr(err.Error())}, nil
+		return &nodecmd.ExecuteCommandResponse{Error: new(err.Error())}, nil
 	}
 
 	if node == nil {
-		return &nodecmd.ExecuteCommandResponse{Error: lo.ToPtr("node not found")}, nil
+		return &nodecmd.ExecuteCommandResponse{Error: new("node not found")}, nil
 	}
 
 	var opts []daemon.CommandServiceOption
@@ -60,7 +59,7 @@ func (s *NodeCmdServiceImpl) ExecuteCommand(
 
 	result, err := s.commandService.ExecuteCommand(ctx, node, req.Command, opts...)
 	if err != nil {
-		return &nodecmd.ExecuteCommandResponse{Error: lo.ToPtr(err.Error())}, nil
+		return &nodecmd.ExecuteCommandResponse{Error: new(err.Error())}, nil
 	}
 
 	return &nodecmd.ExecuteCommandResponse{

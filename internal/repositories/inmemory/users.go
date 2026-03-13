@@ -11,7 +11,6 @@ import (
 
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
-	"github.com/samber/lo"
 )
 
 type UserRepository struct {
@@ -96,10 +95,10 @@ func (r *UserRepository) Save(_ context.Context, user *domain.User) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	user.UpdatedAt = lo.ToPtr(time.Now())
+	user.UpdatedAt = new(time.Now())
 
 	if user.ID == 0 && (user.CreatedAt == nil || user.CreatedAt.IsZero()) {
-		user.CreatedAt = lo.ToPtr(time.Now())
+		user.CreatedAt = new(time.Now())
 	}
 
 	if user.ID == 0 {

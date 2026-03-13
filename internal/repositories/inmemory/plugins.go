@@ -13,7 +13,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 )
 
 type PluginRepository struct {
@@ -77,12 +76,12 @@ func (r *PluginRepository) Save(_ context.Context, plugin *domain.Plugin) error 
 
 	now := time.Now()
 
-	plugin.UpdatedAt = lo.ToPtr(now)
+	plugin.UpdatedAt = new(now)
 
 	_, exists := r.plugins[plugin.ID]
 	if !exists {
 		if plugin.CreatedAt == nil || plugin.CreatedAt.IsZero() {
-			plugin.CreatedAt = lo.ToPtr(now)
+			plugin.CreatedAt = new(now)
 		}
 	}
 

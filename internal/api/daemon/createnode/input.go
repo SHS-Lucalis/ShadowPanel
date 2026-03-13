@@ -135,7 +135,7 @@ func (in *nodeInput) ToDomain(apiKey string, serverCert string) *domain.Node {
 		Name:                name,
 		OS:                  domain.ParseNodeOS(in.OS),
 		Location:            lo.CoalesceOrEmpty(in.Location, "Unknown"),
-		Provider:            lo.ToPtr(lo.CoalesceOrEmpty(in.Provider, "Unknown")),
+		Provider:            new(lo.CoalesceOrEmpty(in.Provider, "Unknown")),
 		IPs:                 in.IP,
 		WorkPath:            lo.CoalesceOrEmpty(in.WorkPath, "/srv/gameap"),
 		SteamcmdPath:        steamcmdPath,

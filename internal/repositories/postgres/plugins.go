@@ -13,7 +13,6 @@ import (
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories/base"
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 )
 
 var pluginFields = []string{
@@ -137,7 +136,7 @@ func (r *PluginRepository) find(
 }
 
 func (r *PluginRepository) Save(ctx context.Context, plugin *domain.Plugin) error {
-	plugin.UpdatedAt = lo.ToPtr(time.Now())
+	plugin.UpdatedAt = new(time.Now())
 
 	exists, err := r.Exists(ctx, &filters.FindPlugin{IDs: []domain.Uint64ID{plugin.ID}})
 	if err != nil {
@@ -149,7 +148,7 @@ func (r *PluginRepository) Save(ctx context.Context, plugin *domain.Plugin) erro
 	}
 
 	if plugin.CreatedAt == nil || plugin.CreatedAt.IsZero() {
-		plugin.CreatedAt = lo.ToPtr(time.Now())
+		plugin.CreatedAt = new(time.Now())
 	}
 
 	return r.insert(ctx, plugin)
@@ -373,7 +372,7 @@ func permissionsToPostgresArray(permissions []domain.PluginPermission) *string {
 		elements[i] = string(p)
 	}
 
-	return lo.ToPtr("{" + strings.Join(elements, ",") + "}")
+	return new("{" + strings.Join(elements, ",") + "}")
 }
 
 func stringsToPostgresArray(strs []string) *string {
@@ -386,7 +385,7 @@ func stringsToPostgresArray(strs []string) *string {
 		escaped[i] = escapePostgresArrayElement(s)
 	}
 
-	return lo.ToPtr("{" + strings.Join(escaped, ",") + "}")
+	return new("{" + strings.Join(escaped, ",") + "}")
 }
 
 func parsePostgresArrayToPermissions(s *string) []domain.PluginPermission {

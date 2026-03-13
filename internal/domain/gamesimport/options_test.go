@@ -4,7 +4,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -26,106 +25,106 @@ func TestImportOptions_Validate(t *testing.T) {
 		{
 			name: "valid_code_only",
 			opts: &Options{
-				Code: lo.ToPtr("test_game"),
+				Code: new("test_game"),
 			},
 		},
 		{
 			name: "valid_name_only",
 			opts: &Options{
-				Name: lo.ToPtr("Test Game"),
+				Name: new("Test Game"),
 			},
 		},
 		{
 			name: "valid_code_and_name",
 			opts: &Options{
-				Code: lo.ToPtr("test"),
-				Name: lo.ToPtr("Test Game"),
+				Code: new("test"),
+				Name: new("Test Game"),
 			},
 		},
 		{
 			name: "valid_code_min_length",
 			opts: &Options{
-				Code: lo.ToPtr("ab"),
+				Code: new("ab"),
 			},
 		},
 		{
 			name: "valid_code_max_length",
 			opts: &Options{
-				Code: lo.ToPtr("1234567890123456"),
+				Code: new("1234567890123456"),
 			},
 		},
 		{
 			name: "valid_name_min_length",
 			opts: &Options{
-				Name: lo.ToPtr("AB"),
+				Name: new("AB"),
 			},
 		},
 		{
 			name: "valid_code_with_underscores",
 			opts: &Options{
-				Code: lo.ToPtr("my_game_code"),
+				Code: new("my_game_code"),
 			},
 		},
 		{
 			name: "valid_code_with_hyphens",
 			opts: &Options{
-				Code: lo.ToPtr("my-game-code"),
+				Code: new("my-game-code"),
 			},
 		},
 		{
 			name: "valid_code_with_numbers",
 			opts: &Options{
-				Code: lo.ToPtr("game123"),
+				Code: new("game123"),
 			},
 		},
 		{
 			name:      "code_too_short",
-			opts:      &Options{Code: lo.ToPtr("a")},
+			opts:      &Options{Code: new("a")},
 			wantError: "code must be between 2 and 16 characters",
 		},
 		{
 			name:      "code_too_long",
-			opts:      &Options{Code: lo.ToPtr("12345678901234567")},
+			opts:      &Options{Code: new("12345678901234567")},
 			wantError: "code must be between 2 and 16 characters",
 		},
 		{
 			name:      "code_with_uppercase",
-			opts:      &Options{Code: lo.ToPtr("Test")},
+			opts:      &Options{Code: new("Test")},
 			wantError: "code must match pattern",
 		},
 		{
 			name:      "code_with_spaces",
-			opts:      &Options{Code: lo.ToPtr("test game")},
+			opts:      &Options{Code: new("test game")},
 			wantError: "code must match pattern",
 		},
 		{
 			name:      "code_with_special_chars",
-			opts:      &Options{Code: lo.ToPtr("test@game")},
+			opts:      &Options{Code: new("test@game")},
 			wantError: "code must match pattern",
 		},
 		{
 			name:      "name_too_short",
-			opts:      &Options{Name: lo.ToPtr("A")},
+			opts:      &Options{Name: new("A")},
 			wantError: "name must be between 2 and 128 characters",
 		},
 		{
 			name:      "name_too_long",
-			opts:      &Options{Name: lo.ToPtr(strings.Repeat("a", 129))},
+			opts:      &Options{Name: new(strings.Repeat("a", 129))},
 			wantError: "name must be between 2 and 128 characters",
 		},
 		{
 			name: "valid_code_with_invalid_name_returns_error",
 			opts: &Options{
-				Code: lo.ToPtr("valid"),
-				Name: lo.ToPtr("A"),
+				Code: new("valid"),
+				Name: new("A"),
 			},
 			wantError: "name must be between 2 and 128 characters",
 		},
 		{
 			name: "invalid_code_with_valid_name_returns_error",
 			opts: &Options{
-				Code: lo.ToPtr("a"),
-				Name: lo.ToPtr("Valid Name"),
+				Code: new("a"),
+				Name: new("Valid Name"),
 			},
 			wantError: "code must be between 2 and 16 characters",
 		},
@@ -164,22 +163,22 @@ func TestImportOptions_IsEmpty(t *testing.T) {
 		{
 			name: "only_code_set",
 			opts: &Options{
-				Code: lo.ToPtr("test"),
+				Code: new("test"),
 			},
 			expected: false,
 		},
 		{
 			name: "only_name_set",
 			opts: &Options{
-				Name: lo.ToPtr("Test"),
+				Name: new("Test"),
 			},
 			expected: false,
 		},
 		{
 			name: "both_set",
 			opts: &Options{
-				Code: lo.ToPtr("test"),
-				Name: lo.ToPtr("Test"),
+				Code: new("test"),
+				Name: new("Test"),
 			},
 			expected: false,
 		},

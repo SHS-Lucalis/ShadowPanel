@@ -6,7 +6,6 @@ import (
 
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -29,8 +28,8 @@ func TestExporter_Export(t *testing.T) {
 					Name:              "Counter-Strike 1.6",
 					Engine:            "GoldSource",
 					EngineVersion:     "1.0",
-					SteamAppIDLinux:   lo.ToPtr(uint(90)),
-					SteamAppIDWindows: lo.ToPtr(uint(90)),
+					SteamAppIDLinux:   new(uint(90)),
+					SteamAppIDWindows: new(uint(90)),
 					Enabled:           1,
 				})
 			},
@@ -38,8 +37,8 @@ func TestExporter_Export(t *testing.T) {
 				_ = repo.Save(context.Background(), &domain.GameMod{
 					GameCode:      "cstrike",
 					Name:          "Classic",
-					StartCmdLinux: lo.ToPtr("./hlds_run -game cstrike +port {port}"),
-					KickCmd:       lo.ToPtr("kick {name}"),
+					StartCmdLinux: new("./hlds_run -game cstrike +port {port}"),
+					KickCmd:       new("kick {name}"),
 					FastRcon: domain.GameModFastRconList{
 						{Info: "Restart", Command: "changelevel {map}"},
 					},
@@ -111,17 +110,17 @@ func TestExporter_Export(t *testing.T) {
 				_ = repo.Save(context.Background(), &domain.GameMod{
 					GameCode:      "multi",
 					Name:          "Mod1",
-					StartCmdLinux: lo.ToPtr("./mod1"),
+					StartCmdLinux: new("./mod1"),
 				})
 				_ = repo.Save(context.Background(), &domain.GameMod{
 					GameCode:      "multi",
 					Name:          "Mod2",
-					StartCmdLinux: lo.ToPtr("./mod2"),
+					StartCmdLinux: new("./mod2"),
 				})
 				_ = repo.Save(context.Background(), &domain.GameMod{
 					GameCode:      "multi",
 					Name:          "Mod3",
-					StartCmdLinux: lo.ToPtr("./mod3"),
+					StartCmdLinux: new("./mod3"),
 				})
 			},
 			validate: func(t *testing.T, yamlData []byte) {
@@ -167,7 +166,7 @@ func TestExporter_Export(t *testing.T) {
 				_ = repo.Save(context.Background(), &domain.GameMod{
 					GameCode:      "pelican",
 					Name:          "Default",
-					StartCmdLinux: lo.ToPtr("./server"),
+					StartCmdLinux: new("./server"),
 					Metadata: domain.Metadata{
 						"pelican_egg": map[string]any{"data": "value"},
 					},
@@ -233,7 +232,7 @@ func TestExporter_ExportToStruct(t *testing.T) {
 	_ = gameModRepo.Save(context.Background(), &domain.GameMod{
 		GameCode:      "test",
 		Name:          "Default",
-		StartCmdLinux: lo.ToPtr("./test"),
+		StartCmdLinux: new("./test"),
 	})
 
 	exporter := NewExporter(gameRepo, gameModRepo, "v3.0.0")

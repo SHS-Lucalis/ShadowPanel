@@ -8,7 +8,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
-	"github.com/samber/lo"
 )
 
 // UserService is sumular to UserRepository but for use cases.
@@ -58,10 +57,10 @@ func (s *UserService) Save(
 	user.Login = strings.ToLower(user.Login)
 
 	if user.CreatedAt == nil || user.CreatedAt.IsZero() {
-		user.CreatedAt = lo.ToPtr(time.Now())
+		user.CreatedAt = new(time.Now())
 	}
 
-	user.UpdatedAt = lo.ToPtr(time.Now())
+	user.UpdatedAt = new(time.Now())
 
 	return s.repo.Save(ctx, user)
 }

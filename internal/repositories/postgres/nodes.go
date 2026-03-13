@@ -9,7 +9,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories/base"
-	"github.com/samber/lo"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/pkg/errors"
@@ -113,10 +112,10 @@ func (r *NodeRepository) find(
 
 //nolint:funlen
 func (r *NodeRepository) Save(ctx context.Context, node *domain.Node) error {
-	node.UpdatedAt = lo.ToPtr(time.Now())
+	node.UpdatedAt = new(time.Now())
 
 	if node.ID == 0 && (node.CreatedAt == nil || node.CreatedAt.IsZero()) {
-		node.CreatedAt = lo.ToPtr(time.Now())
+		node.CreatedAt = new(time.Now())
 	}
 
 	builder := sq.Insert(base.NodesTable)

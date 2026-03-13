@@ -8,7 +8,6 @@ import (
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/pkg/plugin/sdk/common"
 	"github.com/gameap/gameap/pkg/plugin/sdk/games"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -168,11 +167,11 @@ func TestConvertGameToProto(t *testing.T) {
 		Name:                    "Counter-Strike",
 		Engine:                  "goldsrc",
 		EngineVersion:           "1.6",
-		SteamAppIDLinux:         lo.ToPtr(uint(10)),
-		SteamAppIDWindows:       lo.ToPtr(uint(10)),
-		SteamAppSetConfig:       lo.ToPtr("+game cstrike"),
-		RemoteRepositoryLinux:   lo.ToPtr("https://example.com/linux"),
-		RemoteRepositoryWindows: lo.ToPtr("https://example.com/windows"),
+		SteamAppIDLinux:         new(uint(10)),
+		SteamAppIDWindows:       new(uint(10)),
+		SteamAppSetConfig:       new("+game cstrike"),
+		RemoteRepositoryLinux:   new("https://example.com/linux"),
+		RemoteRepositoryWindows: new("https://example.com/windows"),
 		Enabled:                 1,
 	}
 

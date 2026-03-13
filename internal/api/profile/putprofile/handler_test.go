@@ -9,8 +9,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/samber/lo"
-
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/internal/services"
@@ -394,84 +392,84 @@ func TestUpdateProfileInput_Validate(t *testing.T) {
 		{
 			name: "valid name only",
 			input: updateProfileInput{
-				Name: lo.ToPtr("Valid TokenName"),
+				Name: new("Valid TokenName"),
 			},
 			wantError: "",
 		},
 		{
 			name: "valid password only",
 			input: updateProfileInput{
-				Password:        lo.ToPtr("validpassword123"),
-				CurrentPassword: lo.ToPtr("currentpassword"),
+				Password:        new("validpassword123"),
+				CurrentPassword: new("currentpassword"),
 			},
 			wantError: "",
 		},
 		{
 			name: "valid name and password",
 			input: updateProfileInput{
-				Name:            lo.ToPtr("Valid TokenName"),
-				Password:        lo.ToPtr("validpassword123"),
-				CurrentPassword: lo.ToPtr("currentpassword"),
+				Name:            new("Valid TokenName"),
+				Password:        new("validpassword123"),
+				CurrentPassword: new("currentpassword"),
 			},
 			wantError: "",
 		},
 		{
 			name: "empty name",
 			input: updateProfileInput{
-				Name: lo.ToPtr(""),
+				Name: new(""),
 			},
 			wantError: "name cannot be empty",
 		},
 		{
 			name: "name too long",
 			input: updateProfileInput{
-				Name: lo.ToPtr(strings.Repeat("a", 256)),
+				Name: new(strings.Repeat("a", 256)),
 			},
 			wantError: "name must not exceed 255 characters",
 		},
 		{
 			name: "password too short",
 			input: updateProfileInput{
-				Password:        lo.ToPtr("short"),
-				CurrentPassword: lo.ToPtr("currentpassword"),
+				Password:        new("short"),
+				CurrentPassword: new("currentpassword"),
 			},
 			wantError: "password must be at least 8 characters long",
 		},
 		{
 			name: "password too long",
 			input: updateProfileInput{
-				Password:        lo.ToPtr(strings.Repeat("a", 65)),
-				CurrentPassword: lo.ToPtr("currentpassword"),
+				Password:        new(strings.Repeat("a", 65)),
+				CurrentPassword: new("currentpassword"),
 			},
 			wantError: "password must not exceed 64 characters",
 		},
 		{
 			name: "empty password",
 			input: updateProfileInput{
-				Password:        lo.ToPtr(""),
-				CurrentPassword: lo.ToPtr("currentpassword"),
+				Password:        new(""),
+				CurrentPassword: new("currentpassword"),
 			},
 			wantError: "password cannot be empty",
 		},
 		{
 			name: "empty current password",
 			input: updateProfileInput{
-				Password:        lo.ToPtr("validpassword123"),
-				CurrentPassword: lo.ToPtr(""),
+				Password:        new("validpassword123"),
+				CurrentPassword: new(""),
 			},
 			wantError: "current password cannot be empty",
 		},
 		{
 			name: "name with whitespace gets trimmed",
 			input: updateProfileInput{
-				Name: lo.ToPtr("  Valid TokenName  "),
+				Name: new("  Valid TokenName  "),
 			},
 			wantError: "",
 		},
 		{
 			name: "whitespace only name becomes empty",
 			input: updateProfileInput{
-				Name: lo.ToPtr("   "),
+				Name: new("   "),
 			},
 			wantError: "name cannot be empty",
 		},

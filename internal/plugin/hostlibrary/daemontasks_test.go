@@ -9,7 +9,6 @@ import (
 	"github.com/gameap/gameap/pkg/plugin/sdk/common"
 	"github.com/gameap/gameap/pkg/plugin/sdk/daemontasks"
 	"github.com/gameap/gameap/pkg/proto"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -76,19 +75,19 @@ func TestDaemonTasksService_FindDaemonTasks(t *testing.T) {
 			setupRepo: func(r *inmemory.DaemonTaskRepository) {
 				_ = r.Save(context.Background(), &domain.DaemonTask{
 					DedicatedServerID: 1,
-					ServerID:          lo.ToPtr(uint(10)),
+					ServerID:          new(uint(10)),
 					Task:              domain.DaemonTaskTypeServerStart,
 					Status:            domain.DaemonTaskStatusWaiting,
 				})
 				_ = r.Save(context.Background(), &domain.DaemonTask{
 					DedicatedServerID: 1,
-					ServerID:          lo.ToPtr(uint(20)),
+					ServerID:          new(uint(20)),
 					Task:              domain.DaemonTaskTypeServerStop,
 					Status:            domain.DaemonTaskStatusWaiting,
 				})
 				_ = r.Save(context.Background(), &domain.DaemonTask{
 					DedicatedServerID: 2,
-					ServerID:          lo.ToPtr(uint(10)),
+					ServerID:          new(uint(10)),
 					Task:              domain.DaemonTaskTypeServerRestart,
 					Status:            domain.DaemonTaskStatusWaiting,
 				})
@@ -197,7 +196,7 @@ func TestDaemonTasksService_CreateDaemonTask(t *testing.T) {
 			name: "valid_task_created",
 			request: &daemontasks.CreateDaemonTaskRequest{
 				NodeId:   1,
-				ServerId: lo.ToPtr(uint64(10)),
+				ServerId: new(uint64(10)),
 				TaskType: proto.DaemonTaskType_DAEMON_TASK_TYPE_SERVER_START,
 			},
 			wantSuccess: true,
@@ -206,9 +205,9 @@ func TestDaemonTasksService_CreateDaemonTask(t *testing.T) {
 			name: "task_with_run_after",
 			request: &daemontasks.CreateDaemonTaskRequest{
 				NodeId:     1,
-				ServerId:   lo.ToPtr(uint64(10)),
+				ServerId:   new(uint64(10)),
 				TaskType:   proto.DaemonTaskType_DAEMON_TASK_TYPE_SERVER_STOP,
-				RunAfterId: lo.ToPtr(uint64(5)),
+				RunAfterId: new(uint64(5)),
 			},
 			wantSuccess: true,
 		},
@@ -217,7 +216,7 @@ func TestDaemonTasksService_CreateDaemonTask(t *testing.T) {
 			request: &daemontasks.CreateDaemonTaskRequest{
 				NodeId:   1,
 				TaskType: proto.DaemonTaskType_DAEMON_TASK_TYPE_CMD_EXEC,
-				Cmd:      lo.ToPtr("echo hello"),
+				Cmd:      new("echo hello"),
 			},
 			wantSuccess: true,
 		},
@@ -225,7 +224,7 @@ func TestDaemonTasksService_CreateDaemonTask(t *testing.T) {
 			name: "server_install_task",
 			request: &daemontasks.CreateDaemonTaskRequest{
 				NodeId:   1,
-				ServerId: lo.ToPtr(uint64(5)),
+				ServerId: new(uint64(5)),
 				TaskType: proto.DaemonTaskType_DAEMON_TASK_TYPE_SERVER_INSTALL,
 			},
 			wantSuccess: true,
@@ -358,11 +357,11 @@ func TestConvertDaemonTaskToProto(t *testing.T) {
 	task := &domain.DaemonTask{
 		ID:                1,
 		DedicatedServerID: 10,
-		ServerID:          lo.ToPtr(uint(20)),
-		RunAftID:          lo.ToPtr(uint(5)),
+		ServerID:          new(uint(20)),
+		RunAftID:          new(uint(5)),
 		Task:              domain.DaemonTaskTypeServerStart,
-		Cmd:               lo.ToPtr("./start.sh"),
-		Output:            lo.ToPtr("Server started"),
+		Cmd:               new("./start.sh"),
+		Output:            new("Server started"),
 		Status:            domain.DaemonTaskStatusSuccess,
 	}
 

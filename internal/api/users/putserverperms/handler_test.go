@@ -18,7 +18,6 @@ import (
 	"github.com/gameap/gameap/pkg/flexible"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -405,7 +404,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				entityTypeUser := domain.EntityTypeUser
 				permission := &domain.Permission{
 					AbilityID:  adminAbility.ID,
-					EntityID:   lo.ToPtr(uint(2)),
+					EntityID:   new(uint(2)),
 					EntityType: &entityTypeUser,
 					Forbidden:  false,
 				}
