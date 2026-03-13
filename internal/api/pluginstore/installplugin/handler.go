@@ -3,6 +3,7 @@ package installplugin
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"path"
 	"time"
@@ -274,6 +275,13 @@ func (h *Handler) tryLoadPlugin(ctx context.Context, pluginRecord *domain.Plugin
 		return
 	}
 	if _, err := h.loader.Load(ctx, filename); err != nil {
+		slog.ErrorContext(
+			ctx,
+			"failed to load plugin",
+			slog.String("filename", filename),
+			slog.String("error", err.Error()),
+		)
+
 		pluginRecord.Status = domain.PluginStatusError
 		_ = h.pluginRepo.Save(ctx, pluginRecord)
 	}
