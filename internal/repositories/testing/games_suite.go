@@ -345,7 +345,7 @@ func (s *GameRepositorySuite) TestGameRepositoryIntegration() {
 	})
 
 	s.T().Run("multiple_games_operations", func(t *testing.T) {
-		var gameCodes []string
+		gameCodes := make([]string, 0, 5)
 		for i := range 5 {
 			game := &domain.Game{
 				Code:          "multi_game_" + string(rune('A'+i)),
