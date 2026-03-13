@@ -47,10 +47,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	session := auth.SessionFromContext(ctx)
 	if !session.IsAuthenticated() {
-		h.responder.WriteError(ctx, rw, api.WrapHTTPError(
-			errors.New("user not authenticated"),
-			http.StatusUnauthorized,
-		))
+		h.responder.WriteError(ctx, rw, api.NewError(http.StatusUnauthorized, "user not authenticated"))
 
 		return
 	}
@@ -122,28 +119,19 @@ func (h *Handler) checkAuthorization(r *http.Request, user *domain.User, task *d
 	}
 
 	if task.ServerID == nil {
-		return api.WrapHTTPError(
-			errors.New("access denied: task has no associated server"),
-			http.StatusForbidden,
-		)
+		return api.NewError(http.StatusForbidden, "access denied: task has no associated server")
 	}
 
 	requiredAbilities, ok := daemontasksbase.DaemonTaskTypeAbilities[task.Task]
 	if !ok {
-		return api.WrapHTTPError(
-			errors.New("access denied: task type not allowed for regular users"),
-			http.StatusForbidden,
-		)
+		return api.NewError(http.StatusForbidden, "access denied: task type not allowed for regular users")
 	}
 
 	_, err = h.serverFinder.FindUserServer(ctx, user, *task.ServerID)
 	if err != nil {
 		if target, ok := stderrors.AsType[*api.Error](err); ok {
 			if target.HTTPStatus() == http.StatusNotFound {
-				return api.WrapHTTPError(
-					errors.New("access denied: no access to the server"),
-					http.StatusForbidden,
-				)
+				return api.NewError(http.StatusForbidden, "access denied: no access to the server")
 			}
 		}
 
