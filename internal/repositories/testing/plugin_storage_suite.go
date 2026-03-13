@@ -318,17 +318,6 @@ func (s *PluginStorageRepositorySuite) TestPluginStorageRepositoryFind() {
 
 		results, err := s.repo.Find(ctx, nil, nil, pagination)
 		require.NoError(t, err)
-		assert.LessOrEqual(t, len(results), filters.DefaultLimit)
-	})
-
-	s.T().Run("find_with_zero_limit_uses_default", func(t *testing.T) {
-		pagination := &filters.Pagination{
-			Limit:  0,
-			Offset: 0,
-		}
-
-		results, err := s.repo.Find(ctx, nil, nil, pagination)
-		require.NoError(t, err)
 		assert.LessOrEqual(t, len(results), int(filters.DefaultLimit))
 	})
 

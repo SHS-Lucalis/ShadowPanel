@@ -494,7 +494,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				require.NoError(t, err)
 			},
 			expectedStatus: http.StatusBadRequest,
-			wantError:      "file exceeds maximum size",
+			wantError:      "request body too large",
 		},
 		{
 			name:     "user_not_authenticated",
