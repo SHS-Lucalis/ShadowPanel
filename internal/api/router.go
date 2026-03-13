@@ -1320,18 +1320,29 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 			AdminOnly: true,
 		},
 		{
-			Method:    http.MethodGet,
-			Path:      "/api/gdaemon_tasks/{id}",
-			Handler:   getdaemontask.NewHandler(c.DaemonTaskRepository(), c.Responder(), false),
-			AdminOnly: true,
+			Method: http.MethodGet,
+			Path:   "/api/gdaemon_tasks/{id}",
+			Handler: getdaemontask.NewHandler(
+				c.DaemonTaskRepository(),
+				c.ServerRepository(),
+				c.RBAC(),
+				c.Responder(),
+				false,
+			),
 			CheckPATAbilities: []domain.PATAbility{
 				domain.PATAbilityGDaemonTaskRead,
 			},
 		},
 		{
-			Method:    http.MethodGet,
-			Path:      "/api/gdaemon_tasks/{id}/output",
-			Handler:   getdaemontask.NewHandler(c.DaemonTaskRepository(), c.Responder(), true),
+			Method: http.MethodGet,
+			Path:   "/api/gdaemon_tasks/{id}/output",
+			Handler: getdaemontask.NewHandler(
+				c.DaemonTaskRepository(),
+				c.ServerRepository(),
+				c.RBAC(),
+				c.Responder(),
+				true,
+			),
 			AdminOnly: true,
 		},
 

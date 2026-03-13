@@ -67,7 +67,9 @@ func (r *DaemonTaskRepository) Find(
 	tasks := make([]domain.DaemonTask, 0, len(candidateIDs))
 	for taskID := range candidateIDs {
 		if task, exists := r.tasks[taskID]; exists {
-			tasks = append(tasks, *task)
+			taskCopy := *task
+			taskCopy.Output = nil
+			tasks = append(tasks, taskCopy)
 		}
 	}
 
@@ -77,12 +79,26 @@ func (r *DaemonTaskRepository) Find(
 }
 
 func (r *DaemonTaskRepository) FindWithOutput(
-	ctx context.Context,
+	_ context.Context,
 	filter *filters.FindDaemonTask,
 	order []filters.Sorting,
 	pagination *filters.Pagination,
 ) ([]domain.DaemonTask, error) {
-	return r.Find(ctx, filter, order, pagination)
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	candidateIDs := r.getFilteredTaskIDs(filter)
+
+	tasks := make([]domain.DaemonTask, 0, len(candidateIDs))
+	for taskID := range candidateIDs {
+		if task, exists := r.tasks[taskID]; exists {
+			tasks = append(tasks, *task)
+		}
+	}
+
+	r.sortTasks(tasks, order)
+
+	return r.applyPagination(tasks, pagination), nil
 }
 
 func (r *DaemonTaskRepository) Save(_ context.Context, task *domain.DaemonTask) error {

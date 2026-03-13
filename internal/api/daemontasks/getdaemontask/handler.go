@@ -3,7 +3,11 @@ package getdaemontask
 import (
 	"net/http"
 
+	stderrors "errors"
+
 	"github.com/gameap/gameap/internal/api/base"
+	daemontasksbase "github.com/gameap/gameap/internal/api/daemontasks/base"
+	serversbase "github.com/gameap/gameap/internal/api/servers/base"
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
@@ -14,17 +18,25 @@ import (
 
 type Handler struct {
 	daemonTasksRepo repositories.DaemonTaskRepository
+	serverFinder    *serversbase.ServerFinder
+	abilityChecker  *serversbase.AbilityChecker
+	rbac            base.RBAC
 	responder       base.Responder
 	withOutput      bool
 }
 
 func NewHandler(
 	daemonTasksRepo repositories.DaemonTaskRepository,
+	serverRepo repositories.ServerRepository,
+	rbac base.RBAC,
 	responder base.Responder,
 	withOutput bool,
 ) *Handler {
 	return &Handler{
 		daemonTasksRepo: daemonTasksRepo,
+		serverFinder:    serversbase.NewServerFinder(serverRepo, rbac),
+		abilityChecker:  serversbase.NewAbilityChecker(rbac),
+		rbac:            rbac,
 		responder:       responder,
 		withOutput:      withOutput,
 	}
@@ -84,7 +96,63 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := newDaemonTaskOutputResponseFromDaemonTask(&tasks[0])
+	task := &tasks[0]
+
+	if err := h.checkAuthorization(r, session.User, task); err != nil {
+		h.responder.WriteError(ctx, rw, err)
+
+		return
+	}
+
+	response := newDaemonTaskOutputResponseFromDaemonTask(task)
 
 	h.responder.Write(ctx, rw, response)
+}
+
+func (h *Handler) checkAuthorization(r *http.Request, user *domain.User, task *domain.DaemonTask) error {
+	ctx := r.Context()
+
+	isAdmin, err := h.rbac.Can(ctx, user.ID, []domain.AbilityName{domain.AbilityNameAdminRolesPermissions})
+	if err != nil {
+		return errors.WithMessage(err, "failed to check admin permissions")
+	}
+
+	if isAdmin {
+		return nil
+	}
+
+	if task.ServerID == nil {
+		return api.WrapHTTPError(
+			errors.New("access denied: task has no associated server"),
+			http.StatusForbidden,
+		)
+	}
+
+	requiredAbilities, ok := daemontasksbase.DaemonTaskTypeAbilities[task.Task]
+	if !ok {
+		return api.WrapHTTPError(
+			errors.New("access denied: task type not allowed for regular users"),
+			http.StatusForbidden,
+		)
+	}
+
+	_, err = h.serverFinder.FindUserServer(ctx, user, *task.ServerID)
+	if err != nil {
+		if target, ok := stderrors.AsType[*api.Error](err); ok {
+			if target.HTTPStatus() == http.StatusNotFound {
+				return api.WrapHTTPError(
+					errors.New("access denied: no access to the server"),
+					http.StatusForbidden,
+				)
+			}
+		}
+
+		return errors.WithMessage(err, "failed to find server")
+	}
+
+	if err := h.abilityChecker.CheckOrError(ctx, user.ID, *task.ServerID, requiredAbilities); err != nil {
+		return err
+	}
+
+	return nil
 }
