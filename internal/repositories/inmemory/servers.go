@@ -964,17 +964,18 @@ func (r *ServerRepository) applyPagination(servers []domain.Server, pagination *
 	}
 
 	limit := pagination.Limit
-	if limit <= 0 {
+	if limit == 0 {
 		limit = filters.DefaultLimit
 	}
 
-	offset := max(pagination.Offset, 0)
+	offset := pagination.Offset
+	length := uint64(len(servers))
 
-	if offset >= len(servers) {
+	if offset >= length {
 		return []domain.Server{}
 	}
 
-	end := min(offset+limit, len(servers))
+	end := min(offset+limit, length)
 
 	return servers[offset:end]
 }

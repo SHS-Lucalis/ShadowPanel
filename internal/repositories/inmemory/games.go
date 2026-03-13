@@ -139,12 +139,17 @@ func (r *GameRepository) applyPagination(games []domain.Game, pagination *filter
 		return games
 	}
 
-	if pagination.Offset >= len(games) {
+	length := uint64(len(games))
+	if pagination.Offset >= length {
 		return []domain.Game{}
 	}
 
 	start := pagination.Offset
-	end := min(start+pagination.Limit, len(games))
+	limit := pagination.Limit
+	if limit == 0 {
+		limit = filters.DefaultLimit
+	}
+	end := min(start+limit, length)
 
 	return games[start:end]
 }

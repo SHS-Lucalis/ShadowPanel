@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"log/slog"
+	"unicode"
 
 	"github.com/pkg/errors"
 )
@@ -132,7 +133,9 @@ func (gmvd *GameModVarDefault) UnmarshalJSON(data []byte) error {
 	// Try to unmarshal as number
 	var num int
 	if err := json.Unmarshal(data, &num); err == nil {
-		*gmvd = GameModVarDefault(rune(num))
+		if num >= 0 && num <= unicode.MaxRune {
+			*gmvd = GameModVarDefault(rune(num))
+		}
 	}
 
 	return nil

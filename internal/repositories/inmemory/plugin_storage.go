@@ -443,17 +443,18 @@ func (r *PluginStorageRepository) applyPagination(
 	}
 
 	limit := pagination.Limit
-	if limit <= 0 {
+	if limit == 0 {
 		limit = filters.DefaultLimit
 	}
 
-	offset := max(pagination.Offset, 0)
+	offset := pagination.Offset
+	length := uint64(len(entries))
 
-	if offset >= len(entries) {
+	if offset >= length {
 		return []domain.PluginStorageEntry{}
 	}
 
-	end := min(offset+limit, len(entries))
+	end := min(offset+limit, length)
 
 	return entries[offset:end]
 }

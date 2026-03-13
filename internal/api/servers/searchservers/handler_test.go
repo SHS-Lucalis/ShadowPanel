@@ -462,7 +462,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				require.NoError(t, json.Unmarshal(w.Body.Bytes(), &servers))
 
 				// Extract actual server IDs
-				var actualServerIDs []uint
+				actualServerIDs := make([]uint, 0, len(servers))
 				for _, server := range servers {
 					actualServerIDs = append(actualServerIDs, server.ID)
 				}

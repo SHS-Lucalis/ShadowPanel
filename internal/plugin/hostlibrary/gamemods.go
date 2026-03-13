@@ -39,8 +39,8 @@ func (s *GameModsServiceImpl) FindGameMods(
 	var pagination *filters.Pagination
 	if req.Pagination != nil {
 		pagination = &filters.Pagination{
-			Limit:  int(req.Pagination.Limit),
-			Offset: int(req.Pagination.Offset),
+			Limit:  uint64(req.Pagination.Limit),
+			Offset: uint64(req.Pagination.Offset),
 		}
 	}
 

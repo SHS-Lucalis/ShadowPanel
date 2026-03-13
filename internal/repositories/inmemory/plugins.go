@@ -206,12 +206,17 @@ func (r *PluginRepository) applyPagination(plugins []domain.Plugin, pagination *
 		return plugins
 	}
 
-	if pagination.Offset >= len(plugins) {
+	length := uint64(len(plugins))
+	if pagination.Offset >= length {
 		return []domain.Plugin{}
 	}
 
 	start := pagination.Offset
-	end := min(start+pagination.Limit, len(plugins))
+	limit := pagination.Limit
+	if limit == 0 {
+		limit = filters.DefaultLimit
+	}
+	end := min(start+limit, length)
 
 	return plugins[start:end]
 }

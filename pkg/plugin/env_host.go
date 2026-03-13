@@ -120,6 +120,7 @@ func utf16LEToString(data []byte) string {
 			// Non-ASCII: use replacement character or proper UTF-16 decoding
 			codePoint := uint16(low) | uint16(high)<<8
 
+			//nolint:gosec // G115: bitwise operations guarantee byte range (0-255)
 			switch {
 			case codePoint < 0x80:
 				result = append(result, byte(codePoint))

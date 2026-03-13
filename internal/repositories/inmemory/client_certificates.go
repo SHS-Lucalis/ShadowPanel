@@ -216,17 +216,18 @@ func (r *ClientCertificateRepository) applyPagination(
 	}
 
 	limit := pagination.Limit
-	if limit <= 0 {
+	if limit == 0 {
 		limit = filters.DefaultLimit
 	}
 
-	offset := max(pagination.Offset, 0)
+	offset := pagination.Offset
+	length := uint64(len(certificates))
 
-	if offset >= len(certificates) {
+	if offset >= length {
 		return []domain.ClientCertificate{}
 	}
 
-	end := min(offset+limit, len(certificates))
+	end := min(offset+limit, length)
 
 	return certificates[offset:end]
 }

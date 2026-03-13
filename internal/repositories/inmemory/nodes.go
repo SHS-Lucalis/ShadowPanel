@@ -331,17 +331,18 @@ func (r *NodeRepository) applyPagination(nodes []domain.Node, pagination *filter
 	}
 
 	limit := pagination.Limit
-	if limit <= 0 {
+	if limit == 0 {
 		limit = filters.DefaultLimit
 	}
 
-	offset := max(pagination.Offset, 0)
+	offset := pagination.Offset
+	length := uint64(len(nodes))
 
-	if offset >= len(nodes) {
+	if offset >= length {
 		return []domain.Node{}
 	}
 
-	end := min(offset+limit, len(nodes))
+	end := min(offset+limit, length)
 
 	return nodes[offset:end]
 }

@@ -249,11 +249,16 @@ func (r *PersonalAccessTokenRepository) applyPagination(
 	}
 
 	start := pagination.Offset
-	if start > len(tokens) {
+	length := uint64(len(tokens))
+	if start > length {
 		return []domain.PersonalAccessToken{}
 	}
 
-	end := min(start+pagination.Limit, len(tokens))
+	limit := pagination.Limit
+	if limit == 0 {
+		limit = filters.DefaultLimit
+	}
+	end := min(start+limit, length)
 
 	return tokens[start:end]
 }

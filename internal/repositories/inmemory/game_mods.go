@@ -182,12 +182,17 @@ func (r *GameModRepository) applyPagination(
 		return gameMods
 	}
 
-	if pagination.Offset >= len(gameMods) {
+	length := uint64(len(gameMods))
+	if pagination.Offset >= length {
 		return []domain.GameMod{}
 	}
 
 	start := pagination.Offset
-	end := min(start+pagination.Limit, len(gameMods))
+	limit := pagination.Limit
+	if limit == 0 {
+		limit = filters.DefaultLimit
+	}
+	end := min(start+limit, length)
 
 	return gameMods[start:end]
 }

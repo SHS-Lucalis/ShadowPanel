@@ -1,8 +1,8 @@
 package filters
 
 const (
-	DefaultLimit  = 20
-	DefaultOffset = 0
+	DefaultLimit  uint64 = 20
+	DefaultOffset uint64 = 0
 )
 
 var DefaultPagination = &Pagination{
@@ -11,11 +11,11 @@ var DefaultPagination = &Pagination{
 }
 
 type Pagination struct {
-	Limit  int
-	Offset int
+	Limit  uint64
+	Offset uint64
 }
 
-func NewPagination(limit, offset int) *Pagination {
+func NewPagination(limit, offset uint64) *Pagination {
 	return &Pagination{
 		Limit:  limit,
 		Offset: offset,

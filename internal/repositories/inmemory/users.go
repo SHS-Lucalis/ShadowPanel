@@ -220,17 +220,18 @@ func (r *UserRepository) applyPagination(users []domain.User, pagination *filter
 	}
 
 	limit := pagination.Limit
-	if limit <= 0 {
+	if limit == 0 {
 		limit = filters.DefaultLimit
 	}
 
-	offset := max(pagination.Offset, 0)
+	offset := pagination.Offset
+	length := uint64(len(users))
 
-	if offset >= len(users) {
+	if offset >= length {
 		return []domain.User{}
 	}
 
-	end := min(offset+limit, len(users))
+	end := min(offset+limit, length)
 
 	return users[offset:end]
 }

@@ -865,7 +865,7 @@ func (s *PluginRepositorySuite) TestPluginRepositoryIntegration() {
 	})
 
 	s.T().Run("multiple_plugins_operations", func(t *testing.T) {
-		var pluginIDs []domain.Uint64ID
+		pluginIDs := make([]domain.Uint64ID, 0, 5)
 
 		for i := range 5 {
 			plugin := &domain.Plugin{

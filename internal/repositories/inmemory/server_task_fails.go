@@ -304,17 +304,18 @@ func (r *ServerTaskFailRepository) applyPagination(
 	}
 
 	limit := pagination.Limit
-	if limit <= 0 {
+	if limit == 0 {
 		limit = filters.DefaultLimit
 	}
 
-	offset := max(pagination.Offset, 0)
+	offset := pagination.Offset
+	length := uint64(len(fails))
 
-	if offset >= len(fails) {
+	if offset >= length {
 		return []domain.ServerTaskFail{}
 	}
 
-	end := min(offset+limit, len(fails))
+	end := min(offset+limit, length)
 
 	return fails[offset:end]
 }
