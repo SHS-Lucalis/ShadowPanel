@@ -1,6 +1,6 @@
 <script setup>
   import {ref, h} from 'vue'
-  import {alert, confirm} from '@/parts/dialogs'
+  import {confirm, errorNotification, notification} from '@/parts/dialogs'
   import {trans} from "@/i18n/i18n";
   import {useAuthStore} from "@/store/auth";
   import axios from "@/config/axios";
@@ -108,7 +108,7 @@
               watchTaskStopped = false;
               watchTask(command, taskId);
           }).catch(function (error) {
-            alert(error.response.data.message, function() {
+            errorNotification(error.response.data.message, function() {
                 location.reload();
             });
       });
@@ -199,16 +199,25 @@
       let content = "";
       if (detailedError) {
           content = () => [
-              h('div', [
+              h('div', {class: 'my-4'}, [
+                  h('span', {class: 'mr-2'}, trans('servers.task_see_log')),
                   h(
-                      'a',
-                      {href: "/admin/gdaemon_tasks/" + watchTaskData.id},
-                      trans('servers.task_see_log'),
+                      GButton,
+                      {color: 'black', size: 'small', onClick: () => { window.location.href = '/admin/gdaemon_tasks/' + watchTaskData.id; }},
+                      () => [
+                          h('span', {class: 'inline'}, trans('main.details')),
+                          h(GIcon, {name: 'chevron-double-right'})
+                      ]
                   )
               ])
           ];
       }
-      alert(errorMsg, () => { location.reload() }, content);
+
+      notification({
+        title: errorMsg,
+        content: content,
+        type: 'error'
+      }, () => { location.reload() })
 
       watchTaskStartedTime = 0;
       hideAdditionalInfo();
@@ -227,7 +236,11 @@
           msg = trans('servers.task_success_msg');
       }
 
-      alert(msg, () => { location.reload() });
+      notification({
+        title: trans('main.success'),
+        content: msg,
+        type: 'success'
+      }, () => { location.reload() })
 
       taskComplete();
   }

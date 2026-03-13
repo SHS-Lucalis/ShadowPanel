@@ -23,7 +23,7 @@ const errorNotification = function(error, callback) {
         title: title,
         content: content,
         type: 'error'
-    })
+    }, callback)
 }
 
 const parseErrorObject = function(error) {
