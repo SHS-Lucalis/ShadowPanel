@@ -392,7 +392,9 @@
     "copy": "Copy",
     "drag_file_here": "Drag file here",
     "or_click_to_select": "or click to select",
-    "details": "Details"
+    "details": "Details",
+    "select_all": "Select all",
+    "deselect_all": "Deselect all"
   },
   "modules": {
     "modules": "Modules",

@@ -100,6 +100,15 @@
       </tbody>
     </GTable>
 
+    <div class="flex justify-end gap-2 mb-4">
+      <GButton color="green" size="small" v-on:click="selectAllPermissions">
+        {{ trans('main.select_all') }}
+      </GButton>
+      <GButton color="red" size="small" v-on:click="deselectAllPermissions">
+        {{ trans('main.deselect_all') }}
+      </GButton>
+    </div>
+
     <div class="grid grid-cols-2 gap-x-20 mb-4">
       <div v-for="item in serverPermissions" class="grid grid-cols-4 gap-x-4 mb-6">
         <div class="col-span-3">{{ transWithPlugin(item.name) }}</div>
@@ -322,6 +331,18 @@ const onClickSavePermissions = () => {
   }).catch((error) => {
     errorNotification(error)
   });
+}
+
+const selectAllPermissions = () => {
+  serverPermissions.value.forEach(item => {
+    item.value = true
+  })
+}
+
+const deselectAllPermissions = () => {
+  serverPermissions.value.forEach(item => {
+    item.value = false
+  })
 }
 
 </script>

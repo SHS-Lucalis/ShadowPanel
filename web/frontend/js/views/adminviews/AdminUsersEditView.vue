@@ -12,11 +12,11 @@
 import { GBreadcrumbs } from "@gameap/ui"
 import UpdateUserForm from "./forms/UpdateUserForm.vue"
 import {computed, ref, onMounted} from "vue"
-import {trans} from "../../i18n/i18n"
-import {useUserStore} from "../../store/user"
+import {trans} from "@/i18n/i18n"
+import {useUserStore} from "@/store/user"
 import {useRoute, useRouter} from "vue-router"
 import {storeToRefs} from "pinia"
-import {errorNotification, notification} from "../../parts/dialogs"
+import {errorNotification, notification} from "@/parts/dialogs"
 
 const route = useRoute()
 const router = useRouter()

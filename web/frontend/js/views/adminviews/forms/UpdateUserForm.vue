@@ -126,7 +126,7 @@
 <script setup>
 import { GIcon, Loading } from "@gameap/ui"
 import {ref, defineModel, defineProps, defineEmits} from "vue"
-import {trans} from "../../../i18n/i18n";
+import {trans} from "@/i18n/i18n";
 import GButton from "../../../components/GButton.vue";
 import GFixedBottomBar from "../../../components/GFixedBottomBar.vue";
 import {
@@ -143,8 +143,9 @@ import {
   sameWithValidator,
   stringMinLengthValidator,
   ifNotEmptyValidator,
-} from "../../../parts/validators"
-import {useUserStore} from "../../../store/user"
+} from "@/parts/validators"
+import {useUserStore} from "@/store/user"
+import UserServerPrivileges from "@/components/servers/UserServerPrivileges.vue";
 
 const userStore = useUserStore()
 
