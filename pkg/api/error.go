@@ -40,6 +40,7 @@ func NewValidationError(message string) *Error {
 
 type WrappedError struct {
 	code  int
+	title string
 	cause error
 }
 
@@ -50,8 +51,20 @@ func WrapHTTPError(err error, code int) *WrappedError {
 	}
 }
 
+func WrapHTTPErrorWithTitle(err error, code int, title string) *WrappedError {
+	return &WrappedError{
+		code:  code,
+		title: title,
+		cause: err,
+	}
+}
+
 func (e *WrappedError) HTTPStatus() int {
 	return e.code
+}
+
+func (e *WrappedError) Title() string {
+	return e.title
 }
 
 func (e *WrappedError) Error() string {

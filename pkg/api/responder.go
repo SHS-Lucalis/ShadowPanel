@@ -15,6 +15,11 @@ type customStatusError interface {
 	HTTPStatus() int
 }
 
+type withTitleError interface {
+	error
+	Title() string
+}
+
 type withDescriptionError interface {
 	error
 	Description() string
@@ -22,6 +27,7 @@ type withDescriptionError interface {
 
 type response struct {
 	Status      string `json:"status"`
+	Title       string `json:"title,omitempty"`
 	Error       string `json:"error,omitempty"`
 	Message     string `json:"message,omitempty"`
 	Description string `json:"description,omitempty"`
@@ -37,11 +43,17 @@ func NewResponder() *Responder {
 
 func (r *Responder) WriteError(ctx context.Context, rw http.ResponseWriter, err error) {
 	code := http.StatusInternalServerError
+	title := ""
 	description := err.Error()
 
 	var errCustomStatus customStatusError
+	var errWithTitle withTitleError
 	var errWithDescription withDescriptionError
 	var errJSONSyntax *json.SyntaxError
+
+	if errors.As(err, &errWithTitle) {
+		title = errWithTitle.Title()
+	}
 
 	if errors.As(err, &errWithDescription) {
 		description = errWithDescription.Description()
@@ -74,7 +86,7 @@ func (r *Responder) WriteError(ctx context.Context, rw http.ResponseWriter, err 
 		}
 	}
 
-	WriteErr(rw, code, err)
+	WriteErrWithTitle(rw, code, title, err)
 }
 
 func (r *Responder) Write(_ context.Context, rw http.ResponseWriter, result any) {
@@ -90,6 +102,10 @@ func WriteJSON(rw http.ResponseWriter, result any) {
 }
 
 func WriteErr(rw http.ResponseWriter, code int, err error) {
+	WriteErrWithTitle(rw, code, "", err)
+}
+
+func WriteErrWithTitle(rw http.ResponseWriter, code int, title string, err error) {
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(code)
 
@@ -101,6 +117,7 @@ func WriteErr(rw http.ResponseWriter, code int, err error) {
 
 	resp := response{
 		Status:   "error",
+		Title:    title,
 		Error:    errMsg,
 		Message:  errMsg, // for backward compatibility
 		HTTPCode: code,   // for backward compatibility

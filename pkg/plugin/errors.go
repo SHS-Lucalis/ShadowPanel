@@ -1,6 +1,10 @@
 package plugin
 
-import "github.com/pkg/errors"
+import (
+	"strings"
+
+	"github.com/pkg/errors"
+)
 
 var (
 	ErrManagerClosed        = errors.New("plugin manager is closed")
@@ -13,3 +17,44 @@ var (
 	ErrMemoryOutOfRange     = errors.New("memory operation out of range")
 	ErrPluginReturnedError  = errors.New("plugin returned error")
 )
+
+var knownErrors = []error{
+	ErrAPIVersionMismatch,
+	ErrExportNotFound,
+	ErrMemoryOutOfRange,
+	ErrPluginReturnedError,
+	ErrUnexpectedExitCode,
+	ErrPluginAlreadyLoaded,
+	ErrPluginNotFound,
+}
+
+// SanitizeLoadError processes a plugin loading error and returns a sanitized version.
+// For known plugin errors, it returns the original error.
+// For WASM runtime errors with stack traces, it removes the Go runtime stack trace.
+// For other errors, it returns a generic message.
+func SanitizeLoadError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	for _, knownErr := range knownErrors {
+		if errors.Is(err, knownErr) {
+			return err
+		}
+	}
+
+	errMsg := err.Error()
+
+	if strings.Contains(errMsg, "wasm stack trace:") {
+		before, _, found := strings.Cut(errMsg, "Go runtime stack trace:")
+		if found {
+			sanitized := strings.TrimRight(before, "\n\t ")
+
+			return errors.New(sanitized)
+		}
+
+		return err
+	}
+
+	return errors.New("failed to load plugin")
+}

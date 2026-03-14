@@ -1,4 +1,4 @@
-package loaded
+package getloaded
 
 import (
 	"context"

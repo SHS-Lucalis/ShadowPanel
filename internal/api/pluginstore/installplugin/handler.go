@@ -11,9 +11,9 @@ import (
 	"github.com/gameap/gameap/internal/api/base"
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/files"
-	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/plugin"
 	"github.com/gameap/gameap/internal/repositories"
+	"github.com/gameap/gameap/internal/services/plugininstall"
 	"github.com/gameap/gameap/internal/services/pluginstore"
 	"github.com/gameap/gameap/pkg/api"
 	pkgplugin "github.com/gameap/gameap/pkg/plugin"
@@ -70,7 +70,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	dbID := pkgplugin.ParsePluginID(storePluginID)
 
-	if err := h.checkNotInstalled(ctx, dbID); err != nil {
+	if err := plugininstall.CheckNotInstalled(ctx, h.pluginRepo, dbID); err != nil {
 		h.responder.WriteError(ctx, rw, err)
 
 		return
@@ -140,18 +140,6 @@ func (h *Handler) parseInput(r *http.Request) (input, error) {
 	}
 
 	return inp, nil
-}
-
-func (h *Handler) checkNotInstalled(ctx context.Context, dbID domain.Uint64ID) error {
-	exists, err := h.pluginRepo.Exists(ctx, filters.FindPluginByIDs(dbID))
-	if err != nil {
-		return errors.WithMessage(err, "failed to check if plugin exists")
-	}
-	if exists {
-		return api.WrapHTTPError(errors.New("plugin already installed"), http.StatusConflict)
-	}
-
-	return nil
 }
 
 func (h *Handler) checkSubscription(ctx context.Context, details *pluginstore.PluginDetails) error {
@@ -257,6 +245,8 @@ func (h *Handler) buildPluginRecord(
 	filename string,
 	storePluginID string,
 ) *domain.Plugin {
+	source := h.storeService.BaseURL() + "/plugins/" + storePluginID
+
 	return &domain.Plugin{
 		ID:          dbID,
 		Name:        details.Name,
@@ -264,7 +254,7 @@ func (h *Handler) buildPluginRecord(
 		Description: details.Description,
 		Author:      details.Author.Username,
 		Filename:    new(filename),
-		Source:      new(h.storeService.BaseURL() + "/plugins/" + storePluginID),
+		Source:      new(source),
 		Status:      domain.PluginStatusActive,
 		InstalledAt: new(time.Now()),
 	}

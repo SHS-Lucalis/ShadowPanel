@@ -1,4 +1,4 @@
-package loaded_test
+package getloaded_test
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gameap/gameap/internal/api/admin/plugins/loaded"
+	"github.com/gameap/gameap/internal/api/plugins/getloaded"
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/pkg/api"
@@ -32,7 +32,7 @@ func (m *mockLoaderManager) GetPlugins() []*pkgplugin.LoadedPlugin {
 func TestLoaded_empty_list(t *testing.T) {
 	pluginRepo := inmemory.NewPluginRepository()
 
-	h := loaded.NewHandler(
+	h := getloaded.NewHandler(
 		&mockLoaderManager{
 			getPluginsFunc: func() []*pkgplugin.LoadedPlugin {
 				return nil
@@ -82,7 +82,7 @@ func TestLoaded_with_plugins(t *testing.T) {
 	err = pluginRepo.Save(context.Background(), plugin2)
 	require.NoError(t, err)
 
-	h := loaded.NewHandler(
+	h := getloaded.NewHandler(
 		&mockLoaderManager{
 			getPluginsFunc: func() []*pkgplugin.LoadedPlugin {
 				return []*pkgplugin.LoadedPlugin{
@@ -164,7 +164,7 @@ func TestLoaded_with_plugins(t *testing.T) {
 func TestLoaded_plugin_not_in_db(t *testing.T) {
 	pluginRepo := inmemory.NewPluginRepository()
 
-	h := loaded.NewHandler(
+	h := getloaded.NewHandler(
 		&mockLoaderManager{
 			getPluginsFunc: func() []*pkgplugin.LoadedPlugin {
 				return []*pkgplugin.LoadedPlugin{

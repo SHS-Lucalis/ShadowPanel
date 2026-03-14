@@ -7,9 +7,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	pluginsloaded "github.com/gameap/gameap/internal/api/admin/plugins/loaded"
-	pluginuploaddryrun "github.com/gameap/gameap/internal/api/admin/plugins/upload/dryrun"
-	pluginuploadinstall "github.com/gameap/gameap/internal/api/admin/plugins/upload/install"
 	"github.com/gameap/gameap/internal/api/auth/login"
 	"github.com/gameap/gameap/internal/api/clientcertificates/deleteclientcertificates"
 	"github.com/gameap/gameap/internal/api/clientcertificates/getclientcertificates"
@@ -75,13 +72,16 @@ import (
 	"github.com/gameap/gameap/internal/api/nodes/putnode"
 	"github.com/gameap/gameap/internal/api/plugins/getfrontendplugins"
 	"github.com/gameap/gameap/internal/api/plugins/getfrontendstyles"
+	pluginsloaded "github.com/gameap/gameap/internal/api/plugins/getloaded"
+	pluginuninstall "github.com/gameap/gameap/internal/api/plugins/uninstall"
+	pluginuploaddryrun "github.com/gameap/gameap/internal/api/plugins/upload/dryrun"
+	pluginuploadinstall "github.com/gameap/gameap/internal/api/plugins/upload/install"
 	"github.com/gameap/gameap/internal/api/pluginstore/getcategories"
 	"github.com/gameap/gameap/internal/api/pluginstore/getlabels"
 	"github.com/gameap/gameap/internal/api/pluginstore/getplugin"
 	"github.com/gameap/gameap/internal/api/pluginstore/getplugins"
 	"github.com/gameap/gameap/internal/api/pluginstore/getpluginversions"
 	"github.com/gameap/gameap/internal/api/pluginstore/installplugin"
-	"github.com/gameap/gameap/internal/api/pluginstore/uninstallplugin"
 	"github.com/gameap/gameap/internal/api/pluginstore/updateplugin"
 	"github.com/gameap/gameap/internal/api/profile/getprofile"
 	"github.com/gameap/gameap/internal/api/profile/putprofile"
@@ -1486,11 +1486,11 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 		},
 		{
 			Method: http.MethodDelete,
-			Path:   "/api/plugin-store/plugins/{id}",
-			Handler: uninstallplugin.NewHandler(
+			Path:   "/api/admin/plugins/{id}",
+			Handler: pluginuninstall.NewHandler(
 				c.PluginRepository(),
 				c.FileManager(),
-				c.PluginLoader(),
+				c.PluginManager(),
 				c.PluginsDir(),
 				c.Responder(),
 			),

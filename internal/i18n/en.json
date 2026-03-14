@@ -381,6 +381,7 @@
     "yes": "Yes",
     "no": "No",
     "more": "More",
+    "back": "Back",
     "autoscroll": "Autoscroll",
     "common_admin_error": "Contact an administrator",
     "error": "Error",
@@ -477,7 +478,9 @@
     "source_file": "Local file",
     "source_store": "Store",
     "install_from_file_success": "Plugin installed from file successfully",
-    "features": "Features"
+    "features": "Features",
+    "validation_failed_title": "Plugin Validation Failed",
+    "installation_failed_title": "Plugin Installation Failed"
   },
   "navbar": {
     "main": "Home",

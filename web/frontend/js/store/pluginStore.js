@@ -168,7 +168,7 @@ export const usePluginStoreStore = defineStore('pluginStore', () => {
     async function uninstallPlugin(id) {
         apiProcesses.value++
         try {
-            const response = await axios.delete(`/api/plugin-store/plugins/${id}`, {
+            const response = await axios.delete(`/api/admin/plugins/${id}`, {
                 params: withLang()
             })
             return response.data

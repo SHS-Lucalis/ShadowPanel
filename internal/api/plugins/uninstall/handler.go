@@ -1,23 +1,29 @@
-package uninstallplugin
+package uninstall
 
 import (
+	"context"
 	"net/http"
 	"path"
 
 	"github.com/gameap/gameap/internal/api/base"
+	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/files"
 	"github.com/gameap/gameap/internal/filters"
-	"github.com/gameap/gameap/internal/plugin"
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/pkg/api"
 	pkgplugin "github.com/gameap/gameap/pkg/plugin"
 	"github.com/pkg/errors"
 )
 
+type PluginManager interface {
+	GetPlugin(pluginID string) (*pkgplugin.LoadedPlugin, bool)
+	Unload(ctx context.Context, pluginID string) error
+}
+
 type Handler struct {
 	pluginRepo  repositories.PluginRepository
 	fileManager files.FileManager
-	loader      *plugin.Loader
+	manager     PluginManager
 	pluginsDir  string
 	responder   base.Responder
 }
@@ -25,14 +31,14 @@ type Handler struct {
 func NewHandler(
 	pluginRepo repositories.PluginRepository,
 	fileManager files.FileManager,
-	loader *plugin.Loader,
+	manager PluginManager,
 	pluginsDir string,
 	responder base.Responder,
 ) *Handler {
 	return &Handler{
 		pluginRepo:  pluginRepo,
 		fileManager: fileManager,
-		loader:      loader,
+		manager:     manager,
 		pluginsDir:  pluginsDir,
 		responder:   responder,
 	}
@@ -68,14 +74,10 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	pluginRecord := &installedPlugins[0]
 
-	if h.loader != nil {
-		if managerID, ok := h.loader.GetPluginManagerID(dbID); ok {
-			if err := h.loader.Unload(ctx, managerID); err != nil {
-				h.responder.WriteError(ctx, rw, errors.WithMessage(err, "failed to unload plugin"))
+	if err := h.unloadPlugin(ctx, dbID); err != nil {
+		h.responder.WriteError(ctx, rw, errors.WithMessage(err, "failed to unload plugin"))
 
-				return
-			}
-		}
+		return
 	}
 
 	filename := storePluginID + ".wasm"
@@ -100,4 +102,17 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	rw.WriteHeader(http.StatusNoContent)
+}
+
+func (h *Handler) unloadPlugin(ctx context.Context, dbID domain.Uint64ID) error {
+	if h.manager == nil {
+		return nil
+	}
+
+	managerID := pkgplugin.CompactPluginID(dbID)
+	if _, exists := h.manager.GetPlugin(managerID); !exists {
+		return nil
+	}
+
+	return h.manager.Unload(ctx, managerID)
 }

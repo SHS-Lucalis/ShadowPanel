@@ -382,6 +382,7 @@
     "yes": "Да",
     "no": "Нет",
     "more": "Больше",
+    "back": "Назад",
     "autoscroll": "Автопрокрутка",
     "common_admin_error": "Обратитесь к администратору",
     "error": "Ошибка",
@@ -478,7 +479,9 @@
     "source_file": "Локальный файл",
     "source_store": "Магазин",
     "install_from_file_success": "Плагин успешно установлен из файла",
-    "features": "Функции"
+    "features": "Функции",
+    "validation_failed_title": "Ошибка валидации плагина",
+    "installation_failed_title": "Ошибка установки плагина"
   },
   "navbar": {
     "main": "Главная",
