@@ -76,10 +76,10 @@
 <script setup>
 import { GBreadcrumbs, GDeletableList, Loading, GIcon, GDataTable, GModal, GEmpty, GGameIcon } from "@gameap/ui"
 import {computed, ref, onMounted, h, watch} from "vue"
-import {trans} from "../../i18n/i18n"
-import GButton from "../../components/GButton.vue"
-import {useGameListStore} from "../../store/gameList"
-import {errorNotification, notification} from "../../parts/dialogs"
+import {trans} from "@/i18n/i18n"
+import GButton from "@/components/GButton.vue"
+import {useGameListStore} from "@/store/gameList"
+import {errorNotification, notification} from "@/parts/dialogs"
 import {
   NButton,
   NInput,
@@ -352,17 +352,15 @@ const onCreateGame = () => {
     fields.engine = "unknown"
   }
 
-  gamesStore.createGame(fields).then(({id}) => {
+  gamesStore.createGame(fields).then((game) => {
     notification({
       content: trans('games.create_success_msg'),
       type: "success",
-    }, () => {
-      gamesStore.fetchGames()
     })
+    gameCreateModalEnabled.value = false
+    router.push({name: 'admin.games.edit', params: {code: fields.code}})
   }).catch((error) => {
     errorNotification(error)
-  }).finally(() => {
-    gameCreateModalEnabled.value = false
   })
 }
 
