@@ -3,6 +3,13 @@
 
   <n-tabs v-model:value="activeTab" type="line" animated @update:value="onTabChange">
     <n-tab-pane name="installed" :tab="trans('plugins.installed')">
+      <div class="flex justify-end mb-4">
+        <GButton color="blue" @click="showUploadModal">
+          <GIcon name="upload" class="mr-1" />
+          {{ trans('plugins.upload') }}
+        </GButton>
+      </div>
+
       <div v-if="updatablePlugins.length > 0" class="mb-6">
         <h3 class="text-lg font-semibold mb-2">{{ trans('plugins.updates_available') }}</h3>
         <GDataTable
@@ -68,6 +75,7 @@
           :plugin="currentPlugin"
           :versions="currentPluginVersions"
           :loading="loading"
+          :loaded-info="loadedPluginsMap[currentPlugin?.id]"
           @install="onInstall"
           @update="onUpdate"
           @uninstall="onUninstall"
@@ -79,6 +87,11 @@
   <SubscriptionModal
       v-model:show="subscriptionModalVisible"
       :plugin="subscriptionPlugin"
+  />
+
+  <UploadPluginModal
+      v-model:show="uploadModalVisible"
+      @installed="onPluginInstalled"
   />
 </template>
 
@@ -98,6 +111,7 @@ import {
 import { storeToRefs } from "pinia"
 import PluginDetailsModal from "./forms/PluginDetailsModal.vue"
 import SubscriptionModal from "./forms/SubscriptionModal.vue"
+import UploadPluginModal from "./forms/UploadPluginModal.vue"
 
 const pluginStore = usePluginStoreStore()
 
@@ -109,6 +123,7 @@ const {
   loading,
   installedPlugins,
   updatablePlugins,
+  loadedPlugins,
 } = storeToRefs(pluginStore)
 
 const breadcrumbs = computed(() => {
@@ -125,6 +140,17 @@ const storePage = ref(1)
 const isSmallScreen = ref(window.innerWidth < 768)
 const subscriptionModalVisible = ref(false)
 const subscriptionPlugin = ref(null)
+const uploadModalVisible = ref(false)
+
+const loadedPluginsMap = computed(() => {
+  const map = {}
+  for (const p of loadedPlugins.value) {
+    if (p.db_id) {
+      map[p.db_id] = p
+    }
+  }
+  return map
+})
 
 const handleResize = () => {
   isSmallScreen.value = window.innerWidth < 768
@@ -152,6 +178,34 @@ const createInstalledColumns = () => {
       title: trans('plugins.name'),
       key: 'name',
       render(row) {
+        const loadedInfo = loadedPluginsMap.value[row.id]
+        const badges = []
+
+        if (loadedInfo?.source_type) {
+          badges.push(h('span', {
+            class: loadedInfo.source_type === 'file'
+              ? 'px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+              : 'px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+          }, loadedInfo.source_type === 'file' ? trans('plugins.source_file') : trans('plugins.source_store')))
+        }
+
+        if (loadedInfo) {
+          badges.push(h('span', {
+            class: loadedInfo.enabled
+              ? 'px-2 py-0.5 text-xs font-medium rounded-full bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-300'
+              : 'px-2 py-0.5 text-xs font-medium rounded-full bg-stone-100 text-stone-800 dark:bg-stone-700 dark:text-stone-300'
+          }, loadedInfo.enabled ? trans('plugins.status_active') : trans('plugins.status_disabled')))
+        }
+
+        if (!isSmallScreen.value && row.labels?.length > 0) {
+          row.labels.forEach(label => {
+            badges.push(h('span', {
+              class: 'px-2 py-0.5 text-xs font-medium rounded-full' + (!label.color ? ' bg-stone-100 text-stone-800 dark:bg-stone-700 dark:text-stone-300' : ''),
+              style: label.color ? { backgroundColor: label.color, color: '#fff' } : {}
+            }, label.name))
+          })
+        }
+
         return h('div', {
           class: 'flex items-center gap-2 cursor-pointer hover:opacity-80',
           onClick: () => onShowDetails(row.id)
@@ -161,16 +215,7 @@ const createInstalledColumns = () => {
               : h(GIcon, { name: 'plugin', class: 'text-2xl text-stone-400' }),
           h('div', { class: 'flex flex-col' }, [
             h('span', { class: 'font-medium text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap' }, row.name),
-            !isSmallScreen.value && row.labels?.length > 0
-                ? h('div', { class: 'flex gap-1 mt-1' },
-                    row.labels.map(label =>
-                        h('span', {
-                          class: 'px-2 py-0.5 text-xs font-medium rounded-full' + (!label.color ? ' bg-stone-100 text-stone-800 dark:bg-stone-700 dark:text-stone-300' : ''),
-                          style: label.color ? { backgroundColor: label.color, color: '#fff' } : {}
-                        }, label.name)
-                    )
-                )
-                : null
+            badges.length > 0 ? h('div', { class: 'flex gap-1 mt-1 flex-wrap' }, badges) : null
           ])
         ])
       },
@@ -515,9 +560,20 @@ function onClickUninstall(id, name) {
 
 function refreshData() {
   pluginStore.fetchPlugins({ page: 1, perPage: 100 }).catch(errorNotification)
+  pluginStore.fetchLoadedPlugins().catch(errorNotification)
+}
+
+function showUploadModal() {
+  uploadModalVisible.value = true
+}
+
+function onPluginInstalled() {
+  uploadModalVisible.value = false
+  refreshData()
 }
 
 onMounted(() => {
   pluginStore.fetchPlugins({ page: 1, perPage: 100 }).catch(errorNotification)
+  pluginStore.fetchLoadedPlugins().catch(errorNotification)
 })
 </script>

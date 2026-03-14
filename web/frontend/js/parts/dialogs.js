@@ -1,4 +1,5 @@
 import {trans} from "@/i18n/i18n";
+import {h} from 'vue';
 
 const errorNotification = function(error, callback) {
     if (error.__CANCEL__) {
@@ -41,8 +42,13 @@ const parseErrorObject = function(error) {
             result.title = error.response.statusText
         }
 
-        if ('data' in error.response && error.response.data && typeof error.response.data === 'object' && 'message' in error.response.data) {
-            result.content = error.response.data.message
+        if ('data' in error.response && error.response.data && typeof error.response.data === 'object') {
+            if ('title' in error.response.data && error.response.data.title) {
+                result.title = trans(error.response.data.title)
+            }
+            if ('message' in error.response.data) {
+                result.content = error.response.data.message
+            }
         }
     } else {
         if ('title' in error) {
@@ -89,7 +95,9 @@ const notification = function(n, callback) {
         case 'error':
             window.$dialog.error({
                 title: notification.title,
-                content: notification.content,
+                content: () => h('div', {
+                    style: 'white-space: pre-wrap; word-break: break-word'
+                }, notification.content),
                 style: notification.style,
                 maskClosable: notification.maskClosable ?? true,
                 positiveText: trans('main.close'),
@@ -109,7 +117,9 @@ const notification = function(n, callback) {
         case 'success':
             window.$dialog.success({
                 title: notification.title,
-                content: notification.content,
+                content: () => h('div', {
+                    style: 'white-space: pre-wrap; word-break: break-word'
+                }, notification.content),
                 style: notification.style,
                 maskClosable: notification.maskClosable ?? true,
                 positiveText: trans('main.close'),
@@ -129,7 +139,9 @@ const notification = function(n, callback) {
         default:
             window.$dialog.info({
                 title: notification.title,
-                content: notification.content,
+                content: () => h('div', {
+                    style: 'white-space: pre-wrap; word-break: break-word'
+                }, notification.content),
                 style: notification.style,
                 maskClosable: notification.maskClosable ?? true,
                 positiveText: trans('main.close'),

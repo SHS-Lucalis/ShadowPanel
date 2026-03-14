@@ -466,7 +466,18 @@
     "subscription_required": "Subscription Required",
     "subscription_info": "This plugin requires an active subscription to install.",
     "subscription_expires": "Subscription expires",
-    "get_subscription": "Get Subscription"
+    "get_subscription": "Get Subscription",
+    "upload": "Upload",
+    "upload_plugin": "Upload Plugin",
+    "upload_hint": "Drop a .wasm file here or click to select",
+    "validate": "Validate",
+    "valid": "Valid",
+    "invalid": "Invalid",
+    "validation_errors": "Validation Errors",
+    "source_file": "Local file",
+    "source_store": "Store",
+    "install_from_file_success": "Plugin installed from file successfully",
+    "features": "Features"
   },
   "navbar": {
     "main": "Home",

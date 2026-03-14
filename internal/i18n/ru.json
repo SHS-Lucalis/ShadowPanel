@@ -467,7 +467,18 @@
     "subscription_required": "Требуется подписка",
     "subscription_info": "Для установки этого плагина требуется активная подписка.",
     "subscription_expires": "Подписка истекает",
-    "get_subscription": "Оформить подписку"
+    "get_subscription": "Оформить подписку",
+    "upload": "Загрузить",
+    "upload_plugin": "Загрузить плагин",
+    "upload_hint": "Перетащите .wasm файл сюда или нажмите для выбора",
+    "validate": "Проверить",
+    "valid": "Валидный",
+    "invalid": "Невалидный",
+    "validation_errors": "Ошибки валидации",
+    "source_file": "Локальный файл",
+    "source_store": "Магазин",
+    "install_from_file_success": "Плагин успешно установлен из файла",
+    "features": "Функции"
   },
   "navbar": {
     "main": "Главная",
