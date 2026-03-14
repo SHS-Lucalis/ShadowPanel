@@ -193,7 +193,18 @@ const copiedKey = ref(null)
 let copyTimeout = null
 
 const copyToClipboard = async (key, text) => {
-  await navigator.clipboard.writeText(text)
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    await navigator.clipboard.writeText(text)
+  } else {
+    const textArea = document.createElement('textarea')
+    textArea.value = text
+    textArea.style.position = 'fixed'
+    textArea.style.left = '-9999px'
+    document.body.appendChild(textArea)
+    textArea.select()
+    document.execCommand('copy')
+    document.body.removeChild(textArea)
+  }
 
   if (copyTimeout) {
     clearTimeout(copyTimeout)

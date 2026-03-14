@@ -86,7 +86,22 @@ const selectedDisk = computed(() => fm.selectedDisk)
 const selectedItem = computed(() => fm.selectedItems[0])
 
 function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
+    const copy = () => {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            return navigator.clipboard.writeText(text)
+        } else {
+            const textArea = document.createElement('textarea')
+            textArea.value = text
+            textArea.style.position = 'fixed'
+            textArea.style.left = '-9999px'
+            document.body.appendChild(textArea)
+            textArea.select()
+            document.execCommand('copy')
+            document.body.removeChild(textArea)
+            return Promise.resolve()
+        }
+    }
+    copy().then(() => {
         notification({
             content: lang.value.notifications.copyToClipboard,
             type: 'success',
