@@ -1,0 +1,93 @@
+type: object
+description: Plugin dry-run validation response
+properties:
+  id:
+    type: string
+    description: Plugin compact ID
+    example: "myplugin_com_example"
+  name:
+    type: string
+    description: Plugin name
+    example: "My Plugin"
+  version:
+    type: string
+    description: Plugin version
+    example: "1.0.0"
+  description:
+    type: string
+    description: Plugin description
+    example: "A plugin that does something useful"
+  author:
+    type: string
+    description: Plugin author
+    example: "Plugin Author"
+  api_version:
+    type: string
+    description: Plugin API version
+    example: "v1"
+  required_permissions:
+    type: array
+    description: Required permissions for the plugin
+    items:
+      type: string
+    example: ["manage_servers"]
+  http_routes:
+    type: array
+    description: HTTP routes exposed by the plugin
+    items:
+      type: object
+      properties:
+        path:
+          type: string
+          example: "/stats"
+        methods:
+          type: array
+          items:
+            type: string
+          example: ["GET"]
+  server_abilities:
+    type: array
+    description: Server abilities provided by the plugin
+    items:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "custom_restart"
+        title:
+          type: string
+          example: "Custom Restart"
+  subscribed_events:
+    type: array
+    description: Events the plugin subscribes to
+    items:
+      type: string
+    example: ["SERVER_POST_START"]
+  has_frontend_bundle:
+    type: boolean
+    description: Whether the plugin has a frontend bundle
+    example: true
+  frontend_bundle_size:
+    type: integer
+    description: Size of the frontend bundle in bytes
+    example: 12345
+  has_frontend_styles:
+    type: boolean
+    description: Whether the plugin has frontend styles
+    example: false
+  is_valid:
+    type: boolean
+    description: Whether the plugin is valid and can be installed
+    example: true
+  errors:
+    type: array
+    description: Validation errors if any
+    items:
+      type: string
+    example: []
+required:
+  - id
+  - name
+  - version
+  - is_valid
+  - errors

@@ -148,6 +148,12 @@ func (l *Loader) GetDBPluginID(managerID string) (domain.Uint64ID, bool) {
 	return 0, false
 }
 
+func (l *Loader) RegisterPluginID(dbID domain.Uint64ID, managerID string) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.pluginIDs[dbID] = managerID
+}
+
 func (l *Loader) resolvePluginFilename(plugin *domain.Plugin) string {
 	if plugin.Filename != nil && *plugin.Filename != "" {
 		return *plugin.Filename

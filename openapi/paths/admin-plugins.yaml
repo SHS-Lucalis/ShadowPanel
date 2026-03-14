@@ -1,0 +1,151 @@
+/api/admin/plugins/upload/dry-run:
+  post:
+    tags:
+      - PluginStore
+    summary: Validate WASM plugin (dry-run)
+    description: |
+      Uploads a WASM plugin file, validates it, and returns plugin information
+      without installing. The plugin is loaded temporarily and then unloaded.
+      Admin only.
+    operationId: dryRunPluginUpload
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required:
+              - file
+            properties:
+              file:
+                type: string
+                format: binary
+                description: WASM plugin file (max 100MB)
+    responses:
+      '200':
+        description: Plugin validation result
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/PluginDryRunResponse.yaml'
+      '400':
+        description: Invalid request or WASM file
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '422':
+        description: Plugin validation failed
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/admin/plugins/upload/install:
+  post:
+    tags:
+      - PluginStore
+    summary: Install WASM plugin from file
+    description: |
+      Uploads a WASM plugin file, saves it, and installs the plugin.
+      Admin only.
+    operationId: installPluginFromFile
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required:
+              - file
+            properties:
+              file:
+                type: string
+                format: binary
+                description: WASM plugin file (max 100MB)
+              config:
+                type: string
+                description: Optional JSON configuration for the plugin
+    responses:
+      '200':
+        description: Plugin installed successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/PluginInstallResponse.yaml'
+      '400':
+        description: Invalid request or WASM file
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '409':
+        description: Plugin already installed
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '422':
+        description: Plugin validation failed
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/admin/plugins/loaded:
+  get:
+    tags:
+      - PluginStore
+    summary: List loaded plugins
+    description: |
+      Returns all currently loaded plugins with their runtime status.
+      Admin only.
+    operationId: listLoadedPlugins
+    responses:
+      '200':
+        description: List of loaded plugins
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '../schemas/LoadedPlugin.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'

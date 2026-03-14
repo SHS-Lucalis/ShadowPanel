@@ -53,6 +53,10 @@ PluginLabel:
   $ref: './PluginLabel.yaml'
 PluginVersion:
   $ref: './PluginVersion.yaml'
+PluginDryRunResponse:
+  $ref: './PluginDryRunResponse.yaml'
+LoadedPlugin:
+  $ref: './LoadedPlugin.yaml'
 
 # Request schemas
 LoginRequest:

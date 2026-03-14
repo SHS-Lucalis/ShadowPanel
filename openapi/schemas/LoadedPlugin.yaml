@@ -1,0 +1,70 @@
+type: object
+description: Loaded plugin with runtime status
+properties:
+  id:
+    type: string
+    description: Plugin compact ID (from plugin info)
+    example: "myplugin_com_example"
+  db_id:
+    type: integer
+    description: Plugin database ID
+    example: 123456789
+  name:
+    type: string
+    description: Plugin name
+    example: "My Plugin"
+  version:
+    type: string
+    description: Plugin version
+    example: "1.0.0"
+  source:
+    type: string
+    description: Plugin source URL or file path
+    example: "file://123456789.wasm"
+  source_type:
+    type: string
+    description: Plugin source type
+    enum:
+      - file
+      - store
+    example: "file"
+  enabled:
+    type: boolean
+    description: Whether the plugin is enabled
+    example: true
+  http_routes:
+    type: array
+    description: HTTP routes exposed by the plugin
+    items:
+      type: object
+      properties:
+        path:
+          type: string
+          example: "/stats"
+        methods:
+          type: array
+          items:
+            type: string
+          example: ["GET"]
+  server_abilities:
+    type: array
+    description: Server abilities provided by the plugin
+    items:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "custom_restart"
+        title:
+          type: string
+          example: "Custom Restart"
+  has_frontend_bundle:
+    type: boolean
+    description: Whether the plugin has a frontend bundle
+    example: true
+required:
+  - id
+  - name
+  - version
+  - source_type
+  - enabled

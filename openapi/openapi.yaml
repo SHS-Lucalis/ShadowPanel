@@ -353,6 +353,14 @@ paths:
   /api/plugin-store/plugins/{id}/update:
     $ref: './paths/plugin-store.yaml#/~1api~1plugin-store~1plugins~1{id}~1update'
 
+  # Admin Plugins
+  /api/admin/plugins/upload/dry-run:
+    $ref: './paths/admin-plugins.yaml#/~1api~1admin~1plugins~1upload~1dry-run'
+  /api/admin/plugins/upload/install:
+    $ref: './paths/admin-plugins.yaml#/~1api~1admin~1plugins~1upload~1install'
+  /api/admin/plugins/loaded:
+    $ref: './paths/admin-plugins.yaml#/~1api~1admin~1plugins~1loaded'
+
   # Daemon Setup
   /gdaemon/setup/{token}:
     $ref: './paths/gdaemon-setup.yaml#/~1gdaemon~1setup~1{token}'
