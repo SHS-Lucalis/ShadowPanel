@@ -4,6 +4,7 @@
       v-else
       label-placement="left"
       label-width="auto"
+      class="settings-form"
       ref="settingsRef"
       :model="settingsForm"
   >
@@ -99,3 +100,9 @@ function fetchSettings() {
   })
 }
 </script>
+
+<style scoped>
+.settings-form :deep(.n-form-item-label) {
+  max-width: 60%;
+}
+</style>
