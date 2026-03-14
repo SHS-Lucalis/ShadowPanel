@@ -114,7 +114,14 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.tryLoadPlugin(ctx, pluginRecord, filename)
+	if err := h.tryLoadPlugin(ctx, pluginRecord, filename); err != nil {
+		h.responder.WriteError(ctx, rw, api.WrapHTTPError(
+			errors.WithMessage(err, "plugin installed but failed to load"),
+			http.StatusUnprocessableEntity,
+		))
+
+		return
+	}
 
 	h.responder.Write(ctx, rw, newUpdateResponse(pluginRecord))
 }
@@ -227,9 +234,9 @@ func (h *Handler) updatePluginRecord(record *domain.Plugin, version *pluginstore
 	record.UpdatedAt = new(time.Now())
 }
 
-func (h *Handler) tryLoadPlugin(ctx context.Context, pluginRecord *domain.Plugin, filename string) {
+func (h *Handler) tryLoadPlugin(ctx context.Context, pluginRecord *domain.Plugin, filename string) error {
 	if h.loader == nil {
-		return
+		return nil
 	}
 	if _, err := h.loader.Load(ctx, filename); err != nil {
 		slog.ErrorContext(
@@ -241,5 +248,9 @@ func (h *Handler) tryLoadPlugin(ctx context.Context, pluginRecord *domain.Plugin
 
 		pluginRecord.Status = domain.PluginStatusError
 		_ = h.pluginRepo.Save(ctx, pluginRecord)
+
+		return errors.WithMessage(err, "failed to load plugin")
 	}
+
+	return nil
 }

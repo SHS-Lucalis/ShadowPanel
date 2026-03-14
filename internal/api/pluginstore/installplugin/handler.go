@@ -54,6 +54,13 @@ type input struct {
 func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
+	slog.InfoContext(ctx, "installplugin handler called",
+		slog.String("method", r.Method),
+		slog.String("url", r.URL.String()),
+		slog.String("request_uri", r.RequestURI),
+		slog.String("remote_addr", r.RemoteAddr),
+	)
+
 	storePluginID, err := api.NewInputReader(r).ReadString("id")
 	if err != nil {
 		h.responder.WriteError(ctx, rw, errors.WithMessage(err, "failed to read plugin ID"))
@@ -123,7 +130,14 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.tryLoadPlugin(ctx, pluginRecord, filename)
+	if err := h.tryLoadPlugin(ctx, pluginRecord, filename); err != nil {
+		h.responder.WriteError(ctx, rw, api.WrapHTTPError(
+			errors.WithMessage(err, "plugin installed but failed to load"),
+			http.StatusUnprocessableEntity,
+		))
+
+		return
+	}
 
 	h.responder.Write(ctx, rw, newInstallResponse(pluginRecord))
 }
@@ -260,9 +274,9 @@ func (h *Handler) buildPluginRecord(
 	}
 }
 
-func (h *Handler) tryLoadPlugin(ctx context.Context, pluginRecord *domain.Plugin, filename string) {
+func (h *Handler) tryLoadPlugin(ctx context.Context, pluginRecord *domain.Plugin, filename string) error {
 	if h.loader == nil {
-		return
+		return nil
 	}
 	if _, err := h.loader.Load(ctx, filename); err != nil {
 		slog.ErrorContext(
@@ -274,5 +288,9 @@ func (h *Handler) tryLoadPlugin(ctx context.Context, pluginRecord *domain.Plugin
 
 		pluginRecord.Status = domain.PluginStatusError
 		_ = h.pluginRepo.Save(ctx, pluginRecord)
+
+		return errors.WithMessage(err, "failed to load plugin")
 	}
+
+	return nil
 }

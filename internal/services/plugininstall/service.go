@@ -56,9 +56,9 @@ func TryLoadPlugin(
 	repo repositories.PluginRepository,
 	pluginRecord *domain.Plugin,
 	filename string,
-) {
+) error {
 	if loader == nil {
-		return
+		return nil
 	}
 
 	loaded, err := loader.LoadWithID(ctx, filename, uint64(pluginRecord.ID))
@@ -70,8 +70,10 @@ func TryLoadPlugin(
 		pluginRecord.Status = domain.PluginStatusError
 		_ = repo.Save(ctx, pluginRecord)
 
-		return
+		return errors.WithMessage(err, "failed to load plugin")
 	}
 
 	loader.RegisterPluginID(pluginRecord.ID, loaded.Info.Id)
+
+	return nil
 }
