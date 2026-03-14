@@ -5,10 +5,6 @@ properties:
     type: string
     description: Plugin compact ID (from plugin info)
     example: "myplugin_com_example"
-  db_id:
-    type: integer
-    description: Plugin database ID
-    example: 123456789
   name:
     type: string
     description: Plugin name

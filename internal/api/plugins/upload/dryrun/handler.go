@@ -2,6 +2,8 @@ package dryrun
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"log/slog"
 	"net/http"
 
@@ -53,9 +55,12 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	loaded, err := h.manager.Load(ctx, wasmBytes, nil, 0)
 	if err != nil {
+		wasmHash := sha256.Sum256(wasmBytes)
+
 		slog.WarnContext(
 			ctx,
 			"failed to load wasm file",
+			slog.String("wasm_hash", hex.EncodeToString(wasmHash[:])),
 			slog.String("error", err.Error()),
 		)
 

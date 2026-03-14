@@ -2,6 +2,8 @@ package plugin
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"log/slog"
 	"path"
 	"strconv"
@@ -107,10 +109,13 @@ func (l *Loader) LoadWithID(ctx context.Context, filename string, pluginID uint6
 		return nil, errors.WithMessage(err, "failed to load plugin")
 	}
 
+	wasmHash := sha256.Sum256(wasmBytes)
+
 	attr := []slog.Attr{
 		{Key: "id", Value: slog.StringValue(loaded.Info.Id)},
 		{Key: "name", Value: slog.StringValue(loaded.Info.Name)},
 		{Key: "version", Value: slog.StringValue(loaded.Info.Version)},
+		{Key: "wasm_hash", Value: slog.StringValue(hex.EncodeToString(wasmHash[:]))},
 		{Key: "description", Value: slog.StringValue(loaded.Info.Description)},
 		{Key: "author", Value: slog.StringValue(loaded.Info.Author)},
 		{Key: "api_version", Value: slog.StringValue(loaded.Info.ApiVersion)},

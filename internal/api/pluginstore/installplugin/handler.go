@@ -2,6 +2,8 @@ package installplugin
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -47,6 +49,8 @@ func NewHandler(
 	}
 }
 
+const extendedWriteDeadline = 5 * time.Minute
+
 type input struct {
 	Version string `json:"version"`
 }
@@ -54,12 +58,10 @@ type input struct {
 func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	slog.InfoContext(ctx, "installplugin handler called",
-		slog.String("method", r.Method),
-		slog.String("url", r.URL.String()),
-		slog.String("request_uri", r.RequestURI),
-		slog.String("remote_addr", r.RemoteAddr),
-	)
+	rc := http.NewResponseController(rw)
+	if err := rc.SetWriteDeadline(time.Now().Add(extendedWriteDeadline)); err != nil {
+		slog.WarnContext(ctx, "failed to extend write deadline", slog.String("error", err.Error()))
+	}
 
 	storePluginID, err := api.NewInputReader(r).ReadString("id")
 	if err != nil {
@@ -131,6 +133,14 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.tryLoadPlugin(ctx, pluginRecord, filename); err != nil {
+		wasmHash := sha256.Sum256(wasmBytes)
+
+		slog.WarnContext(
+			ctx,
+			"failed to load wasm file",
+			slog.String("wasm_hash", hex.EncodeToString(wasmHash[:])),
+			slog.String("error", err.Error()),
+		)
 		h.responder.WriteError(ctx, rw, api.WrapHTTPError(
 			errors.WithMessage(err, "plugin installed but failed to load"),
 			http.StatusUnprocessableEntity,

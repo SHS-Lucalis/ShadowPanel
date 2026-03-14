@@ -424,6 +424,7 @@
     "installed": "Installed",
     "store": "Store",
     "updates_available": "Updates Available",
+    "update_available": "Update Available",
     "already_installed": "Installed",
     "name": "Plugin name",
     "version": "Version",

@@ -47,12 +47,19 @@ func NewHandler(
 	}
 }
 
+const extendedWriteDeadline = 5 * time.Minute
+
 type input struct {
 	Version string `json:"version"`
 }
 
 func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+
+	rc := http.NewResponseController(rw)
+	if err := rc.SetWriteDeadline(time.Now().Add(extendedWriteDeadline)); err != nil {
+		slog.WarnContext(ctx, "failed to extend write deadline", slog.String("error", err.Error()))
+	}
 
 	storePluginID, err := api.NewInputReader(r).ReadString("id")
 	if err != nil {

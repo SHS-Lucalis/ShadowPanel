@@ -206,5 +206,4 @@ func TestLoaded_plugin_not_in_db(t *testing.T) {
 	assert.Equal(t, "Autoload Plugin", pluginData["name"])
 	assert.Equal(t, "1.0.0", pluginData["version"])
 	assert.Equal(t, "store", pluginData["source_type"])
-	assert.Nil(t, pluginData["db_id"])
 }

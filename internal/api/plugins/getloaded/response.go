@@ -3,7 +3,6 @@ package getloaded
 import (
 	"strings"
 
-	"github.com/gameap/gameap/internal/domain"
 	pkgplugin "github.com/gameap/gameap/pkg/plugin"
 	"github.com/gameap/gameap/pkg/plugin/proto"
 )
@@ -20,7 +19,6 @@ type serverAbilityResponse struct {
 
 type loadedPluginResponse struct {
 	ID                string                  `json:"id"`
-	DBID              *domain.Uint64ID        `json:"db_id,omitempty"`
 	Name              string                  `json:"name"`
 	Version           string                  `json:"version"`
 	Source            string                  `json:"source,omitempty"`
@@ -37,12 +35,10 @@ type listResponse struct {
 
 func newLoadedPluginResponse(
 	loaded *pkgplugin.LoadedPlugin,
-	dbID *domain.Uint64ID,
 	source string,
 ) *loadedPluginResponse {
 	resp := &loadedPluginResponse{
 		ID:                pkgplugin.CompactPluginID(pkgplugin.ParsePluginID(loaded.Info.Id)),
-		DBID:              dbID,
 		Name:              loaded.Info.Name,
 		Version:           loaded.Info.Version,
 		Source:            source,

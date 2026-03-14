@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"path"
 	"strconv"
+	"time"
 
 	"github.com/gameap/gameap/internal/api/base"
 	"github.com/gameap/gameap/internal/files"
@@ -16,6 +17,8 @@ import (
 	pkgplugin "github.com/gameap/gameap/pkg/plugin"
 	"github.com/pkg/errors"
 )
+
+const extendedWriteDeadline = 5 * time.Minute
 
 type LoaderManager interface {
 	Load(ctx context.Context, wasmBytes []byte, config map[string]string, pluginID uint64) (*pkgplugin.LoadedPlugin, error)
@@ -51,6 +54,11 @@ func NewHandler(
 
 func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+
+	rc := http.NewResponseController(rw)
+	if err := rc.SetWriteDeadline(time.Now().Add(extendedWriteDeadline)); err != nil {
+		slog.WarnContext(ctx, "failed to extend write deadline", slog.String("error", err.Error()))
+	}
 
 	wasmBytes, err := plugininstall.ReadWASMFromMultipart(rw, r)
 	if err != nil {

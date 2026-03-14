@@ -3,30 +3,16 @@
 
   <n-tabs v-model:value="activeTab" type="line" animated @update:value="onTabChange">
     <n-tab-pane name="installed" :tab="trans('plugins.installed')">
-      <div class="flex justify-end mb-4">
+      <div class="flex mb-4">
         <GButton color="blue" @click="showUploadModal">
           <GIcon name="upload" class="mr-1" />
           {{ trans('plugins.upload') }}
         </GButton>
       </div>
 
-      <div v-if="updatablePlugins.length > 0" class="mb-6">
-        <h3 class="text-lg font-semibold mb-2">{{ trans('plugins.updates_available') }}</h3>
-        <GDataTable
-            :columns="installedColumns"
-            :data="updatablePlugins"
-            :loading="loading"
-            size="small"
-        >
-          <template #loading>
-            <Loading />
-          </template>
-        </GDataTable>
-      </div>
-
       <GDataTable
           :columns="installedColumns"
-          :data="installedPluginsSorted"
+          :data="enrichedInstalledPlugins"
           :loading="loading"
           :pagination="installedPagination"
       >
@@ -75,7 +61,7 @@
           :plugin="currentPlugin"
           :versions="currentPluginVersions"
           :loading="loading"
-          :loaded-info="loadedPluginsMap[currentPlugin?.id]"
+          :loaded-info="currentLoadedInfo"
           @install="onInstall"
           @update="onUpdate"
           @uninstall="onUninstall"
@@ -121,8 +107,7 @@ const {
   currentPlugin,
   currentPluginVersions,
   loading,
-  installedPlugins,
-  updatablePlugins,
+  enrichedInstalledPlugins,
   loadedPlugins,
 } = storeToRefs(pluginStore)
 
@@ -142,15 +127,6 @@ const subscriptionModalVisible = ref(false)
 const subscriptionPlugin = ref(null)
 const uploadModalVisible = ref(false)
 
-const loadedPluginsMap = computed(() => {
-  const map = {}
-  for (const p of loadedPlugins.value) {
-    if (p.db_id) {
-      map[p.db_id] = p
-    }
-  }
-  return map
-})
 
 const handleResize = () => {
   isSmallScreen.value = window.innerWidth < 768
@@ -164,8 +140,9 @@ onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
 })
 
-const installedPluginsSorted = computed(() => {
-  return [...installedPlugins.value].sort((a, b) => a.name.localeCompare(b.name))
+const currentLoadedInfo = computed(() => {
+  if (!currentPlugin.value) return null
+  return loadedPlugins.value.find(p => p.id === currentPlugin.value.id) || null
 })
 
 const installedPagination = {
@@ -178,23 +155,24 @@ const createInstalledColumns = () => {
       title: trans('plugins.name'),
       key: 'name',
       render(row) {
-        const loadedInfo = loadedPluginsMap.value[row.id]
         const badges = []
 
-        if (loadedInfo?.source_type) {
-          badges.push(h('span', {
-            class: loadedInfo.source_type === 'file'
-              ? 'px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
-              : 'px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-          }, loadedInfo.source_type === 'file' ? trans('plugins.source_file') : trans('plugins.source_store')))
-        }
+        badges.push(h('span', {
+          class: row.isFilePlugin
+            ? 'px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+            : 'px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+        }, row.isFilePlugin ? trans('plugins.source_file') : trans('plugins.source_store')))
 
-        if (loadedInfo) {
+        badges.push(h('span', {
+          class: row.enabled
+            ? 'px-2 py-0.5 text-xs font-medium rounded-full bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-300'
+            : 'px-2 py-0.5 text-xs font-medium rounded-full bg-stone-100 text-stone-800 dark:bg-stone-700 dark:text-stone-300'
+        }, row.enabled ? trans('plugins.status_active') : trans('plugins.status_disabled')))
+
+        if (row.hasUpdate) {
           badges.push(h('span', {
-            class: loadedInfo.enabled
-              ? 'px-2 py-0.5 text-xs font-medium rounded-full bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-300'
-              : 'px-2 py-0.5 text-xs font-medium rounded-full bg-stone-100 text-stone-800 dark:bg-stone-700 dark:text-stone-300'
-          }, loadedInfo.enabled ? trans('plugins.status_active') : trans('plugins.status_disabled')))
+            class: 'px-2 py-0.5 text-xs font-medium rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300'
+          }, trans('plugins.update_available')))
         }
 
         if (!isSmallScreen.value && row.labels?.length > 0) {
@@ -208,7 +186,7 @@ const createInstalledColumns = () => {
 
         return h('div', {
           class: 'flex items-center gap-2 cursor-pointer hover:opacity-80',
-          onClick: () => onShowDetails(row.id)
+          onClick: () => onShowDetails(row)
         }, [
           row.icon_url
               ? h('img', { src: row.icon_url, class: 'w-8 h-8 rounded', alt: row.name })
@@ -225,7 +203,7 @@ const createInstalledColumns = () => {
       key: 'category',
       width: 120,
       render(row) {
-        return row.category?.name || ''
+        return row.category?.name || '-'
       }
     },
     {
@@ -233,6 +211,9 @@ const createInstalledColumns = () => {
       key: 'rating_avg',
       width: 140,
       render(row) {
+        if (row.isFilePlugin) {
+          return '-'
+        }
         return h('div', { class: 'flex items-center gap-1' }, [
           h('span', { class: 'text-orange-500' }, renderStars(row.rating_avg)),
           h('span', { class: 'text-sm text-stone-500' }, `(${row.rating_count || 0})`)
@@ -244,32 +225,44 @@ const createInstalledColumns = () => {
       key: 'download_count',
       width: 100,
       render(row) {
+        if (row.isFilePlugin) {
+          return '-'
+        }
         return formatNumber(row.download_count)
       }
     },
     {
       title: trans('plugins.version'),
       key: 'installed_version',
-      width: 100,
+      width: 130,
+      render(row) {
+        if (row.hasUpdate) {
+          return h('span', {}, [
+            row.installed_version,
+            h('span', { class: 'text-stone-400 mx-1' }, '→'),
+            h('span', { class: 'text-orange-500 font-medium' }, row.latest_version)
+          ])
+        }
+        return row.installed_version
+      }
     },
     {
       title: trans('main.actions'),
       key: 'actions',
       width: isSmallScreen.value ? 80 : 180,
       render(row) {
-        const isUpdatable = row.installed_version && row.latest_version && row.installed_version !== row.latest_version
         return h('div', { class: 'flex gap-1' }, [
-          isUpdatable
+          row.hasUpdate
               ? h(GButton, {
                 color: 'blue',
                 size: 'small',
-                onClick: () => onShowDetailsForUpdate(row.id)
+                onClick: () => onShowDetailsForUpdate(row)
               }, () => [h(GIcon, { name: 'sync' })])
               : null,
           h(GButton, {
             color: 'red',
             size: 'small',
-            onClick: () => onClickUninstall(row.id, row.name)
+            onClick: () => onClickUninstall(row)
           }, () => isSmallScreen.value
               ? [h(GIcon, { name: 'close' })]
               : [h(GIcon, { name: 'close', class: 'mr-1' }), trans('plugins.uninstall')]),
@@ -287,7 +280,7 @@ const createStoreColumns = () => {
       render(row) {
         return h('div', {
           class: 'flex items-center gap-2 cursor-pointer hover:opacity-80',
-          onClick: () => onShowDetails(row.id)
+          onClick: () => onShowDetailsById(row.id)
         }, [
           row.icon_url
               ? h('img', { src: row.icon_url, class: 'w-8 h-8 rounded', alt: row.name })
@@ -454,18 +447,28 @@ function fetchStorePlugins() {
   }).catch(errorNotification)
 }
 
-function onShowDetails(id) {
+function onShowDetails(row) {
+  if (row.isStorePlugin) {
+    pluginStore.fetchPluginDetails(row.id).catch(errorNotification)
+    pluginStore.fetchPluginVersions(row.id).catch(errorNotification)
+  } else {
+    pluginStore.setCurrentPluginFromLoaded(row)
+  }
+  detailsModalVisible.value = true
+}
+
+function onShowDetailsById(id) {
   pluginStore.fetchPluginDetails(id).catch(errorNotification)
   pluginStore.fetchPluginVersions(id).catch(errorNotification)
   detailsModalVisible.value = true
 }
 
 function onShowDetailsForInstall(id) {
-  onShowDetails(id)
+  onShowDetailsById(id)
 }
 
-function onShowDetailsForUpdate(id) {
-  onShowDetails(id)
+function onShowDetailsForUpdate(row) {
+  onShowDetails(row)
 }
 
 function closeDetailsModal() {
@@ -475,16 +478,16 @@ function closeDetailsModal() {
 
 function onInstall(version) {
   if (!currentPlugin.value) return
+  if (actionLoading.value) return
 
   actionLoading.value = true
   pluginStore.installPlugin(currentPlugin.value.id, version)
       .then(() => {
+        closeDetailsModal()
         notification({
           content: trans('plugins.install_success_msg'),
           type: 'success'
-        })
-        closeDetailsModal()
-        refreshData()
+        }, () => window.location.reload())
       })
       .catch(errorNotification)
       .finally(() => {
@@ -494,16 +497,16 @@ function onInstall(version) {
 
 function onUpdate(version) {
   if (!currentPlugin.value) return
+  if (actionLoading.value) return
 
   actionLoading.value = true
   pluginStore.updatePlugin(currentPlugin.value.id, version)
       .then(() => {
+        closeDetailsModal()
         notification({
           content: trans('plugins.update_success_msg'),
           type: 'success'
-        })
-        closeDetailsModal()
-        refreshData()
+        }, () => window.location.reload())
       })
       .catch(errorNotification)
       .finally(() => {
@@ -523,12 +526,11 @@ function onUninstall() {
       actionLoading.value = true
       pluginStore.uninstallPlugin(currentPlugin.value.id)
           .then(() => {
+            closeDetailsModal()
             notification({
               content: trans('plugins.uninstall_success_msg'),
               type: 'success'
-            })
-            closeDetailsModal()
-            refreshData()
+            }, () => window.location.reload())
           })
           .catch(errorNotification)
           .finally(() => {
@@ -538,20 +540,19 @@ function onUninstall() {
   })
 }
 
-function onClickUninstall(id, name) {
+function onClickUninstall(row) {
   window.$dialog.warning({
     title: trans('plugins.uninstall_confirm_msg'),
     positiveText: trans('main.yes'),
     negativeText: trans('main.no'),
     closable: false,
     onPositiveClick: () => {
-      pluginStore.uninstallPlugin(id)
+      pluginStore.uninstallPlugin(row.id)
           .then(() => {
             notification({
               content: trans('plugins.uninstall_success_msg'),
               type: 'success'
-            })
-            refreshData()
+            }, () => window.location.reload())
           })
           .catch(errorNotification)
     }
@@ -569,7 +570,10 @@ function showUploadModal() {
 
 function onPluginInstalled() {
   uploadModalVisible.value = false
-  refreshData()
+  notification({
+    content: trans('plugins.install_success_msg'),
+    type: 'success'
+  }, () => window.location.reload())
 }
 
 onMounted(() => {

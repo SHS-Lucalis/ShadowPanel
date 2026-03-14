@@ -20,9 +20,17 @@ npm run build
 
 ### 2. Build WASM Plugin
 
+**Using TinyGo** (smaller binary, ~1MB):
 ```bash
 tinygo build -o server-logger.wasm -target=wasip1 -buildmode=c-shared -scheduler=asyncify .
 ```
+
+**Using standard Go compiler** (larger binary, ~12MB):
+```bash
+GOOS=wasip1 GOARCH=wasm go build -o server-logger.wasm -buildmode=c-shared .
+```
+
+Use the standard Go compiler if TinyGo doesn't support your Go version.
 
 ## HTTP API Endpoints
 

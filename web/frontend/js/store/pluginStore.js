@@ -41,6 +41,42 @@ export const usePluginStoreStore = defineStore('pluginStore', () => {
         )
     )
 
+    const enrichedInstalledPlugins = computed(() => {
+        const storePluginsMap = new Map()
+        for (const p of plugins.value) {
+            storePluginsMap.set(p.id, p)
+        }
+
+        return loadedPlugins.value.map(loaded => {
+            const isStorePlugin = loaded.source_type === 'store'
+            const storePlugin = isStorePlugin
+                ? storePluginsMap.get(loaded.id)
+                : null
+
+            return {
+                id: loaded.id,
+                name: loaded.name,
+                version: loaded.version,
+                source: loaded.source,
+                source_type: loaded.source_type,
+                enabled: loaded.enabled,
+
+                icon_url: storePlugin?.icon_url || null,
+                category: storePlugin?.category || null,
+                labels: storePlugin?.labels || [],
+                rating_avg: storePlugin?.rating_avg ?? null,
+                rating_count: storePlugin?.rating_count ?? null,
+                download_count: storePlugin?.download_count ?? null,
+                latest_version: storePlugin?.latest_version || null,
+                installed_version: loaded.version,
+
+                hasUpdate: storePlugin ? loaded.version !== storePlugin.latest_version : false,
+                isStorePlugin,
+                isFilePlugin: !isStorePlugin,
+            }
+        }).sort((a, b) => a.name.localeCompare(b.name))
+    })
+
     const categoryOptions = computed(() =>
         categories.value.map(c => ({
             label: c.name,
@@ -184,6 +220,18 @@ export const usePluginStoreStore = defineStore('pluginStore', () => {
         versionsLastPage.value = 1
     }
 
+    function setCurrentPluginFromLoaded(loadedPlugin) {
+        currentPlugin.value = {
+            id: loadedPlugin.id,
+            name: loadedPlugin.name,
+            installed: true,
+            installed_version: loadedPlugin.version,
+            latest_version: loadedPlugin.latest_version || null,
+            source_type: loadedPlugin.source_type,
+        }
+        currentPluginVersions.value = []
+    }
+
     async function fetchLoadedPlugins() {
         apiProcesses.value++
         try {
@@ -253,6 +301,7 @@ export const usePluginStoreStore = defineStore('pluginStore', () => {
         loading,
         installedPlugins,
         updatablePlugins,
+        enrichedInstalledPlugins,
         categoryOptions,
         labelOptions,
 
@@ -266,6 +315,7 @@ export const usePluginStoreStore = defineStore('pluginStore', () => {
         updatePlugin,
         uninstallPlugin,
         clearCurrentPlugin,
+        setCurrentPluginFromLoaded,
         fetchLoadedPlugins,
         dryRunUpload,
         installFromFile,

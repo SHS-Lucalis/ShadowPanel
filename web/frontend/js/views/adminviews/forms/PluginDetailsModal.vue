@@ -82,7 +82,7 @@
           </template>
           <template v-else>
             <n-select
-                v-if="!plugin.installed || hasUpdate"
+                v-if="!isFilePlugin && (!plugin.installed || hasUpdate)"
                 v-model:value="selectedVersion"
                 :options="versionOptions"
                 :placeholder="trans('plugins.select_version')"
@@ -100,7 +100,7 @@
             </GButton>
           </template>
           <GButton
-              v-if="plugin.installed && hasUpdate"
+              v-if="plugin.installed && hasUpdate && !isFilePlugin"
               color="blue"
               :size="isSmallScreen ? 'small' : 'medium'"
               @click="$emit('update', selectedVersion)"
@@ -120,7 +120,18 @@
         </div>
       </div>
 
-      <div class="flex justify-around py-4 border-t border-b border-stone-200 dark:border-stone-700 mb-4 divide-x divide-stone-100 dark:divide-stone-700">
+      <div
+          v-if="plugin.author
+            || plugin.category
+            || plugin.license
+            || (plugin.download_count !== undefined && !isFilePlugin)
+            || (plugin.published_at && !isFilePlugin)
+            || (plugin.has_subscription && plugin.subscription_expires_at)
+            || plugin.min_gameap_version
+            || (plugin.url && !isFilePlugin)
+          "
+          class="flex justify-around py-4 border-t border-b border-stone-200 dark:border-stone-700 mb-4 divide-x divide-stone-100 dark:divide-stone-700"
+      >
         <div v-if="plugin.author" class="flex flex-col items-center text-center px-4">
           <GIcon name="user" class="text-xl text-stone-500 dark:text-stone-400 mb-1" />
           <span class="text-sm font-medium whitespace-nowrap">{{ plugin.author.username }}</span>
@@ -180,14 +191,16 @@
           <span class="text-sm font-medium whitespace-nowrap">{{ plugin.installed_version }}</span>
           <span class="text-xs text-stone-500">{{ trans('plugins.installed_version') }}</span>
         </div>
-        <div class="flex flex-col items-center text-center">
-          <GIcon name="arrow-up" class="text-xl mb-1" :class="hasUpdate ? 'text-orange-500' : 'text-stone-400'" />
-          <span class="text-sm font-medium whitespace-nowrap">{{ plugin.latest_version }}</span>
-          <span class="text-xs text-stone-500">{{ trans('plugins.latest_version') }}</span>
-        </div>
-        <span v-if="hasUpdate" class="self-center px-2 py-0.5 text-xs font-medium rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300">
-          {{ trans('plugins.update') }}
-        </span>
+        <template v-if="!isFilePlugin">
+          <div class="flex flex-col items-center text-center">
+            <GIcon name="arrow-up" class="text-xl mb-1" :class="hasUpdate ? 'text-orange-500' : 'text-stone-400'" />
+            <span class="text-sm font-medium whitespace-nowrap">{{ plugin.latest_version }}</span>
+            <span class="text-xs text-stone-500">{{ trans('plugins.latest_version') }}</span>
+          </div>
+          <span v-if="hasUpdate" class="self-center px-2 py-0.5 text-xs font-medium rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300">
+            {{ trans('plugins.update') }}
+          </span>
+        </template>
       </div>
     </div>
   </div>
@@ -219,7 +232,7 @@ const props = defineProps({
   }
 })
 
-const isFilePlugin = computed(() => props.loadedInfo?.source_type === 'file')
+const isFilePlugin = computed(() => props.loadedInfo?.source_type === 'file' || props.plugin?.source_type === 'file')
 
 const emit = defineEmits(['install', 'update', 'uninstall'])
 
@@ -240,6 +253,7 @@ onUnmounted(() => {
 
 const hasUpdate = computed(() => {
   if (!props.plugin?.installed) return false
+  if (!props.plugin.latest_version) return false
   return props.plugin.installed_version !== props.plugin.latest_version
 })
 

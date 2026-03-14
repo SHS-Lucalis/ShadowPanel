@@ -50,18 +50,15 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	for _, loaded := range loadedPlugins {
 		managerID := pkgplugin.CompactPluginID(pkgplugin.ParsePluginID(loaded.Info.Id))
-		var dbID *domain.Uint64ID
 		var source string
 
 		if dbPlugin, ok := dbPlugins[managerID]; ok {
-			dbID = new(domain.Uint64ID)
-			*dbID = dbPlugin.ID
 			if dbPlugin.Source != nil {
 				source = *dbPlugin.Source
 			}
 		}
 
-		response.Data = append(response.Data, newLoadedPluginResponse(loaded, dbID, source))
+		response.Data = append(response.Data, newLoadedPluginResponse(loaded, source))
 	}
 
 	h.responder.Write(ctx, rw, response)
