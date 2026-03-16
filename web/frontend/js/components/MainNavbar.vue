@@ -33,65 +33,68 @@
           </button>
         </div>
 
-        <div class="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
+        <div class="flex flex-1 items-center sm:items-stretch sm:justify-start ml-12 sm:ml-0">
           <div class="flex flex-shrink-0 items-center">
             <a id="brand-link" class="navbar-brand" href="/">
-              <img id="brand-logo" src="/images/gap_logo_white.png" class="logo" alt="GameAP">
+              <img src="/images/gap_logo_white_mini.png" class="logo-mini sm:hidden" alt="GameAP">
+              <img src="/images/gap_logo_white.png" class="logo hidden sm:block" alt="GameAP">
             </a>
           </div>
         </div>
 
-        <div class="md:mr-4 gap-x-1.5 text-white hover:bg-stone-800 px-5 py-2 rounded" v-on:click="switchTheme()">
-          <GIcon v-if="currentTheme === 'dark'" name="sun" class="px-2 w-full" />
-          <GIcon v-if="currentTheme === 'light'" name="moon" class="px-2 w-full" />
+        <div class="flex items-center">
+          <div class="flex items-center md:mr-4 gap-x-1.5 text-white hover:bg-stone-800 px-5 py-2 rounded cursor-pointer" v-on:click="switchTheme()">
+            <GIcon v-if="currentTheme === 'dark'" name="sun" />
+            <GIcon v-if="currentTheme === 'light'" name="moon" />
+          </div>
+
+          <MainNavbarDropdown
+              class="md:mr-4"
+              :button-text="trans('navbar.help')"
+              button-icon="help"
+              :items="[
+                  [
+                      {
+                        icon: 'book',
+                        label: trans('navbar.documentation'),
+                        link: pageLanguage === 'ru' ? 'https://docs.gameap.com/ru/' : 'https://docs.gameap.com/en/',
+                      },
+                      {
+                        icon: 'admin-panel',
+                        label: trans('navbar.api_documentation'),
+                        link: 'https://openapi.gameap.io/',
+                      }
+                  ],
+                ]"
+          ></MainNavbarDropdown>
+
+          <MainNavbarDropdown
+              class="md:mr-4"
+              :button-text="user.name"
+              button-icon="user"
+              :items="[
+                  [
+                      {
+                        icon: 'profile',
+                        label: trans('navbar.profile'),
+                        route: {name: 'profile'},
+                      },
+                      {
+                        icon: 'key',
+                        label: trans('tokens.tokens'),
+                        route: {name: 'tokens'},
+                      }
+                  ],
+                  [
+                      {
+                        icon: 'logout',
+                        label: trans('navbar.sign_out'),
+                        onClick: logout,
+                      }
+                  ]
+                ]"
+          ></MainNavbarDropdown>
         </div>
-
-        <MainNavbarDropdown
-            class="md:mr-4"
-            :button-text="trans('navbar.help')"
-            button-icon="help"
-            :items="[
-                [
-                    {
-                      icon: 'book',
-                      label: trans('navbar.documentation'),
-                      link: pageLanguage === 'ru' ? 'https://docs.gameap.com/ru/' : 'https://docs.gameap.com/en/',
-                    },
-                    {
-                      icon: 'admin-panel',
-                      label: trans('navbar.api_documentation'),
-                      link: 'https://openapi.gameap.io/',
-                    }
-                ],
-              ]"
-        ></MainNavbarDropdown>
-
-        <MainNavbarDropdown
-            class="md:mr-4"
-            :button-text="user.name"
-            button-icon="user"
-            :items="[
-                [
-                    {
-                      icon: 'profile',
-                      label: trans('navbar.profile'),
-                      route: {name: 'profile'},
-                    },
-                    {
-                      icon: 'key',
-                      label: trans('tokens.tokens'),
-                      route: {name: 'tokens'},
-                    }
-                ],
-                [
-                    {
-                      icon: 'logout',
-                      label: trans('navbar.sign_out'),
-                      onClick: logout,
-                    }
-                ]
-              ]"
-        ></MainNavbarDropdown>
       </div>
     </div>
 
@@ -100,24 +103,66 @@
       <div class="space-y-1 px-2 pb-3 pt-2">
         <router-link
             v-for="link in serversLinks"
+            :key="'server-' + link.route.name"
             @click="showMobileMenu = !showMobileMenu"
             :to="link.route"
-            class="bg-stone-800 text-white block rounded px-3 py-2 font-medium"
+            class="bg-stone-800 text-white flex items-center rounded px-3 py-2 font-medium"
             aria-current="page"
         >
-          <GIcon :name="link.icon" class="ml-1" />
-          {{ link.text }}
+          <GIcon :name="link.icon" class="ml-1 shrink-0" />
+          <span class="ml-2">{{ link.text }}</span>
         </router-link>
         <router-link
-            v-for="link in adminLinks"
+            v-for="item in pluginServersMenuItems"
+            :key="'plugin-server-' + item.pluginId + '-' + item.text"
             @click="showMobileMenu = !showMobileMenu"
-            :to="link.route"
-            class="bg-stone-800 text-white block rounded px-3 py-2 font-medium"
+            :to="item.route"
+            class="bg-stone-800 text-white flex items-center rounded px-3 py-2 font-medium"
             aria-current="page"
         >
-          <GIcon :name="link.icon" class="ml-1" />
-          {{ link.text }}
+          <GIcon :name="item.icon" class="ml-1 shrink-0" />
+          <span class="ml-2">{{ pluginsStore.resolvePluginText(item.pluginId, item.text) }}</span>
         </router-link>
+
+        <template v-if="isAdmin">
+          <router-link
+              v-for="link in adminLinks"
+              :key="'admin-' + link.route.name"
+              @click="showMobileMenu = !showMobileMenu"
+              :to="link.route"
+              class="bg-stone-800 text-white flex items-center rounded px-3 py-2 font-medium"
+              aria-current="page"
+          >
+            <GIcon :name="link.icon" class="ml-1 shrink-0" />
+            <span class="ml-2">{{ link.text }}</span>
+          </router-link>
+          <router-link
+              v-for="item in pluginAdminMenuItems"
+              :key="'plugin-admin-' + item.pluginId + '-' + item.text"
+              @click="showMobileMenu = !showMobileMenu"
+              :to="item.route"
+              class="bg-stone-800 text-white flex items-center rounded px-3 py-2 font-medium"
+              aria-current="page"
+          >
+            <GIcon :name="item.icon" class="ml-1 shrink-0" />
+            <span class="ml-2">{{ pluginsStore.resolvePluginText(item.pluginId, item.text) }}</span>
+          </router-link>
+        </template>
+
+        <template v-for="(items, section) in customPluginSections" :key="'section-' + section">
+          <div class="text-stone-400 px-3 py-1 text-sm">{{ section }}</div>
+          <router-link
+              v-for="item in items"
+              :key="'plugin-custom-' + item.pluginId + '-' + item.text"
+              @click="showMobileMenu = !showMobileMenu"
+              :to="item.route"
+              class="bg-stone-800 text-white flex items-center rounded px-3 py-2 font-medium"
+              aria-current="page"
+          >
+            <GIcon :name="item.icon" class="ml-1 shrink-0" />
+            <span class="ml-2">{{ pluginsStore.resolvePluginText(item.pluginId, item.text) }}</span>
+          </router-link>
+        </template>
       </div>
     </div>
   </nav>
@@ -130,10 +175,12 @@ import MainNavbarDropdown from "./MainNavbarDropdown.vue";
 import {adminLinks, serversLinks} from "./bars";
 import {useAuthStore} from "@/store/auth";
 import {useUISettingsStore} from "@/store/uiSettings";
+import {usePluginsStore} from "@/store/plugins";
 import {errorNotification} from "@/parts/dialogs";
 
 const authStore = useAuthStore()
 const uiSettingsStore = useUISettingsStore()
+const pluginsStore = usePluginsStore()
 
 const user = computed(() => {
     return authStore.user
@@ -144,6 +191,22 @@ const currentTheme = computed(() => {
 })
 
 const showMobileMenu = ref(false)
+
+const isAdmin = computed(() => authStore.isAdmin)
+
+const pluginServersMenuItems = computed(() => pluginsStore.getMenuItems('servers'))
+
+const pluginAdminMenuItems = computed(() => pluginsStore.getMenuItems('admin'))
+
+const customPluginSections = computed(() => {
+    const items = pluginsStore.getMenuItems('custom')
+    return items.reduce((acc, item) => {
+        const section = item.section || 'Plugins'
+        if (!acc[section]) acc[section] = []
+        acc[section].push(item)
+        return acc
+    }, {})
+})
 
 const switchTheme = () => {
     uiSettingsStore.toggleTheme()
