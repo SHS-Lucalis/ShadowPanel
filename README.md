@@ -28,6 +28,21 @@ GameAP can be installed on the following operating systems:
 - Windows Server (2016, 2019, 2022, 2025), Windows 10, Windows 11
 - MacOS
 
+
+### Architecture
+
+GameAP follows a three-tier architecture consisting of the web panel, daemon agents, and game servers.
+
+Administrators interact with GameAP through a browser via HTTP/HTTPS. 
+The panel provides a web UI and a REST API, and stores its data in a database, which can be either PostgreSQL, MySQL, or SQLite, depending on the deployment.
+
+![](docs/gameap_architecture.svg)
+
+Each GameAP instance can communicate with one or more nodes where game servers are hosted. 
+On every node, a lightweight agent called GameAP Daemon runs alongside the game servers. 
+The daemon is responsible for controlling game server processes (starting, stopping, monitoring, and configuring them).
+It supports Windows, Linux, and macOS and offers a wide range of configuration options.
+
 ### Database
 
 GameAP supports the following databases:
@@ -154,6 +169,15 @@ Used when `FILES_DRIVER` is set to `s3`.
 
 - `DEFAULT_LANGUAGE` - Default UI language code
 
+### Plugins Configuration
+
+- `PLUGINS_DISABLED` - Disable plugins support (default: `false`)
+
+### Plugin Store Configuration
+
+- `PLUGIN_STORE_URL` - GameAP plugin store URL (default: `https://plugins.gameap.dev/api`)
+- `PLUGIN_STORE_LICENSE_KEY` - License key for plugin store
+
 ### Example Configuration
 
 ```bash
@@ -193,4 +217,11 @@ GLOBAL_API_URL=https://api.gameap.com
 
 # Logger
 LOGGER_LEVEL=info
+
+# Plugins
+# PLUGINS_DISABLED=false
+
+# Plugin Store
+# PLUGIN_STORE_URL=https://plugins.gameap.dev/api
+# PLUGIN_STORE_LICENSE_KEY=your-license-key
 ```
