@@ -8,6 +8,7 @@ services:
         VERSION: dev
         BUILD_DATE: ${BUILD_DATE:-2025-01-01T00:00:00Z}
     container_name: gameap
+    entrypoint: ["/bin/sh", "-c", "mkdir -p /var/lib/gameap/files && /usr/bin/gameap"]
     ports:
       - "8025:8025"
     environment:
