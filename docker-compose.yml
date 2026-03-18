@@ -47,7 +47,7 @@ services:
       POSTGRES_USER: gameap
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gameap}
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - gameap-postgres-data:/var/lib/postgresql/data
     networks:
       - gameap-network
     restart: unless-stopped
@@ -62,7 +62,7 @@ services:
     container_name: gameap-redis
     command: redis-server --appendonly yes
     volumes:
-      - redis-data:/data
+      - gameap-redis-data:/data
     networks:
       - gameap-network
     restart: unless-stopped
