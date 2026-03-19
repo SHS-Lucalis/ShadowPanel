@@ -38,7 +38,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, defineModel } from 'vue';
+import { ref, watch, onMounted, defineModel } from 'vue';
 import { storeToRefs } from 'pinia'
 import { useNodeStore } from '@/store/node'
 import { useGameStore } from '@/store/game'
@@ -57,6 +57,7 @@ const DEFAULT_PORTS = {
   'cod4': 28960,
   'fivem': 30120,
   'hurtworld': 12871,
+  'hytale': 5520,
   'justcause': 7777,
   'minecraft': 25565,
   'mta': 22003,
