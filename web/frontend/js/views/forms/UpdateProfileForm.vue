@@ -62,12 +62,12 @@
       </n-form-item>
     </n-form>
 
-    <GFixedBottomBar>
+    <div class="flex justify-end mt-4">
       <GButton color="green" v-on:click="onClickUpdate">
         <GIcon name="save" class="mr-0.5" />
         <span class="inline">{{ trans('main.save') }}</span>
       </GButton>
-    </GFixedBottomBar>
+    </div>
   </div>
 </template>
 
@@ -76,7 +76,6 @@ import {ref, defineModel} from "vue"
 import { GIcon, GDivider } from "@gameap/ui"
 import {trans} from "@/i18n/i18n";
 import GButton from "@/components/GButton.vue";
-import GFixedBottomBar from "@/components/GFixedBottomBar.vue";
 import {
   NForm,
   NFormItem,
