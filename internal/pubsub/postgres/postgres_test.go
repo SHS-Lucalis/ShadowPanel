@@ -247,3 +247,57 @@ func TestPostgres_Unsubscribe(t *testing.T) {
 
 	assert.Equal(t, int32(0), received.Load())
 }
+
+func TestPostgres_DynamicSubscription(t *testing.T) {
+	dsn := getPostgresDSN(t)
+
+	ps, err := pubsubpg.New(pubsubpg.Config{
+		ConnStr:    dsn,
+		InstanceID: "test-instance",
+	})
+	require.NoError(t, err)
+	defer ps.Close()
+
+	ctx, cancel := context.WithCancel(context.Background()) //nolint:modernize
+	defer cancel()
+
+	go func() {
+		_ = ps.Start(ctx)
+	}()
+
+	time.Sleep(200 * time.Millisecond)
+
+	var received atomic.Int32
+	receivedCh := make(chan *pubsub.Message, 1)
+
+	err = ps.Subscribe(context.Background(), "dynamic:channel", func(_ context.Context, msg *pubsub.Message) error {
+		received.Add(1)
+		receivedCh <- msg
+
+		return nil
+	})
+	require.NoError(t, err)
+
+	time.Sleep(200 * time.Millisecond)
+
+	msg := &pubsub.Message{
+		ID:        "1",
+		Channel:   "dynamic:channel",
+		Type:      "test.type",
+		Payload:   []byte(`{"key":"value"}`),
+		Timestamp: time.Now(),
+	}
+
+	err = ps.Publish(context.Background(), "dynamic:channel", msg)
+	require.NoError(t, err)
+
+	select {
+	case receivedMsg := <-receivedCh:
+		assert.Equal(t, "dynamic:channel", receivedMsg.Channel)
+		assert.Equal(t, "test.type", receivedMsg.Type)
+	case <-time.After(3 * time.Second):
+		t.Fatal("timeout waiting for message")
+	}
+
+	assert.Equal(t, int32(1), received.Load())
+}

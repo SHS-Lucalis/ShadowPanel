@@ -6,6 +6,7 @@ import (
 
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
+	"github.com/gameap/gameap/internal/pubsub/dlq"
 )
 
 type GameRepository interface {
@@ -280,4 +281,14 @@ type PluginRepository interface {
 	Delete(ctx context.Context, id domain.Uint64ID) error
 
 	Exists(ctx context.Context, filter *filters.FindPlugin) (bool, error)
+}
+
+type DLQRepository interface {
+	Push(ctx context.Context, msg *dlq.FailedMessage) error
+	Pop(ctx context.Context) (*dlq.FailedMessage, error)
+	List(ctx context.Context, limit, offset int) ([]dlq.FailedMessage, error)
+	Count(ctx context.Context) (int, error)
+	MarkProcessed(ctx context.Context, id string) error
+	Delete(ctx context.Context, id string) error
+	Purge(ctx context.Context) error
 }

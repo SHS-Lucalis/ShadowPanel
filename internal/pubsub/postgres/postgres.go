@@ -30,6 +30,15 @@ type Postgres struct {
 	wg                sync.WaitGroup
 	reconnectInterval time.Duration
 	maxReconnectDelay time.Duration
+
+	started       bool
+	subRequests   chan subRequest
+	unsubRequests chan string
+}
+
+type subRequest struct {
+	pattern string
+	done    chan error
 }
 
 type Config struct {
@@ -73,6 +82,8 @@ func New(cfg Config) (*Postgres, error) {
 		instanceID:        instanceID,
 		reconnectInterval: reconnectInterval,
 		maxReconnectDelay: maxReconnectDelay,
+		subRequests:       make(chan subRequest),
+		unsubRequests:     make(chan string),
 	}, nil
 }
 
@@ -106,33 +117,56 @@ func (p *Postgres) Publish(ctx context.Context, channel string, msg *pubsub.Mess
 	return nil
 }
 
-func (p *Postgres) Subscribe(_ context.Context, pattern string, handler pubsub.Handler) error {
+func (p *Postgres) Subscribe(ctx context.Context, pattern string, handler pubsub.Handler) error {
 	if pattern == "" {
 		return pubsub.ErrEmptyPattern
 	}
 
 	p.mu.Lock()
-	defer p.mu.Unlock()
-
 	if p.closed {
+		p.mu.Unlock()
+
 		return pubsub.ErrClosed
 	}
-
 	p.handlers[pattern] = append(p.handlers[pattern], handler)
+	started := p.started
+	p.mu.Unlock()
+
+	if started {
+		req := subRequest{pattern: pattern, done: make(chan error, 1)}
+		select {
+		case p.subRequests <- req:
+			return <-req.done
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
 
 	return nil
 }
 
-func (p *Postgres) Unsubscribe(_ context.Context, pattern string) error {
+func (p *Postgres) Unsubscribe(ctx context.Context, pattern string) error {
 	p.mu.Lock()
-	defer p.mu.Unlock()
-
 	delete(p.handlers, pattern)
+	started := p.started
+	p.mu.Unlock()
+
+	if started {
+		select {
+		case p.unsubRequests <- pattern:
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
 
 	return nil
 }
 
 func (p *Postgres) Start(ctx context.Context) error {
+	p.mu.Lock()
+	p.started = true
+	p.mu.Unlock()
+
 	p.wg.Go(func() {
 		p.listenLoop(ctx)
 	})
@@ -183,6 +217,7 @@ func (p *Postgres) listen(ctx context.Context) error {
 		_ = conn.Close(ctx)
 	}()
 
+	listeningChannels := make(map[string]struct{})
 	channels := p.getListenChannels()
 	for _, ch := range channels {
 		pgChannel := sanitizeChannelName(ch)
@@ -191,15 +226,50 @@ func (p *Postgres) listen(ctx context.Context) error {
 		if err != nil {
 			return errors.Wrapf(err, "failed to listen on channel %s", pgChannel)
 		}
+		listeningChannels[pgChannel] = struct{}{}
 	}
 
 	for {
-		notification, err := conn.WaitForNotification(ctx)
-		if err != nil {
-			return errors.Wrap(err, "notification error")
-		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case req := <-p.subRequests:
+			pgChannel := sanitizeChannelName(getBaseChannel(req.pattern))
+			if _, exists := listeningChannels[pgChannel]; !exists {
+				_, err := conn.Exec(ctx, "LISTEN "+pgChannel)
+				if err != nil {
+					req.done <- errors.Wrapf(err, "failed to listen on channel %s", pgChannel)
+				} else {
+					listeningChannels[pgChannel] = struct{}{}
+					req.done <- nil
+				}
+			} else {
+				req.done <- nil
+			}
+		case pattern := <-p.unsubRequests:
+			pgChannel := sanitizeChannelName(getBaseChannel(pattern))
+			if _, exists := listeningChannels[pgChannel]; exists {
+				_, _ = conn.Exec(ctx, "UNLISTEN "+pgChannel)
+				delete(listeningChannels, pgChannel)
+			}
+		default:
+			waitCtx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
+			notification, err := conn.WaitForNotification(waitCtx)
+			cancel()
 
-		p.handleNotification(ctx, notification)
+			if err != nil {
+				if ctx.Err() != nil {
+					return ctx.Err()
+				}
+				if errors.Is(err, context.DeadlineExceeded) {
+					continue
+				}
+
+				return errors.Wrap(err, "notification error")
+			}
+
+			p.handleNotification(ctx, notification)
+		}
 	}
 }
 
@@ -276,8 +346,8 @@ func sanitizeChannelName(channel string) string {
 }
 
 func getBaseChannel(pattern string) string {
-	if idx := strings.Index(pattern, "*"); idx != -1 {
-		return pattern[:idx]
+	if before, _, found := strings.Cut(pattern, "*"); found {
+		return before
 	}
 
 	return pattern

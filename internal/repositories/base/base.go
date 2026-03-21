@@ -21,6 +21,7 @@ const NodesTable = "dedicated_servers"
 const ClientCertificatesTable = "client_certificates"
 const PluginStorageTable = "plugin_storage"
 const PluginsTable = "plugins"
+const DLQTable = "pubsub_dlq"
 
 var (
 	GameFields                = allFields(domain.Game{})

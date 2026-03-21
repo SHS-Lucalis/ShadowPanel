@@ -106,6 +106,20 @@ type Config struct {
 		Driver     string `env:"PUBSUB_DRIVER" envDefault:"memory"`
 		InstanceID string `env:"PUBSUB_INSTANCE_ID" envDefault:""`
 
+		Retry struct {
+			Enabled      bool    `env:"PUBSUB_RETRY_ENABLED" envDefault:"true"`
+			MaxRetries   int     `env:"PUBSUB_RETRY_MAX_RETRIES" envDefault:"3"`
+			InitialDelay string  `env:"PUBSUB_RETRY_INITIAL_DELAY" envDefault:"100ms"`
+			MaxDelay     string  `env:"PUBSUB_RETRY_MAX_DELAY" envDefault:"5s"`
+			Multiplier   float64 `env:"PUBSUB_RETRY_MULTIPLIER" envDefault:"2.0"`
+		}
+
+		DLQ struct {
+			Enabled bool   `env:"PUBSUB_DLQ_ENABLED" envDefault:"false"`
+			Driver  string `env:"PUBSUB_DLQ_DRIVER" envDefault:"memory"`
+			MaxSize int    `env:"PUBSUB_DLQ_MAX_SIZE" envDefault:"1000"`
+		}
+
 		Redis struct {
 			Addr     string `env:"PUBSUB_REDIS_ADDR" envDefault:""`
 			Password string `env:"PUBSUB_REDIS_PASSWORD" envDefault:""`

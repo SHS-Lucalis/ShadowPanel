@@ -24,9 +24,11 @@ import (
 	internalplugin "github.com/gameap/gameap/internal/plugin"
 	"github.com/gameap/gameap/internal/plugin/hostlibrary"
 	"github.com/gameap/gameap/internal/pubsub"
+	"github.com/gameap/gameap/internal/pubsub/dlq"
 	pubsubmemory "github.com/gameap/gameap/internal/pubsub/memory"
 	pubsubpg "github.com/gameap/gameap/internal/pubsub/postgres"
 	pubsubredis "github.com/gameap/gameap/internal/pubsub/redis"
+	"github.com/gameap/gameap/internal/pubsub/retry"
 	"github.com/gameap/gameap/internal/rbac"
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/internal/repositories/base"
@@ -96,6 +98,7 @@ type Container struct {
 	nodeRepository                repositories.NodeRepository
 	clientCertificateRepository   repositories.ClientCertificateRepository
 	pluginStorageRepository       repositories.PluginStorageRepository
+	dlqRepository                 repositories.DLQRepository
 
 	// Services
 	authService          auth.Service
@@ -791,6 +794,29 @@ func (c *Container) createPluginStorageRepository() repositories.PluginStorageRe
 	}
 }
 
+func (c *Container) DLQRepository() repositories.DLQRepository {
+	if c.dlqRepository == nil {
+		c.dlqRepository = c.createDLQRepository()
+	}
+
+	return c.dlqRepository
+}
+
+func (c *Container) createDLQRepository() repositories.DLQRepository {
+	switch c.config.DatabaseDriver {
+	case databaseDriverMySQL:
+		return mysql.NewDLQRepository(c.TransactionalDB())
+	case databaseDriverPostgres, databaseDriverPGX:
+		return postgres.NewDLQRepository(c.TransactionalDB())
+	case databaseDriverSQLite:
+		return sqlite.NewDLQRepository(c.TransactionalDB())
+	case databaseDriverInMemory:
+		return inmemory.NewDLQRepository(c.config.PubSub.DLQ.MaxSize)
+	default:
+		return inmemory.NewDLQRepository(c.config.PubSub.DLQ.MaxSize)
+	}
+}
+
 func (c *Container) Cache() cache.Cache {
 	if c.cache == nil {
 		c.cache = c.createCache()
@@ -844,6 +870,30 @@ func (c *Container) PubSub() pubsub.PubSub {
 }
 
 func (c *Container) createPubSub() pubsub.PubSub {
+	basePubSub := c.createBasePubSub()
+
+	if c.config.PubSub.Retry.Enabled {
+		retryCfg := c.buildRetryConfig()
+		var opts []retry.Option
+
+		if c.config.PubSub.DLQ.Enabled {
+			dlqStore := c.createDLQStore()
+			dlqHandler := dlq.NewHandler(dlqStore, basePubSub)
+			opts = append(opts, retry.WithDLQ(dlqHandler))
+		}
+
+		retryPublisher := retry.NewPublisher(basePubSub, retryCfg, opts...)
+
+		return &wrappedPubSub{
+			publisher: retryPublisher,
+			PubSub:    basePubSub,
+		}
+	}
+
+	return basePubSub
+}
+
+func (c *Container) createBasePubSub() pubsub.PubSub {
 	switch c.config.PubSub.Driver {
 	case pubsubDriverMemory, "":
 		return pubsubmemory.New()
@@ -893,6 +943,40 @@ func (c *Container) createPubSub() pubsub.PubSub {
 	default:
 		panic("invalid pub-sub driver: " + c.config.PubSub.Driver)
 	}
+}
+
+func (c *Container) buildRetryConfig() retry.Config {
+	cfg := retry.DefaultConfig()
+	cfg.MaxRetries = c.config.PubSub.Retry.MaxRetries
+	cfg.Multiplier = c.config.PubSub.Retry.Multiplier
+
+	if d, err := time.ParseDuration(c.config.PubSub.Retry.InitialDelay); err == nil {
+		cfg.InitialDelay = d
+	}
+	if d, err := time.ParseDuration(c.config.PubSub.Retry.MaxDelay); err == nil {
+		cfg.MaxDelay = d
+	}
+
+	return cfg
+}
+
+func (c *Container) createDLQStore() dlq.Store {
+	switch c.config.PubSub.DLQ.Driver {
+	case "database", "db":
+		return c.DLQRepository()
+	default:
+		return dlq.NewMemoryStore(c.config.PubSub.DLQ.MaxSize)
+	}
+}
+
+type wrappedPubSub struct {
+	pubsub.PubSub
+
+	publisher pubsub.Publisher
+}
+
+func (w *wrappedPubSub) Publish(ctx context.Context, channel string, msg *pubsub.Message) error {
+	return w.publisher.Publish(ctx, channel, msg)
 }
 
 func (c *Container) FileManager() files.FileManager {
