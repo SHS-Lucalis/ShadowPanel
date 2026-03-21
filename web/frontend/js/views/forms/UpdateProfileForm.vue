@@ -62,10 +62,12 @@
       </n-form-item>
     </n-form>
 
-    <GButton color="green" v-on:click="onClickUpdate" class="mt-4">
-      <GIcon name="save" class="mr-0.5" />
-      <span class="hidden lg:inline">&nbsp;{{ trans('main.save') }}</span>
-    </GButton>
+    <div class="flex justify-end mt-4">
+      <GButton color="green" v-on:click="onClickUpdate">
+        <GIcon name="save" class="mr-0.5" />
+        <span class="inline">{{ trans('main.save') }}</span>
+      </GButton>
+    </div>
   </div>
 </template>
 

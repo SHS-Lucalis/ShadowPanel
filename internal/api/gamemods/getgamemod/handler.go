@@ -45,6 +45,8 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 	if id <= 0 {
 		h.responder.WriteError(ctx, rw, api.NewValidationError("game mod id must be greater than zero"))
+
+		return
 	}
 
 	gameMods, err := h.repo.Find(ctx, &filters.FindGameMod{

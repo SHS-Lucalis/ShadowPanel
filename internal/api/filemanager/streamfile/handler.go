@@ -234,6 +234,12 @@ func validatePath(path string) error {
 
 func getContentTypeFromExtension(filename string) string {
 	ext := filepath.Ext(filename)
+
+	// WebM is primarily a video container format
+	if ext == ".webm" {
+		return "video/webm"
+	}
+
 	contentType := mime.TypeByExtension(ext)
 	if contentType == "" {
 		contentType = "application/octet-stream"

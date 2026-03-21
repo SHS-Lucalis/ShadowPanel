@@ -12,7 +12,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 )
 
 type PersonalAccessTokenRepository struct {
@@ -87,10 +86,10 @@ func (r *PersonalAccessTokenRepository) Save(_ context.Context, token *domain.Pe
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	token.UpdatedAt = lo.ToPtr(time.Now())
+	token.UpdatedAt = new(time.Now())
 
 	if token.ID == 0 && (token.CreatedAt == nil || token.CreatedAt.IsZero()) {
-		token.CreatedAt = lo.ToPtr(time.Now())
+		token.CreatedAt = new(time.Now())
 	}
 
 	if token.ID == 0 {
@@ -250,11 +249,16 @@ func (r *PersonalAccessTokenRepository) applyPagination(
 	}
 
 	start := pagination.Offset
-	if start > len(tokens) {
+	length := uint64(len(tokens))
+	if start > length {
 		return []domain.PersonalAccessToken{}
 	}
 
-	end := min(start+pagination.Limit, len(tokens))
+	limit := pagination.Limit
+	if limit == 0 {
+		limit = filters.DefaultLimit
+	}
+	end := min(start+limit, length)
 
 	return tokens[start:end]
 }

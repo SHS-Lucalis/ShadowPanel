@@ -54,8 +54,8 @@ func parseMinecraftPlayerEntry(entry string) (name, uuid string) {
 
 	name = strings.TrimSpace(entry[:parenIdx])
 	uuidPart := entry[parenIdx+1:]
-	if closeIdx := strings.Index(uuidPart, ")"); closeIdx != -1 {
-		uuid = uuidPart[:closeIdx]
+	if before, _, ok := strings.Cut(uuidPart, ")"); ok {
+		uuid = before
 	}
 
 	return name, uuid

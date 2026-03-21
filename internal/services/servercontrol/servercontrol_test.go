@@ -8,7 +8,6 @@ import (
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/internal/services"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -28,7 +27,7 @@ func TestServerControlService_Start(t *testing.T) {
 			server: &domain.Server{
 				ID:           1,
 				DSID:         10,
-				StartCommand: lo.ToPtr("./start.sh"),
+				StartCommand: new("./start.sh"),
 			},
 			setupSettings: func(_ *inmemory.ServerSettingRepository) {},
 			setupTasks:    func(_ *inmemory.DaemonTaskRepository) {},
@@ -54,7 +53,7 @@ func TestServerControlService_Start(t *testing.T) {
 			server: &domain.Server{
 				ID:           1,
 				DSID:         10,
-				StartCommand: lo.ToPtr("./start.sh"),
+				StartCommand: new("./start.sh"),
 			},
 			setupSettings: func(repo *inmemory.ServerSettingRepository) {
 				_ = repo.Save(context.Background(), &domain.ServerSetting{
@@ -105,7 +104,7 @@ func TestServerControlService_Start(t *testing.T) {
 			server: &domain.Server{
 				ID:           1,
 				DSID:         10,
-				StartCommand: lo.ToPtr("./start.sh"),
+				StartCommand: new("./start.sh"),
 			},
 			setupSettings: func(_ *inmemory.ServerSettingRepository) {},
 			setupTasks: func(repo *inmemory.DaemonTaskRepository) {
@@ -260,7 +259,7 @@ func TestServerControlService_Restart(t *testing.T) {
 			server: &domain.Server{
 				ID:           1,
 				DSID:         10,
-				StartCommand: lo.ToPtr("./start.sh"),
+				StartCommand: new("./start.sh"),
 			},
 			setupSettings: func(_ *inmemory.ServerSettingRepository) {},
 			setupTasks:    func(_ *inmemory.DaemonTaskRepository) {},
@@ -284,7 +283,7 @@ func TestServerControlService_Restart(t *testing.T) {
 			server: &domain.Server{
 				ID:           1,
 				DSID:         10,
-				StartCommand: lo.ToPtr("./start.sh"),
+				StartCommand: new("./start.sh"),
 			},
 			setupSettings: func(repo *inmemory.ServerSettingRepository) {
 				_ = repo.Save(context.Background(), &domain.ServerSetting{

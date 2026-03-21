@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/gameap/gameap/pkg/plugin/sdk/crypto"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -92,17 +91,17 @@ func TestCryptoService_RandomString(t *testing.T) {
 		{
 			name:    "custom_charset",
 			length:  8,
-			charset: lo.ToPtr("abc"),
+			charset: new("abc"),
 		},
 		{
 			name:    "hex_charset",
 			length:  32,
-			charset: lo.ToPtr("0123456789abcdef"),
+			charset: new("0123456789abcdef"),
 		},
 		{
 			name:    "empty_charset_uses_default",
 			length:  10,
-			charset: lo.ToPtr(""),
+			charset: new(""),
 		},
 		{
 			name:      "zero_length",

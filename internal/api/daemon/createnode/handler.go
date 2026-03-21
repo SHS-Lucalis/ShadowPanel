@@ -87,6 +87,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	r.Body = http.MaxBytesReader(rw, r.Body, maxFileSize)
 	err = r.ParseMultipartForm(maxFileSize)
 	if err != nil {
 		slog.ErrorContext(

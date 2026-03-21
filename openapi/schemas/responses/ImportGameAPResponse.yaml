@@ -1,0 +1,33 @@
+type: object
+description: Result of importing a GameAP YAML configuration
+properties:
+  game_code:
+    type: string
+    description: The game code
+    example: "cstrike"
+  game_name:
+    type: string
+    description: The game name
+    example: "Counter-Strike 1.6"
+  mods_imported:
+    type: integer
+    description: Total number of mods imported (created + updated)
+    example: 3
+  mods_created:
+    type: array
+    items:
+      type: string
+    description: Names of newly created mods
+    example: ["Classic", "Deathmatch"]
+  mods_updated:
+    type: array
+    items:
+      type: string
+    description: Names of updated existing mods
+    example: ["GunGame"]
+required:
+  - game_code
+  - game_name
+  - mods_imported
+  - mods_created
+  - mods_updated

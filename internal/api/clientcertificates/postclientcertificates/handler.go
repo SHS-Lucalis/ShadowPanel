@@ -53,6 +53,7 @@ func NewHandler(
 func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
+	r.Body = http.MaxBytesReader(rw, r.Body, maxFileSize)
 	err := r.ParseMultipartForm(maxFileSize)
 	if err != nil {
 		h.responder.WriteError(ctx, rw, errors.WithMessage(err, "failed to parse multipart form"))

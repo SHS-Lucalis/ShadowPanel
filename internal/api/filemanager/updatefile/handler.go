@@ -116,6 +116,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	r.Body = http.MaxBytesReader(rw, r.Body, maxUploadSize)
 	err = r.ParseMultipartForm(maxMemory)
 	if err != nil {
 		h.responder.WriteError(ctx, rw, api.WrapHTTPError(
@@ -218,6 +219,7 @@ func (h *Handler) updateFile(
 	defer func(file multipart.File) {
 		err := file.Close()
 		if err != nil {
+			//nolint:gosec // G706: slog structured logging safely encodes values
 			slog.Warn(
 				"failed to close uploaded file",
 				slog.String("error", err.Error()),
@@ -226,10 +228,10 @@ func (h *Handler) updateFile(
 		}
 	}(file)
 
-	fileSize := uint64(fileHeader.Size)
 	if fileHeader.Size < 0 {
 		return updateFileResponse{}, errInvalidFileSize
 	}
+	fileSize := uint64(fileHeader.Size)
 
 	err = h.daemonFiles.UploadStream(
 		ctx,

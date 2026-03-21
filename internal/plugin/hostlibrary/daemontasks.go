@@ -78,8 +78,8 @@ func (s *DaemonTasksServiceImpl) FindDaemonTasks(
 	var pagination *filters.Pagination
 	if req.Pagination != nil {
 		pagination = &filters.Pagination{
-			Limit:  int(req.Pagination.Limit),
-			Offset: int(req.Pagination.Offset),
+			Limit:  uint64(req.Pagination.Limit),
+			Offset: uint64(req.Pagination.Offset),
 		}
 	}
 
@@ -104,7 +104,7 @@ func (s *DaemonTasksServiceImpl) CreateDaemonTask(
 	if !ok {
 		return &daemontasks.CreateDaemonTaskResponse{
 			Success: false,
-			Error:   lo.ToPtr("invalid task type"),
+			Error:   new("invalid task type"),
 		}, nil
 	}
 
@@ -131,7 +131,7 @@ func (s *DaemonTasksServiceImpl) CreateDaemonTask(
 	if err := s.daemonTaskRepo.Save(ctx, task); err != nil {
 		return &daemontasks.CreateDaemonTaskResponse{
 			Success: false,
-			Error:   lo.ToPtr(err.Error()),
+			Error:   new(err.Error()),
 		}, nil
 	}
 
@@ -166,10 +166,10 @@ func convertDaemonTasksToProto(tasks []domain.DaemonTask) []*proto.DaemonTask {
 func convertDaemonTaskToProto(t *domain.DaemonTask) *proto.DaemonTask {
 	var serverID, runAfterID *uint64
 	if t.ServerID != nil {
-		serverID = lo.ToPtr(uint64(*t.ServerID))
+		serverID = new(uint64(*t.ServerID))
 	}
 	if t.RunAftID != nil {
-		runAfterID = lo.ToPtr(uint64(*t.RunAftID))
+		runAfterID = new(uint64(*t.RunAftID))
 	}
 
 	return &proto.DaemonTask{

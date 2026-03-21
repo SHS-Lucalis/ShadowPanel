@@ -43,7 +43,7 @@
 
 <script setup>
 import { GBreadcrumbs, GStatusBadge, Loading, GTable } from "@gameap/ui"
-import {computed, onMounted} from "vue"
+import {computed, onMounted, onUnmounted, watch} from "vue"
 import {trans} from "../../i18n/i18n"
 import {errorNotification, notification} from "../../parts/dialogs"
 import {useRoute} from "vue-router"
@@ -53,6 +53,31 @@ import { replace } from "lodash-es";
 
 const daemonTaskStore = useDaemonTaskStore()
 const route = useRoute()
+
+const POLL_INTERVAL = 3000
+let pollIntervalId = null
+
+function shouldPoll(status) {
+  return status === 'waiting' || status === 'working'
+}
+
+function startPolling() {
+  if (pollIntervalId) return
+
+  pollIntervalId = setInterval(() => {
+    daemonTaskStore.fetchTaskOutput(true).catch((error) => {
+      errorNotification(error)
+      stopPolling()
+    })
+  }, POLL_INTERVAL)
+}
+
+function stopPolling() {
+  if (pollIntervalId) {
+    clearInterval(pollIntervalId)
+    pollIntervalId = null
+  }
+}
 
 const breadcrumbs = computed(() => {
   let result = [
@@ -74,9 +99,25 @@ const {loading, task} = storeToRefs(daemonTaskStore)
 
 onMounted(() => {
   daemonTaskStore.setTaskId(route.params.id)
-  daemonTaskStore.fetchTaskOutput().catch((error) => {
-    errorNotification(error)
-  })
+  daemonTaskStore.fetchTaskOutput()
+    .then(() => {
+      if (shouldPoll(task.value.status)) {
+        startPolling()
+      }
+    })
+    .catch((error) => {
+      errorNotification(error)
+    })
+})
+
+watch(() => task.value.status, (newStatus) => {
+  if (!shouldPoll(newStatus)) {
+    stopPolling()
+  }
+})
+
+onUnmounted(() => {
+  stopPolling()
 })
 
 const output = computed(() => {

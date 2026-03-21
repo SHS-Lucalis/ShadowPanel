@@ -7,7 +7,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/rs/xid"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -69,7 +68,7 @@ func (s *RBACRepositorySuite) TestRBACRepositorySaveRole() {
 	s.T().Run("save_new_role", func(t *testing.T) {
 		role := &domain.Role{
 			Name:  xid.New().String(),
-			Title: lo.ToPtr("new role"),
+			Title: new("new role"),
 		}
 		err := s.repo.SaveRole(ctx, role)
 
@@ -80,14 +79,14 @@ func (s *RBACRepositorySuite) TestRBACRepositorySaveRole() {
 	s.T().Run("save_role", func(t *testing.T) {
 		role := &domain.Role{
 			Name:  xid.New().String(),
-			Title: lo.ToPtr("new role"),
+			Title: new("new role"),
 		}
 
 		err := s.repo.SaveRole(ctx, role)
 		require.NoError(t, err)
 		assert.NotEmpty(t, role.ID)
 
-		role.Title = lo.ToPtr("new title for role")
+		role.Title = new("new title for role")
 		err = s.repo.SaveRole(ctx, role)
 		require.NoError(t, err)
 
@@ -111,7 +110,7 @@ func (s *RBACRepositorySuite) TestRBACRepositorySaveRole() {
 		for _, roleName := range roleNames {
 			role := &domain.Role{
 				Name:  roleName,
-				Title: lo.ToPtr("role " + roleName),
+				Title: new("role " + roleName),
 			}
 			err := s.repo.SaveRole(ctx, role)
 			require.NoError(t, err)
@@ -223,14 +222,14 @@ func (s *RBACRepositorySuite) TestRBACRepositoryGetPermissions() {
 		abilities := []domain.Ability{
 			{
 				Name:       domain.AbilityNameGameServerStart,
-				Title:      lo.ToPtr("Start Server"),
+				Title:      new("Start Server"),
 				EntityID:   nil,
 				EntityType: nil,
 				OnlyOwned:  false,
 			},
 			{
 				Name:       domain.AbilityNameGameServerStop,
-				Title:      lo.ToPtr("Stop Server"),
+				Title:      new("Stop Server"),
 				EntityID:   nil,
 				EntityType: nil,
 				OnlyOwned:  false,
@@ -270,7 +269,7 @@ func (s *RBACRepositorySuite) TestRBACRepositoryGetPermissions() {
 		abilities := []domain.Ability{
 			{
 				Name:       domain.AbilityNameGameServerRestart,
-				Title:      lo.ToPtr("Restart Server"),
+				Title:      new("Restart Server"),
 				EntityID:   nil,
 				EntityType: nil,
 				OnlyOwned:  false,
@@ -300,7 +299,7 @@ func (s *RBACRepositorySuite) TestRBACRepositoryAllow() {
 		abilities := []domain.Ability{
 			{
 				Name:       domain.AbilityNameGameServerStart,
-				Title:      lo.ToPtr("Start Server"),
+				Title:      new("Start Server"),
 				EntityID:   nil,
 				EntityType: nil,
 				OnlyOwned:  false,
@@ -322,9 +321,9 @@ func (s *RBACRepositorySuite) TestRBACRepositoryAllow() {
 		entityType := domain.EntityTypeUser
 
 		abilities := []domain.Ability{
-			{Name: domain.AbilityNameGameServerStart, Title: lo.ToPtr("Start"), OnlyOwned: false},
-			{Name: domain.AbilityNameGameServerStop, Title: lo.ToPtr("Stop"), OnlyOwned: false},
-			{Name: domain.AbilityNameGameServerRestart, Title: lo.ToPtr("Restart"), OnlyOwned: false},
+			{Name: domain.AbilityNameGameServerStart, Title: new("Start"), OnlyOwned: false},
+			{Name: domain.AbilityNameGameServerStop, Title: new("Stop"), OnlyOwned: false},
+			{Name: domain.AbilityNameGameServerRestart, Title: new("Restart"), OnlyOwned: false},
 		}
 
 		err := s.repo.Allow(ctx, entityID, entityType, abilities)
@@ -348,7 +347,7 @@ func (s *RBACRepositorySuite) TestRBACRepositoryAllow() {
 		abilities := []domain.Ability{
 			{
 				Name:       domain.AbilityNameGameServerStart,
-				Title:      lo.ToPtr("Start Specific Server"),
+				Title:      new("Start Specific Server"),
 				EntityID:   &serverID,
 				EntityType: &serverType,
 				OnlyOwned:  false,
@@ -391,7 +390,7 @@ func (s *RBACRepositorySuite) TestRBACRepositoryForbid() {
 		abilities := []domain.Ability{
 			{
 				Name:       domain.AbilityNameGameServerStop,
-				Title:      lo.ToPtr("Stop Server"),
+				Title:      new("Stop Server"),
 				EntityID:   nil,
 				EntityType: nil,
 				OnlyOwned:  false,
@@ -413,8 +412,8 @@ func (s *RBACRepositorySuite) TestRBACRepositoryForbid() {
 		entityType := domain.EntityTypeUser
 
 		abilities := []domain.Ability{
-			{Name: domain.AbilityNameGameServerStart, Title: lo.ToPtr("Start"), OnlyOwned: false},
-			{Name: domain.AbilityNameGameServerStop, Title: lo.ToPtr("Stop"), OnlyOwned: false},
+			{Name: domain.AbilityNameGameServerStart, Title: new("Start"), OnlyOwned: false},
+			{Name: domain.AbilityNameGameServerStop, Title: new("Stop"), OnlyOwned: false},
 		}
 
 		err := s.repo.Forbid(ctx, entityID, entityType, abilities)
@@ -450,8 +449,8 @@ func (s *RBACRepositorySuite) TestRBACRepositoryRevoke() {
 		entityType := domain.EntityTypeUser
 
 		abilities := []domain.Ability{
-			{Name: domain.AbilityNameGameServerStart, Title: lo.ToPtr("Start"), OnlyOwned: false},
-			{Name: domain.AbilityNameGameServerStop, Title: lo.ToPtr("Stop"), OnlyOwned: false},
+			{Name: domain.AbilityNameGameServerStart, Title: new("Start"), OnlyOwned: false},
+			{Name: domain.AbilityNameGameServerStop, Title: new("Stop"), OnlyOwned: false},
 		}
 
 		err := s.repo.Allow(ctx, entityID, entityType, abilities)
@@ -475,8 +474,8 @@ func (s *RBACRepositorySuite) TestRBACRepositoryRevoke() {
 		entityType := domain.EntityTypeUser
 
 		abilities := []domain.Ability{
-			{Name: domain.AbilityNameGameServerStart, Title: lo.ToPtr("Start"), OnlyOwned: false},
-			{Name: domain.AbilityNameGameServerStop, Title: lo.ToPtr("Stop"), OnlyOwned: false},
+			{Name: domain.AbilityNameGameServerStart, Title: new("Start"), OnlyOwned: false},
+			{Name: domain.AbilityNameGameServerStop, Title: new("Stop"), OnlyOwned: false},
 		}
 
 		err := s.repo.Allow(ctx, entityID, entityType, abilities)
@@ -495,7 +494,7 @@ func (s *RBACRepositorySuite) TestRBACRepositoryRevoke() {
 		entityType := domain.EntityTypeUser
 
 		abilities := []domain.Ability{
-			{Name: domain.AbilityNameGameServerStart, Title: lo.ToPtr("Start"), OnlyOwned: false},
+			{Name: domain.AbilityNameGameServerStart, Title: new("Start"), OnlyOwned: false},
 		}
 
 		err := s.repo.Revoke(ctx, entityID, entityType, abilities)
@@ -523,7 +522,7 @@ func (s *RBACRepositorySuite) TestRBACRepositoryRevoke() {
 		abilities := []domain.Ability{
 			{
 				Name:       domain.AbilityNameGameServerStart,
-				Title:      lo.ToPtr("Start Specific Server"),
+				Title:      new("Start Specific Server"),
 				EntityID:   &serverID,
 				EntityType: &serverType,
 				OnlyOwned:  false,
@@ -712,9 +711,9 @@ func (s *RBACRepositorySuite) TestRBACRepositoryIntegration() {
 		entityType := domain.EntityTypeUser
 
 		abilities := []domain.Ability{
-			{Name: domain.AbilityNameGameServerStart, Title: lo.ToPtr("Start"), OnlyOwned: false},
-			{Name: domain.AbilityNameGameServerStop, Title: lo.ToPtr("Stop"), OnlyOwned: false},
-			{Name: domain.AbilityNameGameServerRestart, Title: lo.ToPtr("Restart"), OnlyOwned: false},
+			{Name: domain.AbilityNameGameServerStart, Title: new("Start"), OnlyOwned: false},
+			{Name: domain.AbilityNameGameServerStop, Title: new("Stop"), OnlyOwned: false},
+			{Name: domain.AbilityNameGameServerRestart, Title: new("Restart"), OnlyOwned: false},
 		}
 
 		err := s.repo.Allow(ctx, entityID, entityType, abilities)
@@ -790,7 +789,7 @@ func (s *RBACRepositorySuite) TestRBACRepositoryIntegration() {
 		entityType := domain.EntityTypeUser
 
 		abilities := []domain.Ability{
-			{Name: domain.AbilityNameGameServerStart, Title: lo.ToPtr("Start"), OnlyOwned: false},
+			{Name: domain.AbilityNameGameServerStart, Title: new("Start"), OnlyOwned: false},
 		}
 
 		err := s.repo.Allow(ctx, entityID, entityType, abilities)

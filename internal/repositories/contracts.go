@@ -257,6 +257,8 @@ type PluginStorageRepository interface {
 	Delete(ctx context.Context, id uint64) error
 
 	DeleteByPlugin(ctx context.Context, pluginID uint64) error
+
+	DeleteByFilter(ctx context.Context, filter *filters.FindPluginStorage) error
 }
 
 type PluginRepository interface {

@@ -12,7 +12,6 @@ import (
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -30,7 +29,7 @@ func TestAuthMiddleware_Middleware(t *testing.T) {
 		Login:     "testuser",
 		Email:     "test@example.com",
 		Password:  hashedPassword,
-		Name:      lo.ToPtr("Test User"),
+		Name:      new("Test User"),
 		CreatedAt: &now,
 		UpdatedAt: &now,
 	}
@@ -189,7 +188,7 @@ func TestAuthMiddleware_OptionalMiddleware(t *testing.T) {
 		Login:     "testuser",
 		Email:     "test@example.com",
 		Password:  hashedPassword,
-		Name:      lo.ToPtr("Test User"),
+		Name:      new("Test User"),
 		CreatedAt: &now,
 		UpdatedAt: &now,
 	}
@@ -291,7 +290,7 @@ func TestTokenExtractionPriority(t *testing.T) {
 		Login:     "user1",
 		Email:     "user1@example.com",
 		Password:  hashedPassword,
-		Name:      lo.ToPtr("User1"),
+		Name:      new("User1"),
 		CreatedAt: &now,
 		UpdatedAt: &now,
 	}
@@ -303,7 +302,7 @@ func TestTokenExtractionPriority(t *testing.T) {
 		Login:     "user2",
 		Email:     "user2@example.com",
 		Password:  hashedPassword,
-		Name:      lo.ToPtr("User2"),
+		Name:      new("User2"),
 		CreatedAt: &now,
 		UpdatedAt: &now,
 	}
@@ -314,7 +313,7 @@ func TestTokenExtractionPriority(t *testing.T) {
 		Login:     "user3",
 		Email:     "user3@example.com",
 		Password:  hashedPassword,
-		Name:      lo.ToPtr("User3"),
+		Name:      new("User3"),
 		CreatedAt: &now,
 		UpdatedAt: &now,
 	}

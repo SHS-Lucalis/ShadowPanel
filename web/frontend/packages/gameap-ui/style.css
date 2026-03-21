@@ -22,6 +22,22 @@
     @apply bg-stone-50 text-stone-600 me-2 px-1.5 py-0.5 rounded ring-1 ring-inset ring-stone-500/10;
 }
 
+.badge-circle-red {
+    @apply w-3 h-3 rounded-full bg-red-500 dark:bg-red-900 inline-block;
+}
+
+.badge-circle-green {
+    @apply w-3 h-3 rounded-full bg-lime-500 dark:bg-lime-900 inline-block;
+}
+
+.badge-circle-orange {
+    @apply w-3 h-3 rounded-full bg-orange-500 dark:bg-orange-900 inline-block;
+}
+
+.badge-circle-stone {
+    @apply w-3 h-3 rounded-full bg-stone-500 dark:bg-stone-900 inline-block;
+}
+
 .progress {
     @apply w-full bg-stone-200 rounded-full h-4 dark:bg-stone-700;
 }

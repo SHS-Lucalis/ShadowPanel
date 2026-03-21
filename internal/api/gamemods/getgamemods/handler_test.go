@@ -10,7 +10,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/pkg/api"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -41,19 +40,19 @@ func TestGameMods(t *testing.T) {
 							Info:    "Maximum number of players",
 						},
 					},
-					RemoteRepositoryLinux:   lo.ToPtr("http://example.com/linux"),
-					RemoteRepositoryWindows: lo.ToPtr("http://example.com/windows"),
-					LocalRepositoryLinux:    lo.ToPtr("/var/repo/linux"),
-					LocalRepositoryWindows:  lo.ToPtr("C:\\repo\\windows"),
-					StartCmdLinux:           lo.ToPtr("./hlds_run"),
-					StartCmdWindows:         lo.ToPtr("hlds.exe"),
-					KickCmd:                 lo.ToPtr("kick"),
-					BanCmd:                  lo.ToPtr("ban"),
-					ChnameCmd:               lo.ToPtr("hostname"),
-					SrestartCmd:             lo.ToPtr("restart"),
-					ChmapCmd:                lo.ToPtr("changelevel"),
-					SendmsgCmd:              lo.ToPtr("say"),
-					PasswdCmd:               lo.ToPtr("password"),
+					RemoteRepositoryLinux:   new("http://example.com/linux"),
+					RemoteRepositoryWindows: new("http://example.com/windows"),
+					LocalRepositoryLinux:    new("/var/repo/linux"),
+					LocalRepositoryWindows:  new("C:\\repo\\windows"),
+					StartCmdLinux:           new("./hlds_run"),
+					StartCmdWindows:         new("hlds.exe"),
+					KickCmd:                 new("kick"),
+					BanCmd:                  new("ban"),
+					ChnameCmd:               new("hostname"),
+					SrestartCmd:             new("restart"),
+					ChmapCmd:                new("changelevel"),
+					SendmsgCmd:              new("say"),
+					PasswdCmd:               new("password"),
 				},
 				{
 					ID:       2,
@@ -72,19 +71,19 @@ func TestGameMods(t *testing.T) {
 							Info:    "Maximum number of players",
 						},
 					},
-					RemoteRepositoryLinux:   lo.ToPtr("http://cs.example.com/linux"),
-					RemoteRepositoryWindows: lo.ToPtr("http://cs.example.com/windows"),
-					LocalRepositoryLinux:    lo.ToPtr("/var/repo/cs"),
-					LocalRepositoryWindows:  lo.ToPtr("C:\\repo\\cs"),
-					StartCmdLinux:           lo.ToPtr("./hlds_run -game cstrike"),
-					StartCmdWindows:         lo.ToPtr("hlds.exe -game cstrike"),
-					KickCmd:                 lo.ToPtr("kick"),
-					BanCmd:                  lo.ToPtr("banid"),
-					ChnameCmd:               lo.ToPtr("hostname"),
-					SrestartCmd:             lo.ToPtr("restart"),
-					ChmapCmd:                lo.ToPtr("changelevel"),
-					SendmsgCmd:              lo.ToPtr("say"),
-					PasswdCmd:               lo.ToPtr("rcon_password"),
+					RemoteRepositoryLinux:   new("http://cs.example.com/linux"),
+					RemoteRepositoryWindows: new("http://cs.example.com/windows"),
+					LocalRepositoryLinux:    new("/var/repo/cs"),
+					LocalRepositoryWindows:  new("C:\\repo\\cs"),
+					StartCmdLinux:           new("./hlds_run -game cstrike"),
+					StartCmdWindows:         new("hlds.exe -game cstrike"),
+					KickCmd:                 new("kick"),
+					BanCmd:                  new("banid"),
+					ChnameCmd:               new("hostname"),
+					SrestartCmd:             new("restart"),
+					ChmapCmd:                new("changelevel"),
+					SendmsgCmd:              new("say"),
+					PasswdCmd:               new("rcon_password"),
 				},
 			},
 			want: `[
@@ -118,7 +117,8 @@ func TestGameMods(t *testing.T) {
 					"srestart_cmd": "restart",
 					"chmap_cmd": "changelevel",
 					"sendmsg_cmd": "say",
-					"passwd_cmd": "rcon_password"
+					"passwd_cmd": "rcon_password",
+					"metadata": null
 				},
 				{
 					"id": 1,
@@ -150,7 +150,8 @@ func TestGameMods(t *testing.T) {
 					"srestart_cmd": "restart",
 					"chmap_cmd": "changelevel",
 					"sendmsg_cmd": "say",
-					"passwd_cmd": "password"
+					"passwd_cmd": "password",
+					"metadata": null
 				}
 			]`,
 		},

@@ -10,7 +10,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories/base"
-	"github.com/samber/lo"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/pkg/errors"
@@ -54,15 +53,11 @@ func (r *PersonalAccessTokenRepository) find(
 	}
 
 	if pagination != nil {
-		if pagination.Limit <= 0 {
+		if pagination.Limit == 0 {
 			pagination.Limit = filters.DefaultLimit
 		}
 
-		if pagination.Offset < 0 {
-			pagination.Offset = 0
-		}
-
-		builder = builder.Limit(uint64(pagination.Limit)).Offset(uint64(pagination.Offset))
+		builder = builder.Limit(pagination.Limit).Offset(pagination.Offset)
 	}
 
 	query, args, err := builder.PlaceholderFormat(sq.Dollar).ToSql()
@@ -101,10 +96,10 @@ func (r *PersonalAccessTokenRepository) find(
 }
 
 func (r *PersonalAccessTokenRepository) Save(ctx context.Context, token *domain.PersonalAccessToken) error {
-	token.UpdatedAt = lo.ToPtr(time.Now())
+	token.UpdatedAt = new(time.Now())
 
 	if token.ID == 0 && (token.CreatedAt == nil || token.CreatedAt.IsZero()) {
-		token.CreatedAt = lo.ToPtr(time.Now())
+		token.CreatedAt = new(time.Now())
 	}
 
 	var abilitiesJSON []byte

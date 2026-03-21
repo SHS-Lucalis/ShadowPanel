@@ -17,17 +17,23 @@ const (
 )
 
 var (
-	ErrNameIsRequired    = api.NewValidationError("name is required")
-	ErrGameIDIsRequired  = api.NewValidationError("game_id is required")
-	ErrDSIDIsRequired    = api.NewValidationError("ds_id is required")
-	ErrGameModIDRequired = api.NewValidationError("game_mod_id is required")
-	ErrServerIPRequired  = api.NewValidationError("server_ip is required")
-	ErrNameTooLong       = api.NewValidationError("name must not exceed 128 characters")
-	ErrInvalidServerIP   = api.NewValidationError("server_ip is not a valid IP address or hostname")
-	ErrInvalidServerPort = api.NewValidationError("server_port must be between 1 and 65535")
-	ErrInvalidQueryPort  = api.NewValidationError("query_port must be between 1 and 65535")
-	ErrInvalidRconPort   = api.NewValidationError("rcon_port must be between 1 and 65535")
+	ErrNameIsRequired      = api.NewValidationError("name is required")
+	ErrGameIDIsRequired    = api.NewValidationError("game_id is required")
+	ErrDSIDIsRequired      = api.NewValidationError("ds_id is required")
+	ErrGameModIDRequired   = api.NewValidationError("game_mod_id is required")
+	ErrServerIPRequired    = api.NewValidationError("server_ip is required")
+	ErrNameTooLong         = api.NewValidationError("name must not exceed 128 characters")
+	ErrInvalidServerIP     = api.NewValidationError("server_ip is not a valid IP address or hostname")
+	ErrInvalidServerPort   = api.NewValidationError("server_port must be between 1 and 65535")
+	ErrInvalidQueryPort    = api.NewValidationError("query_port must be between 1 and 65535")
+	ErrInvalidRconPort     = api.NewValidationError("rcon_port must be between 1 and 65535")
+	ErrSettingNameRequired = api.NewValidationError("setting name is required")
 )
+
+type settingInput struct {
+	Name  string `json:"name"`
+	Value any    `json:"value"`
+}
 
 type serverInput struct {
 	Install      *flexible.Bool `json:"install,omitempty"`
@@ -43,6 +49,7 @@ type serverInput struct {
 	Dir          *string        `json:"dir,omitempty"`
 	StartCommand *string        `json:"start_command,omitempty"`
 	SuUser       *string        `json:"su_user,omitempty"`
+	Settings     []settingInput `json:"settings,omitempty"`
 }
 
 func (s *serverInput) Validate() error {
@@ -86,7 +93,22 @@ func (s *serverInput) Validate() error {
 		return ErrInvalidRconPort
 	}
 
+	for _, setting := range s.Settings {
+		if setting.Name == "" {
+			return ErrSettingNameRequired
+		}
+	}
+
 	return nil
+}
+
+func (s *serverInput) SettingsToMap() map[string]any {
+	settingsMap := make(map[string]any, len(s.Settings))
+	for _, setting := range s.Settings {
+		settingsMap[setting.Name] = setting.Value
+	}
+
+	return settingsMap
 }
 
 func (s *serverInput) ToDomain() *domain.Server {

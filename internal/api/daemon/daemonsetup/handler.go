@@ -2,6 +2,7 @@ package daemonsetup
 
 import (
 	"context"
+	"encoding/base64"
 	"net/http"
 	"os"
 	"strings"
@@ -12,7 +13,6 @@ import (
 	"github.com/gameap/gameap/internal/cache"
 	"github.com/gameap/gameap/pkg/api"
 	stringspkg "github.com/gameap/gameap/pkg/strings"
-	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 )
 
@@ -46,10 +46,17 @@ func NewHandler(
 func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	vars := mux.Vars(r)
-	token := vars["token"]
+	token, err := api.NewInputReader(r).ReadString("token")
+	if err != nil {
+		h.responder.WriteError(ctx, rw, api.WrapHTTPError(
+			errors.WithMessage(err, "invalid token"),
+			http.StatusBadRequest,
+		))
 
-	err := h.verifySetupToken(ctx, token)
+		return
+	}
+
+	err = h.verifySetupToken(ctx, token)
 	if err != nil && errors.Is(err, ErrInvalidSetupToken) {
 		h.responder.WriteError(ctx, rw, api.WrapHTTPError(
 			errors.WithMessage(err, "invalid setup token"),
@@ -71,6 +78,8 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	config, _ := api.NewQueryReader(r).ReadString("config")
+
 	createToken, err := h.generateCreateToken(ctx)
 	if err != nil {
 		h.responder.WriteError(ctx, rw, errors.WithMessage(err, "failed to generate create token"))
@@ -80,7 +89,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	baseURL := h.detectBaseURL(r)
 
-	script := h.buildSetupScript(createToken, baseURL)
+	script := h.buildSetupScript(createToken, baseURL, config)
 
 	rw.Header().Set("Content-Type", "text/plain")
 	_, _ = rw.Write([]byte(script))
@@ -168,16 +177,23 @@ func (h *Handler) detectBaseURL(r *http.Request) string {
 	return b.String()
 }
 
-func (h *Handler) buildSetupScript(createToken, panelHost string) string {
+func (h *Handler) buildSetupScript(createToken, panelHost, config string) string {
 	sb := strings.Builder{}
 	sb.Grow(256)
 
-	sb.WriteString("export createToken=")
+	sb.WriteString("export CREATE_TOKEN=")
 	sb.WriteString(createToken)
 	sb.WriteString(";\n")
-	sb.WriteString("export panelHost=")
+	sb.WriteString("export PANEL_HOST=")
 	sb.WriteString(panelHost)
 	sb.WriteString(";\n")
+
+	if config != "" {
+		sb.WriteString("export CONFIG=")
+		sb.WriteString(base64.StdEncoding.EncodeToString([]byte(config)))
+		sb.WriteString(";\n")
+	}
+
 	sb.WriteString(
 		"curl -sL https://raw.githubusercontent.com/gameap/auto-install-scripts/master/install-gdaemon.sh | bash --",
 	)

@@ -12,7 +12,6 @@ import (
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories/base"
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 )
 
 var pluginFields = []string{
@@ -87,15 +86,11 @@ func (r *PluginRepository) find(
 	}
 
 	if pagination != nil {
-		if pagination.Limit <= 0 {
+		if pagination.Limit == 0 {
 			pagination.Limit = filters.DefaultLimit
 		}
 
-		if pagination.Offset < 0 {
-			pagination.Offset = 0
-		}
-
-		builder = builder.Limit(uint64(pagination.Limit)).Offset(uint64(pagination.Offset))
+		builder = builder.Limit(pagination.Limit).Offset(pagination.Offset)
 	}
 
 	query, args, err := builder.ToSql()
@@ -134,7 +129,7 @@ func (r *PluginRepository) find(
 }
 
 func (r *PluginRepository) Save(ctx context.Context, plugin *domain.Plugin) error {
-	plugin.UpdatedAt = lo.ToPtr(time.Now())
+	plugin.UpdatedAt = new(time.Now())
 
 	jsonFields, err := r.marshalJSONFields(plugin)
 	if err != nil {
@@ -151,7 +146,7 @@ func (r *PluginRepository) Save(ctx context.Context, plugin *domain.Plugin) erro
 	}
 
 	if plugin.CreatedAt == nil || plugin.CreatedAt.IsZero() {
-		plugin.CreatedAt = lo.ToPtr(time.Now())
+		plugin.CreatedAt = new(time.Now())
 	}
 
 	return r.insert(ctx, plugin, jsonFields)

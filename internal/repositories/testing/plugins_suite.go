@@ -8,7 +8,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -74,9 +73,9 @@ func (s *PluginRepositorySuite) TestPluginRepositorySave() {
 			Description: "A plugin with all fields",
 			Author:      "Full Author",
 			APIVersion:  "v2",
-			Filename:    lo.ToPtr("full-plugin.wasm"),
-			Source:      lo.ToPtr("https://github.com/example/plugin"),
-			Homepage:    lo.ToPtr("https://example.com/plugin"),
+			Filename:    new("full-plugin.wasm"),
+			Source:      new("https://github.com/example/plugin"),
+			Homepage:    new("https://example.com/plugin"),
 			RequiredPermissions: []domain.PluginPermission{
 				domain.PluginPermissionManageServers,
 				domain.PluginPermissionManageNodes,
@@ -87,7 +86,7 @@ func (s *PluginRepositorySuite) TestPluginRepositorySave() {
 			},
 			Status:       domain.PluginStatusActive,
 			Priority:     100,
-			Category:     lo.ToPtr("monitoring"),
+			Category:     new("monitoring"),
 			Dependencies: []string{"base-plugin", "auth-plugin"},
 			Config: map[string]any{
 				"enabled": true,
@@ -164,7 +163,7 @@ func (s *PluginRepositorySuite) TestPluginRepositorySave() {
 		plugin.Description = "Updated description"
 		plugin.Status = domain.PluginStatusActive
 		plugin.Priority = 50
-		plugin.Category = lo.ToPtr("updated-category")
+		plugin.Category = new("updated-category")
 
 		err = s.repo.Save(ctx, plugin)
 		require.NoError(t, err)
@@ -439,17 +438,17 @@ func (s *PluginRepositorySuite) TestPluginRepositoryFind() {
 		{
 			ID: 3001, Name: "find-plugin-1", Version: "1.0.0", Description: "Plugin 1",
 			Author: "Author", APIVersion: "v1", Status: domain.PluginStatusActive, Priority: 10,
-			Category: lo.ToPtr("monitoring"),
+			Category: new("monitoring"),
 		},
 		{
 			ID: 3002, Name: "find-plugin-2", Version: "2.0.0", Description: "Plugin 2",
 			Author: "Author", APIVersion: "v1", Status: domain.PluginStatusDisabled, Priority: 20,
-			Category: lo.ToPtr("monitoring"),
+			Category: new("monitoring"),
 		},
 		{
 			ID: 3003, Name: "find-plugin-3", Version: "3.0.0", Description: "Plugin 3",
 			Author: "Author", APIVersion: "v1", Status: domain.PluginStatusActive, Priority: 30,
-			Category: lo.ToPtr("backup"),
+			Category: new("backup"),
 		},
 		{
 			ID: 3004, Name: "find-plugin-4", Version: "4.0.0", Description: "Plugin 4",
@@ -629,9 +628,9 @@ func (s *PluginRepositorySuite) TestPluginRepositoryCompletePluginData() {
 			Description: "A complete plugin for testing all fields",
 			Author:      "Complete Author <author@example.com>",
 			APIVersion:  "v2.1",
-			Filename:    lo.ToPtr("complete-data-plugin.wasm"),
-			Source:      lo.ToPtr("https://github.com/complete/plugin"),
-			Homepage:    lo.ToPtr("https://complete-plugin.example.com"),
+			Filename:    new("complete-data-plugin.wasm"),
+			Source:      new("https://github.com/complete/plugin"),
+			Homepage:    new("https://complete-plugin.example.com"),
 			RequiredPermissions: []domain.PluginPermission{
 				domain.PluginPermissionManageServers,
 				domain.PluginPermissionManageNodes,
@@ -644,7 +643,7 @@ func (s *PluginRepositorySuite) TestPluginRepositoryCompletePluginData() {
 			},
 			Status:   domain.PluginStatusActive,
 			Priority: 999,
-			Category: lo.ToPtr("system"),
+			Category: new("system"),
 			Dependencies: []string{
 				"core-plugin",
 				"auth-plugin",
@@ -717,12 +716,12 @@ func (s *PluginRepositorySuite) TestPluginRepositoryExists() {
 		{
 			ID: 6001, Name: "exists-plugin-1", Version: "1.0.0", Description: "Plugin 1",
 			Author: "Author", APIVersion: "v1", Status: domain.PluginStatusActive, Priority: 10,
-			Category: lo.ToPtr("monitoring"),
+			Category: new("monitoring"),
 		},
 		{
 			ID: 6002, Name: "exists-plugin-2", Version: "2.0.0", Description: "Plugin 2",
 			Author: "Author", APIVersion: "v1", Status: domain.PluginStatusDisabled, Priority: 20,
-			Category: lo.ToPtr("backup"),
+			Category: new("backup"),
 		},
 	}
 
@@ -844,7 +843,7 @@ func (s *PluginRepositorySuite) TestPluginRepositoryIntegration() {
 		plugin.Version = "2.0.0"
 		plugin.Status = domain.PluginStatusActive
 		plugin.Priority = 100
-		plugin.Category = lo.ToPtr("updated")
+		plugin.Category = new("updated")
 		err = s.repo.Save(ctx, plugin)
 		require.NoError(t, err)
 
@@ -866,7 +865,7 @@ func (s *PluginRepositorySuite) TestPluginRepositoryIntegration() {
 	})
 
 	s.T().Run("multiple_plugins_operations", func(t *testing.T) {
-		var pluginIDs []domain.Uint64ID
+		pluginIDs := make([]domain.Uint64ID, 0, 5)
 
 		for i := range 5 {
 			plugin := &domain.Plugin{

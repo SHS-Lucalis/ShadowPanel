@@ -1,7 +1,7 @@
 <template>
     <!-- Component Start -->
     <div v-if="minimized === true" class="items-center w-16 mr-5"></div>
-    <div v-if="minimized === true" class="sidebar-menu fixed items-center w-16 h-full overflow-y-scroll no-scrollbar text-stone-400 bg-stone-900">
+    <div v-if="minimized === true" class="sidebar-menu fixed items-center w-16 h-full overflow-y-scroll no-scrollbar text-stone-400 bg-stone-900 z-40">
         <a class="flex items-center w-full px-3 mt-3" href="#">
           <span class="ml-2 w-full text-center text-sm font-bold">—</span>
         </a>
@@ -75,7 +75,7 @@
 
     <!-- Component Start -->
     <div v-if="minimized === false" class="items-center w-56 mr-5"></div>
-    <div v-if="minimized === false" class="sidebar-menu fixed items-center w-56 h-full overflow-y-scroll no-scrollbar text-stone-400 bg-stone-900">
+    <div v-if="minimized === false" class="sidebar-menu fixed items-center w-56 h-full overflow-y-scroll no-scrollbar text-stone-400 bg-stone-900 z-40">
       <a class="flex items-center w-full px-3 mt-3" href="#">
         <span class="ml-2 w-full text-center text-sm font-bold">{{ trans('sidebar.control') }}</span>
       </a>

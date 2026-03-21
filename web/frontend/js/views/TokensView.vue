@@ -171,9 +171,24 @@ const onGenerateToken = () => {
             h(NButton, {
               type: "primary",
               onClick: () => {
-                navigator.clipboard.writeText(result.token).then(() => {
+                const copyText = (text) => {
+                  if (navigator.clipboard && navigator.clipboard.writeText) {
+                    return navigator.clipboard.writeText(text)
+                  } else {
+                    const textArea = document.createElement('textarea')
+                    textArea.value = text
+                    textArea.style.position = 'fixed'
+                    textArea.style.left = '-9999px'
+                    document.body.appendChild(textArea)
+                    textArea.select()
+                    document.execCommand('copy')
+                    document.body.removeChild(textArea)
+                    return Promise.resolve()
+                  }
+                }
+                copyText(result.token).then(() => {
                   copied.value = true
-                },() => {
+                }, () => {
                   console.error('Failed to copy');
                 });
               },

@@ -13,7 +13,6 @@ import (
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 )
 
 type Handler struct {
@@ -161,28 +160,28 @@ func (h *Handler) createDeleteFileTasks(ctx context.Context, server *domain.Serv
 	if server.IsOnline() {
 		stopTask := &domain.DaemonTask{
 			DedicatedServerID: server.DSID,
-			ServerID:          lo.ToPtr(server.ID),
+			ServerID:          new(server.ID),
 			Task:              domain.DaemonTaskTypeServerStop,
 			Status:            domain.DaemonTaskStatusWaiting,
-			CreatedAt:         lo.ToPtr(time.Now()),
-			UpdatedAt:         lo.ToPtr(time.Now()),
+			CreatedAt:         new(time.Now()),
+			UpdatedAt:         new(time.Now()),
 		}
 
 		if err := h.daemonTaskRepo.Save(ctx, stopTask); err != nil {
 			return errors.WithMessage(err, "failed to create stop task")
 		}
 
-		runAftID = lo.ToPtr(stopTask.ID)
+		runAftID = new(stopTask.ID)
 	}
 
 	deleteTask := &domain.DaemonTask{
 		RunAftID:          runAftID,
 		DedicatedServerID: server.DSID,
-		ServerID:          lo.ToPtr(server.ID),
+		ServerID:          new(server.ID),
 		Task:              domain.DaemonTaskTypeServerDelete,
 		Status:            domain.DaemonTaskStatusWaiting,
-		CreatedAt:         lo.ToPtr(time.Now()),
-		UpdatedAt:         lo.ToPtr(time.Now()),
+		CreatedAt:         new(time.Now()),
+		UpdatedAt:         new(time.Now()),
 	}
 
 	if err := h.daemonTaskRepo.Save(ctx, deleteTask); err != nil {

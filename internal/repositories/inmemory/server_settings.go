@@ -273,17 +273,18 @@ func (r *ServerSettingRepository) applyPagination(
 	}
 
 	limit := pagination.Limit
-	if limit <= 0 {
+	if limit == 0 {
 		limit = filters.DefaultLimit
 	}
 
-	offset := max(pagination.Offset, 0)
+	offset := pagination.Offset
+	length := uint64(len(settings))
 
-	if offset >= len(settings) {
+	if offset >= length {
 		return []domain.ServerSetting{}
 	}
 
-	end := min(offset+limit, len(settings))
+	end := min(offset+limit, length)
 
 	return settings[offset:end]
 }

@@ -11,7 +11,6 @@ import (
 
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
-	"github.com/samber/lo"
 )
 
 type NodeRepository struct {
@@ -82,10 +81,10 @@ func (r *NodeRepository) Save(_ context.Context, node *domain.Node) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	node.UpdatedAt = lo.ToPtr(time.Now())
+	node.UpdatedAt = new(time.Now())
 
 	if node.ID == 0 && (node.CreatedAt == nil || node.CreatedAt.IsZero()) {
-		node.CreatedAt = lo.ToPtr(time.Now())
+		node.CreatedAt = new(time.Now())
 	}
 
 	// Remove old indexes if updating existing node
@@ -332,17 +331,18 @@ func (r *NodeRepository) applyPagination(nodes []domain.Node, pagination *filter
 	}
 
 	limit := pagination.Limit
-	if limit <= 0 {
+	if limit == 0 {
 		limit = filters.DefaultLimit
 	}
 
-	offset := max(pagination.Offset, 0)
+	offset := pagination.Offset
+	length := uint64(len(nodes))
 
-	if offset >= len(nodes) {
+	if offset >= length {
 		return []domain.Node{}
 	}
 
-	end := min(offset+limit, len(nodes))
+	end := min(offset+limit, length)
 
 	return nodes[offset:end]
 }

@@ -132,11 +132,11 @@ async function downloadFile(url, filename) {
 }
 
 function downloadLogs() {
-  downloadFile(`/api/dedicated_servers/${route.params.id}/logs.zip`, 'logs.zip')
+  downloadFile(`/api/nodes/${route.params.id}/logs.zip`, 'logs.zip')
 }
 
 function downloadCertificates() {
-  downloadFile('/api/dedicated_servers/certificates.zip', 'certificates.zip')
+  downloadFile('/api/nodes/certificates.zip', 'certificates.zip')
 }
 
 const breadcrumbs = computed(() => {

@@ -13,7 +13,6 @@ import (
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gorilla/mux"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -345,13 +344,13 @@ func TestHandler_GameUpdatePersistence(t *testing.T) {
 		"name":                      "Half-Life 2 Updated",
 		"engine":                    "Source",
 		"engine_version":            "2.0",
-		"steam_app_id_linux":        lo.ToPtr(220),
-		"steam_app_id_windows":      lo.ToPtr(2220),
-		"steam_app_set_config":      lo.ToPtr("hl2_updated_config"),
-		"remote_repository_linux":   lo.ToPtr("https://example.com/hl2/linux/updated"),
-		"remote_repository_windows": lo.ToPtr("C:\\local\\hl2\\windows\\updated"),
-		"local_repository_linux":    lo.ToPtr("C:\\local\\hl2\\windows\\updated"),
-		"local_repository_windows":  lo.ToPtr("C:\\local\\hl2\\windows\\updated"),
+		"steam_app_id_linux":        new(220),
+		"steam_app_id_windows":      new(2220),
+		"steam_app_set_config":      new("hl2_updated_config"),
+		"remote_repository_linux":   new("https://example.com/hl2/linux/updated"),
+		"remote_repository_windows": new("C:\\local\\hl2\\windows\\updated"),
+		"local_repository_linux":    new("C:\\local\\hl2\\windows\\updated"),
+		"local_repository_windows":  new("C:\\local\\hl2\\windows\\updated"),
 		"enabled":                   0,
 	}
 
@@ -377,20 +376,121 @@ func TestHandler_GameUpdatePersistence(t *testing.T) {
 	assert.Equal(t, "Source", game.Engine)
 	assert.Equal(t, "2.0", game.EngineVersion)
 	require.NotNil(t, game.SteamAppIDLinux)
-	assert.Equal(t, lo.ToPtr(uint(220)), game.SteamAppIDLinux)
+	assert.Equal(t, new(uint(220)), game.SteamAppIDLinux)
 	require.NotNil(t, game.SteamAppIDWindows)
-	assert.Equal(t, lo.ToPtr(uint(2220)), game.SteamAppIDWindows)
+	assert.Equal(t, new(uint(2220)), game.SteamAppIDWindows)
 	require.NotNil(t, game.SteamAppSetConfig)
-	assert.Equal(t, lo.ToPtr("hl2_updated_config"), game.SteamAppSetConfig)
+	assert.Equal(t, new("hl2_updated_config"), game.SteamAppSetConfig)
 	require.NotNil(t, game.RemoteRepositoryLinux)
-	assert.Equal(t, lo.ToPtr("https://example.com/hl2/linux/updated"), game.RemoteRepositoryLinux)
+	assert.Equal(t, new("https://example.com/hl2/linux/updated"), game.RemoteRepositoryLinux)
 	require.NotNil(t, game.RemoteRepositoryWindows)
-	assert.Equal(t, lo.ToPtr("C:\\local\\hl2\\windows\\updated"), game.RemoteRepositoryWindows)
+	assert.Equal(t, new("C:\\local\\hl2\\windows\\updated"), game.RemoteRepositoryWindows)
 	require.NotNil(t, game.LocalRepositoryLinux)
-	assert.Equal(t, lo.ToPtr("C:\\local\\hl2\\windows\\updated"), game.LocalRepositoryLinux)
+	assert.Equal(t, new("C:\\local\\hl2\\windows\\updated"), game.LocalRepositoryLinux)
 	require.NotNil(t, game.LocalRepositoryWindows)
-	assert.Equal(t, lo.ToPtr("C:\\local\\hl2\\windows\\updated"), game.LocalRepositoryWindows)
+	assert.Equal(t, new("C:\\local\\hl2\\windows\\updated"), game.LocalRepositoryWindows)
 	assert.Equal(t, 0, game.Enabled)
+}
+
+func TestHandler_GameUpdateMetadataPersistence(t *testing.T) {
+	repo := inmemory.NewGameRepository()
+	responder := api.NewResponder()
+	handler := NewHandler(repo, responder)
+
+	originalGame := &domain.Game{
+		Code:    "minecraft",
+		Name:    "Minecraft",
+		Engine:  "Minecraft",
+		Enabled: 1,
+		Metadata: domain.Metadata{
+			"old_key": "old_value",
+		},
+	}
+
+	err := repo.Save(context.Background(), originalGame)
+	require.NoError(t, err)
+
+	updateData := map[string]any{
+		"name":    "Minecraft Updated",
+		"engine":  "Minecraft",
+		"enabled": 1,
+		"metadata": map[string]any{
+			"docker_image": "itzg/minecraft-server",
+			"version":      "1.20.4",
+		},
+	}
+
+	body, err := json.Marshal(updateData)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPut, "/games/minecraft", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = mux.SetURLVars(req, map[string]string{"code": "minecraft"})
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+
+	games, err := repo.FindAll(context.Background(), nil, nil)
+	require.NoError(t, err)
+	require.Len(t, games, 1)
+
+	game := games[0]
+	assert.Equal(t, "minecraft", game.Code)
+	assert.Equal(t, "Minecraft Updated", game.Name)
+	require.NotNil(t, game.Metadata)
+	assert.Equal(t, "itzg/minecraft-server", game.Metadata["docker_image"])
+	assert.Equal(t, "1.20.4", game.Metadata["version"])
+	_, hasOldKey := game.Metadata["old_key"]
+	assert.False(t, hasOldKey, "old metadata should be replaced, not merged")
+}
+
+func TestHandler_GameUpdateWithNilMetadata(t *testing.T) {
+	repo := inmemory.NewGameRepository()
+	responder := api.NewResponder()
+	handler := NewHandler(repo, responder)
+
+	originalGame := &domain.Game{
+		Code:    "minecraft",
+		Name:    "Minecraft",
+		Engine:  "Minecraft",
+		Enabled: 1,
+		Metadata: domain.Metadata{
+			"docker_image": "itzg/minecraft-server",
+		},
+	}
+
+	err := repo.Save(context.Background(), originalGame)
+	require.NoError(t, err)
+
+	updateData := map[string]any{
+		"name":     "Minecraft Updated",
+		"engine":   "Minecraft",
+		"enabled":  1,
+		"metadata": nil,
+	}
+
+	body, err := json.Marshal(updateData)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPut, "/games/minecraft", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = mux.SetURLVars(req, map[string]string{"code": "minecraft"})
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+
+	games, err := repo.FindAll(context.Background(), nil, nil)
+	require.NoError(t, err)
+	require.Len(t, games, 1)
+
+	game := games[0]
+	assert.Equal(t, "minecraft", game.Code)
+	assert.Equal(t, "Minecraft Updated", game.Name)
+	assert.Nil(t, game.Metadata, "metadata should be nil when updated with nil")
 }
 
 func TestHandler_EmptyGameCode(t *testing.T) {

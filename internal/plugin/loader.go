@@ -2,6 +2,8 @@ package plugin
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"log/slog"
 	"path"
 	"strconv"
@@ -14,7 +16,6 @@ import (
 	"github.com/gameap/gameap/internal/repositories"
 	pkgplugin "github.com/gameap/gameap/pkg/plugin"
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 )
 
 type LoaderManager interface {
@@ -76,7 +77,7 @@ func (l *Loader) LoadAll(ctx context.Context) error {
 		l.pluginIDs[plugin.ID] = loaded.Info.Id
 		l.mu.Unlock()
 
-		plugin.LastLoadedAt = lo.ToPtr(time.Now())
+		plugin.LastLoadedAt = new(time.Now())
 		if err := l.pluginRepo.Save(ctx, &plugin); err != nil {
 			slog.Warn("failed to update plugin last_loaded_at",
 				slog.String("plugin", plugin.Name),
@@ -108,10 +109,13 @@ func (l *Loader) LoadWithID(ctx context.Context, filename string, pluginID uint6
 		return nil, errors.WithMessage(err, "failed to load plugin")
 	}
 
+	wasmHash := sha256.Sum256(wasmBytes)
+
 	attr := []slog.Attr{
 		{Key: "id", Value: slog.StringValue(loaded.Info.Id)},
 		{Key: "name", Value: slog.StringValue(loaded.Info.Name)},
 		{Key: "version", Value: slog.StringValue(loaded.Info.Version)},
+		{Key: "wasm_hash", Value: slog.StringValue(hex.EncodeToString(wasmHash[:]))},
 		{Key: "description", Value: slog.StringValue(loaded.Info.Description)},
 		{Key: "author", Value: slog.StringValue(loaded.Info.Author)},
 		{Key: "api_version", Value: slog.StringValue(loaded.Info.ApiVersion)},
@@ -147,6 +151,12 @@ func (l *Loader) GetDBPluginID(managerID string) (domain.Uint64ID, bool) {
 	}
 
 	return 0, false
+}
+
+func (l *Loader) RegisterPluginID(dbID domain.Uint64ID, managerID string) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.pluginIDs[dbID] = managerID
 }
 
 func (l *Loader) resolvePluginFilename(plugin *domain.Plugin) string {
@@ -206,9 +216,9 @@ func (l *Loader) processAutoLoad(ctx context.Context) error {
 			Description: loaded.Info.Description,
 			Author:      loaded.Info.Author,
 			APIVersion:  loaded.Info.ApiVersion,
-			Filename:    lo.ToPtr(filename),
+			Filename:    new(filename),
 			Status:      domain.PluginStatusActive,
-			InstalledAt: lo.ToPtr(time.Now()),
+			InstalledAt: new(time.Now()),
 		}
 
 		if err := l.pluginRepo.Save(ctx, plugin); err != nil {

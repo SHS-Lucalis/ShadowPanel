@@ -15,7 +15,6 @@ import (
 	"github.com/gameap/gameap/pkg/auth"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -90,14 +89,14 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				ability := &domain.Ability{
 					Name:       domain.AbilityNameGameServerStart,
 					EntityType: &serverEntityType,
-					EntityID:   lo.ToPtr(uint(1)),
+					EntityID:   new(uint(1)),
 				}
 				require.NoError(t, rbacRepo.SaveAbility(context.Background(), ability))
 
 				entityTypeUser := domain.EntityTypeUser
 				permission := &domain.Permission{
 					AbilityID:  ability.ID,
-					EntityID:   lo.ToPtr(uint(1)),
+					EntityID:   new(uint(1)),
 					EntityType: &entityTypeUser,
 					Forbidden:  false,
 				}
@@ -105,7 +104,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			},
 			expectedStatus:     http.StatusOK,
 			expectPermissions:  true,
-			expectedPermission: lo.ToPtr("game-server-start"),
+			expectedPermission: new("game-server-start"),
 		},
 		{
 			name:     "successful permissions retrieval for admin user",
@@ -153,7 +152,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				entityTypeUser := domain.EntityTypeUser
 				permission := &domain.Permission{
 					AbilityID:  adminAbility.ID,
-					EntityID:   lo.ToPtr(uint(2)),
+					EntityID:   new(uint(2)),
 					EntityType: &entityTypeUser,
 					Forbidden:  false,
 				}
@@ -427,21 +426,21 @@ func TestHandler_PermissionResponseStructure(t *testing.T) {
 	startAbility := &domain.Ability{
 		Name:       domain.AbilityNameGameServerStart,
 		EntityType: &serverEntityType,
-		EntityID:   lo.ToPtr(uint(1)),
+		EntityID:   new(uint(1)),
 	}
 	require.NoError(t, rbacRepo.SaveAbility(context.Background(), startAbility))
 
 	stopAbility := &domain.Ability{
 		Name:       domain.AbilityNameGameServerStop,
 		EntityType: &serverEntityType,
-		EntityID:   lo.ToPtr(uint(1)),
+		EntityID:   new(uint(1)),
 	}
 	require.NoError(t, rbacRepo.SaveAbility(context.Background(), stopAbility))
 
 	entityTypeUser := domain.EntityTypeUser
 	startPermission := &domain.Permission{
 		AbilityID:  startAbility.ID,
-		EntityID:   lo.ToPtr(uint(1)),
+		EntityID:   new(uint(1)),
 		EntityType: &entityTypeUser,
 		Forbidden:  false,
 	}

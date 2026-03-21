@@ -13,7 +13,6 @@ import (
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
 	"github.com/google/uuid"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -59,7 +58,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 					Name:                  "Test Game",
 					Engine:                "source",
 					EngineVersion:         "1.0",
-					RemoteRepositoryLinux: lo.ToPtr("http://example.com/repo"),
+					RemoteRepositoryLinux: new("http://example.com/repo"),
 				}
 				require.NoError(t, gameRepo.Save(context.Background(), game))
 
@@ -67,8 +66,8 @@ func TestHandler_ServeHTTP(t *testing.T) {
 					ID:                    1,
 					GameCode:              "test",
 					Name:                  "Test Mod",
-					StartCmdLinux:         lo.ToPtr("./start.sh"),
-					RemoteRepositoryLinux: lo.ToPtr("http://example.com/mod"),
+					StartCmdLinux:         new("./start.sh"),
+					RemoteRepositoryLinux: new("http://example.com/mod"),
 				}
 				require.NoError(t, gameModRepo.Save(context.Background(), gameMod))
 
@@ -306,8 +305,9 @@ func TestHandler_ResponseStructure(t *testing.T) {
 		Engine:                "goldsrc",
 		EngineVersion:         "48",
 		SteamAppIDLinux:       &steamAppIDLinux,
-		RemoteRepositoryLinux: lo.ToPtr("http://example.com/repo"),
-		LocalRepositoryLinux:  lo.ToPtr("/var/local/repo"),
+		RemoteRepositoryLinux: new("http://example.com/repo"),
+		LocalRepositoryLinux:  new("/var/local/repo"),
+		Metadata:              domain.Metadata{"docker_image": "ghcr.io/gameap/cs16:latest"},
 	}
 	require.NoError(t, gameRepo.Save(context.Background(), game))
 
@@ -315,10 +315,11 @@ func TestHandler_ResponseStructure(t *testing.T) {
 		ID:                    1,
 		GameCode:              "cs16",
 		Name:                  "Classic",
-		StartCmdLinux:         lo.ToPtr("./hlds_run -game cstrike"),
-		StartCmdWindows:       lo.ToPtr("hlds.exe -game cstrike"),
-		RemoteRepositoryLinux: lo.ToPtr("http://example.com/mod"),
-		LocalRepositoryLinux:  lo.ToPtr("/var/local/mod"),
+		StartCmdLinux:         new("./hlds_run -game cstrike"),
+		StartCmdWindows:       new("hlds.exe -game cstrike"),
+		RemoteRepositoryLinux: new("http://example.com/mod"),
+		LocalRepositoryLinux:  new("/var/local/mod"),
+		Metadata:              domain.Metadata{"mod_type": "classic"},
 	}
 	require.NoError(t, gameModRepo.Save(context.Background(), gameMod))
 
@@ -342,6 +343,7 @@ func TestHandler_ResponseStructure(t *testing.T) {
 		Rcon:          &rcon,
 		Dir:           "/servers/cs16",
 		ProcessActive: true,
+		Metadata:      domain.Metadata{"custom_config": "enabled"},
 		CreatedAt:     &now,
 		UpdatedAt:     &now,
 	}
@@ -390,6 +392,7 @@ func TestHandler_ResponseStructure(t *testing.T) {
 	assert.Equal(t, "test_rcon", *serverResp.Rcon)
 	assert.Equal(t, "/servers/cs16", serverResp.Dir)
 	assert.True(t, serverResp.ProcessActive)
+	assert.Equal(t, map[string]any{"custom_config": "enabled"}, serverResp.Metadata)
 
 	assert.Equal(t, "cs16", serverResp.Game.Code)
 	assert.Equal(t, "Counter-Strike 1.6", serverResp.Game.Name)
@@ -398,6 +401,7 @@ func TestHandler_ResponseStructure(t *testing.T) {
 	assert.Equal(t, uint(90), *serverResp.Game.SteamAppID)
 	require.NotNil(t, serverResp.Game.RemoteRepository)
 	assert.Equal(t, "http://example.com/repo", *serverResp.Game.RemoteRepository)
+	assert.Equal(t, map[string]any{"docker_image": "ghcr.io/gameap/cs16:latest"}, serverResp.Game.Metadata)
 
 	assert.Equal(t, uint(1), serverResp.GameMod.ID)
 	assert.Equal(t, "cs16", serverResp.GameMod.GameCode)
@@ -410,6 +414,7 @@ func TestHandler_ResponseStructure(t *testing.T) {
 	assert.Equal(t, "hlds.exe -game cstrike", *serverResp.GameMod.DefaultStartCmdWindows)
 	require.NotNil(t, serverResp.GameMod.RemoteRepository)
 	assert.Equal(t, "http://example.com/mod", *serverResp.GameMod.RemoteRepository)
+	assert.Equal(t, map[string]any{"mod_type": "classic"}, serverResp.GameMod.Metadata)
 
 	require.Len(t, serverResp.Settings, 1)
 	assert.Equal(t, uint(1), serverResp.Settings[0].ServerID)
@@ -457,8 +462,9 @@ func TestHandler_WindowsOS(t *testing.T) {
 		Name:                    "Counter-Strike 1.6",
 		Engine:                  "goldsrc",
 		SteamAppIDWindows:       &steamAppIDWindows,
-		RemoteRepositoryWindows: lo.ToPtr("http://example.com/repo-win"),
-		LocalRepositoryWindows:  lo.ToPtr("C:\\local\\repo"),
+		RemoteRepositoryWindows: new("http://example.com/repo-win"),
+		LocalRepositoryWindows:  new("C:\\local\\repo"),
+		Metadata:                domain.Metadata{"platform": "windows"},
 	}
 	require.NoError(t, gameRepo.Save(context.Background(), game))
 
@@ -466,10 +472,11 @@ func TestHandler_WindowsOS(t *testing.T) {
 		ID:                      1,
 		GameCode:                "cs16",
 		Name:                    "Classic",
-		StartCmdLinux:           lo.ToPtr("./hlds_run -game cstrike"),
-		StartCmdWindows:         lo.ToPtr("hlds.exe -game cstrike"),
-		RemoteRepositoryWindows: lo.ToPtr("http://example.com/mod-win"),
-		LocalRepositoryWindows:  lo.ToPtr("C:\\local\\mod"),
+		StartCmdLinux:           new("./hlds_run -game cstrike"),
+		StartCmdWindows:         new("hlds.exe -game cstrike"),
+		RemoteRepositoryWindows: new("http://example.com/mod-win"),
+		LocalRepositoryWindows:  new("C:\\local\\mod"),
+		Metadata:                domain.Metadata{"mod_platform": "windows"},
 	}
 	require.NoError(t, gameModRepo.Save(context.Background(), gameMod))
 
@@ -489,6 +496,7 @@ func TestHandler_WindowsOS(t *testing.T) {
 		ServerPort:    27015,
 		Dir:           "C:\\servers\\cs16",
 		ProcessActive: false,
+		Metadata:      domain.Metadata{"server_platform": "windows"},
 		CreatedAt:     &now,
 		UpdatedAt:     &now,
 	}
@@ -512,11 +520,13 @@ func TestHandler_WindowsOS(t *testing.T) {
 	require.Len(t, response, 1)
 
 	serverResp := response[0]
+	assert.Equal(t, map[string]any{"server_platform": "windows"}, serverResp.Metadata)
 
 	require.NotNil(t, serverResp.Game.RemoteRepository)
 	assert.Equal(t, "http://example.com/repo-win", *serverResp.Game.RemoteRepository)
 	require.NotNil(t, serverResp.Game.SteamAppID)
 	assert.Equal(t, uint(90), *serverResp.Game.SteamAppID)
+	assert.Equal(t, map[string]any{"platform": "windows"}, serverResp.Game.Metadata)
 
 	require.NotNil(t, serverResp.GameMod.DefaultStartCmd)
 	assert.Equal(t, "hlds.exe -game cstrike", *serverResp.GameMod.DefaultStartCmd)
@@ -526,6 +536,7 @@ func TestHandler_WindowsOS(t *testing.T) {
 	assert.Equal(t, "hlds.exe -game cstrike", *serverResp.GameMod.DefaultStartCmdWindows)
 	require.NotNil(t, serverResp.GameMod.RemoteRepository)
 	assert.Equal(t, "http://example.com/mod-win", *serverResp.GameMod.RemoteRepository)
+	assert.Equal(t, map[string]any{"mod_platform": "windows"}, serverResp.GameMod.Metadata)
 }
 
 func TestHandler_NewHandler(t *testing.T) {

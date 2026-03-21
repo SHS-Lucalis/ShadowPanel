@@ -8,8 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/samber/lo"
-
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/rbac"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
@@ -346,15 +344,15 @@ func TestHandler_calculateSummary(t *testing.T) {
 			servers: []domain.Server{
 				{
 					ProcessActive:    true,
-					LastProcessCheck: lo.ToPtr(now.Add(-30 * time.Second)),
+					LastProcessCheck: new(now.Add(-30 * time.Second)),
 				},
 				{
 					ProcessActive:    false,
-					LastProcessCheck: lo.ToPtr(now.Add(-30 * time.Second)),
+					LastProcessCheck: new(now.Add(-30 * time.Second)),
 				},
 				{
 					ProcessActive:    true,
-					LastProcessCheck: lo.ToPtr(now.Add(-150 * time.Second)),
+					LastProcessCheck: new(now.Add(-150 * time.Second)),
 				},
 			},
 			wantTotal:   3,
@@ -366,11 +364,11 @@ func TestHandler_calculateSummary(t *testing.T) {
 			servers: []domain.Server{
 				{
 					ProcessActive:    true,
-					LastProcessCheck: lo.ToPtr(now.Add(-30 * time.Second)),
+					LastProcessCheck: new(now.Add(-30 * time.Second)),
 				},
 				{
 					ProcessActive:    true,
-					LastProcessCheck: lo.ToPtr(now.Add(-60 * time.Second)),
+					LastProcessCheck: new(now.Add(-60 * time.Second)),
 				},
 			},
 			wantTotal:   2,
@@ -382,7 +380,7 @@ func TestHandler_calculateSummary(t *testing.T) {
 			servers: []domain.Server{
 				{
 					ProcessActive:    false,
-					LastProcessCheck: lo.ToPtr(now.Add(-30 * time.Second)),
+					LastProcessCheck: new(now.Add(-30 * time.Second)),
 				},
 				{
 					ProcessActive:    true,

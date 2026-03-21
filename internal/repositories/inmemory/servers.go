@@ -13,7 +13,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/google/uuid"
-	"github.com/samber/lo"
 )
 
 type ServerRepository struct {
@@ -254,10 +253,10 @@ func (r *ServerRepository) Save(_ context.Context, server *domain.Server) error 
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	server.UpdatedAt = lo.ToPtr(time.Now())
+	server.UpdatedAt = new(time.Now())
 
 	if server.ID == 0 && (server.CreatedAt == nil || server.CreatedAt.IsZero()) {
-		server.CreatedAt = lo.ToPtr(time.Now())
+		server.CreatedAt = new(time.Now())
 	}
 
 	// Remove old indexes if updating existing server
@@ -299,6 +298,7 @@ func (r *ServerRepository) Save(_ context.Context, server *domain.Server) error 
 		ProcessActive:    server.ProcessActive,
 		LastProcessCheck: server.LastProcessCheck,
 		Vars:             server.Vars,
+		Metadata:         server.Metadata,
 		CreatedAt:        server.CreatedAt,
 		UpdatedAt:        server.UpdatedAt,
 		DeletedAt:        server.DeletedAt,
@@ -358,6 +358,7 @@ func (r *ServerRepository) SaveBulk(_ context.Context, servers []*domain.Server)
 			ProcessActive:    server.ProcessActive,
 			LastProcessCheck: server.LastProcessCheck,
 			Vars:             server.Vars,
+			Metadata:         server.Metadata,
 			CreatedAt:        server.CreatedAt,
 			UpdatedAt:        server.UpdatedAt,
 			DeletedAt:        server.DeletedAt,
@@ -963,17 +964,18 @@ func (r *ServerRepository) applyPagination(servers []domain.Server, pagination *
 	}
 
 	limit := pagination.Limit
-	if limit <= 0 {
+	if limit == 0 {
 		limit = filters.DefaultLimit
 	}
 
-	offset := max(pagination.Offset, 0)
+	offset := pagination.Offset
+	length := uint64(len(servers))
 
-	if offset >= len(servers) {
+	if offset >= length {
 		return []domain.Server{}
 	}
 
-	end := min(offset+limit, len(servers))
+	end := min(offset+limit, length)
 
 	return servers[offset:end]
 }

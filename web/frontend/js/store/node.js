@@ -30,7 +30,7 @@ export const useNodeStore = defineStore('node', () => {
     async function fetchNode() {
         apiProcesses.value++
         try {
-            const response = await axios.get('/api/dedicated_servers/' + nodeId.value)
+            const response = await axios.get('/api/nodes/' + nodeId.value)
             node.value = response.data
         } finally {
             apiProcesses.value--
@@ -40,7 +40,7 @@ export const useNodeStore = defineStore('node', () => {
     async function fetchDaemonInfo() {
         apiProcesses.value++
         try {
-            const response = await axios.get('/api/dedicated_servers/' + nodeId.value + '/daemon')
+            const response = await axios.get('/api/nodes/' + nodeId.value + '/daemon')
             daemonInfo.value = response.data
         } finally {
             apiProcesses.value--
@@ -50,7 +50,7 @@ export const useNodeStore = defineStore('node', () => {
     async function saveNode(nodeData) {
         apiProcesses.value++
         try {
-            await axios.put('/api/dedicated_servers/' + nodeId.value, nodeData)
+            await axios.put('/api/nodes/' + nodeId.value, nodeData)
         } finally {
             apiProcesses.value--
         }
@@ -64,7 +64,7 @@ export const useNodeStore = defineStore('node', () => {
 
         apiProcesses.value++
         try {
-            const response = await axios.get('/api/dedicated_servers/' + nodeId.value + '/ip_list')
+            const response = await axios.get('/api/nodes/' + nodeId.value + '/ip_list')
             ipList.value = response.data
         } finally {
             apiProcesses.value--
@@ -78,7 +78,7 @@ export const useNodeStore = defineStore('node', () => {
 
         apiProcesses.value++
         try {
-            const response = await axios.get('/api/dedicated_servers/' + nodeId.value + '/busy_ports')
+            const response = await axios.get('/api/nodes/' + nodeId.value + '/busy_ports')
             busyPorts.value = response.data
 
             if (typeof callback === 'function') {

@@ -232,10 +232,12 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			serverRepo := inmemory.NewServerRepository()
 			gameRepo := inmemory.NewGameRepository()
+			gameModRepo := inmemory.NewGameModRepository()
+			serverSettingRepo := inmemory.NewServerSettingRepository()
 			rbacRepo := inmemory.NewRBACRepository()
 			rbacService := rbac.NewRBAC(services.NewNilTransactionManager(), rbacRepo, 0)
 			responder := api.NewResponder()
-			handler := NewHandler(serverRepo, gameRepo, rbacService, responder)
+			handler := NewHandler(serverRepo, gameRepo, gameModRepo, serverSettingRepo, rbacService, responder)
 
 			if tt.setupRepo != nil {
 				tt.setupRepo(serverRepo, rbacRepo)
@@ -285,10 +287,12 @@ func TestHandler_ServeHTTP(t *testing.T) {
 func TestHandler_ServerResponseFields(t *testing.T) {
 	serverRepo := inmemory.NewServerRepository()
 	gameRepo := inmemory.NewGameRepository()
+	gameModRepo := inmemory.NewGameModRepository()
+	serverSettingRepo := inmemory.NewServerSettingRepository()
 	rbacRepo := inmemory.NewRBACRepository()
 	rbacService := rbac.NewRBAC(services.NewNilTransactionManager(), rbacRepo, 0)
 	responder := api.NewResponder()
-	handler := NewHandler(serverRepo, gameRepo, rbacService, responder)
+	handler := NewHandler(serverRepo, gameRepo, gameModRepo, serverSettingRepo, rbacService, responder)
 
 	now := time.Now()
 	userName := "Admin User"
@@ -319,7 +323,6 @@ func TestHandler_ServerResponseFields(t *testing.T) {
 	stopCmd := "./stop.sh"
 	forceStopCmd := "./force_stop.sh"
 	restartCmd := "./restart.sh"
-	vars := "{\"key\":\"value\"}"
 	expires := now.Add(30 * 24 * time.Hour)
 	lastCheck := now.Add(-1 * time.Hour)
 
@@ -351,7 +354,8 @@ func TestHandler_ServerResponseFields(t *testing.T) {
 		RestartCommand:   &restartCmd,
 		ProcessActive:    true,
 		LastProcessCheck: &lastCheck,
-		Vars:             &vars,
+		Vars:             domain.ServerVars{"key": "value"},
+		Metadata:         domain.Metadata{"docker_image": "ghcr.io/gameap/cs16:latest", "default_port": float64(27015)},
 		CreatedAt:        &now,
 		UpdatedAt:        &now,
 	}
@@ -418,7 +422,8 @@ func TestHandler_ServerResponseFields(t *testing.T) {
 	require.NotNil(t, serverResp.LastProcessCheck)
 	assert.Equal(t, lastCheck.Unix(), serverResp.LastProcessCheck.Unix())
 	require.NotNil(t, serverResp.Vars)
-	assert.Equal(t, "{\"key\":\"value\"}", *serverResp.Vars)
+	assert.Equal(t, map[string]string{"key": "value"}, serverResp.Vars)
+	assert.Equal(t, map[string]any{"docker_image": "ghcr.io/gameap/cs16:latest", "default_port": float64(27015)}, serverResp.Metadata)
 	assert.NotNil(t, serverResp.CreatedAt)
 	assert.NotNil(t, serverResp.UpdatedAt)
 }
@@ -426,11 +431,13 @@ func TestHandler_ServerResponseFields(t *testing.T) {
 func TestHandler_NewHandler(t *testing.T) {
 	serverRepo := inmemory.NewServerRepository()
 	gameRepo := inmemory.NewGameRepository()
+	gameModRepo := inmemory.NewGameModRepository()
+	serverSettingRepo := inmemory.NewServerSettingRepository()
 	rbacRepo := inmemory.NewRBACRepository()
 	rbacService := rbac.NewRBAC(services.NewNilTransactionManager(), rbacRepo, 0)
 	responder := api.NewResponder()
 
-	handler := NewHandler(serverRepo, gameRepo, rbacService, responder)
+	handler := NewHandler(serverRepo, gameRepo, gameModRepo, serverSettingRepo, rbacService, responder)
 
 	require.NotNil(t, handler)
 	assert.NotNil(t, handler.serverFinder)
@@ -460,7 +467,7 @@ func TestNewServerResponseFromServer(t *testing.T) {
 		UpdatedAt:     &now,
 	}
 
-	response := newAdminServerResponseFromServer(server, nil)
+	response := newAdminServerResponseFromServer(server, nil, nil, nil)
 
 	assert.Equal(t, uint(1), response.ID)
 	assert.Equal(t, "44444444-4444-4444-4444-444444444444", response.UUID)

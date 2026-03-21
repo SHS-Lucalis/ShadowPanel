@@ -1,13 +1,13 @@
 <template>
-  <GMenu as="div" :class="$attrs.class" class="relative inline-block text-left">
+  <GMenu as="div" :class="$attrs.class" class="relative inline-flex items-center text-left">
     <div class="sm:hidden">
-      <GMenuButton @click="onMenuButtonClick" class="gap-x-1.5 mt-4 text-white hover:bg-stone-800 px-4 py-2 rounded">
+      <GMenuButton @click="onMenuButtonClick" class="flex items-center gap-x-1.5 text-white hover:bg-stone-800 px-4 py-2 rounded">
         <GIcon v-if="buttonIcon" :name="buttonIcon" />
       </GMenuButton>
     </div>
 
-    <div class="sm:visible invisible">
-      <GMenuButton @click="onMenuButtonClick" class="w-full gap-x-1.5 text-white hover:bg-stone-800 md:px-4 md:py-2 rounded">
+    <div class="hidden sm:block">
+      <GMenuButton @click="onMenuButtonClick" class="flex items-center w-full gap-x-1.5 text-white hover:bg-stone-800 md:px-4 md:py-2 rounded">
         <GIcon v-if="buttonIcon" :name="buttonIcon" class="mr-1" />
         <span class="md:visible collapse">{{ props.buttonText }}</span>
         <GIcon v-if="!menuOpened" name="chevron-down" class="ml-4 md:visible collapse" />
@@ -16,7 +16,7 @@
     </div>
 
     <transition @after-leave="transitionAfterLeave" enter-active-class="transition ease-out duration-100" enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100" leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95">
-      <GMenuItems :unmount="menuItemsUnmount" class="absolute right-0 z-10 mt-2 w-56 origin-top-right divide-y divide-stone-100 rounded bg-white dark:bg-stone-900 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+      <GMenuItems :unmount="menuItemsUnmount" class="absolute right-0 top-full z-10 mt-2 w-56 origin-top-right divide-y divide-stone-100 rounded bg-white dark:bg-stone-900 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
         <div class="py-1" v-for="itemGroup in items">
           <GMenuItem v-slot="{ active, close }" v-for="item in itemGroup">
             <a

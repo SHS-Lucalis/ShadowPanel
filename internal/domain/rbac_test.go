@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -154,8 +153,8 @@ func TestNewRestrictedRoleFromRole(t *testing.T) {
 			role: Role{
 				ID:    1,
 				Name:  "admin",
-				Title: lo.ToPtr("Administrator"),
-				Level: lo.ToPtr(uint(10)),
+				Title: new("Administrator"),
+				Level: new(uint(10)),
 			},
 		},
 		{
@@ -170,11 +169,11 @@ func TestNewRestrictedRoleFromRole(t *testing.T) {
 			role: Role{
 				ID:        3,
 				Name:      "moderator",
-				Title:     lo.ToPtr("Moderator"),
-				Level:     lo.ToPtr(uint(5)),
-				Scope:     lo.ToPtr(1),
-				CreatedAt: lo.ToPtr(time.Now()),
-				UpdatedAt: lo.ToPtr(time.Now()),
+				Title:     new("Moderator"),
+				Level:     new(uint(5)),
+				Scope:     new(1),
+				CreatedAt: new(time.Now()),
+				UpdatedAt: new(time.Now()),
 			},
 		},
 	}

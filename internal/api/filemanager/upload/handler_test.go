@@ -32,13 +32,13 @@ func allowUserFilesAbility(t *testing.T, rbacRepo *inmemory.RBACRepository, user
 	ability := &domain.Ability{
 		Name:       domain.AbilityNameGameServerFiles,
 		EntityType: lo.ToPtr(domain.EntityTypeServer),
-		EntityID:   lo.ToPtr(serverID),
+		EntityID:   new(serverID),
 	}
 	require.NoError(t, rbacRepo.SaveAbility(context.Background(), ability))
 
 	permission := &domain.Permission{
 		AbilityID:  ability.ID,
-		EntityID:   lo.ToPtr(userID),
+		EntityID:   new(userID),
 		EntityType: lo.ToPtr(domain.EntityTypeUser),
 		Forbidden:  false,
 	}

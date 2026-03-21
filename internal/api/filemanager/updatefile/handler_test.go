@@ -34,13 +34,13 @@ func allowUserFilesAbility(t *testing.T, rbacRepo *inmemory.RBACRepository, user
 	ability := &domain.Ability{
 		Name:       domain.AbilityNameGameServerFiles,
 		EntityType: lo.ToPtr(domain.EntityTypeServer),
-		EntityID:   lo.ToPtr(serverID),
+		EntityID:   new(serverID),
 	}
 	require.NoError(t, rbacRepo.SaveAbility(context.Background(), ability))
 
 	permission := &domain.Permission{
 		AbilityID:  ability.ID,
-		EntityID:   lo.ToPtr(userID),
+		EntityID:   new(userID),
 		EntityType: lo.ToPtr(domain.EntityTypeUser),
 		Forbidden:  false,
 	}
@@ -494,7 +494,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				require.NoError(t, err)
 			},
 			expectedStatus: http.StatusBadRequest,
-			wantError:      "file exceeds maximum size",
+			wantError:      "request body too large",
 		},
 		{
 			name:     "user_not_authenticated",

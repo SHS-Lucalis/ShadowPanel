@@ -358,7 +358,7 @@ func (s *ClientCertificatesRepositorySuite) TestClientCertificateRepositoryInteg
 	})
 
 	s.T().Run("multiple_certificates_operations", func(t *testing.T) {
-		var certIDs []uint
+		certIDs := make([]uint, 0, 5)
 		for i := range 5 {
 			cert := &domain.ClientCertificate{
 				Fingerprint: "AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:" + string(rune('A'+i)) + string(rune('0'+i)),

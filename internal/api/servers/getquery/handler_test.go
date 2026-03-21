@@ -8,8 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/samber/lo"
-
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/rbac"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
@@ -349,9 +347,9 @@ func TestNewQueryResponse(t *testing.T) {
 				ServerPort: 27015,
 			},
 			wantStatus:   "online",
-			wantHostname: lo.ToPtr("Test Server"),
-			wantMap:      lo.ToPtr("de_dust2"),
-			wantPlayers:  lo.ToPtr("5/32"),
+			wantHostname: new("Test Server"),
+			wantMap:      new("de_dust2"),
+			wantPlayers:  new("5/32"),
 		},
 		{
 			name: "online result with zero players",
@@ -367,9 +365,9 @@ func TestNewQueryResponse(t *testing.T) {
 				ServerPort: 27016,
 			},
 			wantStatus:   "online",
-			wantHostname: lo.ToPtr("Empty Server"),
-			wantMap:      lo.ToPtr("cs_office"),
-			wantPlayers:  lo.ToPtr("0/16"),
+			wantHostname: new("Empty Server"),
+			wantMap:      new("cs_office"),
+			wantPlayers:  new("0/16"),
 		},
 	}
 

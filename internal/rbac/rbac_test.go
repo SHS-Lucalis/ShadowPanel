@@ -26,8 +26,8 @@ var (
 
 		// Entity-specific abilities
 		{ID: 101, Name: domain.AbilityNameView, EntityType: lo.ToPtr(domain.EntityTypeServer)},
-		{ID: 201, Name: domain.AbilityNameView, EntityType: lo.ToPtr(domain.EntityTypeServer), EntityID: lo.ToPtr(uint(1))},
-		{ID: 202, Name: domain.AbilityNameView, EntityType: lo.ToPtr(domain.EntityTypeServer), EntityID: lo.ToPtr(uint(123))},
+		{ID: 201, Name: domain.AbilityNameView, EntityType: lo.ToPtr(domain.EntityTypeServer), EntityID: new(uint(1))},
+		{ID: 202, Name: domain.AbilityNameView, EntityType: lo.ToPtr(domain.EntityTypeServer), EntityID: new(uint(123))},
 	}
 
 	testRoles = map[string]domain.Role{
@@ -36,9 +36,9 @@ var (
 	}
 
 	testPermissions = []domain.Permission{
-		{AbilityID: 1, EntityID: lo.ToPtr(testRoles["admin"].ID), EntityType: lo.ToPtr(domain.EntityTypeRole)},
-		{AbilityID: 2, EntityID: lo.ToPtr(testRoles["admin"].ID), EntityType: lo.ToPtr(domain.EntityTypeRole)},
-		{AbilityID: 2, EntityID: lo.ToPtr(testRoles["user"].ID), EntityType: lo.ToPtr(domain.EntityTypeRole)},
+		{AbilityID: 1, EntityID: new(testRoles["admin"].ID), EntityType: lo.ToPtr(domain.EntityTypeRole)},
+		{AbilityID: 2, EntityID: new(testRoles["admin"].ID), EntityType: lo.ToPtr(domain.EntityTypeRole)},
+		{AbilityID: 2, EntityID: new(testRoles["user"].ID), EntityType: lo.ToPtr(domain.EntityTypeRole)},
 
 		{AbilityID: 2, EntityID: &forbiddenUser.ID, EntityType: lo.ToPtr(domain.EntityTypeUser), Forbidden: true},
 		{AbilityID: 3, EntityID: &globalUser.ID, EntityType: lo.ToPtr(domain.EntityTypeUser)},
@@ -61,7 +61,7 @@ var (
 			EntityID:         regularUser.ID,
 			EntityType:       domain.EntityTypeUser,
 			RoleID:           testRoles["user"].ID,
-			RestrictedToID:   lo.ToPtr(uint(123)),
+			RestrictedToID:   new(uint(123)),
 			RestrictedToType: lo.ToPtr(domain.EntityTypeServer)},
 	}
 )
@@ -213,12 +213,12 @@ func TestRBAC_Can_RoleBased(t *testing.T) {
 				permissions: []domain.Permission{
 					{
 						AbilityID:  2,
-						EntityID:   lo.ToPtr(uint(1)),
+						EntityID:   new(uint(1)),
 						EntityType: lo.ToPtr(domain.EntityTypeRole),
 					},
 					{
 						AbilityID:  2,
-						EntityID:   lo.ToPtr(uint(1)),
+						EntityID:   new(uint(1)),
 						EntityType: lo.ToPtr(domain.EntityTypeRole),
 					},
 				},
@@ -242,18 +242,18 @@ func TestRBAC_Can_RoleBased(t *testing.T) {
 					},
 				},
 				abilities: []domain.Ability{
-					{ID: 1, Name: domain.AbilityNameCreate, EntityType: lo.ToPtr(domain.EntityTypeServer), EntityID: lo.ToPtr(uint(123))},
+					{ID: 1, Name: domain.AbilityNameCreate, EntityType: lo.ToPtr(domain.EntityTypeServer), EntityID: new(uint(123))},
 					{ID: 2, Name: domain.AbilityNameView},
 				},
 				permissions: []domain.Permission{
 					{
 						AbilityID:  1,
-						EntityID:   lo.ToPtr(uint(1)),
+						EntityID:   new(uint(1)),
 						EntityType: lo.ToPtr(domain.EntityTypeRole),
 					},
 					{
 						AbilityID:  2,
-						EntityID:   lo.ToPtr(uint(1)),
+						EntityID:   new(uint(1)),
 						EntityType: lo.ToPtr(domain.EntityTypeRole),
 					},
 				},
@@ -273,7 +273,7 @@ func TestRBAC_Can_RoleBased(t *testing.T) {
 						EntityID:         regularUser.ID,
 						EntityType:       domain.EntityTypeUser,
 						RoleID:           1,
-						RestrictedToID:   lo.ToPtr(uint(123)),
+						RestrictedToID:   new(uint(123)),
 						RestrictedToType: lo.ToPtr(domain.EntityTypeServer),
 					},
 				},
@@ -283,7 +283,7 @@ func TestRBAC_Can_RoleBased(t *testing.T) {
 				permissions: []domain.Permission{
 					{
 						AbilityID:  1,
-						EntityID:   lo.ToPtr(uint(1)),
+						EntityID:   new(uint(1)),
 						EntityType: lo.ToPtr(domain.EntityTypeRole),
 					},
 				},
@@ -312,7 +312,7 @@ func TestRBAC_Can_RoleBased(t *testing.T) {
 				permissions: []domain.Permission{
 					{
 						AbilityID:  1,
-						EntityID:   lo.ToPtr(uint(1)),
+						EntityID:   new(uint(1)),
 						EntityType: lo.ToPtr(domain.EntityTypeRole),
 					},
 				},

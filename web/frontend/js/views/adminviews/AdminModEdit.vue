@@ -72,6 +72,12 @@ onMounted(() => {
       modUpdateModel.value = Object.fromEntries(
           Object.entries(mod.value).map(([k, v]) => [camelCase(k), v])
       );
+
+      modUpdateModel.value.metadata = Object.entries(mod.value.metadata || {})
+          .map(([key, value]) => ({
+            key,
+            value: typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)
+          }))
     }).catch((error) => {
       errorNotification(error)
     })
@@ -84,9 +90,22 @@ onMounted(() => {
 const modUpdateModel = ref({})
 
 const onUpdateMod = () => {
+  const metadataObj = {}
+  for (const {key, value} of modUpdateModel.value.metadata || []) {
+    if (key) {
+      try {
+        metadataObj[key] = JSON.parse(value)
+      } catch {
+        metadataObj[key] = value
+      }
+    }
+  }
+
   const fields = Object.fromEntries(
       Object.entries(modUpdateModel.value).map(([k, v]) => [snakeCase(k), v])
   );
+  fields.metadata = metadataObj
+
   gameModStore.saveMod(fields).then(() => {
     notification({
       content: trans('games.mod_update_success_msg'),

@@ -3,6 +3,7 @@ package updateplugin
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"path"
 	"time"
@@ -17,7 +18,6 @@ import (
 	"github.com/gameap/gameap/pkg/api"
 	pkgplugin "github.com/gameap/gameap/pkg/plugin"
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 )
 
 type Handler struct {
@@ -47,12 +47,19 @@ func NewHandler(
 	}
 }
 
+const extendedWriteDeadline = 5 * time.Minute
+
 type input struct {
 	Version string `json:"version"`
 }
 
 func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+
+	rc := http.NewResponseController(rw)
+	if err := rc.SetWriteDeadline(time.Now().Add(extendedWriteDeadline)); err != nil {
+		slog.WarnContext(ctx, "failed to extend write deadline", slog.String("error", err.Error()))
+	}
 
 	storePluginID, err := api.NewInputReader(r).ReadString("id")
 	if err != nil {
@@ -114,7 +121,14 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.tryLoadPlugin(ctx, pluginRecord, filename)
+	if err := h.tryLoadPlugin(ctx, pluginRecord, filename); err != nil {
+		h.responder.WriteError(ctx, rw, api.WrapHTTPError(
+			errors.WithMessage(err, "plugin installed but failed to load"),
+			http.StatusUnprocessableEntity,
+		))
+
+		return
+	}
 
 	h.responder.Write(ctx, rw, newUpdateResponse(pluginRecord))
 }
@@ -222,17 +236,28 @@ func (h *Handler) downloadAndVerify(
 
 func (h *Handler) updatePluginRecord(record *domain.Plugin, version *pluginstore.PluginVersion, filename string) {
 	record.Version = version.Version
-	record.Filename = lo.ToPtr(filename)
+	record.Filename = new(filename)
 	record.Status = domain.PluginStatusActive
-	record.UpdatedAt = lo.ToPtr(time.Now())
+	record.UpdatedAt = new(time.Now())
 }
 
-func (h *Handler) tryLoadPlugin(ctx context.Context, pluginRecord *domain.Plugin, filename string) {
+func (h *Handler) tryLoadPlugin(ctx context.Context, pluginRecord *domain.Plugin, filename string) error {
 	if h.loader == nil {
-		return
+		return nil
 	}
 	if _, err := h.loader.Load(ctx, filename); err != nil {
+		slog.ErrorContext(
+			ctx,
+			"failed to load plugin",
+			slog.String("filename", filename),
+			slog.String("error", err.Error()),
+		)
+
 		pluginRecord.Status = domain.PluginStatusError
 		_ = h.pluginRepo.Save(ctx, pluginRecord)
+
+		return errors.WithMessage(err, "failed to load plugin")
 	}
+
+	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"log/slog"
+	"unicode"
 
 	"github.com/pkg/errors"
 )
@@ -27,6 +28,7 @@ type GameMod struct {
 	ChmapCmd                *string             `db:"chmap_cmd"`
 	SendmsgCmd              *string             `db:"sendmsg_cmd"`
 	PasswdCmd               *string             `db:"passwd_cmd"`
+	Metadata                Metadata            `db:"metadata"`
 }
 
 func (gm *GameMod) Merge(other *GameMod) {
@@ -131,7 +133,9 @@ func (gmvd *GameModVarDefault) UnmarshalJSON(data []byte) error {
 	// Try to unmarshal as number
 	var num int
 	if err := json.Unmarshal(data, &num); err == nil {
-		*gmvd = GameModVarDefault(rune(num))
+		if num >= 0 && num <= unicode.MaxRune {
+			*gmvd = GameModVarDefault(rune(num))
+		}
 	}
 
 	return nil

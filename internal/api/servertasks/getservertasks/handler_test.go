@@ -71,7 +71,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 					RepeatPeriod: 0,
 					Counter:      0,
 					ExecuteDate:  executeDate,
-					Payload:      lo.ToPtr("task payload"),
+					Payload:      new("task payload"),
 					CreatedAt:    &now,
 					UpdatedAt:    &now,
 				}
@@ -91,8 +91,8 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				adminRole := &domain.Role{
 					Name:  "admin",
-					Title: lo.ToPtr("Administrator"),
-					Level: lo.ToPtr(uint(100)),
+					Title: new("Administrator"),
+					Level: new(uint(100)),
 				}
 				_ = rbacRepo.SaveRole(context.Background(), adminRole)
 
@@ -105,13 +105,13 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				ability := &domain.Ability{
 					Name:  domain.AbilityNameAdminRolesPermissions,
-					Title: lo.ToPtr("Admin Permissions"),
+					Title: new("Admin Permissions"),
 				}
 				_ = rbacRepo.SaveAbility(context.Background(), ability)
 
 				permission := &domain.Permission{
 					AbilityID:  ability.ID,
-					EntityID:   lo.ToPtr(uint(1)),
+					EntityID:   new(uint(1)),
 					EntityType: lo.ToPtr(domain.EntityTypeUser),
 					Forbidden:  false,
 				}
@@ -169,15 +169,15 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				ability := &domain.Ability{
 					Name:       domain.AbilityNameGameServerTasks,
-					Title:      lo.ToPtr("Server Tasks"),
-					EntityID:   lo.ToPtr(uint(1)),
+					Title:      new("Server Tasks"),
+					EntityID:   new(uint(1)),
 					EntityType: lo.ToPtr(domain.EntityTypeServer),
 				}
 				_ = rbacRepo.SaveAbility(context.Background(), ability)
 
 				permission := &domain.Permission{
 					AbilityID:  ability.ID,
-					EntityID:   lo.ToPtr(uint(2)),
+					EntityID:   new(uint(2)),
 					EntityType: lo.ToPtr(domain.EntityTypeUser),
 					Forbidden:  false,
 				}
@@ -304,8 +304,8 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				adminRole := &domain.Role{
 					Name:  "admin",
-					Title: lo.ToPtr("Administrator"),
-					Level: lo.ToPtr(uint(100)),
+					Title: new("Administrator"),
+					Level: new(uint(100)),
 				}
 				_ = rbacRepo.SaveRole(context.Background(), adminRole)
 
@@ -318,13 +318,13 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				ability := &domain.Ability{
 					Name:  domain.AbilityNameAdminRolesPermissions,
-					Title: lo.ToPtr("Admin Permissions"),
+					Title: new("Admin Permissions"),
 				}
 				_ = rbacRepo.SaveAbility(context.Background(), ability)
 
 				permission := &domain.Permission{
 					AbilityID:  ability.ID,
-					EntityID:   lo.ToPtr(uint(1)),
+					EntityID:   new(uint(1)),
 					EntityType: lo.ToPtr(domain.EntityTypeUser),
 					Forbidden:  false,
 				}
@@ -406,15 +406,15 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				ability := &domain.Ability{
 					Name:       domain.AbilityNameGameServerTasks,
-					Title:      lo.ToPtr("Server Tasks"),
-					EntityID:   lo.ToPtr(uint(1)),
+					Title:      new("Server Tasks"),
+					EntityID:   new(uint(1)),
 					EntityType: lo.ToPtr(domain.EntityTypeServer),
 				}
 				_ = rbacRepo.SaveAbility(context.Background(), ability)
 
 				permission := &domain.Permission{
 					AbilityID:  ability.ID,
-					EntityID:   lo.ToPtr(uint(6)),
+					EntityID:   new(uint(6)),
 					EntityType: lo.ToPtr(domain.EntityTypeUser),
 					Forbidden:  true,
 				}
@@ -472,7 +472,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				serverRole := &domain.Role{
 					Name:  "server_manager",
-					Title: lo.ToPtr("Server Manager"),
+					Title: new("Server Manager"),
 				}
 				_ = rbacRepo.SaveRole(context.Background(), serverRole)
 
@@ -485,15 +485,15 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				ability := &domain.Ability{
 					Name:       domain.AbilityNameGameServerTasks,
-					Title:      lo.ToPtr("Server Tasks"),
-					EntityID:   lo.ToPtr(uint(1)),
+					Title:      new("Server Tasks"),
+					EntityID:   new(uint(1)),
 					EntityType: lo.ToPtr(domain.EntityTypeServer),
 				}
 				_ = rbacRepo.SaveAbility(context.Background(), ability)
 
 				permission := &domain.Permission{
 					AbilityID:  ability.ID,
-					EntityID:   lo.ToPtr(serverRole.ID),
+					EntityID:   new(serverRole.ID),
 					EntityType: lo.ToPtr(domain.EntityTypeRole),
 					Forbidden:  false,
 				}
@@ -550,13 +550,13 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				ability := &domain.Ability{
 					Name:  domain.AbilityNameAdminRolesPermissions,
-					Title: lo.ToPtr("Admin Permissions"),
+					Title: new("Admin Permissions"),
 				}
 				_ = rbacRepo.SaveAbility(context.Background(), ability)
 
 				permission := &domain.Permission{
 					AbilityID:  ability.ID,
-					EntityID:   lo.ToPtr(uint(8)),
+					EntityID:   new(uint(8)),
 					EntityType: lo.ToPtr(domain.EntityTypeUser),
 					Forbidden:  false,
 				}

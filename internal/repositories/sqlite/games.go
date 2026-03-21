@@ -62,15 +62,11 @@ func (r *GameRepository) find(
 	}
 
 	if pagination != nil {
-		if pagination.Limit <= 0 {
+		if pagination.Limit == 0 {
 			pagination.Limit = filters.DefaultLimit
 		}
 
-		if pagination.Offset < 0 {
-			pagination.Offset = 0
-		}
-
-		builder = builder.Limit(uint64(pagination.Limit)).Offset(uint64(pagination.Offset))
+		builder = builder.Limit(pagination.Limit).Offset(pagination.Offset)
 	}
 
 	query, args, err := builder.ToSql()
@@ -124,6 +120,7 @@ func (r *GameRepository) Save(ctx context.Context, game *domain.Game) error {
 			game.LocalRepositoryLinux,
 			game.LocalRepositoryWindows,
 			game.Enabled,
+			game.Metadata,
 		).
 		Suffix("ON CONFLICT(code) DO UPDATE SET " +
 			"name=excluded.name," +
@@ -136,7 +133,8 @@ func (r *GameRepository) Save(ctx context.Context, game *domain.Game) error {
 			"remote_repository_windows=excluded.remote_repository_windows," +
 			"local_repository_linux=excluded.local_repository_linux," +
 			"local_repository_windows=excluded.local_repository_windows," +
-			"enabled=excluded.enabled").
+			"enabled=excluded.enabled," +
+			"metadata=excluded.metadata").
 		ToSql()
 	if err != nil {
 		return errors.WithMessage(err, "failed to build query")
@@ -182,6 +180,7 @@ func (r *GameRepository) scan(row base.Scanner) (*domain.Game, error) {
 		&game.LocalRepositoryLinux,
 		&game.LocalRepositoryWindows,
 		&game.Enabled,
+		&game.Metadata,
 	)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to scan row")

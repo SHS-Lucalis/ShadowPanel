@@ -9,7 +9,6 @@ import (
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/google/uuid"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -178,7 +177,7 @@ func (s *ServerRepositorySuite) TestServerRepositoryDeletedAtHandling() {
 			DSID:       1,
 			ServerIP:   "127.0.0.1",
 			ServerPort: 27018,
-			DeletedAt:  lo.ToPtr(time.Now()),
+			DeletedAt:  new(time.Now()),
 		}
 		err := s.repo.Save(ctx, deletedServer)
 		require.NoError(t, err)
@@ -218,7 +217,7 @@ func (s *ServerRepositorySuite) TestServerRepositoryFindAll() {
 		ServerIP:   "10.0.0.3",
 		ServerPort: 27017,
 		Dir:        "/servers/findall3",
-		DeletedAt:  lo.ToPtr(time.Now()),
+		DeletedAt:  new(time.Now()),
 	}
 
 	require.NoError(s.T(), s.repo.Save(ctx, server1))

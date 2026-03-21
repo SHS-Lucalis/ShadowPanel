@@ -53,6 +53,10 @@ PluginLabel:
   $ref: './PluginLabel.yaml'
 PluginVersion:
   $ref: './PluginVersion.yaml'
+PluginDryRunResponse:
+  $ref: './PluginDryRunResponse.yaml'
+LoadedPlugin:
+  $ref: './LoadedPlugin.yaml'
 
 # Request schemas
 LoginRequest:
@@ -93,6 +97,8 @@ ConsoleCommandRequest:
   $ref: './requests/ConsoleCommandRequest.yaml'
 CreateClientCertificateRequest:
   $ref: './requests/CreateClientCertificateRequest.yaml'
+ImportPelicanEggRequest:
+  $ref: './requests/ImportPelicanEggRequest.yaml'
 
 # Response schemas
 LoginResponse:
@@ -121,3 +127,5 @@ PublicConfigResponse:
   $ref: './responses/PublicConfigResponse.yaml'
 HealthResponse:
   $ref: './responses/HealthResponse.yaml'
+ImportPelicanEggResponse:
+  $ref: './responses/ImportPelicanEggResponse.yaml'

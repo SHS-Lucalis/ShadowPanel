@@ -1,0 +1,1263 @@
+{
+  "data": [
+    {
+      "code": "7d2d",
+      "start_code": "7d2d",
+      "name": "7 Days to Die",
+      "engine": "7d2d",
+      "engine_version": "1.0",
+      "steam_app_id_linux": 294420,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": [
+        {
+          "id": 11,
+          "game_code": "7d2d",
+          "name": "Default",
+          "fast_rcon": [],
+          "vars": [],
+          "remote_repository_linux": "",
+          "remote_repository_windows": "",
+          "start_cmd_linux": "./startserver.sh -configfile=serverconfig.xml",
+          "start_cmd_windows": "startdedicated.bat",
+          "kick_cmd": "",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "",
+          "chmap_cmd": "",
+          "sendmsg_cmd": "",
+          "passwd_cmd": ""
+        }
+      ]
+    },
+    {
+      "code": "ark",
+      "start_code": "ark",
+      "name": "ARK: Survival Evolved",
+      "engine": "Source",
+      "engine_version": "1.0",
+      "steam_app_id_linux": 376030,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": [
+        {
+          "id": 20,
+          "game_code": "ark",
+          "name": "Default",
+          "fast_rcon": [],
+          "vars": [
+            {"var": "default_map", "default": "Ragnarok", "info": "Default Map", "admin_var": false},
+            {"var": "maxplayers", "default": "20", "info": "Maximum players on server", "admin_var": true},
+            {"var": "join_password", "default": "", "info": "Join password", "admin_var": false}
+          ],
+          "remote_repository_linux": "",
+          "remote_repository_windows": "",
+          "start_cmd_linux": "./ShooterGame/Binaries/Linux/ShooterGameServer {default_map}?listen?ServerPassword={join_password}?ServerAdminPassword={rcon_password}?Port={port}?MaxPlayers={maxplayers}",
+          "start_cmd_windows": "ShooterGame/Binaries/Win64/ShooterGameServer.exe {default_map}?listen?ServerPassword={join_password}?ServerAdminPassword={rcon_password}?Port={port}?MaxPlayers={maxplayers}",
+          "kick_cmd": "",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "",
+          "chmap_cmd": "",
+          "sendmsg_cmd": "",
+          "passwd_cmd": ""
+        }
+      ]
+    },
+    {
+      "code": "arma2",
+      "start_code": "arma2",
+      "name": "Arma 2",
+      "engine": "armedassault2",
+      "engine_version": "2",
+      "steam_app_id_linux": 33905,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": []
+    },
+    {
+      "code": "arma2oa",
+      "start_code": "arma2oa",
+      "name": "Arma 2: Operation Arrowhead",
+      "engine": "armedassault2oa",
+      "engine_version": "2",
+      "steam_app_id_linux": 33935,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": []
+    },
+    {
+      "code": "arma3",
+      "start_code": "arma3",
+      "name": "Arma 3",
+      "engine": "armedassault3",
+      "engine_version": "3",
+      "steam_app_id_linux": 233780,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": []
+    },
+    {
+      "code": "bms",
+      "start_code": "bms",
+      "name": "Black Mesa: Deathmatch",
+      "engine": "Source",
+      "engine_version": "4",
+      "steam_app_id_linux": 346680,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": [
+        {
+          "id": 18,
+          "game_code": "bms",
+          "name": "Default",
+          "fast_rcon": [
+            {"info": "Status", "command": "status"},
+            {"info": "Stats", "command": "stats"}
+          ],
+          "vars": [
+            {"var": "default_map", "default": "crossfire", "info": "Default Map", "admin_var": false},
+            {"var": "maxplayers", "default": "32", "info": "Maximum players on server", "admin_var": false}
+          ],
+          "remote_repository_linux": "",
+          "remote_repository_windows": "",
+          "start_cmd_linux": "./srcds_run -game bms -console -usercon +ip {ip} +port {port} +maxplayers {maxplayers} +map {default_map} +rcon_password {rcon_password}",
+          "start_cmd_windows": "srcds.exe -game bms -console -usercon +ip {ip} +port {port} +maxplayers {maxplayers} +map {default_map} +rcon_password {rcon_password}",
+          "kick_cmd": "kick #{id}",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "restart",
+          "chmap_cmd": "changelevel {map}",
+          "sendmsg_cmd": "",
+          "passwd_cmd": "password {password}"
+        }
+      ]
+    },
+    {
+      "code": "cod4",
+      "start_code": "cod4",
+      "name": "Call of Duty 4",
+      "engine": "cod4",
+      "engine_version": "4",
+      "steam_app_id_linux": 0,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": []
+    },
+    {
+      "code": "cs15",
+      "start_code": "cstrike",
+      "name": "Counter-Strike 1.5",
+      "engine": "GoldSource",
+      "engine_version": "won",
+      "steam_app_id_linux": 0,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "http://files.gameap.ru/cstrike-1.5/hl_cs_won_3111e.tar.xz",
+      "remote_repository_windows": "",
+      "mods": [
+        {
+          "id": 28,
+          "game_code": "cs15",
+          "name": "Default",
+          "fast_rcon": [
+            {"info": "Status", "command": "status"},
+            {"info": "Stats", "command": "stats"}
+          ],
+          "vars": [
+            {"var": "default_map", "default": "de_dust2", "info": "Default Map", "admin_var": false},
+            {"var": "fps", "default": "500", "info": "Server FPS (tickrate)", "admin_var": false},
+            {"var": "maxplayers", "default": "32", "info": "Maximum players on server", "admin_var": false}
+          ],
+          "remote_repository_linux": "",
+          "remote_repository_windows": "",
+          "start_cmd_linux": "./hlds_run -game cstrike +ip {ip} +port {port} +map {default_map} +maxplayers {maxplayers} +sys_ticrate {fps} +sv_lan 1 +rcon_password {rcon_password}",
+          "start_cmd_windows": "hlds.exe -console -game cstrike +ip {ip} +port {port} +map {default_map} +maxplayers {maxplayers} +sys_ticrate {fps} +sv_lan 1 +rcon_password {rcon_password}",
+          "kick_cmd": "kick #{id}",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "",
+          "chmap_cmd": "",
+          "sendmsg_cmd": "",
+          "passwd_cmd": ""
+        }
+      ]
+    },
+    {
+      "code": "cs2",
+      "start_code": "cs2",
+      "name": "Counter-Strike 2",
+      "engine": "source",
+      "engine_version": "2",
+      "steam_app_id_linux": 730,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": [
+        {
+          "id": 30,
+          "game_code": "cs2",
+          "name": "Default",
+          "fast_rcon": [
+            {"info": "Status", "command": "status"},
+            {"info": "Stats", "command": "stats"}
+          ],
+          "vars": [
+            {"var": "default_map", "default": "de_dust2", "info": "Default Map", "admin_var": false},
+            {"var": "maxplayers", "default": "64", "info": "Maximum players on server", "admin_var": false},
+            {"var": "server_token", "default": "", "info": "Server Token (sv_setsteamaccount)", "admin_var": false},
+            {"var": "hostname", "default": "GameAP CS2 Server", "info": "Server hostname", "admin_var": false}
+          ],
+          "remote_repository_linux": "https://files.gameap.ru/cs2/default_linux.tar.gz",
+          "remote_repository_windows": "https://files.gameap.ru/cs2/default_windows.zip",
+          "start_cmd_linux": "./game/cs2.sh -dedicated -ip {ip} -port {port} +map de_dust2  +sv_setsteamaccount {server_token}",
+          "start_cmd_windows": "run.bat -dedicated -ip {ip} -port {port} +map de_dust2 +sv_setsteamaccount {server_token} -condebug",
+          "kick_cmd": "kick #{id}",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "restart",
+          "chmap_cmd": "changelevel {map}",
+          "sendmsg_cmd": "",
+          "passwd_cmd": "password {password}"
+        }
+      ]
+    },
+    {
+      "code": "csgo",
+      "start_code": "csgo",
+      "name": "Counter-Strike: Global Offensive",
+      "engine": "Source",
+      "engine_version": "1",
+      "steam_app_id_linux": 740,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": [
+        {
+          "id": 17,
+          "game_code": "csgo",
+          "name": "Classic",
+          "fast_rcon": [
+            {"info": "Status", "command": "status"},
+            {"info": "Stats", "command": "stats"}
+          ],
+          "vars": [
+            {"var": "default_map", "default": "de_dust2", "info": "Default Map", "admin_var": false},
+            {"var": "maxplayers", "default": "32", "info": "Maximum players on server", "admin_var": false},
+            {"var": "server_token", "default": "", "info": "Server Token (sv_setsteamaccount)", "admin_var": false}
+          ],
+          "remote_repository_linux": "",
+          "remote_repository_windows": "",
+          "start_cmd_linux": "./srcds_run -game csgo -console -usercon +game_type 0 +game_mode 0  +ip {ip} +port {port} +maxplayers {maxplayers} +mapgroup mg_active  +map {default_map} +sv_setsteamaccount {server_token}  +rcon_password {rcon_password}",
+          "start_cmd_windows": "srcds.exe -game csgo -console -usercon +game_type 0 +game_mode 0 +ip {ip} +port {port} +maxplayers {maxplayers} +mapgroup mg_active  +map {default_map} +sv_setsteamaccount {server_token}  +rcon_password {rcon_password}",
+          "kick_cmd": "kick #{id}",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "restart",
+          "chmap_cmd": "changelevel {map}",
+          "sendmsg_cmd": "",
+          "passwd_cmd": "password {password}"
+        }
+      ]
+    },
+    {
+      "code": "cssource",
+      "start_code": "cstrike",
+      "name": "Counter-Strike: Source",
+      "engine": "Source",
+      "engine_version": "",
+      "steam_app_id_linux": 232330,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": [
+        {
+          "id": 26,
+          "game_code": "cssource",
+          "name": "Default",
+          "fast_rcon": [
+            {"info": "Status", "command": "status"},
+            {"info": "Stats", "command": "stats"}
+          ],
+          "vars": [
+            {"var": "default_map", "default": "de_dust2", "info": "Default Map", "admin_var": false},
+            {"var": "maxplayers", "default": "32", "info": "Maximum players on server", "admin_var": true}
+          ],
+          "remote_repository_linux": "",
+          "remote_repository_windows": "",
+          "start_cmd_linux": "./srcds_run -game cstrike -console -ip {ip} -port {port} +maxplayers {maxplayers} +map {default_map} +rcon_password {rcon_password}",
+          "start_cmd_windows": "srcds.exe -game cstrike -console -ip {ip} -port {port} +maxplayers {maxplayers} +map {default_map} +rcon_password {rcon_password}",
+          "kick_cmd": "kick #{id}",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "restart",
+          "chmap_cmd": "changelevel {map}",
+          "sendmsg_cmd": "",
+          "passwd_cmd": "password {password}"
+        }
+      ]
+    },
+    {
+      "code": "cssv34",
+      "start_code": "cstrike",
+      "name": "Counter-Strike: Source v34",
+      "engine": "Source",
+      "engine_version": "v34",
+      "steam_app_id_linux": 232330,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "http://files.gameap.ru/cssv34/css_v34.tar.xz",
+      "remote_repository_windows": "",
+      "mods": [
+        {
+          "id": 27,
+          "game_code": "cssv34",
+          "name": "Default",
+          "fast_rcon": [
+            {"info": "Status", "command": "status"},
+            {"info": "Stats", "command": "stats"}
+          ],
+          "vars": [
+            {"var": "default_map", "default": "de_dust2", "info": "Default Map", "admin_var": false},
+            {"var": "maxplayers", "default": "32", "info": "Maximum players on server", "admin_var": false},
+            {"var": "tickrate", "default": "66", "info": "Tickrate", "admin_var": false}
+          ],
+          "remote_repository_linux": "",
+          "remote_repository_windows": "",
+          "start_cmd_linux": "./srcds_run -console -game cstrike -insecure +maxplayers {maxplayers} +map {default_map} +fps_max 0 -tickrate {tickrate} -port {port} +sv_lan 0 -localcser -nomaster +rcon_password {rcon_password}",
+          "start_cmd_windows": "",
+          "kick_cmd": "kick #{id}",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "",
+          "chmap_cmd": "",
+          "sendmsg_cmd": "",
+          "passwd_cmd": ""
+        }
+      ]
+    },
+    {
+      "code": "cstrike",
+      "start_code": "cstrike",
+      "name": "Counter-Strike 1.6",
+      "engine": "GoldSource",
+      "engine_version": "1",
+      "steam_app_id_linux": 90,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "http://files.gameap.ru/cstrike-1.6/hlcs_base.tar.xz",
+      "remote_repository_windows": "",
+      "mods": [
+        {
+          "id": 3,
+          "game_code": "cstrike",
+          "name": "Classic (Standart)",
+          "fast_rcon": [
+            {"info": "Status", "command": "status"},
+            {"info": "Stats", "command": "stats"},
+            {"info": "Last disconnect players", "command": "amx_last"},
+            {"info": "Admins on servers", "command": "amx_who"}
+          ],
+          "vars": [
+            {"var": "default_map", "default": "de_dust2", "info": "Default Map", "admin_var": false},
+            {"var": "fps", "default": "500", "info": "Server FPS (tickrate)", "admin_var": false},
+            {"var": "maxplayers", "default": "32", "info": "Maximum players on server", "admin_var": false}
+          ],
+          "remote_repository_linux": "http://files.gameap.ru/cstrike-1.6/amxx.tar.xz",
+          "remote_repository_windows": "",
+          "start_cmd_linux": "./hlds_run -game cstrike +ip {ip} +port {port} +map {default_map} +maxplayers {maxplayers} +sys_ticrate {fps}  +rcon_password {rcon_password}",
+          "start_cmd_windows": "hlds.exe -console -game cstrike +ip {ip} +port {port} +map {default_map} +maxplayers {maxplayers} +sys_ticrate {fps}  +rcon_password {rcon_password}",
+          "kick_cmd": "kick #{id}",
+          "ban_cmd": "amx_ban \"{name}\" {time} \"{reason}\"",
+          "chname_cmd": "amx_nick #{id} {name}",
+          "srestart_cmd": "restart",
+          "chmap_cmd": "changelevel {map}",
+          "sendmsg_cmd": "amx_say \"{msg}\"",
+          "passwd_cmd": "password {password}"
+        },
+        {
+          "id": 4,
+          "game_code": "cstrike",
+          "name": "No AMX MOD X",
+          "fast_rcon": [
+            {"info": "Status", "command": "status"},
+            {"info": "Stats", "command": "stats"}
+          ],
+          "vars": [
+            {"var": "default_map", "default": "de_dust2", "info": "Default Map", "admin_var": false},
+            {"var": "fps", "default": "500", "info": "Server FPS (tickrate)", "admin_var": false},
+            {"var": "maxplayers", "default": "32", "info": "Maximum players on server", "admin_var": false}
+          ],
+          "remote_repository_linux": "",
+          "remote_repository_windows": "",
+          "start_cmd_linux": "./hlds_run -game cstrike +ip {ip} +port {port} +map {default_map} +maxplayers {maxplayers} +sys_ticrate {fps} +rcon_password {rcon_password}",
+          "start_cmd_windows": "hlds.exe -console -game cstrike +ip {ip} +port {port} +map {default_map} +maxplayers {maxplayers} +sys_ticrate {fps}  +rcon_password {rcon_password}",
+          "kick_cmd": "kick #{id}",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "restart",
+          "chmap_cmd": "changelevel {map}",
+          "sendmsg_cmd": "say \"{msg}\"",
+          "passwd_cmd": "password {password}"
+        },
+        {
+          "id": 9,
+          "game_code": "cstrike",
+          "name": "ReHLDS",
+          "fast_rcon": [
+            {"info": "Status", "command": "status"},
+            {"info": "Stats", "command": "stats"},
+            {"info": "Last disconnect players", "command": "amx_last"},
+            {"info": "Admins on servers", "command": "amx_who"}
+          ],
+          "vars": [
+            {"var": "default_map", "default": "de_dust2", "info": "Default Map", "admin_var": false},
+            {"var": "fps", "default": "500", "info": "Server FPS (tickrate)", "admin_var": false},
+            {"var": "maxplayers", "default": "32", "info": "Maximum players on server", "admin_var": false}
+          ],
+          "remote_repository_linux": "http://files.gameap.ru/cstrike-1.6/rehlds-amxx-reunion.tar.xz",
+          "remote_repository_windows": "",
+          "start_cmd_linux": "./hlds_run -game cstrike +ip {ip} +port {port} +map {default_map} +maxplayers {maxplayers} +sys_ticrate {fps}  +rcon_password {rcon_password}",
+          "start_cmd_windows": "hlds.exe -console -game cstrike +ip {ip} +port {port} +map {default_map} +maxplayers {maxplayers} +sys_ticrate {fps}  +rcon_password {rcon_password}",
+          "kick_cmd": "kick #{id}",
+          "ban_cmd": "amx_ban \"{name}\" {time} \"{reason}\"",
+          "chname_cmd": "amx_nick #{id} {name}",
+          "srestart_cmd": "restart",
+          "chmap_cmd": "changelevel {map}",
+          "sendmsg_cmd": "amx_say \"{msg}\"",
+          "passwd_cmd": "password {password}"
+        }
+      ]
+    },
+    {
+      "code": "czero",
+      "start_code": "czero",
+      "name": "Counter-Strike: Condition Zero",
+      "engine": "GoldSource",
+      "engine_version": "1",
+      "steam_app_id_linux": 90,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "90 mod czero",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": []
+    },
+    {
+      "code": "dmc",
+      "start_code": "dmc",
+      "name": "Deathmatch Classic",
+      "engine": "GoldSource",
+      "engine_version": "1",
+      "steam_app_id_linux": 90,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "90 mod dmc",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": [
+        {
+          "id": 24,
+          "game_code": "dmc",
+          "name": "No AMX MOD X",
+          "fast_rcon": [
+            {"info": "Status", "command": "status"},
+            {"info": "Stats", "command": "stats"}
+          ],
+          "vars": [
+            {"var": "default_map", "default": "dm1", "info": "Default Map", "admin_var": false},
+            {"var": "fps", "default": "500", "info": "Server FPS (tickrate)", "admin_var": true},
+            {"var": "maxplayers", "default": "32", "info": "Maximum players on server", "admin_var": true}
+          ],
+          "remote_repository_linux": "",
+          "remote_repository_windows": "",
+          "start_cmd_linux": "./hlds_run   -game dmc +ip {ip} +port {port} +map {default_map}  +maxplayers {maxplayers} +sys_ticrate {fps}   +rcon_password {rcon_password}",
+          "start_cmd_windows": "hlds.exe   -console -game dod +ip {ip} +port {port} +map {default_map}  +maxplayers {maxplayers} +sys_ticrate {fps}   +rcon_password {rcon_password}",
+          "kick_cmd": "kick #{id}",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "restart",
+          "chmap_cmd": "changelevel {map}",
+          "sendmsg_cmd": "",
+          "passwd_cmd": "password {password}"
+        }
+      ]
+    },
+    {
+      "code": "dod",
+      "start_code": "dod",
+      "name": "Day of Defeat",
+      "engine": "GoldSource",
+      "engine_version": "1",
+      "steam_app_id_linux": 90,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "90 mod dod",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": [
+        {
+          "id": 23,
+          "game_code": "dod",
+          "name": "No AMX MOD X",
+          "fast_rcon": [
+            {"info": "Status", "command": "status"},
+            {"info": "Stats", "command": "stats"}
+          ],
+          "vars": [
+            {"var": "default_map", "default": "dod_caen", "info": "Default Map", "admin_var": false},
+            {"var": "fps", "default": "500", "info": "Server FPS (tickrate)", "admin_var": true},
+            {"var": "maxplayers", "default": "32", "info": "Maximum players on server", "admin_var": true}
+          ],
+          "remote_repository_linux": "",
+          "remote_repository_windows": "",
+          "start_cmd_linux": "./hlds_run -game dod +ip {ip} +port {port} +map {default_map} +maxplayers {maxplayers} +sys_ticrate {fps} +rcon_password {rcon_password}",
+          "start_cmd_windows": "hlds.exe -console -game dod +ip {ip} +port {port} +map {default_map} +maxplayers {maxplayers} +sys_ticrate {fps} +rcon_password {rcon_password}",
+          "kick_cmd": "kick #{id}",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "restart",
+          "chmap_cmd": "changelevel {map}",
+          "sendmsg_cmd": "",
+          "passwd_cmd": "password {password}"
+        }
+      ]
+    },
+    {
+      "code": "dods",
+      "start_code": "dods",
+      "name": "Day of Defeat: Source",
+      "engine": "Source",
+      "engine_version": "1",
+      "steam_app_id_linux": 232290,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": []
+    },
+    {
+      "code": "fivem",
+      "start_code": "fivem",
+      "name": "FiveM",
+      "engine": "Gta5m",
+      "engine_version": "1",
+      "steam_app_id_linux": 0,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "http://files.gameap.ru/fivem/fivem.tar.xz",
+      "remote_repository_windows": "https://files.gameap.ru/fivem/fivem-7290.zip",
+      "mods": [
+        {
+          "id": 10,
+          "game_code": "fivem",
+          "name": "Default",
+          "fast_rcon": [],
+          "vars": [
+            {"var": "hostname", "default": "GameAP FiveM Server", "info": "Server Hostname", "admin_var": false},
+            {"var": "license_key", "default": "changeme", "info": "License key from https://keymaster.fivem.net", "admin_var": false}
+          ],
+          "remote_repository_linux": "",
+          "remote_repository_windows": "",
+          "start_cmd_linux": "./fivem_run.sh --ip={ip} --port={port} --hostname=\"{hostname}\" --rcon-password=\"{rcon_password}\" --license-key=\"{license_key}\"",
+          "start_cmd_windows": "FXServer.exe +exec server.cfg",
+          "kick_cmd": "clientkick {id}",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "",
+          "chmap_cmd": "",
+          "sendmsg_cmd": "say {msg}",
+          "passwd_cmd": ""
+        }
+      ]
+    },
+    {
+      "code": "garrysmod",
+      "start_code": "garrysmod",
+      "name": "Garry's Mod",
+      "engine": "Source",
+      "engine_version": "1",
+      "steam_app_id_linux": 4020,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": [
+        {
+          "id": 19,
+          "game_code": "garrysmod",
+          "name": "Default",
+          "fast_rcon": [
+            {"info": "Status", "command": "status"},
+            {"info": "Stats", "command": "stats"}
+          ],
+          "vars": [
+            {"var": "default_map", "default": "gm_flatgrass", "info": "Default Map", "admin_var": false},
+            {"var": "maxplayers", "default": "32", "info": "Maximum players on server", "admin_var": true},
+            {"var": "tickrate", "default": "22", "info": "Tickrate", "admin_var": true}
+          ],
+          "remote_repository_linux": "",
+          "remote_repository_windows": "",
+          "start_cmd_linux": "./srcds_run   -console -game garrysmod +ip {ip} +port {port} +map {default_map}   -strictportbind -norestart +maxplayers {maxplayers}   -tickrate {tickrate} +rcon_password {rcon_password}",
+          "start_cmd_windows": "srcds.exe   -console -game garrysmod +ip {ip} +port {port}   +map {default_map} -strictportbind -norestart +maxplayers {maxplayers}   -tickrate {tickrate} +rcon_password {rcon_password}",
+          "kick_cmd": "kick #{id}",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "restart",
+          "chmap_cmd": "changelevel {map}",
+          "sendmsg_cmd": "",
+          "passwd_cmd": "password {password}"
+        }
+      ]
+    },
+    {
+      "code": "hl2mp",
+      "start_code": "hl2mp",
+      "name": "Half-Life 2",
+      "engine": "Source",
+      "engine_version": "1",
+      "steam_app_id_linux": 232370,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": []
+    },
+    {
+      "code": "hurtworld",
+      "start_code": "hurtworld",
+      "name": "HurtWorld",
+      "engine": "hurtworld",
+      "engine_version": "stable",
+      "steam_app_id_linux": 405100,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": []
+    },
+    {
+      "code": "justcause",
+      "start_code": "justcause",
+      "name": "Just Cause 2",
+      "engine": "JustCause",
+      "engine_version": "1.0",
+      "steam_app_id_linux": 261140,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": []
+    },
+    {
+      "code": "l4d",
+      "start_code": "l4d",
+      "name": "Left 4 Dead",
+      "engine": "Source",
+      "engine_version": "1",
+      "steam_app_id_linux": 222840,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": []
+    },
+    {
+      "code": "l4d2",
+      "start_code": "l4d2",
+      "name": "Left 4 Dead 2",
+      "engine": "Source",
+      "engine_version": "1",
+      "steam_app_id_linux": 222860,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": []
+    },
+    {
+      "code": "minecraft",
+      "start_code": "minecraft",
+      "name": "Minecraft",
+      "engine": "Minecraft",
+      "engine_version": "1",
+      "steam_app_id_linux": 0,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "http://packages.gameap.com/mcrun/mcrun-v1.2.0-linux-amd64.tar.gz",
+      "remote_repository_windows": "http://packages.gameap.com/mcrun/mcrun-v1.2.0-windows-amd64.zip",
+      "mods": [
+        {
+          "id": 5,
+          "game_code": "minecraft",
+          "name": "Multicore",
+          "fast_rcon": [
+            {"info": "Ban List", "command": "banlist players"},
+            {"info": "Save World", "command": "save-all"},
+            {"info": "Set Day", "command": "time set day"},
+            {"info": "Set Night", "command": "time set night"},
+            {"info": "Weather Clear", "command": "weather clear"},
+            {"info": "Seed", "command": "seed"}
+          ],
+          "vars": [
+            {"var": "version", "default": "1.20.4", "info": "Minecraft version", "admin_var": true},
+            {"var": "mod", "default": "vanilla", "info": "Mod", "admin_var": true},
+            {"var": "mod_version", "default": "", "info": "Mod version", "admin_var": true},
+            {"var": "memory", "default": "1G", "info": "Memory. Max heap size (Xmx)", "admin_var": true},
+            {"var": "min_memory", "default": "512M", "info": "Min memory. Initial heap size (Xms)", "admin_var": true}
+          ],
+          "remote_repository_linux": "",
+          "remote_repository_windows": "",
+          "start_cmd_linux": "./mcrun run --version={version} --mod={mod} --ip={ip} --port={port} --query-port={query_port}  --rcon-port={rcon_port} --rcon-password={rcon_password} --min-memory={min_memory} --memory={memory} --accept-eula",
+          "start_cmd_windows": "mcrun.exe run  --version={version} --mod={mod} --ip={ip} --port={port} --query-port={query_port}  --rcon-port={rcon_port} --rcon-password={rcon_password} --min-memory={min_memory} --memory={memory} --accept-eula",
+          "kick_cmd": "",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "",
+          "chmap_cmd": "",
+          "sendmsg_cmd": "",
+          "passwd_cmd": ""
+        }
+      ]
+    },
+    {
+      "code": "mta",
+      "start_code": "mta",
+      "name": "GTA: Multi Theft Auto",
+      "engine": "mta",
+      "engine_version": "1.0",
+      "steam_app_id_linux": 0,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "http://files.gameap.ru/mta/mta.tar.xz",
+      "remote_repository_windows": "",
+      "mods": [
+        {
+          "id": 12,
+          "game_code": "mta",
+          "name": "DeathMatch Default",
+          "fast_rcon": [],
+          "vars": [
+            {"var": "maxplayers", "default": "32", "info": "Maximum players on server", "admin_var": false}
+          ],
+          "remote_repository_linux": "http://files.gameap.ru/mta/default-deathmatch.tar.xz",
+          "remote_repository_windows": "",
+          "start_cmd_linux": "./mta-server64 -t -n --ip {ip} --port {port} --maxplayers {maxplayers}",
+          "start_cmd_windows": "mta-server.exe -t -n --ip {ip} --port {port} --maxplayers {maxplayers}",
+          "kick_cmd": "",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "",
+          "chmap_cmd": "",
+          "sendmsg_cmd": "",
+          "passwd_cmd": ""
+        }
+      ]
+    },
+    {
+      "code": "op4",
+      "start_code": "gearbox",
+      "name": "Half-Life: Opposing Force",
+      "engine": "GoldSource",
+      "engine_version": "1",
+      "steam_app_id_linux": 90,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "90 mod gearbox",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": [
+        {
+          "id": 21,
+          "game_code": "op4",
+          "name": "No AMX MOD X",
+          "fast_rcon": [
+            {"info": "Status", "command": "status"},
+            {"info": "Stats", "command": "stats"}
+          ],
+          "vars": [
+            {"var": "default_map", "default": "crossfire", "info": "Default Map", "admin_var": false},
+            {"var": "fps", "default": "500", "info": "Server FPS (tickrate)", "admin_var": true},
+            {"var": "maxplayers", "default": "32", "info": "Maximum players on server", "admin_var": true}
+          ],
+          "remote_repository_linux": "",
+          "remote_repository_windows": "",
+          "start_cmd_linux": "./hlds_run -game gearbox +ip {ip} +port {port} +map {default_map}  +maxplayers {maxplayers} +sys_ticrate {fps}   +rcon_password {rcon_password}",
+          "start_cmd_windows": "hlds.exe -console -game gearbox +ip {ip} +port {port} +map {default_map}  +maxplayers {maxplayers} +sys_ticrate {fps}   +rcon_password {rcon_password}",
+          "kick_cmd": "kick #{id}",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "restart",
+          "chmap_cmd": "changelevel {map}",
+          "sendmsg_cmd": "",
+          "passwd_cmd": "password {password}"
+        }
+      ]
+    },
+    {
+      "code": "q2",
+      "start_code": "q2",
+      "name": "Quake 2",
+      "engine": "idtech",
+      "engine_version": "2",
+      "steam_app_id_linux": 0,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "https://files.gameap.ru/quake/quake2-linux-i386-full.tar.gz",
+      "remote_repository_windows": "",
+      "mods": [
+        {
+          "id": 29,
+          "game_code": "q2",
+          "name": "Default",
+          "fast_rcon": [],
+          "vars": [
+            {"var": "hostname", "default": "Quake 2 Server", "info": "Server Hostname", "admin_var": false},
+            {"var": "maxplayers", "default": "16", "info": "Maximum players on server", "admin_var": true},
+            {"var": "map", "default": "base1", "info": "Map of the server", "admin_var": false},
+            {"var": "timelimit", "default": "20", "info": "Timelimit in minutes", "admin_var": false},
+            {"var": "fraglimit", "default": "30", "info": "Frag limit", "admin_var": false},
+            {"var": "game", "default": "baseq2", "info": "Mission Pack (game)", "admin_var": false}
+          ],
+          "remote_repository_linux": "",
+          "remote_repository_windows": "",
+          "start_cmd_linux": "./run.sh +set dedicated 1 +set ip {ip} +set port {port} +set hostname \"{hostname}\" +set maxclients {maxplayers} +set game {game} +set timelimit {timelimit} +set fraglimit {fraglimit} +set rcon_password \"{rcon_password}\" +map {map}",
+          "start_cmd_windows": "",
+          "kick_cmd": "",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "",
+          "chmap_cmd": "",
+          "sendmsg_cmd": "",
+          "passwd_cmd": ""
+        }
+      ]
+    },
+    {
+      "code": "q3",
+      "start_code": "q3",
+      "name": "Quake 3",
+      "engine": "idtech",
+      "engine_version": "3",
+      "steam_app_id_linux": 0,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "https://files.gameap.ru/quake/quake3-base.zip",
+      "remote_repository_windows": "https://files.gameap.ru/quake/quake3-base.zip",
+      "mods": [
+        {
+          "id": 30,
+          "game_code": "q3",
+          "name": "ioquake3",
+          "fast_rcon": [],
+          "vars": [
+            {"var": "hostname", "default": "Quake 3 Server", "info": "Server Hostname", "admin_var": false},
+            {"var": "maxplayers", "default": "16", "info": "Maximum players on server", "admin_var": true},
+            {"var": "map", "default": "q3dm17", "info": "Default map of the server", "admin_var": false},
+            {"var": "timelimit", "default": "20", "info": "Timelimit in minutes", "admin_var": false},
+            {"var": "fraglimit", "default": "30", "info": "Frag limit", "admin_var": false}
+          ],
+          "remote_repository_linux": "https://files.gameap.ru/quake/ioquake3-linux-amd64.tar.gz",
+          "remote_repository_windows": "https://files.gameap.ru/quake/ioquake3-windows-amd64.zip",
+          "start_cmd_linux": "./ioq3ded.x86_64 +set dedicated 2  +set net_ip {ip}  +set net_port {port}  +set sv_hostname \"{hostname}\"  +set sv_maxclients {maxplayers}  +set g_gametype 0  +set fraglimit {fraglimit}  +set timelimit {timelimit}  +set rconpassword \"{rcon_password}\"  +map {map}",
+          "start_cmd_windows": "ioq3ded.x86_64.exe +set dedicated 1  +set net_ip {ip}  +set net_port {port}  +set sv_hostname \"{hostname}\"  +set sv_maxclients {maxplayers}  +set g_gametype 0  +set fraglimit {fraglimit}  +set timelimit {timelimit}  +set rconpassword \"{rcon_password}\"  +map {map}",
+          "kick_cmd": "",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "",
+          "chmap_cmd": "",
+          "sendmsg_cmd": "",
+          "passwd_cmd": ""
+        },
+        {
+          "id": 31,
+          "game_code": "q3",
+          "name": "quake3e",
+          "fast_rcon": [],
+          "vars": [
+            {"var": "hostname", "default": "Quake 3 Server", "info": "Server Hostname", "admin_var": false},
+            {"var": "maxplayers", "default": "16", "info": "Maximum players on server", "admin_var": true},
+            {"var": "map", "default": "q3dm17", "info": "Default map of the server", "admin_var": false},
+            {"var": "timelimit", "default": "20", "info": "Timelimit in minutes", "admin_var": false},
+            {"var": "fraglimit", "default": "30", "info": "Frag limit", "admin_var": false}
+          ],
+          "remote_repository_linux": "https://files.gameap.ru/quake/quake3e-linux.tar.gz",
+          "remote_repository_windows": "https://files.gameap.ru/quake/quake3e-windows.zip",
+          "start_cmd_linux": "./run.sh +set dedicated 2  +set net_ip {ip}  +set net_port {port}  +set sv_hostname \"{hostname}\"  +set sv_maxclients {maxplayers}  +set g_gametype 0  +set fraglimit {fraglimit}  +set timelimit {timelimit}  +set rconpassword \"{rcon_password}\"  +map {map}",
+          "start_cmd_windows": "quake3e.ded.x64.exe +set dedicated 2  +set net_ip {ip}  +set net_port {port}  +set sv_hostname \"{hostname}\"  +set sv_maxclients {maxplayers}  +set g_gametype 0  +set fraglimit {fraglimit}  +set timelimit {timelimit}  +set rconpassword \"{rcon_password}\"  +map {map}",
+          "kick_cmd": "",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "",
+          "chmap_cmd": "",
+          "sendmsg_cmd": "",
+          "passwd_cmd": ""
+        }
+      ]
+    },
+    {
+      "code": "ricochet",
+      "start_code": "ricochet",
+      "name": "Ricochet",
+      "engine": "GoldSource",
+      "engine_version": "1",
+      "steam_app_id_linux": 90,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "90 mod ricochet",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": []
+    },
+    {
+      "code": "rok",
+      "start_code": "rok",
+      "name": "Reign Of Kings",
+      "engine": "ReignOfKings",
+      "engine_version": "1.0",
+      "steam_app_id_linux": 344760,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": []
+    },
+    {
+      "code": "rust",
+      "start_code": "rust",
+      "name": "Rust",
+      "engine": "rust",
+      "engine_version": "staging",
+      "steam_app_id_linux": 258550,
+      "steam_app_id_windows": 258550,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": [
+        {
+          "id": 0,
+          "game_code": "rust",
+          "name": "Vanilla",
+          "fast_rcon": [],
+          "vars": [
+            {"var": "hostname", "default": "GameAP Rust server", "info": "Server Hostname", "admin_var": false},
+            {"var": "maxplayers", "default": "32", "info": "Maximum players on server", "admin_var": true},
+            {"var": "level", "default": "Procedural Map", "info": "Map of the server", "admin_var": false},
+            {"var": "level_seed", "default": "1234", "info": "Map generation seed", "admin_var": false},
+            {"var": "world_size", "default": "2000", "info": "World size", "admin_var": false},
+            {"var": "saveinterval", "default": "300", "info": "Server save interval", "admin_var": true}
+          ],
+          "remote_repository_linux": "https://files.gameap.ru/rust/default_linux.tar.gz",
+          "remote_repository_windows": "",
+          "start_cmd_linux": "./run.sh   --hostname=\"{hostname}\"   --maxplayers={maxplayers}   --level=\"{level}\"  --worldsize={world_size}  --rcon-password=\"{rcon_password}\"  --rcon-port={rcon_port}  --seed={level_seed}",
+          "start_cmd_windows": "RustDedicated.exe   -batchmode -server.hostname \"{hostname}\" -server.maxplayers {maxplayers}   -server.level \"{level}\" -server.ip {ip} -server.port {port}  +rcon.ip {ip} +rcon.port {rcon_port} +rcon.password {rcon_password}  +server.saveinterval {saveinterval} -server.worldsize {world_size} -server.seed 1234  -server.secure true",
+          "kick_cmd": "",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "",
+          "chmap_cmd": "",
+          "sendmsg_cmd": "",
+          "passwd_cmd": ""
+        },
+        {
+          "id": 0,
+          "game_code": "rust",
+          "name": "Oxide",
+          "fast_rcon": [],
+          "vars": [],
+          "remote_repository_linux": "",
+          "remote_repository_windows": "",
+          "start_cmd_linux": "./RustDedicated   -batchmode -server.hostname \"Test\" -server.maxplayers 32  -server.level \"Procedural Map\" -server.ip {ip} -server.port {port}  +rcon.ip {ip} +rcon.port {rcon_port} +rcon.password {rcon_password}  +server.saveinterval 300 -server.worldsize 4000 -server.seed 1234  -server.secure true -logfile output.txt",
+          "start_cmd_windows": "RustDedicated.exe   -batchmode -server.hostname \"Test\" -server.maxplayers 32   -server.level \"Procedural Map\" -server.ip {ip} -server.port {port}  +rcon.ip {ip} +rcon.port {rcon_port} +rcon.password {rcon_password}  +server.saveinterval 300 -server.worldsize 4000 -server.seed 1234  -server.secure true -logfile output.txt",
+          "kick_cmd": "",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "",
+          "chmap_cmd": "",
+          "sendmsg_cmd": "",
+          "passwd_cmd": ""
+        }
+      ]
+    },
+    {
+      "code": "samp",
+      "start_code": "samp",
+      "name": "GTA: San-Andreas Multiplayer",
+      "engine": "samp",
+      "engine_version": "1.0",
+      "steam_app_id_linux": 0,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "http://files.gameap.ru/samp/samp03.tar.gz",
+      "remote_repository_windows": "",
+      "mods": [
+        {
+          "id": 8,
+          "game_code": "samp",
+          "name": "Vanilla",
+          "fast_rcon": [
+            {"info": "Commands List", "command": "cmdlist"},
+            {"info": "Variables List", "command": "varlist"},
+            {"info": "Version", "command": "version"}
+          ],
+          "vars": [
+            {"var": "hostname", "default": "SA-MP 0.3 Server", "info": "Server Hostname", "admin_var": false}
+          ],
+          "remote_repository_linux": "",
+          "remote_repository_windows": "",
+          "start_cmd_linux": "./samp_run.sh --ip={ip} --port={port} --hostname=\"{hostname}\"  --rcon-password={rcon_password}",
+          "start_cmd_windows": "",
+          "kick_cmd": "",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "",
+          "chmap_cmd": "",
+          "sendmsg_cmd": "",
+          "passwd_cmd": ""
+        }
+      ]
+    },
+    {
+      "code": "svencoop",
+      "start_code": "svencoop",
+      "name": "Sven Co-op",
+      "engine": "GoldSource",
+      "engine_version": "1",
+      "steam_app_id_linux": 276060,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": []
+    },
+    {
+      "code": "synergy",
+      "start_code": "synergy",
+      "name": "Synergy",
+      "engine": "Source",
+      "engine_version": "1",
+      "steam_app_id_linux": 17525,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": []
+    },
+    {
+      "code": "teamspeak3",
+      "start_code": "teamspeak3",
+      "name": "TeamSpeak 3",
+      "engine": "teamspeak",
+      "engine_version": "3",
+      "steam_app_id_linux": 0,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "http://files.gameap.ru/mod-game.tar.gz",
+      "remote_repository_windows": "",
+      "mods": [
+        {
+          "id": 25,
+          "game_code": "teamspeak3",
+          "name": "Default",
+          "fast_rcon": [
+            {"info": "Help. List all commands", "command": "help"},
+            {"info": "Channel List", "command": "channellist"}
+          ],
+          "vars": [
+            {"var": "files_port", "default": "30033", "info": "File transfer port", "admin_var": true}
+          ],
+          "remote_repository_linux": "http://files.gameap.ru/teamspeak3/teamspeak-runner.tar.gz",
+          "remote_repository_windows": "",
+          "start_cmd_linux": "./teamspeak_run.sh run --ip={ip} --port={port} --query-port={query_port}  --files-port={files_port} --rcon-password={rcon_password}",
+          "start_cmd_windows": "",
+          "kick_cmd": "",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "",
+          "chmap_cmd": "",
+          "sendmsg_cmd": "",
+          "passwd_cmd": ""
+        }
+      ]
+    },
+    {
+      "code": "tf2",
+      "start_code": "tf",
+      "name": "Team Fortress 2",
+      "engine": "Source",
+      "engine_version": "1",
+      "steam_app_id_linux": 232250,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": [
+        {
+          "id": 29,
+          "game_code": "tf2",
+          "name": "Default",
+          "fast_rcon": [
+            {"info": "Status", "command": "status"},
+            {"info": "Stats", "command": "stats"}
+          ],
+          "vars": [
+            {"var": "default_map", "default": "pl_goldrush", "info": "Default Map", "admin_var": false},
+            {"var": "maxplayers", "default": "24", "info": "Maximum players on server", "admin_var": true},
+            {"var": "server_token", "default": "", "info": "Server Token (sv_setsteamaccount)", "admin_var": true}
+          ],
+          "remote_repository_linux": "",
+          "remote_repository_windows": "",
+          "start_cmd_linux": "./srcds_run -game tf -console -usercon +ip {ip} +port {port}   +maxplayers {maxplayers} +map {default_map} +sv_setsteamaccount {server_token}  +rcon_password {rcon_password}",
+          "start_cmd_windows": "srcds.exe -game tf -console -usercon +ip {ip} +port {port}   +maxplayers {maxplayers} +map {default_map} +sv_setsteamaccount {server_token}  +rcon_password {rcon_password}",
+          "kick_cmd": "",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "",
+          "chmap_cmd": "",
+          "sendmsg_cmd": "",
+          "passwd_cmd": ""
+        }
+      ]
+    },
+    {
+      "code": "tfc",
+      "start_code": "tfc",
+      "name": "Team Fortress Classic",
+      "engine": "GoldSource",
+      "engine_version": "1",
+      "steam_app_id_linux": 90,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "90 mod tfc",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": [
+        {
+          "id": 22,
+          "game_code": "tfc",
+          "name": "No AMX MOD X",
+          "fast_rcon": [
+            {"info": "Status", "command": "status"},
+            {"info": "Stats", "command": "stats"}
+          ],
+          "vars": [
+            {"var": "default_map", "default": "2fort", "info": "Default Map", "admin_var": false},
+            {"var": "fps", "default": "500", "info": "Server FPS (tickrate)", "admin_var": true},
+            {"var": "maxplayers", "default": "32", "info": "Maximum players on server", "admin_var": true}
+          ],
+          "remote_repository_linux": "",
+          "remote_repository_windows": "",
+          "start_cmd_linux": "./hlds_run -game tfc +ip {ip} +port {port} +map {default_map}  +maxplayers {maxplayers} +sys_ticrate {fps}   +rcon_password {rcon_password}",
+          "start_cmd_windows": "hlds.exe -game valve +ip {ip} +port {port} +map {default_map}  +maxplayers {maxplayers} +sys_ticrate {fps}   +rcon_password {rcon_password}",
+          "kick_cmd": "kick #{id}",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "restart",
+          "chmap_cmd": "changelevel {map}",
+          "sendmsg_cmd": "",
+          "passwd_cmd": "password {password}"
+        }
+      ]
+    },
+    {
+      "code": "the-forest",
+      "start_code": "the-forest",
+      "name": "The Forest",
+      "engine": "TheForest",
+      "engine_version": "1.0",
+      "steam_app_id_linux": 556450,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": []
+    },
+    {
+      "code": "valheim",
+      "start_code": "valheim",
+      "name": "Valheim",
+      "engine": "valheim",
+      "engine_version": "1.0",
+      "steam_app_id_linux": 896660,
+      "steam_app_id_windows": 896660,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": [
+        {
+          "id": 0,
+          "game_code": "valheim",
+          "name": "Default",
+          "fast_rcon": null,
+          "vars": [
+            {"var": "word", "default": "Dedicated", "info": "Default Word", "admin_var": false},
+            {"var": "hostname", "default": "GameAP Valheim Server", "info": "Server Hostname", "admin_var": false}
+          ],
+          "remote_repository_linux": "https://files.gameap.ru/valheim/default_linux.tar.gz",
+          "remote_repository_windows": "",
+          "start_cmd_linux": "./run.sh --hostname=\"{hostname}\" --port={port} --word=\"{word}\" --rcon-password=\"{rcon_password}\"",
+          "start_cmd_windows": "valheim_server.exe -name \"{hostname}\" -port {port} -world \"{word}\" -password \"{rcon_password}\" -crossplay",
+          "kick_cmd": "",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "",
+          "chmap_cmd": "",
+          "sendmsg_cmd": "",
+          "passwd_cmd": ""
+        }
+      ]
+    },
+    {
+      "code": "valve",
+      "start_code": "valve",
+      "name": "Half-Life 1",
+      "engine": "GoldSource",
+      "engine_version": "1",
+      "steam_app_id_linux": 90,
+      "steam_app_id_windows": 0,
+      "steam_app_set_config": "",
+      "remote_repository_linux": "",
+      "remote_repository_windows": "",
+      "mods": [
+        {
+          "id": 1,
+          "game_code": "valve",
+          "name": "No AMX MOD X",
+          "fast_rcon": [
+            {"info": "Status", "command": "status"},
+            {"info": "Stats", "command": "stats"}
+          ],
+          "vars": [
+            {"var": "default_map", "default": "crossfire", "info": "Default Map", "admin_var": false},
+            {"var": "fps", "default": "500", "info": "Server FPS (tickrate)", "admin_var": true},
+            {"var": "maxplayers", "default": "32", "info": "Maximum players on server", "admin_var": true}
+          ],
+          "remote_repository_linux": "",
+          "remote_repository_windows": "",
+          "start_cmd_linux": "./hlds_run -game valve +ip {ip} +port {port} +map {default_map}  +maxplayers {maxplayers} +sys_ticrate {fps}   +rcon_password {rcon_password}",
+          "start_cmd_windows": "hlds.exe -console -game valve +ip {ip} +port {port} +map {default_map}  +maxplayers {maxplayers} +sys_ticrate {fps}   +rcon_password {rcon_password}",
+          "kick_cmd": "kick #{id}",
+          "ban_cmd": "",
+          "chname_cmd": "",
+          "srestart_cmd": "restart",
+          "chmap_cmd": "changelevel {map}",
+          "sendmsg_cmd": "",
+          "passwd_cmd": "password {password}"
+        }
+      ]
+    }
+  ],
+  "message": "",
+  "success": true
+}

@@ -9,7 +9,6 @@ import (
 	"github.com/gameap/gameap/internal/repositories"
 	pkgplugin "github.com/gameap/gameap/pkg/plugin"
 	"github.com/gameap/gameap/pkg/plugin/sdk/storage"
-	"github.com/samber/lo"
 	"github.com/tetratelabs/wazero"
 )
 
@@ -73,7 +72,7 @@ func (s *StorageServiceImpl) Set(
 	if err != nil {
 		return &storage.StorageSetResponse{
 			Success: false,
-			Error:   lo.ToPtr(err.Error()),
+			Error:   new(err.Error()),
 		}, nil
 	}
 
@@ -97,18 +96,7 @@ func (s *StorageServiceImpl) Delete(
 		},
 	}
 
-	entries, err := s.repo.Find(ctx, filter, nil, &filters.Pagination{Limit: 1})
-	if err != nil {
-		return nil, err
-	}
-
-	if len(entries) == 0 {
-		return &storage.StorageDeleteResponse{
-			Success: true,
-		}, nil
-	}
-
-	err = s.repo.Delete(ctx, entries[0].ID)
+	err := s.repo.DeleteByFilter(ctx, filter)
 	if err != nil {
 		return nil, err
 	}

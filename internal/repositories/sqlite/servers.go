@@ -86,15 +86,11 @@ func (r *ServerRepository) find(
 	}
 
 	if pagination != nil {
-		if pagination.Limit <= 0 {
+		if pagination.Limit == 0 {
 			pagination.Limit = filters.DefaultLimit
 		}
 
-		if pagination.Offset < 0 {
-			pagination.Offset = 0
-		}
-
-		builder = builder.Limit(uint64(pagination.Limit)).Offset(uint64(pagination.Offset))
+		builder = builder.Limit(pagination.Limit).Offset(pagination.Offset)
 	}
 
 	query, args, err := builder.ToSql()
@@ -133,15 +129,15 @@ func (r *ServerRepository) find(
 }
 
 func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) error {
-	server.UpdatedAt = lo.ToPtr(time.Now())
+	server.UpdatedAt = new(time.Now())
 
 	if server.ID == 0 && (server.CreatedAt == nil || server.CreatedAt.IsZero()) {
-		server.CreatedAt = lo.ToPtr(time.Now())
+		server.CreatedAt = new(time.Now())
 	}
 
 	formatTime := func(t *time.Time) *string {
 		if t != nil {
-			return lo.ToPtr(t.Format(time.RFC3339))
+			return new(t.Format(time.RFC3339))
 		}
 
 		return nil
@@ -178,6 +174,7 @@ func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) erro
 			server.ProcessActive,
 			formatTime(server.LastProcessCheck),
 			server.Vars,
+			server.Metadata,
 			formatTime(server.CreatedAt),
 			formatTime(server.UpdatedAt),
 			formatTime(server.DeletedAt),
@@ -210,6 +207,7 @@ func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) erro
 			"process_active=excluded.process_active," +
 			"last_process_check=excluded.last_process_check," +
 			"vars=excluded.vars," +
+			"metadata=excluded.metadata," +
 			"updated_at=excluded.updated_at," +
 			"deleted_at=excluded.deleted_at " +
 			"RETURNING id").
@@ -238,7 +236,7 @@ func (r *ServerRepository) SaveBulk(ctx context.Context, servers []*domain.Serve
 
 	formatTime := func(t *time.Time) *string {
 		if t != nil {
-			return lo.ToPtr(t.Format(time.RFC3339))
+			return new(t.Format(time.RFC3339))
 		}
 
 		return nil
@@ -277,6 +275,7 @@ func (r *ServerRepository) SaveBulk(ctx context.Context, servers []*domain.Serve
 			server.ProcessActive,
 			formatTime(server.LastProcessCheck),
 			server.Vars,
+			server.Metadata,
 			formatTime(server.CreatedAt),
 			formatTime(server.UpdatedAt),
 			formatTime(server.DeletedAt),
@@ -312,6 +311,7 @@ func (r *ServerRepository) SaveBulk(ctx context.Context, servers []*domain.Serve
 			"process_active=excluded.process_active," +
 			"last_process_check=excluded.last_process_check," +
 			"vars=excluded.vars," +
+			"metadata=excluded.metadata," +
 			"updated_at=excluded.updated_at," +
 			"deleted_at=excluded.deleted_at").
 		ToSql()
@@ -523,6 +523,7 @@ func (r *ServerRepository) scan(row base.Scanner) (*domain.Server, error) {
 		&server.ProcessActive,
 		&lastProcessCheckStr,
 		&server.Vars,
+		&server.Metadata,
 		&createdAtStr,
 		&updatedAtStr,
 		&deletedAtStr,

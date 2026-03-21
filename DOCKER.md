@@ -11,7 +11,7 @@ The simplest way to get started with GameAP is using Docker Compose:
 ```bash
 # Clone the repository
 git clone https://github.com/gameap/gameap.git
-cd gameap-api
+cd gameap
 
 # Start GameAP with PostgreSQL and Redis
 docker-compose up -d

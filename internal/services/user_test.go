@@ -247,10 +247,10 @@ func TestUserService_Save(t *testing.T) {
 				_ = repo.Save(context.Background(), &domain.User{
 					Login: "alice",
 					Email: "alice@example.com",
-					Name:  lo.ToPtr("Alice"),
+					Name:  new("Alice"),
 				})
 			},
-			user: &domain.User{ID: 1, Login: "Alice", Email: "alice@example.com", Name: lo.ToPtr("Alice Updated")},
+			user: &domain.User{ID: 1, Login: "Alice", Email: "alice@example.com", Name: new("Alice Updated")},
 			validate: func(t *testing.T, repo *inmemory.UserRepository, err error) {
 				t.Helper()
 				require.NoError(t, err)

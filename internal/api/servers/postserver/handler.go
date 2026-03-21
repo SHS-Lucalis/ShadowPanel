@@ -14,11 +14,12 @@ import (
 )
 
 type Handler struct {
-	serverRepo     repositories.ServerRepository
-	nodeRepo       repositories.NodeRepository
-	gameModRepo    repositories.GameModRepository
-	daemonTaskRepo repositories.DaemonTaskRepository
-	responder      base.Responder
+	serverRepo         repositories.ServerRepository
+	nodeRepo           repositories.NodeRepository
+	gameModRepo        repositories.GameModRepository
+	daemonTaskRepo     repositories.DaemonTaskRepository
+	serverSettingsRepo repositories.ServerSettingRepository
+	responder          base.Responder
 }
 
 func NewHandler(
@@ -26,14 +27,16 @@ func NewHandler(
 	nodeRepo repositories.NodeRepository,
 	gameModRepo repositories.GameModRepository,
 	daemonTaskRepo repositories.DaemonTaskRepository,
+	serverSettingsRepo repositories.ServerSettingRepository,
 	responder base.Responder,
 ) *Handler {
 	return &Handler{
-		serverRepo:     serverRepo,
-		nodeRepo:       nodeRepo,
-		gameModRepo:    gameModRepo,
-		daemonTaskRepo: daemonTaskRepo,
-		responder:      responder,
+		serverRepo:         serverRepo,
+		nodeRepo:           nodeRepo,
+		gameModRepo:        gameModRepo,
+		daemonTaskRepo:     daemonTaskRepo,
+		serverSettingsRepo: serverSettingsRepo,
+		responder:          responder,
 	}
 }
 
@@ -60,7 +63,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	server := input.ToDomain()
 
-	err = h.prepareServer(ctx, server, input)
+	gameMod, err := h.prepareServer(ctx, server, input)
 	if err != nil {
 		h.responder.WriteError(ctx, rw, err)
 
@@ -72,6 +75,15 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		h.responder.WriteError(ctx, rw, errors.WithMessage(err, "failed to save server"))
 
 		return
+	}
+
+	if len(input.Settings) > 0 {
+		err = h.saveSettings(ctx, server.ID, input.SettingsToMap(), gameMod)
+		if err != nil {
+			h.responder.WriteError(ctx, rw, errors.WithMessage(err, "failed to save settings"))
+
+			return
+		}
 	}
 
 	taskID := uint(0)
@@ -100,38 +112,38 @@ func (h *Handler) prepareServer(
 	ctx context.Context,
 	server *domain.Server,
 	input *serverInput,
-) error {
+) (*domain.GameMod, error) {
 	if server.Rcon == nil || *server.Rcon == "" {
 		rconPassword, err := pkgstrings.CryptoRandomString(defaultRconPasswordLength)
 		if err != nil {
-			return errors.WithMessage(err, "failed to generate rcon password")
+			return nil, errors.WithMessage(err, "failed to generate rcon password")
 		}
 		server.Rcon = &rconPassword
 	}
 
 	nodes, err := h.nodeRepo.Find(ctx, &filters.FindNode{IDs: []uint{server.DSID}}, nil, nil)
 	if err != nil {
-		return errors.WithMessage(err, "failed to find node")
+		return nil, errors.WithMessage(err, "failed to find node")
 	}
 
 	if len(nodes) == 0 {
-		return errors.New("node not found")
+		return nil, errors.New("node not found")
 	}
 
 	node := &nodes[0]
 
+	gameMods, err := h.gameModRepo.Find(ctx, &filters.FindGameMod{IDs: []uint{server.GameModID}}, nil, nil)
+	if err != nil {
+		return nil, errors.WithMessage(err, "failed to find game mod")
+	}
+
+	if len(gameMods) == 0 {
+		return nil, errors.New("game mod not found")
+	}
+
+	gameMod := &gameMods[0]
+
 	if server.StartCommand == nil || *server.StartCommand == "" {
-		gameMods, err := h.gameModRepo.Find(ctx, &filters.FindGameMod{IDs: []uint{server.GameModID}}, nil, nil)
-		if err != nil {
-			return errors.WithMessage(err, "failed to find game mod")
-		}
-
-		if len(gameMods) == 0 {
-			return errors.New("game mod not found")
-		}
-
-		gameMod := &gameMods[0]
-
 		switch node.OS {
 		case domain.NodeOSLinux:
 			server.StartCommand = gameMod.StartCmdLinux
@@ -148,7 +160,7 @@ func (h *Handler) prepareServer(
 		server.Installed = domain.ServerInstalledStatusNotInstalled
 	}
 
-	return nil
+	return gameMod, nil
 }
 
 func (h *Handler) createInstallTask(ctx context.Context, server *domain.Server) (uint, error) {
@@ -165,4 +177,51 @@ func (h *Handler) createInstallTask(ctx context.Context, server *domain.Server) 
 	}
 
 	return task.ID, nil
+}
+
+const (
+	autostartSettingKey         = "autostart"
+	updateBeforeStartSettingKey = "update_before_start"
+)
+
+func (h *Handler) buildAllowedSettings(gameMod *domain.GameMod) map[string]bool {
+	allowedSettings := make(map[string]bool)
+
+	allowedSettings[autostartSettingKey] = true
+	allowedSettings[updateBeforeStartSettingKey] = true
+
+	if gameMod != nil {
+		for _, gmVar := range gameMod.Vars {
+			allowedSettings[gmVar.Var] = true
+		}
+	}
+
+	return allowedSettings
+}
+
+func (h *Handler) saveSettings(
+	ctx context.Context,
+	serverID uint,
+	settingsMap map[string]any,
+	gameMod *domain.GameMod,
+) error {
+	allowedSettings := h.buildAllowedSettings(gameMod)
+
+	for settingName, settingValue := range settingsMap {
+		if !allowedSettings[settingName] {
+			continue
+		}
+
+		newSetting := &domain.ServerSetting{
+			ServerID: serverID,
+			Name:     settingName,
+			Value:    domain.NewServerSettingValue(settingValue),
+		}
+		err := h.serverSettingsRepo.Save(ctx, newSetting)
+		if err != nil {
+			return errors.WithMessage(err, "failed to save setting")
+		}
+	}
+
+	return nil
 }

@@ -1,29 +1,34 @@
 <template>
   <GEmpty v-if="!settings || settings.length === 0" />
-  <n-form
-      v-else
-      label-placement="left"
-      label-width="auto"
-      ref="settingsRef"
-      :model="settingsForm"
-  >
-      <n-form-item v-for="setting in settings" :label="setting.label">
+  <div v-else class="space-y-4">
+    <div
+      v-for="setting in settings"
+      :key="setting.name"
+      class="grid grid-cols-[1fr_2fr] gap-4 items-center"
+    >
+      <label class="text-sm text-right truncate" :title="setting.label">
+        {{ setting.label }}
+      </label>
+      <div>
         <GSwitch
-            v-if="setting.type === 'bool'"
-            v-model:value="settingsForm[setting.name]"
+          v-if="setting.type === 'bool'"
+          v-model:value="settingsForm[setting.name]"
         />
         <n-input
-            v-if="setting.type === 'string'"
-            v-model:value="settingsForm[setting.name]"
-            type="text"
+          v-else-if="setting.type === 'string'"
+          v-model:value="settingsForm[setting.name]"
+          type="text"
         />
-      </n-form-item>
+      </div>
+    </div>
 
+    <GFixedBottomBar>
       <GButton color="green" v-on:click="saveSettings()">
         <GIcon name="save" />
-        <span class="hidden lg:inline">&nbsp;{{ trans('main.save') }}</span>
+        <span class="inline">{{ trans('main.save') }}</span>
       </GButton>
-  </n-form>
+    </GFixedBottomBar>
+  </div>
 </template>
 
 <script setup>
@@ -31,18 +36,14 @@ import {trans} from "@/i18n/i18n"
 import {useServerStore} from "@/store/server"
 import {onMounted, ref} from "vue"
 import {storeToRefs} from "pinia"
-import {
-  NForm,
-  NFormItem,
-  NInput,
-} from "naive-ui"
+import { NInput } from "naive-ui"
 import { GIcon, GEmpty, GSwitch } from '@gameap/ui'
 import GButton from '@/components/GButton.vue'
+import GFixedBottomBar from '@/components/GFixedBottomBar.vue'
 import {errorNotification, notification} from "@/parts/dialogs";
 
 const serverStore = useServerStore()
 
-const settingsRef = ref({})
 const settingsForm = ref({})
 
 const {settings} = storeToRefs(serverStore)

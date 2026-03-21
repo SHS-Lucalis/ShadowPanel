@@ -15,7 +15,6 @@ import (
 	"github.com/gameap/gameap/pkg/auth"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -678,6 +677,151 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			},
 			wantStatus: http.StatusOK,
 		},
+		{
+			name:     "successful_update_with_vars",
+			serverID: "1",
+			requestBody: `{
+				"name": "Server with vars",
+				"game_id": "cstrike",
+				"ds_id": 1,
+				"game_mod_id": 1,
+				"server_ip": "192.168.1.100",
+				"server_port": 27015,
+				"vars": {"maxplayers": "32", "hostname": "My Server"}
+			}`,
+			setupRepo: func(repo *inmemory.ServerRepository) {
+				err := repo.Save(context.Background(), &domain.Server{
+					ID:         1,
+					UUID:       uuid.New(),
+					UUIDShort:  "12345678",
+					Name:       "Test Server",
+					GameID:     "cstrike",
+					DSID:       1,
+					GameModID:  1,
+					ServerIP:   "192.168.1.1",
+					ServerPort: 27015,
+				})
+				if err != nil {
+					t.Fatalf("failed to setup test server: %v", err)
+				}
+			},
+			setupAuth: func(ctx context.Context) context.Context {
+				session := &auth.Session{
+					User: &domain.User{ID: 1},
+				}
+
+				return auth.ContextWithSession(ctx, session)
+			},
+			wantStatus: http.StatusOK,
+		},
+		{
+			name:     "successful_update_with_cpu_and_ram_limits",
+			serverID: "1",
+			requestBody: `{
+				"name": "Server with limits",
+				"game_id": "cstrike",
+				"ds_id": 1,
+				"game_mod_id": 1,
+				"server_ip": "192.168.1.100",
+				"server_port": 27015,
+				"cpu_limit": 2000,
+				"ram_limit": 4294967296
+			}`,
+			setupRepo: func(repo *inmemory.ServerRepository) {
+				err := repo.Save(context.Background(), &domain.Server{
+					ID:         1,
+					UUID:       uuid.New(),
+					UUIDShort:  "12345678",
+					Name:       "Test Server",
+					GameID:     "cstrike",
+					DSID:       1,
+					GameModID:  1,
+					ServerIP:   "192.168.1.1",
+					ServerPort: 27015,
+				})
+				if err != nil {
+					t.Fatalf("failed to setup test server: %v", err)
+				}
+			},
+			setupAuth: func(ctx context.Context) context.Context {
+				session := &auth.Session{
+					User: &domain.User{ID: 1},
+				}
+
+				return auth.ContextWithSession(ctx, session)
+			},
+			wantStatus: http.StatusOK,
+		},
+		{
+			name:     "negative_cpu_limit",
+			serverID: "1",
+			requestBody: `{
+				"name": "Server with negative cpu limit",
+				"game_id": "cstrike",
+				"ds_id": 1,
+				"game_mod_id": 1,
+				"server_ip": "192.168.1.100",
+				"server_port": 27015,
+				"cpu_limit": -1
+			}`,
+			setupRepo: func(repo *inmemory.ServerRepository) {
+				_ = repo.Save(context.Background(), &domain.Server{
+					ID:         1,
+					UUID:       uuid.New(),
+					UUIDShort:  "12345678",
+					Name:       "Test Server",
+					GameID:     "cstrike",
+					DSID:       1,
+					GameModID:  1,
+					ServerIP:   "192.168.1.1",
+					ServerPort: 27015,
+				})
+			},
+			setupAuth: func(ctx context.Context) context.Context {
+				session := &auth.Session{
+					User: &domain.User{ID: 1},
+				}
+
+				return auth.ContextWithSession(ctx, session)
+			},
+			wantStatus: http.StatusUnprocessableEntity,
+			wantError:  "cpu_limit must be >= 0",
+		},
+		{
+			name:     "negative_ram_limit",
+			serverID: "1",
+			requestBody: `{
+				"name": "Server with negative ram limit",
+				"game_id": "cstrike",
+				"ds_id": 1,
+				"game_mod_id": 1,
+				"server_ip": "192.168.1.100",
+				"server_port": 27015,
+				"ram_limit": -1
+			}`,
+			setupRepo: func(repo *inmemory.ServerRepository) {
+				_ = repo.Save(context.Background(), &domain.Server{
+					ID:         1,
+					UUID:       uuid.New(),
+					UUIDShort:  "12345678",
+					Name:       "Test Server",
+					GameID:     "cstrike",
+					DSID:       1,
+					GameModID:  1,
+					ServerIP:   "192.168.1.1",
+					ServerPort: 27015,
+				})
+			},
+			setupAuth: func(ctx context.Context) context.Context {
+				session := &auth.Session{
+					User: &domain.User{ID: 1},
+				}
+
+				return auth.ContextWithSession(ctx, session)
+			},
+			wantStatus: http.StatusUnprocessableEntity,
+			wantError:  "ram_limit must be >= 0",
+		},
 	}
 
 	for _, tt := range tests {
@@ -745,19 +889,19 @@ func TestHandler_ServerUpdatePersistence(t *testing.T) {
 	require.NoError(t, err)
 
 	updateData := map[string]any{
-		"enabled":       lo.ToPtr(int8(1)),
-		"installed":     lo.ToPtr(int8(1)),
-		"blocked":       lo.ToPtr(int8(0)),
+		"enabled":       new(int8(1)),
+		"installed":     new(int8(1)),
+		"blocked":       new(int8(0)),
 		"name":          "Updated Server Name",
 		"game_id":       "valve",
 		"ds_id":         2,
 		"game_mod_id":   2,
 		"server_ip":     "10.0.0.1",
 		"server_port":   27016,
-		"query_port":    lo.ToPtr(27017),
-		"rcon_port":     lo.ToPtr(27018),
-		"start_command": lo.ToPtr("./hlds_run -game valve"),
-		"dir":           lo.ToPtr("/servers/valve"),
+		"query_port":    new(27017),
+		"rcon_port":     new(27018),
+		"start_command": new("./hlds_run -game valve"),
+		"dir":           new("/servers/valve"),
 	}
 
 	body, err := json.Marshal(updateData)
@@ -794,12 +938,79 @@ func TestHandler_ServerUpdatePersistence(t *testing.T) {
 	assert.Equal(t, "10.0.0.1", server.ServerIP)
 	assert.Equal(t, 27016, server.ServerPort)
 	require.NotNil(t, server.QueryPort)
-	assert.Equal(t, lo.ToPtr(27017), server.QueryPort)
+	assert.Equal(t, new(27017), server.QueryPort)
 	require.NotNil(t, server.RconPort)
-	assert.Equal(t, lo.ToPtr(27018), server.RconPort)
+	assert.Equal(t, new(27018), server.RconPort)
 	require.NotNil(t, server.StartCommand)
-	assert.Equal(t, lo.ToPtr("./hlds_run -game valve"), server.StartCommand)
+	assert.Equal(t, new("./hlds_run -game valve"), server.StartCommand)
 	assert.Equal(t, "/servers/valve", server.Dir)
+}
+
+func TestHandler_ServerUpdatePersistence_WithVarsAndLimits(t *testing.T) {
+	serverRepo := inmemory.NewServerRepository()
+	responder := api.NewResponder()
+	handler := NewHandler(serverRepo, nil, responder)
+
+	originalServer := &domain.Server{
+		ID:         1,
+		UUID:       uuid.New(),
+		UUIDShort:  "12345678",
+		Enabled:    true,
+		Installed:  0,
+		Blocked:    false,
+		Name:       "Original Server",
+		GameID:     "cstrike",
+		DSID:       1,
+		GameModID:  1,
+		ServerIP:   "192.168.1.1",
+		ServerPort: 27015,
+	}
+
+	err := serverRepo.Save(context.Background(), originalServer)
+	require.NoError(t, err)
+
+	updateData := map[string]any{
+		"name":        "Updated Server Name",
+		"game_id":     "valve",
+		"ds_id":       1,
+		"game_mod_id": 1,
+		"server_ip":   "10.0.0.1",
+		"server_port": 27016,
+		"vars":        map[string]string{"maxplayers": "32", "hostname": "My Server"},
+		"cpu_limit":   2000,
+		"ram_limit":   4294967296,
+	}
+
+	body, err := json.Marshal(updateData)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPut, "/servers/1", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = mux.SetURLVars(req, map[string]string{"id": "1"})
+
+	session := &auth.Session{
+		User: &domain.User{ID: 1},
+	}
+	req = req.WithContext(auth.ContextWithSession(req.Context(), session))
+
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+
+	servers, err := serverRepo.FindAll(context.Background(), nil, nil)
+	require.NoError(t, err)
+	require.Len(t, servers, 1)
+
+	server := servers[0]
+	assert.Equal(t, uint(1), server.ID)
+	assert.Equal(t, "Updated Server Name", server.Name)
+	assert.Equal(t, domain.ServerVars{"maxplayers": "32", "hostname": "My Server"}, server.Vars)
+	require.NotNil(t, server.CPULimit)
+	assert.Equal(t, 2000, *server.CPULimit)
+	require.NotNil(t, server.RAMLimit)
+	assert.Equal(t, 4294967296, *server.RAMLimit)
 }
 
 func TestHandler_InvalidServerID(t *testing.T) {

@@ -62,15 +62,11 @@ func (r *GameModRepository) find(
 	}
 
 	if pagination != nil {
-		if pagination.Limit <= 0 {
+		if pagination.Limit == 0 {
 			pagination.Limit = filters.DefaultLimit
 		}
 
-		if pagination.Offset < 0 {
-			pagination.Offset = 0
-		}
-
-		builder = builder.Limit(uint64(pagination.Limit)).Offset(uint64(pagination.Offset))
+		builder = builder.Limit(pagination.Limit).Offset(pagination.Offset)
 	}
 
 	query, args, err := builder.PlaceholderFormat(sq.Dollar).ToSql()
@@ -132,6 +128,7 @@ func (r *GameModRepository) Save(ctx context.Context, gameMod *domain.GameMod) e
 				"chmap_cmd",
 				"sendmsg_cmd",
 				"passwd_cmd",
+				"metadata",
 			).
 			Values(
 				gameMod.GameCode,
@@ -151,6 +148,7 @@ func (r *GameModRepository) Save(ctx context.Context, gameMod *domain.GameMod) e
 				gameMod.ChmapCmd,
 				gameMod.SendmsgCmd,
 				gameMod.PasswdCmd,
+				gameMod.Metadata,
 			).
 			Suffix("RETURNING id")
 	} else {
@@ -175,6 +173,7 @@ func (r *GameModRepository) Save(ctx context.Context, gameMod *domain.GameMod) e
 				gameMod.ChmapCmd,
 				gameMod.SendmsgCmd,
 				gameMod.PasswdCmd,
+				gameMod.Metadata,
 			).
 			Suffix("ON CONFLICT(id) DO UPDATE SET " +
 				"game_code=excluded.game_code," +
@@ -193,7 +192,8 @@ func (r *GameModRepository) Save(ctx context.Context, gameMod *domain.GameMod) e
 				"srestart_cmd=excluded.srestart_cmd," +
 				"chmap_cmd=excluded.chmap_cmd," +
 				"sendmsg_cmd=excluded.sendmsg_cmd," +
-				"passwd_cmd=excluded.passwd_cmd " +
+				"passwd_cmd=excluded.passwd_cmd," +
+				"metadata=excluded.metadata " +
 				"RETURNING id")
 	}
 
@@ -254,6 +254,7 @@ func (r *GameModRepository) scan(row base.Scanner) (*domain.GameMod, error) {
 		&gameMod.ChmapCmd,
 		&gameMod.SendmsgCmd,
 		&gameMod.PasswdCmd,
+		&gameMod.Metadata,
 	)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to scan row")

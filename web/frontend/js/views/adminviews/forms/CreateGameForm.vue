@@ -63,16 +63,16 @@
 
 <script setup>
 import { GIcon } from "@gameap/ui"
-import {computed, ref, defineModel} from "vue"
-import {trans} from "../../../i18n/i18n";
-import GButton from "../../../components/GButton.vue";
+import {ref, defineModel} from "vue"
+import {trans} from "@/i18n/i18n";
+import GButton from "@/components/GButton.vue";
 import {
   NForm,
   NFormItem,
   NInput,
   NSpace,
 } from "naive-ui"
-import {allOfValidator, requiredValidator, stringLengthValidator} from "../../../parts/validators"
+import {allOfValidator, requiredValidator, stringLengthValidator} from "@/parts/validators"
 
 const formRef = ref({})
 const form = defineModel({

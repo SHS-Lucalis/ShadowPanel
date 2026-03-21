@@ -13,7 +13,8 @@ export const usePluginsStore = defineStore('plugins', () => {
         'dashboard-widgets': [],
         'sidebar-sections': [],
         'admin-pages': [],
-        'home-buttons': []
+        'home-buttons': [],
+        'admin-user-info': []
     })
     const pendingRoutes = ref([])
     const registeredRoutes = ref([])

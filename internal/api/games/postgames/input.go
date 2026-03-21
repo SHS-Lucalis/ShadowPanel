@@ -7,7 +7,6 @@ import (
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/flexible"
 	"github.com/gameap/gameap/pkg/validation"
-	"github.com/samber/lo"
 )
 
 const (
@@ -142,8 +141,8 @@ func (g *createGameInput) ToDomain() *domain.Game {
 		Name:                    g.Name,
 		Engine:                  g.Engine,
 		EngineVersion:           g.EngineVersion,
-		SteamAppIDLinux:         lo.ToPtr(g.SteamAppIDLinux.Uint()),
-		SteamAppIDWindows:       lo.ToPtr(g.SteamAppIDWindows.Uint()),
+		SteamAppIDLinux:         new(g.SteamAppIDLinux.Uint()),
+		SteamAppIDWindows:       new(g.SteamAppIDWindows.Uint()),
 		SteamAppSetConfig:       g.SteamAppSetConfig,
 		RemoteRepositoryLinux:   g.RemoteRepositoryLinux,
 		RemoteRepositoryWindows: g.RemoteRepositoryWindows,

@@ -186,6 +186,7 @@ func parseMinecraftServerDetails(data []byte, result *Result) {
 		}
 
 		// Map common fields
+		//nolint:goconst,nolintlint
 		switch key {
 		case "hostname":
 			result.Name = valueUTF8

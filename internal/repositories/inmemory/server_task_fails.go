@@ -10,7 +10,6 @@ import (
 
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
-	"github.com/samber/lo"
 )
 
 type ServerTaskFailRepository struct {
@@ -74,10 +73,10 @@ func (r *ServerTaskFailRepository) Save(_ context.Context, fail *domain.ServerTa
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	fail.UpdatedAt = lo.ToPtr(time.Now())
+	fail.UpdatedAt = new(time.Now())
 
 	if fail.ID == 0 && (fail.CreatedAt == nil || fail.CreatedAt.IsZero()) {
-		fail.CreatedAt = lo.ToPtr(time.Now())
+		fail.CreatedAt = new(time.Now())
 	}
 
 	if fail.ID != 0 {
@@ -305,17 +304,18 @@ func (r *ServerTaskFailRepository) applyPagination(
 	}
 
 	limit := pagination.Limit
-	if limit <= 0 {
+	if limit == 0 {
 		limit = filters.DefaultLimit
 	}
 
-	offset := max(pagination.Offset, 0)
+	offset := pagination.Offset
+	length := uint64(len(fails))
 
-	if offset >= len(fails) {
+	if offset >= length {
 		return []domain.ServerTaskFail{}
 	}
 
-	end := min(offset+limit, len(fails))
+	end := min(offset+limit, length)
 
 	return fails[offset:end]
 }

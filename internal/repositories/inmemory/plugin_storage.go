@@ -145,6 +145,25 @@ func (r *PluginStorageRepository) DeleteByPlugin(_ context.Context, pluginID uin
 	return nil
 }
 
+func (r *PluginStorageRepository) DeleteByFilter(_ context.Context, filter *filters.FindPluginStorage) error {
+	if filter == nil {
+		return nil
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	candidateIDs := r.getFilteredEntryIDs(filter)
+	for entryID := range candidateIDs {
+		if entry, exists := r.entries[entryID]; exists {
+			r.removeFromIndexes(entry)
+			delete(r.entries, entryID)
+		}
+	}
+
+	return nil
+}
+
 func (r *PluginStorageRepository) findExistingEntry(
 	pluginID uint64,
 	key string,
@@ -424,17 +443,18 @@ func (r *PluginStorageRepository) applyPagination(
 	}
 
 	limit := pagination.Limit
-	if limit <= 0 {
+	if limit == 0 {
 		limit = filters.DefaultLimit
 	}
 
-	offset := max(pagination.Offset, 0)
+	offset := pagination.Offset
+	length := uint64(len(entries))
 
-	if offset >= len(entries) {
+	if offset >= length {
 		return []domain.PluginStorageEntry{}
 	}
 
-	end := min(offset+limit, len(entries))
+	end := min(offset+limit, length)
 
 	return entries[offset:end]
 }

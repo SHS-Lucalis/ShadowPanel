@@ -10,6 +10,7 @@ import (
 
 	"github.com/gameap/gameap/internal/certificates"
 	"github.com/gameap/gameap/internal/domain"
+	"github.com/gameap/gameap/internal/services"
 	"github.com/gameap/gameap/pkg/auth"
 	"github.com/gameap/gameap/pkg/strings"
 	"github.com/pkg/errors"
@@ -100,8 +101,8 @@ func seedRoles(ctx context.Context, c *Container) error {
 			return nil
 		}
 
-		adminRole := domain.Role{Name: "admin", Title: lo.ToPtr("Administrator")}
-		userRole := domain.Role{Name: "user", Title: lo.ToPtr("User")}
+		adminRole := domain.Role{Name: "admin", Title: new("Administrator")}
+		userRole := domain.Role{Name: "user", Title: new("User")}
 
 		if err := repo.SaveRole(ctx, &adminRole); err != nil {
 			return errors.WithMessagef(err, "failed to save role %s", adminRole.Name)
@@ -115,7 +116,7 @@ func seedRoles(ctx context.Context, c *Container) error {
 			ctx, adminRole.ID, domain.EntityTypeRole, []domain.Ability{
 				{
 					Name:  domain.AbilityNameAdminRolesPermissions,
-					Title: lo.ToPtr("Common Admininstator Permissions"),
+					Title: new("Common Admininstator Permissions"),
 				},
 			},
 		)
@@ -145,7 +146,7 @@ func seedUsers(ctx context.Context, c *Container) error {
 		user := domain.User{
 			Login: lo.CoalesceOrEmpty(os.Getenv("ADMIN_LOGIN"), "admin"),
 			Email: lo.CoalesceOrEmpty(os.Getenv("ADMIN_EMAIL"), "admin@localhost"),
-			Name:  lo.ToPtr("Admin"),
+			Name:  new("Admin"),
 		}
 
 		pw := os.Getenv("ADMIN_PASSWORD")
@@ -198,7 +199,23 @@ func seedGamesAndMods(ctx context.Context, c *Container) error {
 
 		err = c.GameUpgradeService().UpgradeGames(ctx)
 		if err != nil {
-			return errors.WithMessage(err, "failed to upgrade games")
+			slog.WarnContext(
+				ctx,
+				"Failed to upgrade games using global API, falling back to local seeding",
+				slog.String("error", err.Error()),
+			)
+
+			fallbackUpgrader := services.NewGameUpgradeService(
+				services.NewFallbackGlobalAPIService(),
+				c.GameRepository(),
+				c.GameModRepository(),
+				c.TransactionManager(),
+			)
+
+			err = fallbackUpgrader.UpgradeGames(ctx)
+			if err != nil {
+				return errors.WithMessage(err, "failed to upgrade games from fallback")
+			}
 		}
 
 		slog.InfoContext(ctx, "Games and mods seeded successfully")

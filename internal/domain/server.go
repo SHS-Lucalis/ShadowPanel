@@ -55,7 +55,8 @@ type Server struct {
 	RestartCommand   *string               `db:"restart_command"`
 	ProcessActive    bool                  `db:"process_active"`
 	LastProcessCheck *time.Time            `db:"last_process_check"`
-	Vars             *string               `db:"vars"`
+	Vars             ServerVars            `db:"vars"`
+	Metadata         Metadata              `db:"metadata"`
 	CreatedAt        *time.Time            `db:"created_at"`
 	UpdatedAt        *time.Time            `db:"updated_at"`
 	DeletedAt        *time.Time            `db:"deleted_at"`
@@ -112,6 +113,8 @@ func (s *Server) ReplaceServerShortcodes(node *Node, command string, extra map[s
 	// Replace all server shortcodes
 	for key, value := range replaceMap {
 		command = strings.ReplaceAll(command, "{"+key+"}", value)
+		command = strings.ReplaceAll(command, "{"+strings.ToLower(key)+"}", value)
+		command = strings.ReplaceAll(command, "{"+strings.ToUpper(key)+"}", value)
 	}
 
 	return command

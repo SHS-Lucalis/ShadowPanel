@@ -35,24 +35,29 @@ var (
 	ErrInvalidRconPort = api.NewValidationError(
 		fmt.Sprintf("rcon_port must be between %d and %d", minPort, maxPort),
 	)
+	ErrInvalidCPULimit = api.NewValidationError("cpu_limit must be >= 0")
+	ErrInvalidRAMLimit = api.NewValidationError("ram_limit must be >= 0")
 )
 
 type updateServerInput struct {
-	Enabled      *flexible.Bool `json:"enabled,omitempty"`
-	Installed    *flexible.Int  `json:"installed,omitempty"`
-	Blocked      *flexible.Bool `json:"blocked,omitempty"`
-	Name         string         `json:"name"`
-	GameID       string         `json:"game_id"`
-	DSID         flexible.Int   `json:"ds_id"`
-	GameModID    flexible.Int   `json:"game_mod_id"`
-	ServerIP     string         `json:"server_ip"`
-	ServerPort   flexible.Int   `json:"server_port"`
-	QueryPort    *flexible.Int  `json:"query_port,omitempty"`
-	RconPort     *flexible.Int  `json:"rcon_port,omitempty"`
-	Rcon         *string        `json:"rcon,omitempty"`
-	StartCommand *string        `json:"start_command,omitempty"`
-	Dir          *string        `json:"dir,omitempty"`
-	SuUser       *string        `json:"su_user,omitempty"`
+	Enabled      *flexible.Bool    `json:"enabled,omitempty"`
+	Installed    *flexible.Int     `json:"installed,omitempty"`
+	Blocked      *flexible.Bool    `json:"blocked,omitempty"`
+	Name         string            `json:"name"`
+	GameID       string            `json:"game_id"`
+	DSID         flexible.Int      `json:"ds_id"`
+	GameModID    flexible.Int      `json:"game_mod_id"`
+	ServerIP     string            `json:"server_ip"`
+	ServerPort   flexible.Int      `json:"server_port"`
+	QueryPort    *flexible.Int     `json:"query_port,omitempty"`
+	RconPort     *flexible.Int     `json:"rcon_port,omitempty"`
+	Rcon         *string           `json:"rcon,omitempty"`
+	StartCommand *string           `json:"start_command,omitempty"`
+	Dir          *string           `json:"dir,omitempty"`
+	SuUser       *string           `json:"su_user,omitempty"`
+	Vars         map[string]string `json:"vars,omitempty"`
+	CPULimit     *flexible.Int     `json:"cpu_limit,omitempty"`
+	RAMLimit     *flexible.Int     `json:"ram_limit,omitempty"`
 }
 
 func (in *updateServerInput) Validate() error {
@@ -98,6 +103,14 @@ func (in *updateServerInput) Validate() error {
 
 	if in.RconPort != nil && (in.RconPort.Int() < minPort || in.RconPort.Int() > maxPort) {
 		return ErrInvalidRconPort
+	}
+
+	if in.CPULimit != nil && in.CPULimit.Int() < 0 {
+		return ErrInvalidCPULimit
+	}
+
+	if in.RAMLimit != nil && in.RAMLimit.Int() < 0 {
+		return ErrInvalidRAMLimit
 	}
 
 	return nil
@@ -148,6 +161,20 @@ func (in *updateServerInput) Apply(server *domain.Server) error {
 
 	if in.SuUser != nil {
 		server.SuUser = in.SuUser
+	}
+
+	if in.Vars != nil {
+		server.Vars = in.Vars
+	}
+
+	if in.CPULimit != nil {
+		cpuLimit := in.CPULimit.Int()
+		server.CPULimit = &cpuLimit
+	}
+
+	if in.RAMLimit != nil {
+		ramLimit := in.RAMLimit.Int()
+		server.RAMLimit = &ramLimit
 	}
 
 	return nil

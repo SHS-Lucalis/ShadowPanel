@@ -308,6 +308,8 @@ paths:
     $ref: './paths/games.yaml#/~1api~1games'
   /api/games/upgrade:
     $ref: './paths/games.yaml#/~1api~1games~1upgrade'
+  /api/games/import/pelican-egg:
+    $ref: './paths/games.yaml#/~1api~1games~1import~1pelican-egg'
   /api/games/{code}:
     $ref: './paths/games.yaml#/~1api~1games~1{code}'
   /api/games/{code}/mods:
@@ -350,6 +352,14 @@ paths:
     $ref: './paths/plugin-store.yaml#/~1api~1plugin-store~1plugins~1{id}~1install'
   /api/plugin-store/plugins/{id}/update:
     $ref: './paths/plugin-store.yaml#/~1api~1plugin-store~1plugins~1{id}~1update'
+
+  # Admin Plugins
+  /api/admin/plugins/upload/dry-run:
+    $ref: './paths/admin-plugins.yaml#/~1api~1admin~1plugins~1upload~1dry-run'
+  /api/admin/plugins/upload/install:
+    $ref: './paths/admin-plugins.yaml#/~1api~1admin~1plugins~1upload~1install'
+  /api/admin/plugins/loaded:
+    $ref: './paths/admin-plugins.yaml#/~1api~1admin~1plugins~1loaded'
 
   # Daemon Setup
   /gdaemon/setup/{token}:

@@ -97,6 +97,74 @@ export const useGameListStore = defineStore('games', () => {
         }
     }
 
+    async function importPelicanEgg(content, format = 'json', options = {}) {
+        apiProcesses.value++
+        try {
+            const contentType = format === 'yaml' ? 'application/x-yaml' : 'application/json'
+            const params = new URLSearchParams()
+            if (options.name) params.append('name', options.name)
+            if (options.code) params.append('code', options.code)
+            const query = params.toString() ? `?${params.toString()}` : ''
+
+            const response = await axios.post('/api/games/import/pelican-egg' + query, content, {
+                headers: {
+                    'Content-Type': contentType,
+                },
+            })
+            return response.data
+        } finally {
+            apiProcesses.value--
+        }
+    }
+
+    async function importGameAP(yamlContent, options = {}) {
+        apiProcesses.value++
+        try {
+            const params = new URLSearchParams()
+            if (options.name) params.append('name', options.name)
+            if (options.code) params.append('code', options.code)
+            const query = params.toString() ? `?${params.toString()}` : ''
+
+            const response = await axios.post('/api/games/import/gameap' + query, yamlContent, {
+                headers: {
+                    'Content-Type': 'application/x-yaml',
+                },
+            })
+            return response.data
+        } finally {
+            apiProcesses.value--
+        }
+    }
+
+    async function exportGame(gameCode) {
+        apiProcesses.value++
+        try {
+            const response = await axios.get('/api/games/' + gameCode + '/export', {
+                responseType: 'blob',
+            })
+
+            const contentDisposition = response.headers['content-disposition']
+            let filename = gameCode + '.gameap.yaml'
+            if (contentDisposition) {
+                const match = contentDisposition.match(/filename="(.+)"/)
+                if (match) {
+                    filename = match[1]
+                }
+            }
+
+            const url = window.URL.createObjectURL(new Blob([response.data]))
+            const link = document.createElement('a')
+            link.href = url
+            link.setAttribute('download', filename)
+            document.body.appendChild(link)
+            link.click()
+            link.remove()
+            window.URL.revokeObjectURL(url)
+        } finally {
+            apiProcesses.value--
+        }
+    }
+
     // From legacy gameMods.js
     async function fetchGameModsList(gameCode) {
         if (!gameCode) {
@@ -137,6 +205,9 @@ export const useGameListStore = defineStore('games', () => {
         upgradeGames,
         deleteGameByCode,
         deleteModById,
+        importPelicanEgg,
+        importGameAP,
+        exportGame,
         fetchGameModsList,
         setSelectedGameMod,
     }

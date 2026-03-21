@@ -83,15 +83,11 @@ func (r *DaemonTaskRepository) find(
 	}
 
 	if pagination != nil {
-		if pagination.Limit <= 0 {
+		if pagination.Limit == 0 {
 			pagination.Limit = filters.DefaultLimit
 		}
 
-		if pagination.Offset < 0 {
-			pagination.Offset = 0
-		}
-
-		builder = builder.Limit(uint64(pagination.Limit)).Offset(uint64(pagination.Offset))
+		builder = builder.Limit(pagination.Limit).Offset(pagination.Offset)
 	}
 
 	query, args, err := builder.ToSql()
@@ -135,10 +131,10 @@ func (r *DaemonTaskRepository) find(
 }
 
 func (r *DaemonTaskRepository) Save(ctx context.Context, task *domain.DaemonTask) error {
-	task.UpdatedAt = lo.ToPtr(time.Now())
+	task.UpdatedAt = new(time.Now())
 
 	if task.ID == 0 && (task.CreatedAt == nil || task.CreatedAt.IsZero()) {
-		task.CreatedAt = lo.ToPtr(time.Now())
+		task.CreatedAt = new(time.Now())
 	}
 
 	outputUpdate := "output=VALUES(output)"

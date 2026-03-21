@@ -62,15 +62,11 @@ func (r *GameModRepository) find(
 	}
 
 	if pagination != nil {
-		if pagination.Limit <= 0 {
+		if pagination.Limit == 0 {
 			pagination.Limit = filters.DefaultLimit
 		}
 
-		if pagination.Offset < 0 {
-			pagination.Offset = 0
-		}
-
-		builder = builder.Limit(uint64(pagination.Limit)).Offset(uint64(pagination.Offset))
+		builder = builder.Limit(pagination.Limit).Offset(pagination.Offset)
 	}
 
 	query, args, err := builder.ToSql()
@@ -130,6 +126,7 @@ func (r *GameModRepository) Save(ctx context.Context, gameMod *domain.GameMod) e
 			gameMod.ChmapCmd,
 			gameMod.SendmsgCmd,
 			gameMod.PasswdCmd,
+			gameMod.Metadata,
 		).
 		Suffix("ON DUPLICATE KEY UPDATE " +
 			"game_code=VALUES(game_code)," +
@@ -148,7 +145,8 @@ func (r *GameModRepository) Save(ctx context.Context, gameMod *domain.GameMod) e
 			"srestart_cmd=VALUES(srestart_cmd)," +
 			"chmap_cmd=VALUES(chmap_cmd)," +
 			"sendmsg_cmd=VALUES(sendmsg_cmd)," +
-			"passwd_cmd=VALUES(passwd_cmd)").
+			"passwd_cmd=VALUES(passwd_cmd)," +
+			"metadata=VALUES(metadata)").
 		PlaceholderFormat(sq.Question).
 		ToSql()
 	if err != nil {
@@ -213,6 +211,7 @@ func (r *GameModRepository) scan(row base.Scanner) (*domain.GameMod, error) {
 		&gameMod.ChmapCmd,
 		&gameMod.SendmsgCmd,
 		&gameMod.PasswdCmd,
+		&gameMod.Metadata,
 	)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to scan row")

@@ -189,6 +189,7 @@ func (m *Manager) initializeRuntime(
 	// Configure WASI with stdout/stderr for runtime error messages
 	moduleConfig := wazero.NewModuleConfig().
 		WithStartFunctions("_initialize", "_start").
+		WithFSConfig(wazero.NewFSConfig()).
 		WithStdout(io.Discard).
 		WithStderr(io.Discard).
 		WithSysWalltime()

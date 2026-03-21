@@ -1,0 +1,134 @@
+type: object
+description: Pelican/Pterodactyl egg configuration file
+properties:
+  meta:
+    type: object
+    description: Metadata about the egg file
+    properties:
+      version:
+        type: string
+        description: Egg format version
+      update_url:
+        type: string
+        description: URL for updates
+      exported_at:
+        type: string
+        description: Export timestamp
+  uuid:
+    type: string
+    description: Unique identifier for the egg
+  author:
+    type: string
+    description: Egg author
+  name:
+    type: string
+    description: Name of the game/application
+  description:
+    type: string
+    description: Description of the game/application
+  features:
+    type: array
+    items:
+      type: string
+    description: List of supported features
+  docker_images:
+    type: object
+    additionalProperties:
+      type: string
+    description: Map of Docker images for running the server
+  file_denylist:
+    type: array
+    items:
+      type: string
+    description: Files that users cannot access
+  startup:
+    type: string
+    description: Startup command template (legacy format)
+  startup_commands:
+    type: object
+    additionalProperties:
+      type: string
+    description: Startup commands map (PLCN_v3 format, key "Default" is used)
+  config:
+    type: object
+    description: Configuration settings
+    properties:
+      files:
+        type: object
+        additionalProperties:
+          type: object
+          properties:
+            parser:
+              type: string
+              description: Config file parser type (json, yaml, ini, etc.)
+            find:
+              type: object
+              additionalProperties: true
+              description: Key-value pairs to find and replace
+      startup:
+        type: object
+        properties:
+          done:
+            type: string
+            description: String pattern indicating server is ready
+          userInteraction:
+            type: array
+            items:
+              type: string
+      stop:
+        type: string
+        description: Stop signal or command
+      logs:
+        description: Logging configuration
+  scripts:
+    type: object
+    description: Installation and other scripts
+    properties:
+      installation:
+        type: object
+        properties:
+          script:
+            type: string
+            description: Bash installation script
+          container:
+            type: string
+            description: Docker image for installation
+          entrypoint:
+            type: string
+            description: Script entrypoint
+  variables:
+    type: array
+    description: Environment variables configuration
+    items:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Display name
+        description:
+          type: string
+          description: Variable description
+        env_variable:
+          type: string
+          description: Environment variable name
+        default_value:
+          type: string
+          description: Default value
+        user_viewable:
+          type: boolean
+          description: Whether users can view this variable
+        user_editable:
+          type: boolean
+          description: Whether users can edit this variable
+        rules:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+          description: Laravel validation rules (string in legacy format, array in PLCN_v3)
+        field_type:
+          type: string
+          description: Input field type (text, password, select, etc.)
+required:
+  - name

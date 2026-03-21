@@ -9,7 +9,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories/base"
-	"github.com/samber/lo"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/pkg/errors"
@@ -86,15 +85,11 @@ func (r *ServerRepository) find(
 	}
 
 	if pagination != nil {
-		if pagination.Limit <= 0 {
+		if pagination.Limit == 0 {
 			pagination.Limit = filters.DefaultLimit
 		}
 
-		if pagination.Offset < 0 {
-			pagination.Offset = 0
-		}
-
-		builder = builder.Limit(uint64(pagination.Limit)).Offset(uint64(pagination.Offset))
+		builder = builder.Limit(pagination.Limit).Offset(pagination.Offset)
 	}
 
 	query, args, err := builder.PlaceholderFormat(sq.Dollar).ToSql()
@@ -134,10 +129,10 @@ func (r *ServerRepository) find(
 
 //nolint:funlen
 func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) error {
-	server.UpdatedAt = lo.ToPtr(time.Now())
+	server.UpdatedAt = new(time.Now())
 
 	if server.ID == 0 && (server.CreatedAt == nil || server.CreatedAt.IsZero()) {
-		server.CreatedAt = lo.ToPtr(time.Now())
+		server.CreatedAt = new(time.Now())
 	}
 
 	builder := sq.Insert(base.ServersTable)
@@ -172,6 +167,7 @@ func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) erro
 				"process_active",
 				"last_process_check",
 				"vars",
+				"metadata",
 				"created_at",
 				"updated_at",
 				"deleted_at",
@@ -204,6 +200,7 @@ func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) erro
 				server.ProcessActive,
 				server.LastProcessCheck,
 				server.Vars,
+				server.Metadata,
 				server.CreatedAt,
 				server.UpdatedAt,
 				server.DeletedAt,
@@ -241,6 +238,7 @@ func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) erro
 				server.ProcessActive,
 				server.LastProcessCheck,
 				server.Vars,
+				server.Metadata,
 				server.CreatedAt,
 				server.UpdatedAt,
 				server.DeletedAt,
@@ -273,6 +271,7 @@ func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) erro
 				"process_active=excluded.process_active," +
 				"last_process_check=excluded.last_process_check," +
 				"vars=excluded.vars," +
+				"metadata=excluded.metadata," +
 				"updated_at=excluded.updated_at," +
 				"deleted_at=excluded.deleted_at " +
 				"RETURNING id")
@@ -357,6 +356,7 @@ func (r *ServerRepository) bulkInsertNewServers(ctx context.Context, servers []*
 			"process_active",
 			"last_process_check",
 			"vars",
+			"metadata",
 			"created_at",
 			"updated_at",
 			"deleted_at",
@@ -391,6 +391,7 @@ func (r *ServerRepository) bulkInsertNewServers(ctx context.Context, servers []*
 			server.ProcessActive,
 			server.LastProcessCheck,
 			server.Vars,
+			server.Metadata,
 			server.CreatedAt,
 			server.UpdatedAt,
 			server.DeletedAt,
@@ -444,6 +445,7 @@ func (r *ServerRepository) bulkUpsertExistingServers(ctx context.Context, server
 			server.ProcessActive,
 			server.LastProcessCheck,
 			server.Vars,
+			server.Metadata,
 			server.CreatedAt,
 			server.UpdatedAt,
 			server.DeletedAt,
@@ -479,6 +481,7 @@ func (r *ServerRepository) bulkUpsertExistingServers(ctx context.Context, server
 			"process_active=excluded.process_active," +
 			"last_process_check=excluded.last_process_check," +
 			"vars=excluded.vars," +
+			"metadata=excluded.metadata," +
 			"updated_at=excluded.updated_at," +
 			"deleted_at=excluded.deleted_at").
 		PlaceholderFormat(sq.Dollar).
@@ -695,6 +698,7 @@ func (r *ServerRepository) scan(row base.Scanner) (*domain.Server, error) {
 		&server.ProcessActive,
 		&server.LastProcessCheck,
 		&server.Vars,
+		&server.Metadata,
 		&server.CreatedAt,
 		&server.UpdatedAt,
 		&server.DeletedAt,

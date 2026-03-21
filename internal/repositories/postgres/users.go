@@ -9,7 +9,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories/base"
-	"github.com/samber/lo"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/pkg/errors"
@@ -64,15 +63,11 @@ func (r *UserRepository) find(
 	}
 
 	if pagination != nil {
-		if pagination.Limit <= 0 {
+		if pagination.Limit == 0 {
 			pagination.Limit = filters.DefaultLimit
 		}
 
-		if pagination.Offset < 0 {
-			pagination.Offset = 0
-		}
-
-		builder = builder.Limit(uint64(pagination.Limit)).Offset(uint64(pagination.Offset))
+		builder = builder.Limit(pagination.Limit).Offset(pagination.Offset)
 	}
 
 	query, args, err := builder.PlaceholderFormat(sq.Dollar).ToSql()
@@ -111,10 +106,10 @@ func (r *UserRepository) find(
 }
 
 func (r *UserRepository) Save(ctx context.Context, user *domain.User) error {
-	user.UpdatedAt = lo.ToPtr(time.Now())
+	user.UpdatedAt = new(time.Now())
 
 	if user.ID == 0 && (user.CreatedAt == nil || user.CreatedAt.IsZero()) {
-		user.CreatedAt = lo.ToPtr(time.Now())
+		user.CreatedAt = new(time.Now())
 	}
 
 	builder := sq.Insert(base.UsersTable)

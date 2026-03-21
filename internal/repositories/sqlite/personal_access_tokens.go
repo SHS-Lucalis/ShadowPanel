@@ -54,15 +54,11 @@ func (r *PersonalAccessTokenRepository) find(
 	}
 
 	if pagination != nil {
-		if pagination.Limit <= 0 {
+		if pagination.Limit == 0 {
 			pagination.Limit = filters.DefaultLimit
 		}
 
-		if pagination.Offset < 0 {
-			pagination.Offset = 0
-		}
-
-		builder = builder.Limit(uint64(pagination.Limit)).Offset(uint64(pagination.Offset))
+		builder = builder.Limit(pagination.Limit).Offset(pagination.Offset)
 	}
 
 	query, args, err := builder.ToSql()
@@ -101,10 +97,10 @@ func (r *PersonalAccessTokenRepository) find(
 }
 
 func (r *PersonalAccessTokenRepository) Save(ctx context.Context, token *domain.PersonalAccessToken) error {
-	token.UpdatedAt = lo.ToPtr(time.Now())
+	token.UpdatedAt = new(time.Now())
 
 	if token.ID == 0 && (token.CreatedAt == nil || token.CreatedAt.IsZero()) {
-		token.CreatedAt = lo.ToPtr(time.Now())
+		token.CreatedAt = new(time.Now())
 	}
 
 	var abilitiesJSON []byte
@@ -118,13 +114,13 @@ func (r *PersonalAccessTokenRepository) Save(ctx context.Context, token *domain.
 
 	var lastUsedAtStr, createdAtStr, updatedAtStr *string
 	if token.LastUsedAt != nil {
-		lastUsedAtStr = lo.ToPtr(token.LastUsedAt.Format(time.RFC3339))
+		lastUsedAtStr = new(token.LastUsedAt.Format(time.RFC3339))
 	}
 	if token.CreatedAt != nil {
-		createdAtStr = lo.ToPtr(token.CreatedAt.Format(time.RFC3339))
+		createdAtStr = new(token.CreatedAt.Format(time.RFC3339))
 	}
 	if token.UpdatedAt != nil {
-		updatedAtStr = lo.ToPtr(token.UpdatedAt.Format(time.RFC3339))
+		updatedAtStr = new(token.UpdatedAt.Format(time.RFC3339))
 	}
 
 	query, args, err := sq.Insert(base.PersonalAccessTokensTable).

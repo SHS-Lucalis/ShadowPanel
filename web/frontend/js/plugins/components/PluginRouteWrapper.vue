@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import { providePluginContext } from '../context'
+import { providePluginContext } from '@/plugins'
 
 defineProps({
     routeComponent: {

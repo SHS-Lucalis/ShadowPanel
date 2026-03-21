@@ -39,8 +39,8 @@ func (s *ServersServiceImpl) FindServers(
 	var pagination *filters.Pagination
 	if req.Pagination != nil {
 		pagination = &filters.Pagination{
-			Limit:  int(req.Pagination.Limit),
-			Offset: int(req.Pagination.Offset),
+			Limit:  uint64(req.Pagination.Limit),
+			Offset: uint64(req.Pagination.Offset),
 		}
 	}
 
@@ -88,7 +88,7 @@ func (s *ServersServiceImpl) SaveServer(
 	if req.Server == nil {
 		return &servers.SaveServerResponse{
 			Success: false,
-			Error:   lo.ToPtr("server is required"),
+			Error:   new("server is required"),
 		}, nil
 	}
 
@@ -96,7 +96,7 @@ func (s *ServersServiceImpl) SaveServer(
 	if err := s.serverRepo.Save(ctx, server); err != nil {
 		return &servers.SaveServerResponse{
 			Success: false,
-			Error:   lo.ToPtr(err.Error()),
+			Error:   new(err.Error()),
 		}, nil
 	}
 
@@ -113,7 +113,7 @@ func (s *ServersServiceImpl) DeleteServer(
 	if err := s.serverRepo.Delete(ctx, uint(req.Id)); err != nil {
 		return &servers.DeleteServerResponse{
 			Success: false,
-			Error:   lo.ToPtr(err.Error()),
+			Error:   new(err.Error()),
 		}, nil
 	}
 
@@ -129,11 +129,11 @@ func convertServersToProto(srvs []domain.Server) []*proto.Server {
 func convertServerToProto(s *domain.Server) *proto.Server {
 	var queryPort, rconPort *int32
 	if s.QueryPort != nil {
-		queryPort = lo.ToPtr(int32(*s.QueryPort)) //nolint:gosec
+		queryPort = new(int32(*s.QueryPort)) //nolint:gosec
 	}
 
 	if s.RconPort != nil {
-		rconPort = lo.ToPtr(int32(*s.RconPort)) //nolint:gosec
+		rconPort = new(int32(*s.RconPort)) //nolint:gosec
 	}
 
 	var suUser, startCommand *string
@@ -169,11 +169,11 @@ func convertServerToProto(s *domain.Server) *proto.Server {
 func convertServerFromProto(s *proto.Server) *domain.Server {
 	var queryPort, rconPort *int
 	if s.QueryPort != nil {
-		queryPort = lo.ToPtr(int(*s.QueryPort))
+		queryPort = new(int(*s.QueryPort))
 	}
 
 	if s.RconPort != nil {
-		rconPort = lo.ToPtr(int(*s.RconPort))
+		rconPort = new(int(*s.RconPort))
 	}
 
 	var suUser, startCommand *string

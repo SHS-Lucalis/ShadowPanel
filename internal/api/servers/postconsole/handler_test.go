@@ -147,7 +147,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 					[]domain.Ability{
 						{
 							Name:       domain.AbilityNameGameServerConsoleSend,
-							EntityID:   lo.ToPtr(uint(1)),
+							EntityID:   new(uint(1)),
 							EntityType: lo.ToPtr(domain.EntityTypeServer),
 						},
 					},
@@ -231,7 +231,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 					[]domain.Ability{
 						{
 							Name:       domain.AbilityNameGameServerConsoleSend,
-							EntityID:   lo.ToPtr(uint(1)),
+							EntityID:   new(uint(1)),
 							EntityType: lo.ToPtr(domain.EntityTypeServer),
 						},
 					},
@@ -313,7 +313,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 					[]domain.Ability{
 						{
 							Name:       domain.AbilityNameGameServerConsoleSend,
-							EntityID:   lo.ToPtr(uint(1)),
+							EntityID:   new(uint(1)),
 							EntityType: lo.ToPtr(domain.EntityTypeServer),
 						},
 					},
@@ -390,7 +390,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 					[]domain.Ability{
 						{
 							Name:       domain.AbilityNameGameServerConsoleSend,
-							EntityID:   lo.ToPtr(uint(1)),
+							EntityID:   new(uint(1)),
 							EntityType: lo.ToPtr(domain.EntityTypeServer),
 						},
 					},
@@ -595,7 +595,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 					[]domain.Ability{
 						{
 							Name:       domain.AbilityNameGameServerConsoleSend,
-							EntityID:   lo.ToPtr(uint(1)),
+							EntityID:   new(uint(1)),
 							EntityType: lo.ToPtr(domain.EntityTypeServer),
 						},
 					},
@@ -666,7 +666,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 					[]domain.Ability{
 						{
 							Name:       domain.AbilityNameGameServerConsoleSend,
-							EntityID:   lo.ToPtr(uint(1)),
+							EntityID:   new(uint(1)),
 							EntityType: lo.ToPtr(domain.EntityTypeServer),
 						},
 					},
@@ -726,7 +726,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 					[]domain.Ability{
 						{
 							Name:       domain.AbilityNameGameServerConsoleSend,
-							EntityID:   lo.ToPtr(uint(1)),
+							EntityID:   new(uint(1)),
 							EntityType: lo.ToPtr(domain.EntityTypeServer),
 						},
 					},

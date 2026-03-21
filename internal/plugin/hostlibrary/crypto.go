@@ -11,7 +11,6 @@ import (
 
 	"github.com/gameap/gameap/pkg/plugin/sdk/crypto"
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 	"github.com/tetratelabs/wazero"
 	"golang.org/x/crypto/argon2"
 )
@@ -55,15 +54,14 @@ func (s *CryptoServiceImpl) RandomUint64(
 ) (*crypto.RandomUint64Response, error) {
 	if req.Max == 0 {
 		return &crypto.RandomUint64Response{
-			Error: lo.ToPtr("max must be greater than 0"),
+			Error: new("max must be greater than 0"),
 		}, nil
 	}
 
 	n, err := rand.Int(rand.Reader, big.NewInt(0).SetUint64(req.Max))
 	if err != nil {
-		//nolint:nilerr // intentionally return nil error; error is passed in response struct
 		return &crypto.RandomUint64Response{
-			Error: lo.ToPtr("failed to generate random number: " + err.Error()),
+			Error: new("failed to generate random number: " + err.Error()),
 		}, nil
 	}
 
@@ -79,12 +77,12 @@ func (s *CryptoServiceImpl) RandomString(
 	length := int(req.Length)
 	if length <= 0 {
 		return &crypto.RandomStringResponse{
-			Error: lo.ToPtr("length must be greater than 0"),
+			Error: new("length must be greater than 0"),
 		}, nil
 	}
 	if length > maxStringLength {
 		return &crypto.RandomStringResponse{
-			Error: lo.ToPtr(fmt.Sprintf("length exceeds maximum of %d", maxStringLength)),
+			Error: new(fmt.Sprintf("length exceeds maximum of %d", maxStringLength)),
 		}, nil
 	}
 
@@ -93,7 +91,7 @@ func (s *CryptoServiceImpl) RandomString(
 		charset = *req.Charset
 		if len(charset) > maxCharsetLen {
 			return &crypto.RandomStringResponse{
-				Error: lo.ToPtr(fmt.Sprintf("charset length exceeds maximum of %d", maxCharsetLen)),
+				Error: new(fmt.Sprintf("charset length exceeds maximum of %d", maxCharsetLen)),
 			}, nil
 		}
 	}
@@ -104,9 +102,8 @@ func (s *CryptoServiceImpl) RandomString(
 	for range length {
 		n, err := rand.Int(rand.Reader, m)
 		if err != nil {
-			//nolint:nilerr // intentionally return nil error; error is passed in response struct
 			return &crypto.RandomStringResponse{
-				Error: lo.ToPtr("failed to generate random number: " + err.Error()),
+				Error: new("failed to generate random number: " + err.Error()),
 			}, nil
 		}
 		result = append(result, charset[n.Int64()])
@@ -123,7 +120,7 @@ func (s *CryptoServiceImpl) Argon2Hash(
 ) (*crypto.Argon2HashResponse, error) {
 	if req.Password == "" {
 		return &crypto.Argon2HashResponse{
-			Error: lo.ToPtr("password cannot be empty"),
+			Error: new("password cannot be empty"),
 		}, nil
 	}
 
@@ -131,15 +128,14 @@ func (s *CryptoServiceImpl) Argon2Hash(
 
 	if err := s.validateArgon2Params(params); err != nil {
 		return &crypto.Argon2HashResponse{
-			Error: lo.ToPtr(err.Error()),
+			Error: new(err.Error()),
 		}, nil
 	}
 
 	salt := make([]byte, params.saltLength)
 	if _, err := rand.Read(salt); err != nil {
-		//nolint:nilerr // intentionally return nil error; error is passed in response struct
 		return &crypto.Argon2HashResponse{
-			Error: lo.ToPtr("failed to generate salt: " + err.Error()),
+			Error: new("failed to generate salt: " + err.Error()),
 		}, nil
 	}
 
@@ -174,22 +170,21 @@ func (s *CryptoServiceImpl) Argon2Verify(
 	if req.Password == "" {
 		return &crypto.Argon2VerifyResponse{
 			Match: false,
-			Error: lo.ToPtr("password cannot be empty"),
+			Error: new("password cannot be empty"),
 		}, nil
 	}
 	if req.Hash == "" {
 		return &crypto.Argon2VerifyResponse{
 			Match: false,
-			Error: lo.ToPtr("hash cannot be empty"),
+			Error: new("hash cannot be empty"),
 		}, nil
 	}
 
 	params, salt, hash, err := s.parseArgon2Hash(req.Hash)
 	if err != nil {
-		//nolint:nilerr // intentionally return nil error; error is passed in response struct
 		return &crypto.Argon2VerifyResponse{
 			Match: false,
-			Error: lo.ToPtr("invalid hash format: " + err.Error()),
+			Error: new("invalid hash format: " + err.Error()),
 		}, nil
 	}
 

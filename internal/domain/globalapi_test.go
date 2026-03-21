@@ -3,7 +3,6 @@ package domain
 import (
 	"testing"
 
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -33,11 +32,11 @@ func TestGlobalAPIGame_ToDomainGame(t *testing.T) {
 				Name:                    "Counter-Strike 2",
 				Engine:                  "Source 2",
 				EngineVersion:           "1.0",
-				SteamAppIDLinux:         lo.ToPtr(uint(730)),
-				SteamAppIDWindows:       lo.ToPtr(uint(740)),
-				SteamAppSetConfig:       lo.ToPtr("cs2_config"),
-				RemoteRepositoryLinux:   lo.ToPtr("https://repo.example.com/linux"),
-				RemoteRepositoryWindows: lo.ToPtr("https://repo.example.com/windows"),
+				SteamAppIDLinux:         new(uint(730)),
+				SteamAppIDWindows:       new(uint(740)),
+				SteamAppSetConfig:       new("cs2_config"),
+				RemoteRepositoryLinux:   new("https://repo.example.com/linux"),
+				RemoteRepositoryWindows: new("https://repo.example.com/windows"),
 				Enabled:                 1,
 			},
 		},
@@ -91,7 +90,7 @@ func TestGlobalAPIGame_ToDomainGame(t *testing.T) {
 				Name:              "Valheim",
 				Engine:            "Unity",
 				EngineVersion:     "2020.3",
-				SteamAppIDLinux:   lo.ToPtr(uint(896660)),
+				SteamAppIDLinux:   new(uint(896660)),
 				SteamAppIDWindows: nil,
 				Enabled:           1,
 			},
@@ -112,7 +111,7 @@ func TestGlobalAPIGame_ToDomainGame(t *testing.T) {
 				Engine:            "Unity",
 				EngineVersion:     "2019.4",
 				SteamAppIDLinux:   nil,
-				SteamAppIDWindows: lo.ToPtr(uint(258550)),
+				SteamAppIDWindows: new(uint(258550)),
 				Enabled:           1,
 			},
 		},
@@ -150,7 +149,7 @@ func TestGlobalAPIGame_ToDomainGame(t *testing.T) {
 				Name:                  "Team Fortress 2",
 				Engine:                "Source",
 				EngineVersion:         "1.0",
-				RemoteRepositoryLinux: lo.ToPtr("https://repo.example.com/tf2/linux"),
+				RemoteRepositoryLinux: new("https://repo.example.com/tf2/linux"),
 				Enabled:               1,
 			},
 		},
@@ -168,7 +167,7 @@ func TestGlobalAPIGame_ToDomainGame(t *testing.T) {
 				Name:              "CS:GO",
 				Engine:            "Source",
 				EngineVersion:     "1.0",
-				SteamAppSetConfig: lo.ToPtr("csgo_ds.txt"),
+				SteamAppSetConfig: new("csgo_ds.txt"),
 				Enabled:           1,
 			},
 		},
@@ -223,17 +222,17 @@ func TestGlobalAPIGameMod_ToDomainGameMod(t *testing.T) {
 				Vars: GameModVarList{
 					{Var: "sv_cheats", Default: "0", Info: "Enable cheats", AdminVar: true},
 				},
-				RemoteRepositoryLinux:   lo.ToPtr("https://repo.example.com/csgo/linux"),
-				RemoteRepositoryWindows: lo.ToPtr("https://repo.example.com/csgo/windows"),
-				StartCmdLinux:           lo.ToPtr("./srcds_run -game csgo"),
-				StartCmdWindows:         lo.ToPtr("srcds.exe -game csgo"),
-				KickCmd:                 lo.ToPtr("kick {player}"),
-				BanCmd:                  lo.ToPtr("banid {player}"),
-				ChnameCmd:               lo.ToPtr("name {name}"),
-				SrestartCmd:             lo.ToPtr("restart"),
-				ChmapCmd:                lo.ToPtr("changelevel {map}"),
-				SendmsgCmd:              lo.ToPtr("say {message}"),
-				PasswdCmd:               lo.ToPtr("sv_password {password}"),
+				RemoteRepositoryLinux:   new("https://repo.example.com/csgo/linux"),
+				RemoteRepositoryWindows: new("https://repo.example.com/csgo/windows"),
+				StartCmdLinux:           new("./srcds_run -game csgo"),
+				StartCmdWindows:         new("srcds.exe -game csgo"),
+				KickCmd:                 new("kick {player}"),
+				BanCmd:                  new("banid {player}"),
+				ChnameCmd:               new("name {name}"),
+				SrestartCmd:             new("restart"),
+				ChmapCmd:                new("changelevel {map}"),
+				SendmsgCmd:              new("say {message}"),
+				PasswdCmd:               new("sv_password {password}"),
 			},
 		},
 		{
@@ -289,8 +288,8 @@ func TestGlobalAPIGameMod_ToDomainGameMod(t *testing.T) {
 			expected: &GameMod{
 				GameCode:      "tf2",
 				Name:          "Default",
-				StartCmdLinux: lo.ToPtr("./srcds_run -game tf"),
-				KickCmd:       lo.ToPtr("sm_kick {player}"),
+				StartCmdLinux: new("./srcds_run -game tf"),
+				KickCmd:       new("sm_kick {player}"),
 			},
 		},
 		{
@@ -305,8 +304,8 @@ func TestGlobalAPIGameMod_ToDomainGameMod(t *testing.T) {
 			expected: &GameMod{
 				GameCode:              "valheim",
 				Name:                  "Plus",
-				RemoteRepositoryLinux: lo.ToPtr("https://repo.example.com/valheim"),
-				StartCmdLinux:         lo.ToPtr("./valheim_server.x86_64"),
+				RemoteRepositoryLinux: new("https://repo.example.com/valheim"),
+				StartCmdLinux:         new("./valheim_server.x86_64"),
 			},
 		},
 		{
@@ -321,8 +320,8 @@ func TestGlobalAPIGameMod_ToDomainGameMod(t *testing.T) {
 			expected: &GameMod{
 				GameCode:                "ark",
 				Name:                    "Survival Evolved",
-				RemoteRepositoryWindows: lo.ToPtr("https://repo.example.com/ark"),
-				StartCmdWindows:         lo.ToPtr("ShooterGameServer.exe"),
+				RemoteRepositoryWindows: new("https://repo.example.com/ark"),
+				StartCmdWindows:         new("ShooterGameServer.exe"),
 			},
 		},
 		{
@@ -339,10 +338,10 @@ func TestGlobalAPIGameMod_ToDomainGameMod(t *testing.T) {
 			expected: &GameMod{
 				GameCode:    "gmod",
 				Name:        "DarkRP",
-				KickCmd:     lo.ToPtr("ulx kick {player}"),
-				BanCmd:      lo.ToPtr("ulx ban {player}"),
-				ChnameCmd:   lo.ToPtr("ulx name {name}"),
-				SrestartCmd: lo.ToPtr("ulx restart"),
+				KickCmd:     new("ulx kick {player}"),
+				BanCmd:      new("ulx ban {player}"),
+				ChnameCmd:   new("ulx name {name}"),
+				SrestartCmd: new("ulx restart"),
 			},
 		},
 		{
@@ -358,9 +357,9 @@ func TestGlobalAPIGameMod_ToDomainGameMod(t *testing.T) {
 			expected: &GameMod{
 				GameCode:   "cs2",
 				Name:       "Competitive",
-				ChmapCmd:   lo.ToPtr("map {map}"),
-				SendmsgCmd: lo.ToPtr("say {message}"),
-				PasswdCmd:  lo.ToPtr("sv_password {password}"),
+				ChmapCmd:   new("map {map}"),
+				SendmsgCmd: new("say {message}"),
+				PasswdCmd:  new("sv_password {password}"),
 			},
 		},
 		{

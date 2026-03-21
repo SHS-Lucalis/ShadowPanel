@@ -36,8 +36,8 @@ func (s *GamesServiceImpl) FindGames(
 	var pagination *filters.Pagination
 	if req.Pagination != nil {
 		pagination = &filters.Pagination{
-			Limit:  int(req.Pagination.Limit),
-			Offset: int(req.Pagination.Offset),
+			Limit:  uint64(req.Pagination.Limit),
+			Offset: uint64(req.Pagination.Offset),
 		}
 	}
 
@@ -82,10 +82,10 @@ func convertGamesToProto(gms []domain.Game) []*proto.Game {
 func convertGameToProto(g *domain.Game) *proto.Game {
 	var steamAppIDLinux, steamAppIDWindows *uint32
 	if g.SteamAppIDLinux != nil {
-		steamAppIDLinux = lo.ToPtr(uint32(*g.SteamAppIDLinux)) //nolint:gosec
+		steamAppIDLinux = new(uint32(*g.SteamAppIDLinux)) //nolint:gosec
 	}
 	if g.SteamAppIDWindows != nil {
-		steamAppIDWindows = lo.ToPtr(uint32(*g.SteamAppIDWindows)) //nolint:gosec
+		steamAppIDWindows = new(uint32(*g.SteamAppIDWindows)) //nolint:gosec
 	}
 
 	return &proto.Game{

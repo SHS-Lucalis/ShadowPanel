@@ -162,10 +162,10 @@ func buildSorting(input *input) []filters.Sorting {
 
 func buildPagination(input *input) *filters.Pagination {
 	// Convert page-based pagination to offset-based
-	offset := (input.PageNumber - 1) * input.PageSize
+	offset := uint64((input.PageNumber - 1) * input.PageSize) //nolint:gosec // PageNumber and PageSize are validated
 
 	return &filters.Pagination{
-		Limit:  input.PageSize,
+		Limit:  uint64(input.PageSize), //nolint:gosec // PageSize is validated
 		Offset: offset,
 	}
 }

@@ -7,7 +7,6 @@ import (
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/pkg/plugin/sdk/servercontrol"
-	"github.com/samber/lo"
 	"github.com/tetratelabs/wazero"
 )
 
@@ -64,14 +63,14 @@ func (s *ServerControlServiceImpl) StartServer(
 	if err != nil {
 		return &servercontrol.ServerControlResponse{
 			Success: false,
-			Error:   lo.ToPtr(err.Error()),
+			Error:   new(err.Error()),
 		}, nil
 	}
 
 	if server == nil {
 		return &servercontrol.ServerControlResponse{
 			Success: false,
-			Error:   lo.ToPtr("server not found"),
+			Error:   new("server not found"),
 		}, nil
 	}
 
@@ -79,13 +78,13 @@ func (s *ServerControlServiceImpl) StartServer(
 	if err != nil {
 		return &servercontrol.ServerControlResponse{
 			Success: false,
-			Error:   lo.ToPtr(err.Error()),
+			Error:   new(err.Error()),
 		}, nil
 	}
 
 	return &servercontrol.ServerControlResponse{
 		Success: true,
-		TaskId:  lo.ToPtr(uint64(taskID)),
+		TaskId:  new(uint64(taskID)),
 	}, nil
 }
 
@@ -97,14 +96,14 @@ func (s *ServerControlServiceImpl) StopServer(
 	if err != nil {
 		return &servercontrol.ServerControlResponse{
 			Success: false,
-			Error:   lo.ToPtr(err.Error()),
+			Error:   new(err.Error()),
 		}, nil
 	}
 
 	if server == nil {
 		return &servercontrol.ServerControlResponse{
 			Success: false,
-			Error:   lo.ToPtr("server not found"),
+			Error:   new("server not found"),
 		}, nil
 	}
 
@@ -112,13 +111,13 @@ func (s *ServerControlServiceImpl) StopServer(
 	if err != nil {
 		return &servercontrol.ServerControlResponse{
 			Success: false,
-			Error:   lo.ToPtr(err.Error()),
+			Error:   new(err.Error()),
 		}, nil
 	}
 
 	return &servercontrol.ServerControlResponse{
 		Success: true,
-		TaskId:  lo.ToPtr(uint64(taskID)),
+		TaskId:  new(uint64(taskID)),
 	}, nil
 }
 
@@ -130,14 +129,14 @@ func (s *ServerControlServiceImpl) RestartServer(
 	if err != nil {
 		return &servercontrol.ServerControlResponse{
 			Success: false,
-			Error:   lo.ToPtr(err.Error()),
+			Error:   new(err.Error()),
 		}, nil
 	}
 
 	if server == nil {
 		return &servercontrol.ServerControlResponse{
 			Success: false,
-			Error:   lo.ToPtr("server not found"),
+			Error:   new("server not found"),
 		}, nil
 	}
 
@@ -145,13 +144,13 @@ func (s *ServerControlServiceImpl) RestartServer(
 	if err != nil {
 		return &servercontrol.ServerControlResponse{
 			Success: false,
-			Error:   lo.ToPtr(err.Error()),
+			Error:   new(err.Error()),
 		}, nil
 	}
 
 	return &servercontrol.ServerControlResponse{
 		Success: true,
-		TaskId:  lo.ToPtr(uint64(taskID)),
+		TaskId:  new(uint64(taskID)),
 	}, nil
 }
 
@@ -163,14 +162,14 @@ func (s *ServerControlServiceImpl) UpdateServer(
 	if err != nil {
 		return &servercontrol.ServerControlResponse{
 			Success: false,
-			Error:   lo.ToPtr(err.Error()),
+			Error:   new(err.Error()),
 		}, nil
 	}
 
 	if server == nil {
 		return &servercontrol.ServerControlResponse{
 			Success: false,
-			Error:   lo.ToPtr("server not found"),
+			Error:   new("server not found"),
 		}, nil
 	}
 
@@ -178,13 +177,13 @@ func (s *ServerControlServiceImpl) UpdateServer(
 	if err != nil {
 		return &servercontrol.ServerControlResponse{
 			Success: false,
-			Error:   lo.ToPtr(err.Error()),
+			Error:   new(err.Error()),
 		}, nil
 	}
 
 	return &servercontrol.ServerControlResponse{
 		Success: true,
-		TaskId:  lo.ToPtr(uint64(taskID)),
+		TaskId:  new(uint64(taskID)),
 	}, nil
 }
 
@@ -196,14 +195,14 @@ func (s *ServerControlServiceImpl) InstallServer(
 	if err != nil {
 		return &servercontrol.ServerControlResponse{
 			Success: false,
-			Error:   lo.ToPtr(err.Error()),
+			Error:   new(err.Error()),
 		}, nil
 	}
 
 	if server == nil {
 		return &servercontrol.ServerControlResponse{
 			Success: false,
-			Error:   lo.ToPtr("server not found"),
+			Error:   new("server not found"),
 		}, nil
 	}
 
@@ -211,13 +210,13 @@ func (s *ServerControlServiceImpl) InstallServer(
 	if err != nil {
 		return &servercontrol.ServerControlResponse{
 			Success: false,
-			Error:   lo.ToPtr(err.Error()),
+			Error:   new(err.Error()),
 		}, nil
 	}
 
 	return &servercontrol.ServerControlResponse{
 		Success: true,
-		TaskId:  lo.ToPtr(uint64(taskID)),
+		TaskId:  new(uint64(taskID)),
 	}, nil
 }
 
@@ -229,14 +228,14 @@ func (s *ServerControlServiceImpl) ReinstallServer(
 	if err != nil {
 		return &servercontrol.ServerControlResponse{
 			Success: false,
-			Error:   lo.ToPtr(err.Error()),
+			Error:   new(err.Error()),
 		}, nil
 	}
 
 	if server == nil {
 		return &servercontrol.ServerControlResponse{
 			Success: false,
-			Error:   lo.ToPtr("server not found"),
+			Error:   new("server not found"),
 		}, nil
 	}
 
@@ -244,13 +243,13 @@ func (s *ServerControlServiceImpl) ReinstallServer(
 	if err != nil {
 		return &servercontrol.ServerControlResponse{
 			Success: false,
-			Error:   lo.ToPtr(err.Error()),
+			Error:   new(err.Error()),
 		}, nil
 	}
 
 	return &servercontrol.ServerControlResponse{
 		Success: true,
-		TaskId:  lo.ToPtr(uint64(taskID)),
+		TaskId:  new(uint64(taskID)),
 	}, nil
 }
 

@@ -14,7 +14,6 @@ import (
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -27,7 +26,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		Login:     "testuser",
 		Email:     "test@example.com",
 		Password:  hashedPassword,
-		Name:      lo.ToPtr("Test User"),
+		Name:      new("Test User"),
 		CreatedAt: &now,
 		UpdatedAt: &now,
 	}
@@ -206,7 +205,7 @@ func TestHandler_MultipleUsers(t *testing.T) {
 		Login:     "user1",
 		Email:     "user1@example.com",
 		Password:  hashedPassword1,
-		Name:      lo.ToPtr("User One"),
+		Name:      new("User One"),
 		CreatedAt: &now,
 		UpdatedAt: &now,
 	}
@@ -216,7 +215,7 @@ func TestHandler_MultipleUsers(t *testing.T) {
 		Login:     "user2",
 		Email:     "user2@example.com",
 		Password:  hashedPassword2,
-		Name:      lo.ToPtr("User Two"),
+		Name:      new("User Two"),
 		CreatedAt: &now,
 		UpdatedAt: &now,
 	}
@@ -226,7 +225,7 @@ func TestHandler_MultipleUsers(t *testing.T) {
 		Login:     "user3",
 		Email:     "user3@example.com",
 		Password:  hashedPassword3,
-		Name:      lo.ToPtr("User Three"),
+		Name:      new("User Three"),
 		CreatedAt: &now,
 		UpdatedAt: &now,
 	}
@@ -311,7 +310,7 @@ func TestHandler_SpecialCharacters(t *testing.T) {
 		Login:     "special.user-name_123",
 		Email:     "special+tag@example.com",
 		Password:  hashedPassword,
-		Name:      lo.ToPtr("Special User"),
+		Name:      new("Special User"),
 		CreatedAt: &now,
 		UpdatedAt: &now,
 	}
@@ -373,7 +372,7 @@ func TestHandler_TokenValidation(t *testing.T) {
 		Login:     "tokenuser",
 		Email:     "token@test.com",
 		Password:  hashedPassword,
-		Name:      lo.ToPtr("Token User"),
+		Name:      new("Token User"),
 		CreatedAt: &now,
 		UpdatedAt: &now,
 	}

@@ -201,7 +201,7 @@ func TestRouterSecurity_TokenAccess(t *testing.T) {
 			name:               "token_with_gdaemon_task_read_can_access_gdaemon_task",
 			request:            "GET /api/gdaemon_tasks/1",
 			tokenAbilities:     []domain.PATAbility{domain.PATAbilityGDaemonTaskRead},
-			expectedStatusCode: http.StatusForbidden,
+			expectedStatusCode: http.StatusNotFound,
 		},
 		{
 			name:               "token_without_gdaemon_task_read_cannot_access_gdaemon_task",

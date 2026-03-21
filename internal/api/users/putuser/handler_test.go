@@ -9,8 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/samber/lo"
-
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/rbac"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
@@ -45,8 +43,8 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			userID: "1",
 			requestBody: updateUserInput{
 				Email:    "updated@example.com",
-				Name:     lo.ToPtr("Updated User"),
-				Password: lo.ToPtr("newpassword123"),
+				Name:     new("Updated User"),
+				Password: new("newpassword123"),
 				Roles:    []string{"user"},
 				Servers:  []flexible.Uint{1, 2},
 			},
@@ -95,8 +93,8 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			userID: "1",
 			requestBody: updateUserInput{
 				Email:    "updated@example.com",
-				Name:     lo.ToPtr("Updated User"),
-				Password: lo.ToPtr(""),
+				Name:     new("Updated User"),
+				Password: new(""),
 				Roles:    []string{"user"},
 				Servers:  []flexible.Uint{},
 			},
@@ -273,7 +271,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			userID: "1",
 			requestBody: updateUserInput{
 				Email:    "test@example.com",
-				Password: lo.ToPtr("short"),
+				Password: new("short"),
 				Roles:    []string{},
 				Servers:  []flexible.Uint{},
 			},

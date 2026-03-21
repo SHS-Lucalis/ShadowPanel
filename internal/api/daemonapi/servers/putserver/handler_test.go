@@ -686,16 +686,16 @@ func TestUpdateServerInput_Validate(t *testing.T) {
 		{
 			name: "valid input with all fields",
 			input: &updateServerInput{
-				Installed:        lo.ToPtr(1),
+				Installed:        new(1),
 				ProcessActive:    lo.ToPtr(flexible.Bool(true)),
-				LastProcessCheck: lo.ToPtr(flexible.Time{Time: time.Now()}),
+				LastProcessCheck: new(flexible.Time{Time: time.Now()}),
 			},
 			wantError: false,
 		},
 		{
 			name: "valid input with installed only",
 			input: &updateServerInput{
-				Installed: lo.ToPtr(1),
+				Installed: new(1),
 			},
 			wantError: false,
 		},
@@ -709,7 +709,7 @@ func TestUpdateServerInput_Validate(t *testing.T) {
 		{
 			name: "valid input with last_process_check only",
 			input: &updateServerInput{
-				LastProcessCheck: lo.ToPtr(flexible.Time{Time: time.Now()}),
+				LastProcessCheck: new(flexible.Time{Time: time.Now()}),
 			},
 			wantError: false,
 		},
@@ -721,14 +721,14 @@ func TestUpdateServerInput_Validate(t *testing.T) {
 		{
 			name: "valid installed - zero",
 			input: &updateServerInput{
-				Installed: lo.ToPtr(0),
+				Installed: new(0),
 			},
 			wantError: false,
 		},
 		{
 			name: "valid installed - large value",
 			input: &updateServerInput{
-				Installed: lo.ToPtr(2),
+				Installed: new(2),
 			},
 			wantError: false,
 		},

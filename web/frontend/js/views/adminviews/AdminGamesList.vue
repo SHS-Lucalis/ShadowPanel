@@ -13,9 +13,13 @@
     <GButton class="mr-1" color="black" v-on:click="onClickGamesUpgrade()">
       <GIcon name="sync" />&nbsp{{ trans('games.upgrade')}}
     </GButton>
+
+    <GButton class="mr-1" color="black" :route="{name: 'admin.games.import'}">
+      <GIcon name="download" />&nbsp;{{ trans('games.import') }}
+    </GButton>
   </div>
 
-  <div class="w-1/3 mb-1">
+  <div class="w-1/4 mb-1">
     <n-input-group>
       <n-input-group-label>
         <GIcon name="search" />
@@ -66,15 +70,16 @@
         v-on:create="onCreateMod"
     />
   </GModal>
+
 </template>
 
 <script setup>
 import { GBreadcrumbs, GDeletableList, Loading, GIcon, GDataTable, GModal, GEmpty, GGameIcon } from "@gameap/ui"
 import {computed, ref, onMounted, h, watch} from "vue"
-import {trans} from "../../i18n/i18n"
-import GButton from "../../components/GButton.vue"
-import {useGameListStore} from "../../store/gameList"
-import {errorNotification, notification} from "../../parts/dialogs"
+import {trans} from "@/i18n/i18n"
+import GButton from "@/components/GButton.vue"
+import {useGameListStore} from "@/store/gameList"
+import {errorNotification, notification} from "@/parts/dialogs"
 import {
   NButton,
   NInput,
@@ -122,13 +127,12 @@ const createColumns = () => {
       render(row) {
         return h("div", {class: 'flex items-center'}, [
           h(GGameIcon, {game: row.code, class: "mr-2"}),
-          h("span", {class: ''}, row.name)
+          h("div", {}, [
+            h("span", {}, row.name),
+            h("small", {class: 'block text-stone-500'}, row.code)
+          ])
         ])
       },
-    },
-    {
-      title: trans('games.code'),
-      key: 'code',
     },
     {
       title: trans('games.mods'),
@@ -204,7 +208,6 @@ const gameCreateModel = ref({
   remoteRepositoryLinux: '',
   remoteRepositoryWindows: '',
 })
-
 
 const columns = ref(createColumns())
 const pagination = {
@@ -349,17 +352,15 @@ const onCreateGame = () => {
     fields.engine = "unknown"
   }
 
-  gamesStore.createGame(fields).then(({id}) => {
+  gamesStore.createGame(fields).then((game) => {
     notification({
       content: trans('games.create_success_msg'),
       type: "success",
-    }, () => {
-      gamesStore.fetchGames()
     })
+    gameCreateModalEnabled.value = false
+    router.push({name: 'admin.games.edit', params: {code: fields.code}})
   }).catch((error) => {
     errorNotification(error)
-  }).finally(() => {
-    gameCreateModalEnabled.value = false
   })
 }
 
@@ -411,4 +412,5 @@ const onClickGamesUpgrade = () => {
     onNegativeClick: () => {}
   })
 }
+
 </script>

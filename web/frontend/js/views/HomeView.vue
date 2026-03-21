@@ -2,7 +2,7 @@
     <div class="mt-4">
       <GButton class="px-8 py-8 bg-stone-50 hover:bg-stone-100
         border dark:border-stone-700 dark:bg-stone-800
-        dark:hover:bg-stone-900 m-2 h-28 min-w-48" :route="{name: 'servers'}">
+        dark:hover:bg-stone-900 m-2 h-28 sm:min-w-48 max-sm:w-full" :route="{name: 'servers'}">
         <div class="text-lg">
           <GIcon name="server" />
           {{ trans('servers.servers') }}
@@ -26,8 +26,8 @@
       </GButton>
 
       <GButton v-if="isAdmin" class="px-8 py-8 bg-stone-50 hover:bg-stone-100
-        px-8 py-8 bg-stone-50 hover:bg-stone-100 border dark:border-stone-700
-        dark:bg-stone-800 dark:hover:bg-stone-900 m-2 h-28 min-w-48" :route="{name: 'admin.nodes.index'}">
+        border dark:border-stone-700
+        dark:bg-stone-800 dark:hover:bg-stone-900 m-2 h-28 sm:min-w-48 max-sm:w-full" :route="{name: 'admin.nodes.index'}">
         <div class="text-lg">
           <GIcon name="hard-drive" />
           {{ trans('dedicated_servers.nodes' )}}
@@ -61,7 +61,7 @@
             v-else
             class="px-8 py-8 bg-stone-50 hover:bg-stone-100
               border dark:border-stone-700 dark:bg-stone-800
-              dark:hover:bg-stone-900 m-2 h-28 min-w-48"
+              dark:hover:bg-stone-900 m-2 h-28 sm:min-w-48 max-sm:w-full"
             :route="btn.props.route"
         >
           <div class="text-lg">
@@ -74,8 +74,8 @@
 
 
   <div class="w-full mt-10 p-3 border border-stone-200 bg-stone-50 rounded-lg sm:p-4 dark:bg-stone-800 dark:border-stone-700">
-    <div class="grid grid-cols-5 gap-4">
-      <h5 class="col-span-3 text-base inline-block align-middle font-semibold text-stone-900 dark:text-white">
+    <div class="md:grid md:grid-cols-5 md:gap-4">
+      <h5 class="col-span-3 text-base inline-block align-middle font-semibold text-stone-900 dark:text-white max-md:mb-2">
         <GIcon name="comments" class="mr-1" />
         {{ trans('home.channels') }}
       </h5>
@@ -126,8 +126,8 @@
   </div>
 
   <div class="w-full mt-5 p-3 border border-stone-200 bg-stone-50 rounded-lg sm:p-4 dark:bg-stone-800 dark:border-stone-700">
-    <div class="grid grid-cols-5 gap-4">
-      <h5 class="col-span-3 text-base inline-block align-middle font-semibold text-stone-900 dark:text-white">
+    <div class="md:grid md:grid-cols-5 md:gap-4">
+      <h5 class="col-span-3 text-base inline-block align-middle font-semibold text-stone-900 dark:text-white max-md:mb-2">
         <GIcon name="heart" class="mr-1" />
         {{ trans('home.support_gameap') }}
       </h5>
@@ -167,8 +167,8 @@
   </div>
 
   <div class="w-full mt-5 p-3 border border-stone-200 bg-stone-50 rounded-lg sm:p-4 dark:bg-stone-800 dark:border-stone-700">
-    <div class="grid grid-cols-5 gap-4">
-      <h5 class="col-span-3 text-base inline-block align-middle font-semibold text-stone-900 dark:text-white">
+    <div class="md:grid md:grid-cols-5 md:gap-4">
+      <h5 class="col-span-3 text-base inline-block align-middle font-semibold text-stone-900 dark:text-white max-md:mb-2">
         <GIcon name="question" class="mr-1" />
         {{ trans('home.need_help') }}
       </h5>
@@ -214,12 +214,12 @@ import {computed, onMounted} from "vue"
 import { GIcon } from "@gameap/ui"
 import GButton from "../components/GButton.vue"
 import PluginSlot from "../plugins/components/PluginSlot.vue"
-import {useAuthStore} from "../store/auth"
-import {usePluginsStore} from "../store/plugins"
-import {useNodeListStore} from "../store/nodeList"
-import {useServerListStore} from "../store/serverList"
-import {trans, pageLanguage} from "../i18n/i18n"
-import {errorNotification} from "../parts/dialogs";
+import {useAuthStore} from "@/store/auth"
+import {usePluginsStore} from "@/store/plugins"
+import {useNodeListStore} from "@/store/nodeList"
+import {useServerListStore} from "@/store/serverList"
+import {trans, pageLanguage} from "@/i18n/i18n"
+import {errorNotification} from "@/parts/dialogs";
 
 const authStore = useAuthStore()
 const nodeListStore = useNodeListStore()

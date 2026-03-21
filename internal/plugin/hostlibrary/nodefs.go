@@ -47,16 +47,16 @@ func (s *NodeFSServiceImpl) ReadDir(
 ) (*nodefs.ReadDirResponse, error) {
 	node, err := s.getNode(ctx, req.NodeId)
 	if err != nil {
-		return &nodefs.ReadDirResponse{Error: lo.ToPtr(err.Error())}, nil
+		return &nodefs.ReadDirResponse{Error: new(err.Error())}, nil
 	}
 
 	if node == nil {
-		return &nodefs.ReadDirResponse{Error: lo.ToPtr("node not found")}, nil
+		return &nodefs.ReadDirResponse{Error: new("node not found")}, nil
 	}
 
 	files, err := s.fileService.ReadDir(ctx, node, req.Path)
 	if err != nil {
-		return &nodefs.ReadDirResponse{Error: lo.ToPtr(err.Error())}, nil
+		return &nodefs.ReadDirResponse{Error: new(err.Error())}, nil
 	}
 
 	return &nodefs.ReadDirResponse{
@@ -70,16 +70,16 @@ func (s *NodeFSServiceImpl) MkDir(
 ) (*nodefs.MkDirResponse, error) {
 	node, err := s.getNode(ctx, req.NodeId)
 	if err != nil {
-		return &nodefs.MkDirResponse{Success: false, Error: lo.ToPtr(err.Error())}, nil
+		return &nodefs.MkDirResponse{Success: false, Error: new(err.Error())}, nil
 	}
 
 	if node == nil {
-		return &nodefs.MkDirResponse{Success: false, Error: lo.ToPtr("node not found")}, nil
+		return &nodefs.MkDirResponse{Success: false, Error: new("node not found")}, nil
 	}
 
 	err = s.fileService.MkDir(ctx, node, req.Path)
 	if err != nil {
-		return &nodefs.MkDirResponse{Success: false, Error: lo.ToPtr(err.Error())}, nil
+		return &nodefs.MkDirResponse{Success: false, Error: new(err.Error())}, nil
 	}
 
 	return &nodefs.MkDirResponse{Success: true}, nil
@@ -91,16 +91,16 @@ func (s *NodeFSServiceImpl) Copy(
 ) (*nodefs.CopyResponse, error) {
 	node, err := s.getNode(ctx, req.NodeId)
 	if err != nil {
-		return &nodefs.CopyResponse{Success: false, Error: lo.ToPtr(err.Error())}, nil
+		return &nodefs.CopyResponse{Success: false, Error: new(err.Error())}, nil
 	}
 
 	if node == nil {
-		return &nodefs.CopyResponse{Success: false, Error: lo.ToPtr("node not found")}, nil
+		return &nodefs.CopyResponse{Success: false, Error: new("node not found")}, nil
 	}
 
 	err = s.fileService.Copy(ctx, node, req.Source, req.Destination)
 	if err != nil {
-		return &nodefs.CopyResponse{Success: false, Error: lo.ToPtr(err.Error())}, nil
+		return &nodefs.CopyResponse{Success: false, Error: new(err.Error())}, nil
 	}
 
 	return &nodefs.CopyResponse{Success: true}, nil
@@ -112,16 +112,16 @@ func (s *NodeFSServiceImpl) Move(
 ) (*nodefs.MoveResponse, error) {
 	node, err := s.getNode(ctx, req.NodeId)
 	if err != nil {
-		return &nodefs.MoveResponse{Success: false, Error: lo.ToPtr(err.Error())}, nil
+		return &nodefs.MoveResponse{Success: false, Error: new(err.Error())}, nil
 	}
 
 	if node == nil {
-		return &nodefs.MoveResponse{Success: false, Error: lo.ToPtr("node not found")}, nil
+		return &nodefs.MoveResponse{Success: false, Error: new("node not found")}, nil
 	}
 
 	err = s.fileService.Move(ctx, node, req.Source, req.Destination)
 	if err != nil {
-		return &nodefs.MoveResponse{Success: false, Error: lo.ToPtr(err.Error())}, nil
+		return &nodefs.MoveResponse{Success: false, Error: new(err.Error())}, nil
 	}
 
 	return &nodefs.MoveResponse{Success: true}, nil
@@ -133,16 +133,16 @@ func (s *NodeFSServiceImpl) Download(
 ) (*nodefs.DownloadResponse, error) {
 	node, err := s.getNode(ctx, req.NodeId)
 	if err != nil {
-		return &nodefs.DownloadResponse{Error: lo.ToPtr(err.Error())}, nil
+		return &nodefs.DownloadResponse{Error: new(err.Error())}, nil
 	}
 
 	if node == nil {
-		return &nodefs.DownloadResponse{Error: lo.ToPtr("node not found")}, nil
+		return &nodefs.DownloadResponse{Error: new("node not found")}, nil
 	}
 
 	content, err := s.fileService.Download(ctx, node, req.Path)
 	if err != nil {
-		return &nodefs.DownloadResponse{Error: lo.ToPtr(err.Error())}, nil
+		return &nodefs.DownloadResponse{Error: new(err.Error())}, nil
 	}
 
 	return &nodefs.DownloadResponse{Content: content}, nil
@@ -154,16 +154,16 @@ func (s *NodeFSServiceImpl) Upload(
 ) (*nodefs.UploadResponse, error) {
 	node, err := s.getNode(ctx, req.NodeId)
 	if err != nil {
-		return &nodefs.UploadResponse{Success: false, Error: lo.ToPtr(err.Error())}, nil
+		return &nodefs.UploadResponse{Success: false, Error: new(err.Error())}, nil
 	}
 
 	if node == nil {
-		return &nodefs.UploadResponse{Success: false, Error: lo.ToPtr("node not found")}, nil
+		return &nodefs.UploadResponse{Success: false, Error: new("node not found")}, nil
 	}
 
 	err = s.fileService.Upload(ctx, node, req.Path, req.Content, os.FileMode(req.Permissions))
 	if err != nil {
-		return &nodefs.UploadResponse{Success: false, Error: lo.ToPtr(err.Error())}, nil
+		return &nodefs.UploadResponse{Success: false, Error: new(err.Error())}, nil
 	}
 
 	return &nodefs.UploadResponse{Success: true}, nil
@@ -175,16 +175,16 @@ func (s *NodeFSServiceImpl) Remove(
 ) (*nodefs.RemoveResponse, error) {
 	node, err := s.getNode(ctx, req.NodeId)
 	if err != nil {
-		return &nodefs.RemoveResponse{Success: false, Error: lo.ToPtr(err.Error())}, nil
+		return &nodefs.RemoveResponse{Success: false, Error: new(err.Error())}, nil
 	}
 
 	if node == nil {
-		return &nodefs.RemoveResponse{Success: false, Error: lo.ToPtr("node not found")}, nil
+		return &nodefs.RemoveResponse{Success: false, Error: new("node not found")}, nil
 	}
 
 	err = s.fileService.Remove(ctx, node, req.Path, req.Recursive)
 	if err != nil {
-		return &nodefs.RemoveResponse{Success: false, Error: lo.ToPtr(err.Error())}, nil
+		return &nodefs.RemoveResponse{Success: false, Error: new(err.Error())}, nil
 	}
 
 	return &nodefs.RemoveResponse{Success: true}, nil
@@ -196,16 +196,16 @@ func (s *NodeFSServiceImpl) GetFileInfo(
 ) (*nodefs.GetFileInfoResponse, error) {
 	node, err := s.getNode(ctx, req.NodeId)
 	if err != nil {
-		return &nodefs.GetFileInfoResponse{Found: false, Error: lo.ToPtr(err.Error())}, nil
+		return &nodefs.GetFileInfoResponse{Found: false, Error: new(err.Error())}, nil
 	}
 
 	if node == nil {
-		return &nodefs.GetFileInfoResponse{Found: false, Error: lo.ToPtr("node not found")}, nil
+		return &nodefs.GetFileInfoResponse{Found: false, Error: new("node not found")}, nil
 	}
 
 	details, err := s.fileService.GetFileInfo(ctx, node, req.Path)
 	if err != nil {
-		return &nodefs.GetFileInfoResponse{Found: false, Error: lo.ToPtr(err.Error())}, nil
+		return &nodefs.GetFileInfoResponse{Found: false, Error: new(err.Error())}, nil
 	}
 
 	return &nodefs.GetFileInfoResponse{
@@ -220,16 +220,16 @@ func (s *NodeFSServiceImpl) Chmod(
 ) (*nodefs.ChmodResponse, error) {
 	node, err := s.getNode(ctx, req.NodeId)
 	if err != nil {
-		return &nodefs.ChmodResponse{Success: false, Error: lo.ToPtr(err.Error())}, nil
+		return &nodefs.ChmodResponse{Success: false, Error: new(err.Error())}, nil
 	}
 
 	if node == nil {
-		return &nodefs.ChmodResponse{Success: false, Error: lo.ToPtr("node not found")}, nil
+		return &nodefs.ChmodResponse{Success: false, Error: new("node not found")}, nil
 	}
 
 	err = s.fileService.Chmod(ctx, node, req.Path, req.Permissions)
 	if err != nil {
-		return &nodefs.ChmodResponse{Success: false, Error: lo.ToPtr(err.Error())}, nil
+		return &nodefs.ChmodResponse{Success: false, Error: new(err.Error())}, nil
 	}
 
 	return &nodefs.ChmodResponse{Success: true}, nil

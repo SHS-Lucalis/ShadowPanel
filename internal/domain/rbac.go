@@ -2,8 +2,6 @@ package domain
 
 import (
 	"time"
-
-	"github.com/samber/lo"
 )
 
 type AbilityName string
@@ -75,8 +73,8 @@ func CreateAbilityForEntity(name AbilityName, entityID uint, entityType EntityTy
 		OnlyOwned:  false,
 		Options:    nil,
 		Scope:      nil,
-		CreatedAt:  lo.ToPtr(time.Now()),
-		UpdatedAt:  lo.ToPtr(time.Now()),
+		CreatedAt:  new(time.Now()),
+		UpdatedAt:  new(time.Now()),
 	}
 }
 

@@ -11,7 +11,6 @@ import (
 
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
-	"github.com/samber/lo"
 )
 
 type UserRepository struct {
@@ -96,10 +95,10 @@ func (r *UserRepository) Save(_ context.Context, user *domain.User) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	user.UpdatedAt = lo.ToPtr(time.Now())
+	user.UpdatedAt = new(time.Now())
 
 	if user.ID == 0 && (user.CreatedAt == nil || user.CreatedAt.IsZero()) {
-		user.CreatedAt = lo.ToPtr(time.Now())
+		user.CreatedAt = new(time.Now())
 	}
 
 	if user.ID == 0 {
@@ -221,17 +220,18 @@ func (r *UserRepository) applyPagination(users []domain.User, pagination *filter
 	}
 
 	limit := pagination.Limit
-	if limit <= 0 {
+	if limit == 0 {
 		limit = filters.DefaultLimit
 	}
 
-	offset := max(pagination.Offset, 0)
+	offset := pagination.Offset
+	length := uint64(len(users))
 
-	if offset >= len(users) {
+	if offset >= length {
 		return []domain.User{}
 	}
 
-	end := min(offset+limit, len(users))
+	end := min(offset+limit, length)
 
 	return users[offset:end]
 }

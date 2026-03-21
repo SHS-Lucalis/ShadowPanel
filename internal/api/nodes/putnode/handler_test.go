@@ -64,7 +64,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 					Name:                "Old Node",
 					OS:                  "linux",
 					Location:            "US",
-					Provider:            lo.ToPtr("OldProvider"),
+					Provider:            new("OldProvider"),
 					IPs:                 []string{"10.0.0.1"},
 					WorkPath:            "/old/path",
 					GdaemonHost:         "10.0.0.1",
@@ -78,23 +78,23 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			},
 			input: updateNodeInput{
 				Enabled:             lo.ToPtr(flexible.Bool(false)),
-				Name:                lo.ToPtr("Updated Node"),
-				OS:                  lo.ToPtr("windows"),
-				Location:            lo.ToPtr("EU"),
-				Provider:            lo.ToPtr("NewProvider"),
+				Name:                new("Updated Node"),
+				OS:                  new("windows"),
+				Location:            new("EU"),
+				Provider:            new("NewProvider"),
 				IP:                  []string{"192.168.1.1", "192.168.1.2"},
-				RAM:                 lo.ToPtr("16GB"),
-				CPU:                 lo.ToPtr("8 cores"),
-				WorkPath:            lo.ToPtr("/new/path"),
-				SteamcmdPath:        lo.ToPtr("/new/steamcmd"),
-				GdaemonHost:         lo.ToPtr("192.168.1.1"),
+				RAM:                 new("16GB"),
+				CPU:                 new("8 cores"),
+				WorkPath:            new("/new/path"),
+				SteamcmdPath:        new("/new/steamcmd"),
+				GdaemonHost:         new("192.168.1.1"),
 				GdaemonPort:         lo.ToPtr(flexible.Int(31717)),
-				GdaemonAPIKey:       lo.ToPtr("new-api-key"),
-				GdaemonLogin:        lo.ToPtr("admin"),
-				GdaemonPassword:     lo.ToPtr("password"),
-				GdaemonServerCert:   lo.ToPtr(validCertPEM),
+				GdaemonAPIKey:       new("new-api-key"),
+				GdaemonLogin:        new("admin"),
+				GdaemonPassword:     new("password"),
+				GdaemonServerCert:   new(validCertPEM),
 				ClientCertificateID: lo.ToPtr(flexible.Uint(2)),
-				PreferInstallMethod: lo.ToPtr("script"),
+				PreferInstallMethod: new("script"),
 			},
 			setupFileManager: func(fm *files.MockFileManager) {
 				fm.WriteFunc = func(_ context.Context, _ string, _ []byte) error {
@@ -153,8 +153,8 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				})
 			},
 			input: updateNodeInput{
-				Name:     lo.ToPtr("Partially Updated Node"),
-				Location: lo.ToPtr("EU"),
+				Name:     new("Partially Updated Node"),
+				Location: new("EU"),
 			},
 			setupFileManager: func(_ *files.MockFileManager) {},
 			expectedStatus:   http.StatusOK,
@@ -191,7 +191,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				})
 			},
 			input: updateNodeInput{
-				GdaemonServerCert: lo.ToPtr(validCertPEM),
+				GdaemonServerCert: new(validCertPEM),
 			},
 			setupFileManager: func(fm *files.MockFileManager) {
 				fm.WriteFunc = func(_ context.Context, path string, data []byte) error {
@@ -257,7 +257,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				})
 			},
 			input: updateNodeInput{
-				Name: lo.ToPtr(string(make([]byte, 200))),
+				Name: new(string(make([]byte, 200))),
 			},
 			expectedStatus: http.StatusUnprocessableEntity,
 			expectError:    true,
@@ -369,7 +369,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				})
 			},
 			input: updateNodeInput{
-				OS: lo.ToPtr("macos"),
+				OS: new("macos"),
 			},
 			expectedStatus: http.StatusUnprocessableEntity,
 			expectError:    true,
@@ -425,7 +425,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				})
 			},
 			input: updateNodeInput{
-				GdaemonServerCert: lo.ToPtr(validCertPEM),
+				GdaemonServerCert: new(validCertPEM),
 			},
 			setupFileManager: func(fm *files.MockFileManager) {
 				fm.WriteFunc = func(_ context.Context, _ string, _ []byte) error {
@@ -521,7 +521,7 @@ func TestHandler_UpdatedAtTimestamp(t *testing.T) {
 	handler := NewHandler(repo, fileManager, responder)
 
 	input := updateNodeInput{
-		Name: lo.ToPtr("Updated Name"),
+		Name: new("Updated Name"),
 	}
 
 	body, err := json.Marshal(input)
@@ -579,7 +579,7 @@ func TestHandler_CertificateFileCleanup(t *testing.T) {
 	handler := NewHandler(repo, fileManager, responder)
 
 	input := updateNodeInput{
-		GdaemonServerCert: lo.ToPtr(validCertPEM),
+		GdaemonServerCert: new(validCertPEM),
 	}
 
 	body, err := json.Marshal(input)

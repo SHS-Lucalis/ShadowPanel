@@ -12,7 +12,6 @@ import (
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -53,8 +52,8 @@ func TestHandler_ServeHTTP(t *testing.T) {
 					DedicatedServerID: 1,
 					ServerID:          &serverID,
 					Task:              domain.DaemonTaskTypeServerStart,
-					Data:              lo.ToPtr("{}"),
-					Cmd:               lo.ToPtr("./start.sh"),
+					Data:              new("{}"),
+					Cmd:               new("./start.sh"),
 					Status:            domain.DaemonTaskStatusWaiting,
 					CreatedAt:         &now,
 					UpdatedAt:         &now,

@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -253,19 +252,19 @@ func TestServer_IsOnline(t *testing.T) {
 		{
 			name:             "online_process_active_recent_check",
 			processActive:    true,
-			lastProcessCheck: lo.ToPtr(time.Now().Add(-1 * time.Minute)),
+			lastProcessCheck: new(time.Now().Add(-1 * time.Minute)),
 			wantedOnline:     true,
 		},
 		{
 			name:             "offline_process_active_old_check",
 			processActive:    true,
-			lastProcessCheck: lo.ToPtr(time.Now().Add(-3 * time.Minute)),
+			lastProcessCheck: new(time.Now().Add(-3 * time.Minute)),
 			wantedOnline:     false,
 		},
 		{
 			name:             "offline_process_inactive_recent_check",
 			processActive:    false,
-			lastProcessCheck: lo.ToPtr(time.Now().Add(-1 * time.Minute)),
+			lastProcessCheck: new(time.Now().Add(-1 * time.Minute)),
 			wantedOnline:     false,
 		},
 		{
@@ -277,19 +276,19 @@ func TestServer_IsOnline(t *testing.T) {
 		{
 			name:             "offline_zero_time_check",
 			processActive:    true,
-			lastProcessCheck: lo.ToPtr(time.Time{}),
+			lastProcessCheck: new(time.Time{}),
 			wantedOnline:     false,
 		},
 		{
 			name:             "online_exactly_at_threshold",
 			processActive:    true,
-			lastProcessCheck: lo.ToPtr(time.Now().Add(-2 * time.Minute)),
+			lastProcessCheck: new(time.Now().Add(-2 * time.Minute)),
 			wantedOnline:     false,
 		},
 		{
 			name:             "online_just_before_threshold",
 			processActive:    true,
-			lastProcessCheck: lo.ToPtr(time.Now().Add(-119 * time.Second)),
+			lastProcessCheck: new(time.Now().Add(-119 * time.Second)),
 			wantedOnline:     true,
 		},
 		{
@@ -333,8 +332,6 @@ func TestServer_Fields(t *testing.T) {
 	stopCmd := "./stop.sh"
 	forceStopCmd := "pkill -9 server"
 	restartCmd := "./restart.sh"
-	vars := testJSONPayload
-
 	server := Server{
 		ID:               42,
 		UUID:             testUUID,
@@ -363,7 +360,7 @@ func TestServer_Fields(t *testing.T) {
 		RestartCommand:   &restartCmd,
 		ProcessActive:    true,
 		LastProcessCheck: &now,
-		Vars:             &vars,
+		Vars:             ServerVars{"key": "value"},
 		CreatedAt:        &now,
 		UpdatedAt:        &now,
 		DeletedAt:        nil,
@@ -396,7 +393,7 @@ func TestServer_Fields(t *testing.T) {
 	assert.Equal(t, &restartCmd, server.RestartCommand)
 	assert.True(t, server.ProcessActive)
 	assert.Equal(t, &now, server.LastProcessCheck)
-	assert.Equal(t, &vars, server.Vars)
+	assert.Equal(t, ServerVars{"key": "value"}, server.Vars)
 	assert.Equal(t, &now, server.CreatedAt)
 	assert.Equal(t, &now, server.UpdatedAt)
 	assert.Nil(t, server.DeletedAt)

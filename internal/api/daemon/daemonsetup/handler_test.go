@@ -2,8 +2,10 @@ package daemonsetup
 
 import (
 	"context"
+	"encoding/base64"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -28,7 +30,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		validateResp   func(*testing.T, string)
 	}{
 		{
-			name:  "successful setup with env token",
+			name:  "successful_setup_with_env_token",
 			token: "test-env-token",
 			setupEnv: func(t *testing.T) {
 				t.Helper()
@@ -39,13 +41,13 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			validateResp: func(t *testing.T, resp string) {
 				t.Helper()
 
-				assert.Contains(t, resp, "export createToken=")
-				assert.Contains(t, resp, "export panelHost=http://panel.example.com")
+				assert.Contains(t, resp, "export CREATE_TOKEN=")
+				assert.Contains(t, resp, "export PANEL_HOST=http://panel.example.com")
 				assert.Contains(t, resp, "curl -sL https://raw.githubusercontent.com/gameap/auto-install-scripts/master/install-gdaemon.sh | bash --")
 			},
 		},
 		{
-			name:  "successful setup with cache token",
+			name:  "successful_setup_with_cache_token",
 			token: "cached-token",
 			setupCache: func(c cache.Cache) {
 				err := c.Set(context.Background(), daemonbase.AutoSetupTokenCacheKey, "cached-token", cache.WithExpiration(300*time.Second))
@@ -56,20 +58,20 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			validateResp: func(t *testing.T, resp string) {
 				t.Helper()
 
-				assert.Contains(t, resp, "export createToken=")
-				assert.Contains(t, resp, "export panelHost=http://panel.example.com")
+				assert.Contains(t, resp, "export CREATE_TOKEN=")
+				assert.Contains(t, resp, "export PANEL_HOST=http://panel.example.com")
 				assert.Contains(t, resp, "curl -sL https://raw.githubusercontent.com/gameap/auto-install-scripts/master/install-gdaemon.sh")
 			},
 		},
 		{
-			name:           "invalid token",
+			name:           "invalid_token",
 			token:          "wrong-token",
 			panelHost:      "panel.example.com",
 			expectedStatus: http.StatusForbidden,
 			wantError:      true,
 		},
 		{
-			name:  "token mismatch with env",
+			name:  "token_mismatch_with_env",
 			token: "wrong-token",
 			setupEnv: func(t *testing.T) {
 				t.Helper()
@@ -80,7 +82,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			wantError:      true,
 		},
 		{
-			name:  "token mismatch with cache",
+			name:  "token_mismatch_with_cache",
 			token: "wrong-token",
 			setupCache: func(c cache.Cache) {
 				err := c.Set(context.Background(), daemonbase.AutoSetupTokenCacheKey, "correct-token", cache.WithExpiration(300*time.Second))
@@ -91,7 +93,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			wantError:      true,
 		},
 		{
-			name:           "token not found in cache",
+			name:           "token_not_found_in_cache",
 			token:          "some-token",
 			setupCache:     func(_ cache.Cache) {},
 			panelHost:      "panel.example.com",
@@ -188,19 +190,19 @@ func TestHandler_HostDetection(t *testing.T) {
 		wantHostInScript string
 	}{
 		{
-			name:             "uses configured panel host",
+			name:             "uses_configured_panel_host",
 			panelHost:        "configured.example.com",
 			host:             "request.example.com",
 			wantHostInScript: "http://configured.example.com",
 		},
 		{
-			name:             "detects from request host without configured host",
+			name:             "detects_from_request_host_without_configured_host",
 			panelHost:        "",
 			host:             "detected.example.com",
 			wantHostInScript: "http://detected.example.com",
 		},
 		{
-			name:      "uses X-Forwarded-Host header",
+			name:      "uses_X-Forwarded-Host_header",
 			panelHost: "",
 			headers: map[string]string{
 				"X-Forwarded-Host":  "forwarded.example.com",
@@ -210,13 +212,13 @@ func TestHandler_HostDetection(t *testing.T) {
 			wantHostInScript: "https://forwarded.example.com",
 		},
 		{
-			name:             "strips http prefix from panel host",
+			name:             "strips_http_prefix_from_panel_host",
 			panelHost:        "http://panel.example.com",
 			host:             "request.example.com",
 			wantHostInScript: "http://panel.example.com",
 		},
 		{
-			name:             "strips https prefix from panel host",
+			name:             "strips_https_prefix_from_panel_host",
 			panelHost:        "https://panel.example.com",
 			host:             "request.example.com",
 			wantHostInScript: "http://panel.example.com",
@@ -246,7 +248,7 @@ func TestHandler_HostDetection(t *testing.T) {
 			require.Equal(t, http.StatusOK, w.Code)
 
 			body := w.Body.String()
-			assert.Contains(t, body, "export panelHost="+tt.wantHostInScript)
+			assert.Contains(t, body, "export PANEL_HOST="+tt.wantHostInScript)
 		})
 	}
 }
@@ -269,18 +271,76 @@ func TestHandler_ResponseContentType(t *testing.T) {
 }
 
 func TestHandler_BuildSetupScript(t *testing.T) {
-	cacheInstance := cache.NewInMemory()
-	responder := api.NewResponder()
-	handler := NewHandler(cacheInstance, responder, "panel.example.com")
+	tests := []struct {
+		name         string
+		createToken  string
+		panelHost    string
+		config       string
+		wantContains []string
+		wantAbsent   []string
+		wantLines    int
+	}{
+		{
+			name:        "without_config",
+			createToken: "test-create-token",
+			panelHost:   "http://panel.example.com",
+			config:      "",
+			wantContains: []string{
+				"export CREATE_TOKEN=test-create-token",
+				"export PANEL_HOST=http://panel.example.com",
+				"curl -sL https://raw.githubusercontent.com/gameap/auto-install-scripts/master/install-gdaemon.sh | bash --",
+			},
+			wantAbsent: []string{"export CONFIG="},
+			wantLines:  3,
+		},
+		{
+			name:        "with_config",
+			createToken: "test-create-token",
+			panelHost:   "http://panel.example.com",
+			config:      "process_manager.name=podman",
+			wantContains: []string{
+				"export CREATE_TOKEN=test-create-token",
+				"export PANEL_HOST=http://panel.example.com",
+				"export CONFIG=cHJvY2Vzc19tYW5hZ2VyLm5hbWU9cG9kbWFu",
+				"curl -sL https://raw.githubusercontent.com/gameap/auto-install-scripts/master/install-gdaemon.sh | bash --",
+			},
+			wantLines: 4,
+		},
+		{
+			name:        "with_config_special_chars",
+			createToken: "test-create-token",
+			panelHost:   "http://panel.example.com",
+			config:      "process_manager.name=podman;process_manager.config.image=debian:bookworm-slim",
+			wantContains: []string{
+				"export CREATE_TOKEN=test-create-token",
+				"export PANEL_HOST=http://panel.example.com",
+				"export CONFIG=cHJvY2Vzc19tYW5hZ2VyLm5hbWU9cG9kbWFuO3Byb2Nlc3NfbWFuYWdlci5jb25maWcuaW1hZ2U9ZGViaWFuOmJvb2t3b3JtLXNsaW0=",
+				"curl -sL https://raw.githubusercontent.com/gameap/auto-install-scripts/master/install-gdaemon.sh | bash --",
+			},
+			wantLines: 4,
+		},
+	}
 
-	script := handler.buildSetupScript("test-create-token", "http://panel.example.com")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cacheInstance := cache.NewInMemory()
+			responder := api.NewResponder()
+			handler := NewHandler(cacheInstance, responder, "panel.example.com")
 
-	assert.Contains(t, script, "export createToken=test-create-token")
-	assert.Contains(t, script, "export panelHost=http://panel.example.com")
-	assert.Contains(t, script, "curl -sL https://raw.githubusercontent.com/gameap/auto-install-scripts/master/install-gdaemon.sh | bash --")
+			script := handler.buildSetupScript(tt.createToken, tt.panelHost, tt.config)
 
-	lines := strings.Split(script, "\n")
-	assert.GreaterOrEqual(t, len(lines), 3)
+			for _, want := range tt.wantContains {
+				assert.Contains(t, script, want)
+			}
+
+			for _, absent := range tt.wantAbsent {
+				assert.NotContains(t, script, absent)
+			}
+
+			lines := strings.Split(script, "\n")
+			assert.GreaterOrEqual(t, len(lines), tt.wantLines)
+		})
+	}
 }
 
 func TestHandler_EnvTokenPriority(t *testing.T) {
@@ -317,4 +377,62 @@ func TestHandler_CacheTokenUsedWhenEnvEmpty(t *testing.T) {
 	handler.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestHandler_ConfigQueryParameter(t *testing.T) {
+	tests := []struct {
+		name       string
+		config     string
+		wantConfig bool
+	}{
+		{
+			name:       "without_config_parameter",
+			config:     "",
+			wantConfig: false,
+		},
+		{
+			name:       "with_simple_config",
+			config:     "process_manager.name=podman",
+			wantConfig: true,
+		},
+		{
+			name:       "with_complex_config",
+			config:     "process_manager.name=podman;process_manager.config.image=debian:bookworm-slim",
+			wantConfig: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cacheInstance := cache.NewInMemory()
+			responder := api.NewResponder()
+			handler := NewHandler(cacheInstance, responder, "panel.example.com")
+
+			t.Setenv("DAEMON_SETUP_TOKEN", "test-token")
+
+			reqURL := "/gdaemon/setup/test-token"
+			if tt.config != "" {
+				reqURL += "?config=" + url.QueryEscape(tt.config)
+			}
+
+			req := httptest.NewRequest(http.MethodGet, reqURL, nil)
+			req = mux.SetURLVars(req, map[string]string{"token": "test-token"})
+			w := httptest.NewRecorder()
+
+			handler.ServeHTTP(w, req)
+
+			require.Equal(t, http.StatusOK, w.Code)
+
+			body := w.Body.String()
+			assert.Contains(t, body, "export CREATE_TOKEN=")
+			assert.Contains(t, body, "export PANEL_HOST=")
+
+			if tt.wantConfig {
+				expectedBase64 := base64.StdEncoding.EncodeToString([]byte(tt.config))
+				assert.Contains(t, body, "export CONFIG="+expectedBase64)
+			} else {
+				assert.NotContains(t, body, "export CONFIG=")
+			}
+		})
+	}
 }

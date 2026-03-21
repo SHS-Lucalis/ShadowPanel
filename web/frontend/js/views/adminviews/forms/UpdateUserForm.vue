@@ -114,18 +114,21 @@
       </div>
     </n-form>
 
-    <GButton color="green" v-on:click="onClickUpdate" class="mt-4">
-      <GIcon name="save" class="mr-0.5" />
-      <span class="hidden lg:inline">&nbsp;{{ trans('main.save') }}</span>
-    </GButton>
+    <GFixedBottomBar>
+      <GButton color="green" v-on:click="onClickUpdate">
+        <GIcon name="save" class="mr-0.5" />
+        <span class="inline">{{ trans('main.save') }}</span>
+      </GButton>
+    </GFixedBottomBar>
   </div>
 </template>
 
 <script setup>
 import { GIcon, Loading } from "@gameap/ui"
 import {ref, defineModel, defineProps, defineEmits} from "vue"
-import {trans} from "../../../i18n/i18n";
+import {trans} from "@/i18n/i18n";
 import GButton from "../../../components/GButton.vue";
+import GFixedBottomBar from "../../../components/GFixedBottomBar.vue";
 import {
   NCard,
   NForm,
@@ -140,8 +143,9 @@ import {
   sameWithValidator,
   stringMinLengthValidator,
   ifNotEmptyValidator,
-} from "../../../parts/validators"
-import {useUserStore} from "../../../store/user"
+} from "@/parts/validators"
+import {useUserStore} from "@/store/user"
+import UserServerPrivileges from "@/components/servers/UserServerPrivileges.vue";
 
 const userStore = useUserStore()
 

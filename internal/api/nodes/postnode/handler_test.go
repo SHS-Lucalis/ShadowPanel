@@ -8,8 +8,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/samber/lo"
-
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/files"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
@@ -74,14 +72,14 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			name: "successful creation with optional fields",
 			input: createDedicatedServerInput{
 				Name:                "Test Server",
-				Description:         lo.ToPtr("Test description"),
+				Description:         new("Test description"),
 				Location:            "Montenegro",
 				IP:                  []string{"172.18.0.5", "10.0.0.1"},
 				OS:                  "windows",
 				Enabled:             false,
-				Provider:            lo.ToPtr("AWS"),
+				Provider:            new("AWS"),
 				WorkPath:            "/srv/gameap",
-				SteamcmdPath:        lo.ToPtr("/srv/gameap/steamcmd"),
+				SteamcmdPath:        new("/srv/gameap/steamcmd"),
 				GdaemonHost:         "172.18.0.5",
 				GdaemonPort:         31717,
 				ClientCertificateID: 2,
@@ -401,14 +399,14 @@ func TestHandler_NodeStoredCorrectly(t *testing.T) {
 
 	input := createDedicatedServerInput{
 		Name:                "Test Server",
-		Description:         lo.ToPtr("Test description"),
+		Description:         new("Test description"),
 		Location:            "Montenegro",
 		IP:                  []string{"172.18.0.5"},
 		OS:                  "linux",
 		Enabled:             true,
-		Provider:            lo.ToPtr("Unknown"),
+		Provider:            new("Unknown"),
 		WorkPath:            "/srv/gameap",
-		SteamcmdPath:        lo.ToPtr("/srv/gameap/steamcmd"),
+		SteamcmdPath:        new("/srv/gameap/steamcmd"),
 		GdaemonHost:         "10.20.30.40",
 		GdaemonPort:         12345,
 		ClientCertificateID: 1,

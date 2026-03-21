@@ -65,15 +65,11 @@ func (r *NodeRepository) find(
 	}
 
 	if pagination != nil {
-		if pagination.Limit <= 0 {
+		if pagination.Limit == 0 {
 			pagination.Limit = filters.DefaultLimit
 		}
 
-		if pagination.Offset < 0 {
-			pagination.Offset = 0
-		}
-
-		builder = builder.Limit(uint64(pagination.Limit)).Offset(uint64(pagination.Offset))
+		builder = builder.Limit(pagination.Limit).Offset(pagination.Offset)
 	}
 
 	query, args, err := builder.ToSql()
@@ -113,21 +109,21 @@ func (r *NodeRepository) find(
 
 //nolint:funlen
 func (r *NodeRepository) Save(ctx context.Context, node *domain.Node) error {
-	node.UpdatedAt = lo.ToPtr(time.Now())
+	node.UpdatedAt = new(time.Now())
 
 	if node.ID == 0 && (node.CreatedAt == nil || node.CreatedAt.IsZero()) {
-		node.CreatedAt = lo.ToPtr(time.Now())
+		node.CreatedAt = new(time.Now())
 	}
 
 	var createdAtStr, updatedAtStr, deletedAtStr *string
 	if node.CreatedAt != nil {
-		createdAtStr = lo.ToPtr(node.CreatedAt.Format(time.RFC3339))
+		createdAtStr = new(node.CreatedAt.Format(time.RFC3339))
 	}
 	if node.UpdatedAt != nil {
-		updatedAtStr = lo.ToPtr(node.UpdatedAt.Format(time.RFC3339))
+		updatedAtStr = new(node.UpdatedAt.Format(time.RFC3339))
 	}
 	if node.DeletedAt != nil {
-		deletedAtStr = lo.ToPtr(node.DeletedAt.Format(time.RFC3339))
+		deletedAtStr = new(node.DeletedAt.Format(time.RFC3339))
 	}
 
 	query, args, err := sq.Insert(base.NodesTable).

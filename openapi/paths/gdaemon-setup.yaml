@@ -2,29 +2,33 @@
   get:
     tags:
       - DaemonSetup
-    summary: Get daemon setup data
-    description: Returns setup data for daemon initialization
+    summary: Get daemon setup script
+    description: Returns bash script for daemon installation with environment variables
     operationId: getDaemonSetup
     security: []
     parameters:
       - $ref: '../parameters/PathToken.yaml'
+      - name: config
+        in: query
+        required: false
+        description: |
+          Optional configuration string to pass to the install script.
+          Will be base64-encoded in the output script.
+          Example: process_manager.name=podman;process_manager.config.image=debian:bookworm-slim
+        schema:
+          type: string
     responses:
       '200':
-        description: Setup data
+        description: Bash script for daemon installation
         content:
-          application/json:
+          text/plain:
             schema:
-              type: object
-              properties:
-                panel_host:
-                  type: string
-                  description: Panel host URL
-                certificate:
-                  type: string
-                  description: Client certificate (PEM)
-                private_key:
-                  type: string
-                  description: Private key (PEM)
+              type: string
+              example: |
+                export CREATE_TOKEN=abc123;
+                export PANEL_HOST=http://panel.example.com;
+                export CONFIG=cHJvY2Vzc19tYW5hZ2VyLm5hbWU9cG9kbWFu;
+                curl -sL https://raw.githubusercontent.com/gameap/auto-install-scripts/master/install-gdaemon.sh | bash --
       '401':
         description: Invalid token
         content:

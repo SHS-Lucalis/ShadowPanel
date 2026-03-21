@@ -11,7 +11,6 @@ import (
 
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
-	"github.com/samber/lo"
 )
 
 type DaemonTaskRepository struct {
@@ -67,7 +66,9 @@ func (r *DaemonTaskRepository) Find(
 	tasks := make([]domain.DaemonTask, 0, len(candidateIDs))
 	for taskID := range candidateIDs {
 		if task, exists := r.tasks[taskID]; exists {
-			tasks = append(tasks, *task)
+			taskCopy := *task
+			taskCopy.Output = nil
+			tasks = append(tasks, taskCopy)
 		}
 	}
 
@@ -77,22 +78,36 @@ func (r *DaemonTaskRepository) Find(
 }
 
 func (r *DaemonTaskRepository) FindWithOutput(
-	ctx context.Context,
+	_ context.Context,
 	filter *filters.FindDaemonTask,
 	order []filters.Sorting,
 	pagination *filters.Pagination,
 ) ([]domain.DaemonTask, error) {
-	return r.Find(ctx, filter, order, pagination)
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	candidateIDs := r.getFilteredTaskIDs(filter)
+
+	tasks := make([]domain.DaemonTask, 0, len(candidateIDs))
+	for taskID := range candidateIDs {
+		if task, exists := r.tasks[taskID]; exists {
+			tasks = append(tasks, *task)
+		}
+	}
+
+	r.sortTasks(tasks, order)
+
+	return r.applyPagination(tasks, pagination), nil
 }
 
 func (r *DaemonTaskRepository) Save(_ context.Context, task *domain.DaemonTask) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	task.UpdatedAt = lo.ToPtr(time.Now())
+	task.UpdatedAt = new(time.Now())
 
 	if task.ID == 0 && (task.CreatedAt == nil || task.CreatedAt.IsZero()) {
-		task.CreatedAt = lo.ToPtr(time.Now())
+		task.CreatedAt = new(time.Now())
 	}
 
 	var preservedOutput *string
@@ -519,17 +534,18 @@ func (r *DaemonTaskRepository) applyPagination(
 	}
 
 	limit := pagination.Limit
-	if limit <= 0 {
+	if limit == 0 {
 		limit = filters.DefaultLimit
 	}
 
-	offset := max(pagination.Offset, 0)
+	offset := pagination.Offset
+	length := uint64(len(tasks))
 
-	if offset >= len(tasks) {
+	if offset >= length {
 		return []domain.DaemonTask{}
 	}
 
-	end := min(offset+limit, len(tasks))
+	end := min(offset+limit, length)
 
 	return tasks[offset:end]
 }

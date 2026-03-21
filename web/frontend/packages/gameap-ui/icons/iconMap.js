@@ -1,4 +1,5 @@
 import FileNetworkIcon from './svg/FileNetworkIcon.vue'
+import MaximizeIcon from './svg/MaximizeIcon.vue'
 
 export const defaultIconMap = {
   // ===== Action Icons =====
@@ -26,6 +27,7 @@ export const defaultIconMap = {
   "redo": "fa-solid fa-redo",
   "download": "fa-solid fa-download",
   "upload": "fa-solid fa-upload",
+  "export": "fa-solid fa-arrow-up-right-from-square",
   "search": "fa-solid fa-magnifying-glass",
   "magnifying-glass": "fa-solid fa-magnifying-glass",
   "view": "fa-solid fa-eye",
@@ -35,6 +37,7 @@ export const defaultIconMap = {
   "eraser": "fa-solid fa-eraser",
   "ban": "fa-solid fa-ban",
   "move": "fa-solid fa-dolly",
+  "maximize": MaximizeIcon,
 
   // ===== Navigation Icons =====
   "chevron-left": "fa-solid fa-chevron-left",

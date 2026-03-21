@@ -77,15 +77,11 @@ func (r *ServerTaskFailRepository) find(
 	}
 
 	if pagination != nil {
-		if pagination.Limit <= 0 {
+		if pagination.Limit == 0 {
 			pagination.Limit = filters.DefaultLimit
 		}
 
-		if pagination.Offset < 0 {
-			pagination.Offset = 0
-		}
-
-		builder = builder.Limit(uint64(pagination.Limit)).Offset(uint64(pagination.Offset))
+		builder = builder.Limit(pagination.Limit).Offset(pagination.Offset)
 	}
 
 	query, args, err := builder.ToSql()
@@ -124,18 +120,18 @@ func (r *ServerTaskFailRepository) find(
 }
 
 func (r *ServerTaskFailRepository) Save(ctx context.Context, taskFail *domain.ServerTaskFail) error {
-	taskFail.UpdatedAt = lo.ToPtr(time.Now())
+	taskFail.UpdatedAt = new(time.Now())
 
 	if taskFail.ID == 0 && (taskFail.CreatedAt == nil || taskFail.CreatedAt.IsZero()) {
-		taskFail.CreatedAt = lo.ToPtr(time.Now())
+		taskFail.CreatedAt = new(time.Now())
 	}
 
 	var createdAtStr, updatedAtStr *string
 	if taskFail.CreatedAt != nil {
-		createdAtStr = lo.ToPtr(taskFail.CreatedAt.Format(time.RFC3339))
+		createdAtStr = new(taskFail.CreatedAt.Format(time.RFC3339))
 	}
 	if taskFail.UpdatedAt != nil {
-		updatedAtStr = lo.ToPtr(taskFail.UpdatedAt.Format(time.RFC3339))
+		updatedAtStr = new(taskFail.UpdatedAt.Format(time.RFC3339))
 	}
 
 	query, args, err := sq.Insert(base.ServerTaskFailsTable).

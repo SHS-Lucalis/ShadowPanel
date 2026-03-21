@@ -18,6 +18,9 @@ import (
 	"github.com/gameap/gameap/internal/repositories/base"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/internal/services"
+	"github.com/gameap/gameap/internal/services/gameapimporter"
+	"github.com/gameap/gameap/internal/services/gameexporter"
+	"github.com/gameap/gameap/internal/services/pelicaneggimporter"
 	"github.com/gameap/gameap/internal/services/pluginstore"
 	"github.com/gameap/gameap/internal/services/servercontrol"
 	pkgapi "github.com/gameap/gameap/pkg/api"
@@ -103,9 +106,12 @@ func (c *InmemoryContainer) PluginManager() *plugin.Manager               { retu
 func (c *InmemoryContainer) PluginRepository() repositories.PluginRepository {
 	return inmemory.NewPluginRepository()
 }
-func (c *InmemoryContainer) PluginLoader() *internalplugin.Loader     { return nil }
-func (c *InmemoryContainer) PluginStoreService() *pluginstore.Service { return nil }
-func (c *InmemoryContainer) PluginsDir() string                       { return "plugins" }
+func (c *InmemoryContainer) PluginLoader() *internalplugin.Loader             { return nil }
+func (c *InmemoryContainer) PluginStoreService() *pluginstore.Service         { return nil }
+func (c *InmemoryContainer) PluginsDir() string                               { return "plugins" }
+func (c *InmemoryContainer) PelicanEggImporter() *pelicaneggimporter.Importer { return nil }
+func (c *InmemoryContainer) GameAPImporter() *gameapimporter.Importer         { return nil }
+func (c *InmemoryContainer) GameExporter() *gameexporter.Exporter             { return nil }
 
 func LoadInmemoryContainer() (*InmemoryContainer, error) {
 	c := buildInmemoryTestContainer()
@@ -183,7 +189,7 @@ func buildInmemoryTestContainer() *InmemoryContainer {
 
 	adminPermission := &domain.Permission{
 		AbilityID:  adminAbility.ID,
-		EntityID:   lo.ToPtr(uint(1)),
+		EntityID:   new(uint(1)),
 		EntityType: lo.ToPtr(domain.EntityTypeRole),
 		Forbidden:  false,
 	}
@@ -205,7 +211,7 @@ func buildInmemoryTestContainer() *InmemoryContainer {
 
 		permission := &domain.Permission{
 			AbilityID:  ability.ID,
-			EntityID:   lo.ToPtr(uint(2)),
+			EntityID:   new(uint(2)),
 			EntityType: lo.ToPtr(domain.EntityTypeRole),
 			Forbidden:  false,
 		}
@@ -232,7 +238,7 @@ func SetupFixtures(ctx context.Context, c *InmemoryContainer) (*TestFixtures, er
 		ID:    1,
 		Login: "admin",
 		Email: "admin@yousite.local",
-		Name:  lo.ToPtr("Administrator"),
+		Name:  new("Administrator"),
 	}
 	err := c.userRepo.Save(ctx, adminUser)
 	if err != nil {
@@ -243,7 +249,7 @@ func SetupFixtures(ctx context.Context, c *InmemoryContainer) (*TestFixtures, er
 		ID:    2,
 		Login: "user",
 		Email: "test@gameap.com",
-		Name:  lo.ToPtr("User"),
+		Name:  new("User"),
 	}
 	err = c.userRepo.Save(ctx, regularUser)
 	if err != nil {
@@ -276,9 +282,9 @@ func SetupFixtures(ctx context.Context, c *InmemoryContainer) (*TestFixtures, er
 		GameID:         game.Code,
 		Name:           "Test Server 1",
 		Dir:            "/path/to/server1",
-		StartCommand:   lo.ToPtr("start"),
-		StopCommand:    lo.ToPtr("stop"),
-		RestartCommand: lo.ToPtr("restart"),
+		StartCommand:   new("start"),
+		StopCommand:    new("stop"),
+		RestartCommand: new("restart"),
 	}
 	err = c.serverRepo.Save(ctx, server1)
 	if err != nil {
@@ -290,9 +296,9 @@ func SetupFixtures(ctx context.Context, c *InmemoryContainer) (*TestFixtures, er
 		GameID:         game.Code,
 		Name:           "Test Server 2",
 		Dir:            "/path/to/server2",
-		StartCommand:   lo.ToPtr("start"),
-		StopCommand:    lo.ToPtr("stop"),
-		RestartCommand: lo.ToPtr("restart"),
+		StartCommand:   new("start"),
+		StopCommand:    new("stop"),
+		RestartCommand: new("restart"),
 	}
 	err = c.serverRepo.Save(ctx, server2)
 	if err != nil {
@@ -317,7 +323,7 @@ func SetupFixtures(ctx context.Context, c *InmemoryContainer) (*TestFixtures, er
 
 		permission := &domain.Permission{
 			AbilityID:  ability.ID,
-			EntityID:   lo.ToPtr(uint(2)),
+			EntityID:   new(uint(2)),
 			EntityType: lo.ToPtr(domain.EntityTypeRole),
 			Forbidden:  false,
 		}
@@ -340,7 +346,7 @@ func SetupFixtures(ctx context.Context, c *InmemoryContainer) (*TestFixtures, er
 
 		permission := &domain.Permission{
 			AbilityID:  ability.ID,
-			EntityID:   lo.ToPtr(uint(2)),
+			EntityID:   new(uint(2)),
 			EntityType: lo.ToPtr(domain.EntityTypeRole),
 			Forbidden:  false,
 		}

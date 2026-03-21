@@ -7,7 +7,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -45,17 +44,17 @@ func (s *GameModRepositorySuite) TestGameModRepositorySave() {
 				{Var: "hostname", Default: "My Server", Info: "Server name", AdminVar: false},
 				{Var: "rcon_password", Default: "", Info: "RCON password", AdminVar: true},
 			},
-			RemoteRepositoryLinux:   lo.ToPtr("https://example.com/css_linux"),
-			RemoteRepositoryWindows: lo.ToPtr("https://example.com/css_windows"),
-			StartCmdLinux:           lo.ToPtr("./srcds_run -game cstrike"),
-			StartCmdWindows:         lo.ToPtr("srcds.exe -game cstrike"),
-			KickCmd:                 lo.ToPtr("kick {player}"),
-			BanCmd:                  lo.ToPtr("ban {player}"),
-			ChnameCmd:               lo.ToPtr("hostname {name}"),
-			SrestartCmd:             lo.ToPtr("restart"),
-			ChmapCmd:                lo.ToPtr("changelevel {map}"),
-			SendmsgCmd:              lo.ToPtr("say {message}"),
-			PasswdCmd:               lo.ToPtr("sv_password {password}"),
+			RemoteRepositoryLinux:   new("https://example.com/css_linux"),
+			RemoteRepositoryWindows: new("https://example.com/css_windows"),
+			StartCmdLinux:           new("./srcds_run -game cstrike"),
+			StartCmdWindows:         new("srcds.exe -game cstrike"),
+			KickCmd:                 new("kick {player}"),
+			BanCmd:                  new("ban {player}"),
+			ChnameCmd:               new("hostname {name}"),
+			SrestartCmd:             new("restart"),
+			ChmapCmd:                new("changelevel {map}"),
+			SendmsgCmd:              new("say {message}"),
+			PasswdCmd:               new("sv_password {password}"),
 		}
 
 		err := s.repo.Save(ctx, gameMod)
@@ -71,8 +70,8 @@ func (s *GameModRepositorySuite) TestGameModRepositorySave() {
 				{Info: "Status", Command: "status"},
 			},
 			Vars:            domain.GameModVarList{},
-			StartCmdLinux:   lo.ToPtr("./csgo_linux"),
-			StartCmdWindows: lo.ToPtr("csgo.exe"),
+			StartCmdLinux:   new("./csgo_linux"),
+			StartCmdWindows: new("csgo.exe"),
 		}
 
 		err := s.repo.Save(ctx, gameMod)
@@ -82,7 +81,7 @@ func (s *GameModRepositorySuite) TestGameModRepositorySave() {
 		gameMod.Name = "CS:GO Updated"
 		gameMod.FastRcon = append(gameMod.FastRcon, domain.GameModFastRcon{Info: "Version", Command: "version"})
 		gameMod.Vars = append(gameMod.Vars, domain.GameModVar{Var: "sv_cheats", Default: "0", Info: "Enable cheats", AdminVar: true})
-		gameMod.KickCmd = lo.ToPtr("kickid {player}")
+		gameMod.KickCmd = new("kickid {player}")
 
 		err = s.repo.Save(ctx, gameMod)
 		require.NoError(t, err)
@@ -416,9 +415,9 @@ func (s *GameModRepositorySuite) TestGameModRepositoryIntegration() {
 				{Var: "hostname", Default: "HL Server", Info: "Server name", AdminVar: false},
 				{Var: "sv_password", Default: "", Info: "Server password", AdminVar: false},
 			},
-			StartCmdLinux:   lo.ToPtr("./hlds_run -game valve"),
-			StartCmdWindows: lo.ToPtr("hlds.exe -game valve"),
-			KickCmd:         lo.ToPtr("kick {player}"),
+			StartCmdLinux:   new("./hlds_run -game valve"),
+			StartCmdWindows: new("hlds.exe -game valve"),
+			KickCmd:         new("kick {player}"),
 		}
 
 		err := s.repo.Save(ctx, gameMod)
@@ -436,7 +435,7 @@ func (s *GameModRepositorySuite) TestGameModRepositoryIntegration() {
 		assert.Len(t, results[0].Vars, 2)
 
 		gameMod.Name = "Half-Life Updated"
-		gameMod.BanCmd = lo.ToPtr("banid {player}")
+		gameMod.BanCmd = new("banid {player}")
 		err = s.repo.Save(ctx, gameMod)
 		require.NoError(t, err)
 

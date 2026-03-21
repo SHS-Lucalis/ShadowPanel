@@ -8,7 +8,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -67,8 +66,8 @@ func (s *PluginStorageRepositorySuite) TestPluginStorageRepositorySave() {
 		entry := &domain.PluginStorageEntry{
 			PluginID:   2,
 			Key:        "server_config",
-			EntityType: lo.ToPtr("server"),
-			EntityID:   lo.ToPtr(uint(100)),
+			EntityType: new("server"),
+			EntityID:   new(uint(100)),
 			Payload:    []byte(`{"port": 27015}`),
 		}
 
@@ -148,15 +147,15 @@ func (s *PluginStorageRepositorySuite) TestPluginStorageRepositorySave() {
 		entry1 := &domain.PluginStorageEntry{
 			PluginID:   pluginID,
 			Key:        "stats",
-			EntityType: lo.ToPtr("server"),
-			EntityID:   lo.ToPtr(uint(1)),
+			EntityType: new("server"),
+			EntityID:   new(uint(1)),
 			Payload:    []byte(`{"cpu": 50}`),
 		}
 		entry2 := &domain.PluginStorageEntry{
 			PluginID:   pluginID,
 			Key:        "stats",
-			EntityType: lo.ToPtr("server"),
-			EntityID:   lo.ToPtr(uint(2)),
+			EntityType: new("server"),
+			EntityID:   new(uint(2)),
 			Payload:    []byte(`{"cpu": 75}`),
 		}
 
@@ -185,8 +184,8 @@ func (s *PluginStorageRepositorySuite) TestPluginStorageRepositoryFind() {
 	entry2 := &domain.PluginStorageEntry{
 		PluginID:   100,
 		Key:        "data",
-		EntityType: lo.ToPtr("server"),
-		EntityID:   lo.ToPtr(uint(50)),
+		EntityType: new("server"),
+		EntityID:   new(uint(50)),
 		Payload:    []byte(`{"b": 2}`),
 	}
 	entry3 := &domain.PluginStorageEntry{
@@ -255,7 +254,7 @@ func (s *PluginStorageRepositorySuite) TestPluginStorageRepositoryFind() {
 	s.T().Run("find_by_entity_pair", func(t *testing.T) {
 		filter := &filters.FindPluginStorage{
 			EntityPairs: []domain.PluginStorageEntityPair{
-				{EntityType: lo.ToPtr("server"), EntityID: lo.ToPtr(uint(50))},
+				{EntityType: new("server"), EntityID: new(uint(50))},
 			},
 		}
 
@@ -319,29 +318,7 @@ func (s *PluginStorageRepositorySuite) TestPluginStorageRepositoryFind() {
 
 		results, err := s.repo.Find(ctx, nil, nil, pagination)
 		require.NoError(t, err)
-		assert.LessOrEqual(t, len(results), filters.DefaultLimit)
-	})
-
-	s.T().Run("find_with_negative_limit_uses_default", func(t *testing.T) {
-		pagination := &filters.Pagination{
-			Limit:  -5,
-			Offset: 0,
-		}
-
-		results, err := s.repo.Find(ctx, nil, nil, pagination)
-		require.NoError(t, err)
-		assert.LessOrEqual(t, len(results), filters.DefaultLimit)
-	})
-
-	s.T().Run("find_with_negative_offset_uses_zero", func(t *testing.T) {
-		pagination := &filters.Pagination{
-			Limit:  10,
-			Offset: -5,
-		}
-
-		results, err := s.repo.Find(ctx, nil, nil, pagination)
-		require.NoError(t, err)
-		assert.NotEmpty(t, results)
+		assert.LessOrEqual(t, len(results), int(filters.DefaultLimit))
 	})
 
 	s.T().Run("find_with_order_desc", func(t *testing.T) {
@@ -460,8 +437,8 @@ func (s *PluginStorageRepositorySuite) TestPluginStorageRepositoryIntegration() 
 		entry := &domain.PluginStorageEntry{
 			PluginID:   pluginID,
 			Key:        "lifecycle_test",
-			EntityType: lo.ToPtr("node"),
-			EntityID:   lo.ToPtr(uint(42)),
+			EntityType: new("node"),
+			EntityID:   new(uint(42)),
 			Payload:    []byte(`{"stage": "create"}`),
 		}
 
@@ -553,15 +530,15 @@ func (s *PluginStorageRepositorySuite) TestPluginStorageRepositoryIntegration() 
 		entryServer1 := &domain.PluginStorageEntry{
 			PluginID:   pluginID,
 			Key:        "server_config",
-			EntityType: lo.ToPtr("server"),
-			EntityID:   lo.ToPtr(uint(1)),
+			EntityType: new("server"),
+			EntityID:   new(uint(1)),
 			Payload:    []byte(`{"server": 1}`),
 		}
 		entryServer2 := &domain.PluginStorageEntry{
 			PluginID:   pluginID,
 			Key:        "server_config",
-			EntityType: lo.ToPtr("server"),
-			EntityID:   lo.ToPtr(uint(2)),
+			EntityType: new("server"),
+			EntityID:   new(uint(2)),
 			Payload:    []byte(`{"server": 2}`),
 		}
 
@@ -584,7 +561,7 @@ func (s *PluginStorageRepositorySuite) TestPluginStorageRepositoryIntegration() 
 			PluginIDs: []uint64{pluginID},
 			Keys:      []string{"server_config"},
 			EntityPairs: []domain.PluginStorageEntityPair{
-				{EntityType: lo.ToPtr("server"), EntityID: lo.ToPtr(uint(1))},
+				{EntityType: new("server"), EntityID: new(uint(1))},
 			},
 		}
 		resultsServer, err := s.repo.Find(ctx, filterServer, nil, nil)

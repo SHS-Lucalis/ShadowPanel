@@ -12,7 +12,6 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
-	"github.com/samber/lo"
 )
 
 type ServerTaskRepository struct {
@@ -85,10 +84,10 @@ func (r *ServerTaskRepository) Save(_ context.Context, task *domain.ServerTask) 
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	task.UpdatedAt = lo.ToPtr(time.Now())
+	task.UpdatedAt = new(time.Now())
 
 	if task.ID == 0 && (task.CreatedAt == nil || task.CreatedAt.IsZero()) {
-		task.CreatedAt = lo.ToPtr(time.Now())
+		task.CreatedAt = new(time.Now())
 	}
 
 	if task.ID != 0 {
@@ -401,17 +400,18 @@ func (r *ServerTaskRepository) applyPagination(
 	}
 
 	limit := pagination.Limit
-	if limit <= 0 {
+	if limit == 0 {
 		limit = filters.DefaultLimit
 	}
 
-	offset := max(pagination.Offset, 0)
+	offset := pagination.Offset
+	length := uint64(len(tasks))
 
-	if offset >= len(tasks) {
+	if offset >= length {
 		return []domain.ServerTask{}
 	}
 
-	end := min(offset+limit, len(tasks))
+	end := min(offset+limit, length)
 
 	return tasks[offset:end]
 }

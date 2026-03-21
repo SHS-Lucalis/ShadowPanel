@@ -95,13 +95,13 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				ability := &domain.Ability{
 					Name:       domain.AbilityNameGameServerFiles,
 					EntityType: lo.ToPtr(domain.EntityTypeServer),
-					EntityID:   lo.ToPtr(uint(1)),
+					EntityID:   new(uint(1)),
 				}
 				require.NoError(t, rbacRepo.SaveAbility(context.Background(), ability))
 
 				permission := &domain.Permission{
 					AbilityID:  ability.ID,
-					EntityID:   lo.ToPtr(uint(1)),
+					EntityID:   new(uint(1)),
 					EntityType: lo.ToPtr(domain.EntityTypeUser),
 					Forbidden:  false,
 				}
@@ -287,13 +287,13 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				ability := &domain.Ability{
 					Name:       domain.AbilityNameGameServerFiles,
 					EntityType: lo.ToPtr(domain.EntityTypeServer),
-					EntityID:   lo.ToPtr(uint(1)),
+					EntityID:   new(uint(1)),
 				}
 				require.NoError(t, rbacRepo.SaveAbility(context.Background(), ability))
 
 				permission := &domain.Permission{
 					AbilityID:  ability.ID,
-					EntityID:   lo.ToPtr(uint(3)),
+					EntityID:   new(uint(3)),
 					EntityType: lo.ToPtr(domain.EntityTypeUser),
 					Forbidden:  false,
 				}

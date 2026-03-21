@@ -108,15 +108,11 @@ func (r *ServerTaskRepository) find(
 	}
 
 	if pagination != nil {
-		if pagination.Limit <= 0 {
+		if pagination.Limit == 0 {
 			pagination.Limit = filters.DefaultLimit
 		}
 
-		if pagination.Offset < 0 {
-			pagination.Offset = 0
-		}
-
-		builder = builder.Limit(uint64(pagination.Limit)).Offset(uint64(pagination.Offset))
+		builder = builder.Limit(pagination.Limit).Offset(pagination.Offset)
 	}
 
 	query, args, err := builder.ToSql()
@@ -155,18 +151,18 @@ func (r *ServerTaskRepository) find(
 }
 
 func (r *ServerTaskRepository) Save(ctx context.Context, task *domain.ServerTask) error {
-	task.UpdatedAt = lo.ToPtr(time.Now())
+	task.UpdatedAt = new(time.Now())
 
 	if task.ID == 0 && (task.CreatedAt == nil || task.CreatedAt.IsZero()) {
-		task.CreatedAt = lo.ToPtr(time.Now())
+		task.CreatedAt = new(time.Now())
 	}
 
 	var createdAtStr, updatedAtStr *string
 	if task.CreatedAt != nil {
-		createdAtStr = lo.ToPtr(task.CreatedAt.Format(time.RFC3339))
+		createdAtStr = new(task.CreatedAt.Format(time.RFC3339))
 	}
 	if task.UpdatedAt != nil {
-		updatedAtStr = lo.ToPtr(task.UpdatedAt.Format(time.RFC3339))
+		updatedAtStr = new(task.UpdatedAt.Format(time.RFC3339))
 	}
 
 	executeDateStr := task.ExecuteDate.Format(time.RFC3339)

@@ -16,15 +16,19 @@ export const useDaemonTaskStore = defineStore('daemonTask', {
         setTaskId(taskId) {
             this.taskId = taskId;
         },
-        async fetchTaskOutput() {
-            this.apiProcesses++
+        async fetchTaskOutput(silent = false) {
+            if (!silent) {
+                this.apiProcesses++
+            }
             try {
                 const response = await axios.get('/api/gdaemon_tasks/' + this.taskId + '/output')
                 this.task = response.data
             } catch (error) {
                 throw error
             } finally {
-                this.apiProcesses--
+                if (!silent) {
+                    this.apiProcesses--
+                }
             }
         }
     },

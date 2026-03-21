@@ -45,7 +45,7 @@ func uintPtrFromUint64Ptr(v *uint64) *uint {
 		return nil
 	}
 
-	return lo.ToPtr(uint(*v))
+	return new(uint(*v))
 }
 
 func uint64PtrFromUintPtr(v *uint) *uint64 {
@@ -53,7 +53,7 @@ func uint64PtrFromUintPtr(v *uint) *uint64 {
 		return nil
 	}
 
-	return lo.ToPtr(uint64(*v))
+	return new(uint64(*v))
 }
 
 var protoToEntityType = map[proto.EntityType]domain.EntityType{
@@ -88,7 +88,7 @@ func entityTypeFromProto(et *proto.EntityType) *string {
 		return nil
 	}
 
-	return lo.ToPtr(string(domainET))
+	return new(string(domainET))
 }
 
 func entityTypeToProtoPtr(et *string) *proto.EntityType {
@@ -101,5 +101,5 @@ func entityTypeToProtoPtr(et *string) *proto.EntityType {
 		return nil
 	}
 
-	return lo.ToPtr(protoET)
+	return new(protoET)
 }

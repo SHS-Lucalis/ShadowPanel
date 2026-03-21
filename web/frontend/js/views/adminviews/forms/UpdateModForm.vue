@@ -13,7 +13,7 @@
             {{ trans('games.main') }}
           </template>
 
-          <div class="flex flex-wrap justify-center mt-2">
+          <div class="md:flex md:flex-wrap md:justify-center mt-2">
             <div class="md:w-1/2">
               <n-card
                   :title="trans('games.basic_info')"
@@ -35,8 +35,8 @@
             </div>
           </div>
 
-          <div class="flex flex-wrap mt-2">
-            <div class="md:w-1/2 pr-8">
+          <div class="md:flex md:flex-wrap mt-2">
+            <div class="md:w-1/2 md:pr-8">
               <n-card
                   :title="trans('games.repositories_local')"
                   size="small"
@@ -91,7 +91,7 @@
             </div>
           </div>
 
-          <div class="flex flex-wrap mt-2">
+          <div class="md:flex md:flex-wrap mt-2">
             <div class="md:w-full">
               <n-card
                   :title="trans('games.run_commands')"
@@ -128,7 +128,7 @@
             {{ trans('games.servers_commands') }}
           </template>
 
-          <div class="flex flex-wrap mt-2">
+          <div class="md:flex md:flex-wrap mt-2">
             <div class="md:w-full">
               <n-card
                   :title="trans('games.servers_commands')"
@@ -214,6 +214,20 @@
           </div>
         </n-tab-pane>
 
+        <n-tab-pane name="metadata">
+          <template #tab>
+            {{ trans('games.metadata') }}
+          </template>
+
+          <InputManyList
+              v-model="form.metadata"
+              class="mb-4"
+              :labels="[trans('labels.key'), trans('labels.the_value')]"
+              :keys="['key', 'value']"
+              :input-types="['text', 'text']"
+          />
+        </n-tab-pane>
+
         <n-tab-pane name="vars">
           <template #tab>
             {{ trans('games.vars') }}
@@ -253,19 +267,21 @@
       </n-tabs>
     </n-form>
 
-    <GButton color="green" v-on:click="onClickUpdate">
-      <GIcon name="save" class="mr-0.5" />
-      <span class="hidden lg:inline">&nbsp;{{ trans('main.save') }}</span>
-    </GButton>
+    <GFixedBottomBar>
+      <GButton color="green" v-on:click="onClickUpdate">
+        <GIcon name="save" class="mr-0.5" />
+        <span class="inline">{{ trans('main.save') }}</span>
+      </GButton>
+    </GFixedBottomBar>
 
   </div>
 </template>
 
 <script setup>
 import { GIcon } from "@gameap/ui"
-import {computed, ref, onMounted, h} from "vue"
-import {allOfValidator, requiredValidator, stringLengthValidator} from "../../../parts/validators";
-import {trans} from "../../../i18n/i18n";
+import { ref } from "vue"
+import { requiredValidator } from "@/parts/validators";
+import { trans } from "@/i18n/i18n";
 import {
   NCard,
   NForm,
@@ -275,6 +291,8 @@ import {
   NTabPane,
 } from "naive-ui"
 import GButton from "../../../components/GButton.vue";
+import GFixedBottomBar from "../../../components/GFixedBottomBar.vue";
+import InputManyList from "../../../components/input/InputManyList.vue";
 
 const formRef = ref({})
 const form = defineModel({})
