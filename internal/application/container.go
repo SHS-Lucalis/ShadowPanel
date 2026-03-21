@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"crypto/tls"
 	"database/sql"
 	"log/slog"
 	"net/http"
@@ -21,6 +22,11 @@ import (
 	"github.com/gameap/gameap/internal/daemon"
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/files"
+	internalgrpc "github.com/gameap/gameap/internal/grpc"
+	"github.com/gameap/gameap/internal/grpc/filetransfer"
+	"github.com/gameap/gameap/internal/grpc/gateway"
+	"github.com/gameap/gameap/internal/grpc/handlers"
+	"github.com/gameap/gameap/internal/grpc/session"
 	internalplugin "github.com/gameap/gameap/internal/plugin"
 	"github.com/gameap/gameap/internal/plugin/hostlibrary"
 	"github.com/gameap/gameap/internal/pubsub"
@@ -47,6 +53,7 @@ import (
 	"github.com/gameap/gameap/pkg/auth"
 	pkgplugin "github.com/gameap/gameap/pkg/plugin"
 	"github.com/pkg/errors"
+	"google.golang.org/grpc"
 )
 
 const (
@@ -134,6 +141,16 @@ type Container struct {
 
 	// PubSub
 	pubsub pubsub.PubSub
+
+	// gRPC
+	sessionRegistry     *session.Registry
+	gatewayService      *gateway.Service
+	fileTransferService *filetransfer.Service
+	taskHandler         *handlers.TaskHandler
+	commandHandler      *handlers.CommandHandler
+	serverStatusHandler *handlers.ServerStatusHandler
+	grpcServer          *grpc.Server
+	multiplexedServer   *MultiplexedServer
 
 	// Shutdown
 	shotdownFuncs []func() error
@@ -1267,4 +1284,153 @@ func (c *Container) PluginLoader() *internalplugin.Loader {
 
 func (c *Container) PluginsDir() string {
 	return "plugins"
+}
+
+func (c *Container) SessionRegistry() *session.Registry {
+	if c.sessionRegistry == nil {
+		instanceID := c.config.PubSub.InstanceID
+		if instanceID == "" {
+			instanceID = "default"
+		}
+		c.sessionRegistry = session.NewRegistry(c.PubSub(), instanceID, slog.Default())
+	}
+
+	return c.sessionRegistry
+}
+
+func (c *Container) TaskHandler() *handlers.TaskHandler {
+	if c.taskHandler == nil {
+		c.taskHandler = handlers.NewTaskHandler(c.DaemonTaskRepository(), slog.Default())
+	}
+
+	return c.taskHandler
+}
+
+func (c *Container) CommandHandler() *handlers.CommandHandler {
+	if c.commandHandler == nil {
+		c.commandHandler = handlers.NewCommandHandler(slog.Default())
+	}
+
+	return c.commandHandler
+}
+
+func (c *Container) ServerStatusHandler() *handlers.ServerStatusHandler {
+	if c.serverStatusHandler == nil {
+		c.serverStatusHandler = handlers.NewServerStatusHandler(c.ServerRepository(), slog.Default())
+	}
+
+	return c.serverStatusHandler
+}
+
+func (c *Container) GatewayService() *gateway.Service {
+	if c.gatewayService == nil {
+		c.gatewayService = gateway.NewService(
+			c.SessionRegistry(),
+			c.NodeRepository(),
+			c.ServerRepository(),
+			c.DaemonTaskRepository(),
+			c.GameRepository(),
+			c.GameModRepository(),
+			nil,
+			c.TaskHandler(),
+			c.CommandHandler(),
+			c.ServerStatusHandler(),
+			slog.Default(),
+		)
+	}
+
+	return c.gatewayService
+}
+
+func (c *Container) FileTransferService() *filetransfer.Service {
+	if c.fileTransferService == nil {
+		basePath := c.config.GRPC.FileTransferBasePath
+		if basePath == "" {
+			basePath = path.Join(c.config.Legacy.Path, "storage", "app")
+		}
+
+		c.fileTransferService = filetransfer.NewService(basePath, slog.Default())
+	}
+
+	return c.fileTransferService
+}
+
+func (c *Container) GRPCServer() *grpc.Server {
+	if c.grpcServer == nil {
+		c.grpcServer = internalgrpc.NewServer(
+			&internalgrpc.ServerConfig{
+				MaxRecvMsgSize:       c.config.GRPC.MaxRecvMsgSize,
+				MaxSendMsgSize:       c.config.GRPC.MaxSendMsgSize,
+				MaxConcurrentStreams: c.config.GRPC.MaxConcurrentStreams,
+				RequireMTLS:          c.config.GRPC.RequireMTLS,
+				FileTransferBasePath: c.config.GRPC.FileTransferBasePath,
+			},
+			&internalgrpc.ServerDependencies{
+				GatewayService:      c.GatewayService(),
+				FileTransferService: c.FileTransferService(),
+				NodeRepo:            c.NodeRepository(),
+				Logger:              slog.Default(),
+			},
+		)
+
+		c.appendShutdownFunc(func() error {
+			c.grpcServer.GracefulStop()
+
+			return nil
+		})
+	}
+
+	return c.grpcServer
+}
+
+func (c *Container) MultiplexedServer() (*MultiplexedServer, error) {
+	if c.multiplexedServer != nil {
+		return c.multiplexedServer, nil
+	}
+
+	tlsConfig, err := c.buildMultiplexerTLSConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	addr := c.getMultiplexerAddress()
+
+	server, err := NewMultiplexedServer(&MultiplexerConfig{
+		Address:    addr,
+		TLSConfig:  tlsConfig,
+		GRPCServer: c.GRPCServer(),
+		HTTPServer: c.HTTPServer(),
+		Logger:     slog.Default(),
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "create multiplexed server")
+	}
+
+	c.multiplexedServer = server
+
+	return c.multiplexedServer, nil
+}
+
+func (c *Container) buildMultiplexerTLSConfig() (*tls.Config, error) {
+	if !c.config.TLSEnabled() {
+		return nil, nil
+	}
+
+	cert, err := c.config.LoadTLSCertificate()
+	if err != nil {
+		return nil, errors.Wrap(err, "load TLS certificate")
+	}
+
+	return &tls.Config{
+		Certificates: []tls.Certificate{*cert},
+		MinVersion:   tls.VersionTLS12,
+	}, nil
+}
+
+func (c *Container) getMultiplexerAddress() string {
+	if c.config.TLSEnabled() {
+		return c.config.HTTPHost + ":" + strconv.Itoa(int(c.config.HTTPSPort))
+	}
+
+	return c.config.HTTPHost + ":" + strconv.Itoa(int(c.config.HTTPPort))
 }

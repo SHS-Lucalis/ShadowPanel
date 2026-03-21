@@ -126,6 +126,15 @@ type Config struct {
 			DB       int    `env:"PUBSUB_REDIS_DB" envDefault:"1"`
 		}
 	}
+
+	GRPC struct {
+		Enabled              bool   `env:"GRPC_ENABLED" envDefault:"false"`
+		MaxRecvMsgSize       int    `env:"GRPC_MAX_RECV_MSG_SIZE" envDefault:"10485760"`
+		MaxSendMsgSize       int    `env:"GRPC_MAX_SEND_MSG_SIZE" envDefault:"10485760"`
+		MaxConcurrentStreams uint32 `env:"GRPC_MAX_CONCURRENT_STREAMS" envDefault:"100"`
+		FileTransferBasePath string `env:"GRPC_FILE_TRANSFER_BASE_PATH" envDefault:""`
+		RequireMTLS          bool   `env:"GRPC_REQUIRE_MTLS" envDefault:"false"`
+	}
 }
 
 func LoadConfig() (*Config, error) {

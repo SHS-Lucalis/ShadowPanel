@@ -116,12 +116,6 @@ func Run(runParams RunParams) {
 		slog.String("build_date", defaults.BuildDate),
 	)
 
-	slog.InfoContext(ctx, fmt.Sprintf("Starting HTTP server on %s:%d", cfg.HTTPHost, cfg.HTTPPort))
-
-	if cfg.TLSEnabled() {
-		startHTTPSServer(ctx, cfg, container)
-	}
-
 	err = container.PluginLoader().LoadAll(ctx)
 	if err != nil {
 		slog.ErrorContext(ctx, "Failed to load plugins", slog.String("error", err.Error()))
@@ -138,15 +132,48 @@ func Run(runParams RunParams) {
 
 	startPubSub(ctx, container)
 
+	if cfg.GRPC.Enabled {
+		runMultiplexed(ctx, cfg, container)
+	} else {
+		runHTTPOnly(ctx, cfg, container)
+	}
+}
+
+func runHTTPOnly(ctx context.Context, cfg *config.Config, container *Container) {
+	slog.InfoContext(ctx, fmt.Sprintf("Starting HTTP server on %s:%d", cfg.HTTPHost, cfg.HTTPPort))
+
+	if cfg.TLSEnabled() {
+		startHTTPSServer(ctx, cfg, container)
+	}
+
 	server := container.HTTPServer()
 
-	err = server.ListenAndServe()
+	err := server.ListenAndServe()
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		slog.Error(err.Error())
-
 		os.Exit(1)
+	}
+}
 
-		return
+func runMultiplexed(ctx context.Context, _ *config.Config, container *Container) {
+	if err := container.SessionRegistry().Start(ctx); err != nil {
+		slog.ErrorContext(ctx, "Failed to start session registry", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+
+	mux, err := container.MultiplexedServer()
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to create multiplexed server", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+
+	addr := mux.Address().String()
+	slog.InfoContext(ctx, "Starting multiplexed server (HTTP + gRPC)", slog.String("address", addr))
+
+	err = mux.Serve(ctx)
+	if err != nil && !errors.Is(err, http.ErrServerClosed) && !errors.Is(err, context.Canceled) {
+		slog.Error("Multiplexed server error", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 }
 
