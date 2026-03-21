@@ -1,0 +1,211 @@
+syntax = "proto3";
+
+package gameap;
+
+option go_package = "github.com/gameap/gameap/pkg/proto";
+
+import "pkg/proto/daemontask.proto";
+import "pkg/proto/server.proto";
+import "pkg/proto/game.proto";
+import "pkg/proto/gamemod.proto";
+
+service DaemonGateway {
+  rpc Connect(stream DaemonMessage) returns (stream GatewayMessage);
+}
+
+message DaemonMessage {
+  string request_id = 1;
+
+  oneof payload {
+    RegisterRequest register = 10;
+    Heartbeat heartbeat = 11;
+
+    TaskStatusUpdate task_status = 20;
+    TaskOutput task_output = 21;
+
+    CommandOutput command_output = 30;
+    CommandResult command_result = 31;
+
+    ServerStatusBatch server_statuses = 50;
+
+    FileReadResponse file_read_response = 60;
+    FileWriteResponse file_write_response = 61;
+    FileListResponse file_list_response = 62;
+  }
+}
+
+message GatewayMessage {
+  string request_id = 1;
+
+  oneof payload {
+    RegisterAck register_ack = 10;
+    ShutdownNotification shutdown = 11;
+
+    DaemonTask task = 20;
+    TaskCancel task_cancel = 21;
+
+    CommandRequest command = 30;
+
+    Server server_config = 50;
+    ServerConfigBatch server_config_batch = 51;
+
+    FileReadRequest file_read = 60;
+    FileWriteRequest file_write = 61;
+    FileListRequest file_list = 62;
+    FileUploadTask file_upload_task = 63;
+  }
+}
+
+message RegisterRequest {
+  uint64 node_id = 1;
+  string api_key = 2;
+  string version = 3;
+  repeated string capabilities = 4;
+  repeated InFlightTask in_flight_tasks = 5;
+}
+
+message InFlightTask {
+  uint64 task_id = 1;
+  DaemonTaskStatus status = 2;
+  string partial_output = 3;
+  int64 started_at_unix = 4;
+}
+
+message RegisterAck {
+  bool success = 1;
+  string error_message = 2;
+  repeated Server servers = 3;
+  repeated DaemonTask pending_tasks = 4;
+  repeated Game games = 5;
+  repeated GameMod game_mods = 6;
+  int32 heartbeat_interval_seconds = 7;
+}
+
+message Heartbeat {
+  int64 timestamp_unix = 1;
+  SystemStats system_stats = 2;
+}
+
+message SystemStats {
+  double cpu_usage_percent = 1;
+  uint64 memory_used_bytes = 2;
+  uint64 memory_total_bytes = 3;
+  uint64 disk_used_bytes = 4;
+  uint64 disk_total_bytes = 5;
+  double load_average_1m = 6;
+  double load_average_5m = 7;
+  double load_average_15m = 8;
+}
+
+message TaskStatusUpdate {
+  uint64 task_id = 1;
+  DaemonTaskStatus status = 2;
+  string message = 3;
+}
+
+message TaskOutput {
+  uint64 task_id = 1;
+  bytes output_chunk = 2;
+  bool is_final = 3;
+}
+
+message TaskCancel {
+  uint64 task_id = 1;
+  string reason = 2;
+}
+
+message CommandRequest {
+  string command_id = 1;
+  uint64 server_id = 2;
+  string command = 3;
+  int32 timeout_seconds = 4;
+  bool stream_output = 5;
+}
+
+message CommandOutput {
+  string command_id = 1;
+  bytes output_chunk = 2;
+}
+
+message CommandResult {
+  string command_id = 1;
+  int32 exit_code = 2;
+  bytes output = 3;
+  string error = 4;
+}
+
+message ServerStatus {
+  uint64 server_id = 1;
+  bool is_running = 2;
+  int32 players_online = 3;
+  int32 max_players = 4;
+  string map_name = 5;
+  string server_name = 6;
+  int64 last_check_unix = 7;
+}
+
+message ServerStatusBatch {
+  repeated ServerStatus statuses = 1;
+}
+
+message ServerConfigBatch {
+  repeated Server servers = 1;
+}
+
+message ShutdownNotification {
+  string reason = 1;
+  int32 reconnect_delay_seconds = 2;
+}
+
+message FileReadRequest {
+  string path = 1;
+  int64 max_size = 2;
+}
+
+message FileReadResponse {
+  string request_id = 1;
+  bool success = 2;
+  bytes content = 3;
+  string transfer_id = 4;
+  string error = 5;
+}
+
+message FileWriteRequest {
+  string path = 1;
+  bytes content = 2;
+  int32 mode = 3;
+  bool create_dirs = 4;
+}
+
+message FileWriteResponse {
+  string request_id = 1;
+  bool success = 2;
+  string error = 3;
+}
+
+message FileListRequest {
+  string path = 1;
+  bool recursive = 2;
+  string pattern = 3;
+}
+
+message FileListResponse {
+  string request_id = 1;
+  bool success = 2;
+  repeated FileInfo files = 3;
+  string error = 4;
+}
+
+message FileInfo {
+  string name = 1;
+  string path = 2;
+  int64 size = 3;
+  int32 mode = 4;
+  int64 modified_unix = 5;
+  bool is_dir = 6;
+}
+
+message FileUploadTask {
+  string transfer_id = 1;
+  string path = 2;
+}

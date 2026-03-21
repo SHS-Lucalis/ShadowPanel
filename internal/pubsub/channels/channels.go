@@ -1,5 +1,7 @@
 package channels
 
+import "strconv"
+
 const (
 	Prefix = "gameap:"
 
@@ -24,6 +26,14 @@ const (
 	SystemPrefix       = Prefix + "system:"
 	SystemShutdown     = SystemPrefix + "shutdown"
 	SystemConfigReload = SystemPrefix + "config:reload"
+
+	DaemonPrefix           = Prefix + "daemon:"
+	DaemonSessionConnected = DaemonPrefix + "session:connected"
+	DaemonSessionClosed    = DaemonPrefix + "session:closed"
+	DaemonTaskDispatch     = DaemonPrefix + "task:dispatch:"
+	DaemonCommandDispatch  = DaemonPrefix + "command:dispatch:"
+	DaemonSessionAll       = DaemonPrefix + "session:*"
+	DaemonTaskDispatchAll  = DaemonPrefix + "task:dispatch:*"
 )
 
 func BuildCacheInvalidateChannel(entityType string, entityID string) string {
@@ -36,4 +46,16 @@ func BuildCacheInvalidateChannel(entityType string, entityID string) string {
 
 func BuildPluginEventChannel(eventType string) string {
 	return PluginPrefix + "events:" + eventType
+}
+
+func BuildDaemonTaskDispatchChannel(nodeID uint64) string {
+	return DaemonTaskDispatch + formatUint64(nodeID)
+}
+
+func BuildDaemonCommandDispatchChannel(nodeID uint64) string {
+	return DaemonCommandDispatch + formatUint64(nodeID)
+}
+
+func formatUint64(n uint64) string {
+	return strconv.FormatUint(n, 10)
 }

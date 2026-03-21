@@ -8,7 +8,6 @@ import (
 	"github.com/gameap/gameap/internal/pubsub/channels"
 	"github.com/gameap/gameap/internal/pubsub/messages"
 	"github.com/gameap/gameap/pkg/plugin/proto"
-	"github.com/samber/lo"
 )
 
 type PluginEventPublisher struct {
@@ -29,16 +28,16 @@ func (p *PluginEventPublisher) PublishEvent(ctx context.Context, event *proto.Ev
 	}
 
 	if serverEvent := event.GetServerEvent(); serverEvent != nil && serverEvent.Server != nil {
-		payload.ServerID = lo.ToPtr(uint(serverEvent.Server.Id))
+		payload.ServerID = new(uint(serverEvent.Server.Id))
 		payload.ExtraData = serverEvent.ExtraData
 	}
 
 	if taskEvent := event.GetTaskEvent(); taskEvent != nil {
-		payload.TaskID = lo.ToPtr(uint(taskEvent.TaskId))
-		payload.NodeID = lo.ToPtr(uint(taskEvent.NodeId))
+		payload.TaskID = new(uint(taskEvent.TaskId))
+		payload.NodeID = new(uint(taskEvent.NodeId))
 
 		if taskEvent.ServerId != nil {
-			payload.ServerID = lo.ToPtr(uint(*taskEvent.ServerId))
+			payload.ServerID = new(uint(*taskEvent.ServerId))
 		}
 
 		payload.ExtraData = taskEvent.ExtraData
@@ -67,7 +66,7 @@ func (p *PluginEventPublisher) PublishServerEvent(
 ) error {
 	payload := messages.PluginEventPayload{
 		EventType: int32(eventType),
-		ServerID:  lo.ToPtr(serverID),
+		ServerID:  new(serverID),
 		ExtraData: extraData,
 	}
 
@@ -88,8 +87,8 @@ func (p *PluginEventPublisher) PublishTaskEvent(
 ) error {
 	payload := messages.PluginEventPayload{
 		EventType: int32(eventType),
-		TaskID:    lo.ToPtr(taskID),
-		NodeID:    lo.ToPtr(nodeID),
+		TaskID:    new(taskID),
+		NodeID:    new(nodeID),
 		ServerID:  serverID,
 		ExtraData: extraData,
 	}

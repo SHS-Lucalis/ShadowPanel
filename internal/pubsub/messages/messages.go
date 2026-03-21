@@ -14,6 +14,12 @@ const (
 	TypeServerStatus    = "server.status"
 	TypeTaskProgress    = "task.progress"
 	TypeNotification    = "notification"
+
+	TypeDaemonConnected    = "daemon.connected"
+	TypeDaemonClosed       = "daemon.closed"
+	TypeDaemonTask         = "daemon.task"
+	TypeDaemonCommand      = "daemon.command"
+	TypeDaemonServerConfig = "daemon.server_config"
 )
 
 type CacheInvalidatePayload struct {
@@ -43,6 +49,35 @@ type TaskProgressPayload struct {
 	Status   string `json:"status"`
 	Progress int    `json:"progress"`
 	Message  string `json:"message,omitempty"`
+}
+
+type DaemonSessionPayload struct {
+	NodeID      uint64    `json:"node_id"`
+	InstanceID  string    `json:"instance_id"`
+	Version     string    `json:"version"`
+	ConnectedAt time.Time `json:"connected_at"`
+}
+
+type DaemonTaskDispatchPayload struct {
+	NodeID    uint64 `json:"node_id"`
+	RequestID string `json:"request_id"`
+	TaskID    uint64 `json:"task_id"`
+	TaskData  []byte `json:"task_data"`
+}
+
+type DaemonCommandDispatchPayload struct {
+	NodeID    uint64 `json:"node_id"`
+	RequestID string `json:"request_id"`
+	CommandID string `json:"command_id"`
+	ServerID  uint64 `json:"server_id"`
+	Command   string `json:"command"`
+	Timeout   int32  `json:"timeout"`
+}
+
+type DaemonServerConfigPayload struct {
+	NodeID     uint64 `json:"node_id"`
+	RequestID  string `json:"request_id"`
+	ConfigData []byte `json:"config_data"`
 }
 
 func NewMessage(channel, msgType string, payload any) (*pubsub.Message, error) {

@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+package gameap;
+
+option go_package = "github.com/gameap/gameap/pkg/proto";
+
+service FileTransferService {
+  rpc UploadFile(stream UploadChunk) returns (UploadResult);
+  rpc DownloadFile(DownloadRequest) returns (stream DownloadChunk);
+  rpc FileOperation(FileOperationRequest) returns (FileOperationResponse);
+  rpc ListDirectory(ListDirectoryRequest) returns (ListDirectoryResponse);
+}
+
+message UploadChunk {
+  UploadMetadata metadata = 1;
+  bytes data = 2;
+}
+
+message UploadMetadata {
+  string transfer_id = 1;
+  string path = 2;
+  int64 total_size = 3;
+  string checksum_sha256 = 4;
+  int32 mode = 5;
+  bool create_dirs = 6;
+}
+
+message UploadResult {
+  bool success = 1;
+  string error = 2;
+  int64 bytes_written = 3;
+  string checksum_sha256 = 4;
+}
+
+message DownloadRequest {
+  string path = 1;
+  int64 offset = 2;
+  int64 length = 3;
+}
+
+message DownloadChunk {
+  bytes data = 1;
+  int64 offset = 2;
+  int64 total_size = 3;
+  string checksum_sha256 = 4;
+  bool is_final = 5;
+}
+
+enum FileOperationType {
+  FILE_OPERATION_TYPE_UNSPECIFIED = 0;
+  FILE_OPERATION_TYPE_DELETE = 1;
+  FILE_OPERATION_TYPE_MOVE = 2;
+  FILE_OPERATION_TYPE_COPY = 3;
+  FILE_OPERATION_TYPE_CHMOD = 4;
+  FILE_OPERATION_TYPE_CHOWN = 5;
+  FILE_OPERATION_TYPE_MKDIR = 6;
+  FILE_OPERATION_TYPE_TOUCH = 7;
+  FILE_OPERATION_TYPE_STAT = 8;
+  FILE_OPERATION_TYPE_EXISTS = 9;
+}
+
+message FileOperationRequest {
+  FileOperationType operation = 1;
+  string path = 2;
+  string destination = 3;
+  int32 mode = 4;
+  int32 uid = 5;
+  int32 gid = 6;
+  bool recursive = 7;
+}
+
+message FileOperationResponse {
+  bool success = 1;
+  string error = 2;
+  FileStat stat = 3;
+  bool exists = 4;
+}
+
+message FileStat {
+  string name = 1;
+  string path = 2;
+  int64 size = 3;
+  int32 mode = 4;
+  int32 uid = 5;
+  int32 gid = 6;
+  int64 modified_unix = 7;
+  int64 accessed_unix = 8;
+  bool is_dir = 9;
+  bool is_symlink = 10;
+  string symlink_target = 11;
+}
+
+message ListDirectoryRequest {
+  string path = 1;
+  bool recursive = 2;
+  string pattern = 3;
+  int32 limit = 4;
+  int32 offset = 5;
+}
+
+message ListDirectoryResponse {
+  bool success = 1;
+  string error = 2;
+  repeated FileStat files = 3;
+  int32 total_count = 4;
+}
