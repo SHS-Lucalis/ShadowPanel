@@ -1401,6 +1401,7 @@ func (c *Container) GRPCServer() *grpc.Server {
 				MaxConcurrentStreams: c.config.GRPC.MaxConcurrentStreams,
 				RequireMTLS:          c.config.GRPC.RequireMTLS,
 				FileTransferBasePath: c.config.GRPC.FileTransferBasePath,
+				EnableReflection:     c.config.GRPC.EnableReflection,
 			},
 			&internalgrpc.ServerDependencies{
 				GatewayService:      c.GatewayService(),

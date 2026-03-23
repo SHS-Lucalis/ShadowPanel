@@ -134,6 +134,7 @@ type Config struct {
 		MaxConcurrentStreams uint32 `env:"GRPC_MAX_CONCURRENT_STREAMS" envDefault:"100"`
 		FileTransferBasePath string `env:"GRPC_FILE_TRANSFER_BASE_PATH" envDefault:""`
 		RequireMTLS          bool   `env:"GRPC_REQUIRE_MTLS" envDefault:"false"`
+		EnableReflection     bool   `env:"GRPC_ENABLE_REFLECTION" envDefault:"false"`
 	}
 
 	DaemonSetupKey string `env:"DAEMON_SETUP_KEY" envDefault:""`
