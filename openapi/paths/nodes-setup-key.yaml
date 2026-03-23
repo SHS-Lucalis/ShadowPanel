@@ -1,0 +1,65 @@
+/api/nodes/setup-key:
+  get:
+    tags:
+      - Nodes
+    summary: Get daemon setup key
+    description: Returns the current daemon setup key used for gRPC enrollment
+    operationId: getSetupKey
+    security:
+      - bearerAuth: []
+    responses:
+      '200':
+        description: Current setup key
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                setup_key:
+                  type: string
+                  description: The setup key. Empty string if not configured.
+
+  post:
+    tags:
+      - Nodes
+    summary: Generate or set daemon setup key
+    description: |
+      Generates a new random setup key or sets a custom one.
+      If `setup_key` is provided in the body, it is used as-is.
+      Otherwise, a random 32-character key is generated.
+    operationId: postSetupKey
+    security:
+      - bearerAuth: []
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              setup_key:
+                type: string
+                description: Custom setup key (optional). If omitted, a random key is generated.
+    responses:
+      '200':
+        description: Setup key created or updated
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                setup_key:
+                  type: string
+                  description: The active setup key
+
+  delete:
+    tags:
+      - Nodes
+    summary: Delete daemon setup key
+    description: Revokes the current daemon setup key. New enrollments will not be possible until a new key is set.
+    operationId: deleteSetupKey
+    security:
+      - bearerAuth: []
+    responses:
+      '204':
+        description: Setup key deleted

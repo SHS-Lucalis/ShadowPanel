@@ -23,6 +23,7 @@ const (
 	NodeKey           contextKey = "node"
 	APIKeyMetadataKey            = "x-api-key"
 	NodeIDMetadataKey            = "x-node-id"
+	enrollFullMethod             = "/gameap.DaemonGateway/Enroll"
 )
 
 type AuthInterceptor struct {
@@ -72,6 +73,10 @@ func (i *AuthInterceptor) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
 	) (interface{}, error) {
+		if info.FullMethod == enrollFullMethod {
+			return handler(ctx, req)
+		}
+
 		if i.requireMTLS {
 			if err := i.verifyMTLS(ctx); err != nil {
 				return nil, err

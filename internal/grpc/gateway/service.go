@@ -6,12 +6,14 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/gameap/gameap/internal/enrollment"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/grpc/session"
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/pkg/proto"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
 )
 
@@ -34,6 +36,7 @@ type Service struct {
 	taskHandler    TaskHandler
 	commandHandler CommandHandler
 	serverHandler  ServerStatusHandler
+	enrollmentSvc  *enrollment.Service
 }
 
 type APIKeyVerifier interface {
@@ -70,6 +73,7 @@ func NewService(
 	taskHandler TaskHandler,
 	commandHandler CommandHandler,
 	serverHandler ServerStatusHandler,
+	enrollmentSvc *enrollment.Service,
 	logger *slog.Logger,
 ) *Service {
 	if logger == nil {
@@ -86,6 +90,7 @@ func NewService(
 		taskHandler:    taskHandler,
 		commandHandler: commandHandler,
 		serverHandler:  serverHandler,
+		enrollmentSvc:  enrollmentSvc,
 		logger:         logger,
 	}
 }
@@ -436,6 +441,51 @@ func (s *Service) RequestFileList(ctx context.Context, nodeID uint64, path strin
 		}
 		return fileResp, nil
 	}
+}
+
+func (s *Service) Enroll(ctx context.Context, req *proto.EnrollRequest) (*proto.EnrollResponse, error) {
+	if s.enrollmentSvc == nil {
+		return nil, status.Error(codes.Unavailable, "enrollment is not enabled")
+	}
+
+	host := req.Host
+	if host == "" {
+		if p, ok := peer.FromContext(ctx); ok {
+			host = p.Addr.String()
+		}
+	}
+
+	result, err := s.enrollmentSvc.Enroll(ctx, req.SetupKey, &enrollment.EnrollInput{
+		Host:         host,
+		Port:         req.Port,
+		OS:           req.Os,
+		Version:      req.Version,
+		Capabilities: req.Capabilities,
+	})
+	if err != nil {
+		if errors.Is(err, enrollment.ErrInvalidSetupKey) || errors.Is(err, enrollment.ErrSetupKeyNotConfigured) {
+			return nil, status.Error(codes.Unauthenticated, err.Error())
+		}
+		s.logger.Error("enrollment failed", "error", err)
+
+		return nil, status.Error(codes.Internal, "enrollment failed")
+	}
+
+	s.logger.Info("daemon enrolled",
+		"node_id", result.NodeID,
+		"host", host,
+		"os", req.Os,
+		"version", req.Version,
+	)
+
+	return &proto.EnrollResponse{
+		Success:           true,
+		NodeId:            uint64(result.NodeID),
+		ApiKey:            result.APIKey,
+		RootCertificate:   result.RootCertificate,
+		ServerCertificate: result.ServerCertificate,
+		ServerPrivateKey:  result.ServerPrivateKey,
+	}, nil
 }
 
 func generateRequestID() string {

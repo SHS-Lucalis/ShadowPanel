@@ -1,0 +1,30 @@
+### Generate a new setup key (random 32 chars)
+POST {{host}}/api/nodes/setup-key
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+> {%
+client.test("Setup key generated", function() {
+    client.assert(response.status === 200, "Expected status 200");
+    client.assert(response.body.setup_key.length > 0, "Expected non-empty setup_key");
+    client.global.set("setupKey", response.body.setup_key);
+    console.log("Setup key: " + response.body.setup_key);
+});
+%}
+
+### Set a custom setup key
+POST {{host}}/api/nodes/setup-key
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "setup_key": "my-custom-setup-key-for-testing1"
+}
+
+> {%
+client.test("Custom setup key set", function() {
+    client.assert(response.status === 200, "Expected status 200");
+    client.assert(response.body.setup_key === "my-custom-setup-key-for-testing1", "Expected custom key");
+    client.global.set("setupKey", response.body.setup_key);
+});
+%}

@@ -70,6 +70,7 @@ import (
 	"github.com/gameap/gameap/internal/api/nodes/nodesetup"
 	"github.com/gameap/gameap/internal/api/nodes/postnode"
 	"github.com/gameap/gameap/internal/api/nodes/putnode"
+	"github.com/gameap/gameap/internal/api/nodes/setupkey"
 	"github.com/gameap/gameap/internal/api/plugins/getfrontendplugins"
 	"github.com/gameap/gameap/internal/api/plugins/getfrontendstyles"
 	pluginsloaded "github.com/gameap/gameap/internal/api/plugins/getloaded"
@@ -129,6 +130,7 @@ import (
 	"github.com/gameap/gameap/internal/config"
 	"github.com/gameap/gameap/internal/daemon"
 	"github.com/gameap/gameap/internal/domain"
+	"github.com/gameap/gameap/internal/enrollment"
 	"github.com/gameap/gameap/internal/files"
 	"github.com/gameap/gameap/internal/i18n"
 	internalplugin "github.com/gameap/gameap/internal/plugin"
@@ -188,6 +190,7 @@ type container interface {
 	PluginStoreService() *pluginstore.Service
 	PluginsDir() string
 	TaskDispatcher() *taskdispatcher.Dispatcher
+	EnrollmentService() *enrollment.Service
 }
 
 func CreateRouter(c container) *http.ServeMux {
@@ -1051,6 +1054,24 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 				c.Responder(),
 				"",
 			),
+			AdminOnly: true,
+		},
+		{
+			Method:    http.MethodGet,
+			Path:      "/api/nodes/setup-key",
+			Handler:   setupkey.NewGetHandler(c.EnrollmentService(), c.Responder()),
+			AdminOnly: true,
+		},
+		{
+			Method:    http.MethodPost,
+			Path:      "/api/nodes/setup-key",
+			Handler:   setupkey.NewPostHandler(c.EnrollmentService(), c.Responder()),
+			AdminOnly: true,
+		},
+		{
+			Method:    http.MethodDelete,
+			Path:      "/api/nodes/setup-key",
+			Handler:   setupkey.NewDeleteHandler(c.EnrollmentService(), c.Responder()),
 			AdminOnly: true,
 		},
 		{

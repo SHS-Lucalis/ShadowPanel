@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	DaemonGateway_Connect_FullMethodName = "/gameap.DaemonGateway/Connect"
+	DaemonGateway_Enroll_FullMethodName  = "/gameap.DaemonGateway/Enroll"
 )
 
 // DaemonGatewayClient is the client API for DaemonGateway service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DaemonGatewayClient interface {
 	Connect(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[DaemonMessage, GatewayMessage], error)
+	Enroll(ctx context.Context, in *EnrollRequest, opts ...grpc.CallOption) (*EnrollResponse, error)
 }
 
 type daemonGatewayClient struct {
@@ -50,11 +52,22 @@ func (c *daemonGatewayClient) Connect(ctx context.Context, opts ...grpc.CallOpti
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type DaemonGateway_ConnectClient = grpc.BidiStreamingClient[DaemonMessage, GatewayMessage]
 
+func (c *daemonGatewayClient) Enroll(ctx context.Context, in *EnrollRequest, opts ...grpc.CallOption) (*EnrollResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(EnrollResponse)
+	err := c.cc.Invoke(ctx, DaemonGateway_Enroll_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DaemonGatewayServer is the server API for DaemonGateway service.
 // All implementations must embed UnimplementedDaemonGatewayServer
 // for forward compatibility.
 type DaemonGatewayServer interface {
 	Connect(grpc.BidiStreamingServer[DaemonMessage, GatewayMessage]) error
+	Enroll(context.Context, *EnrollRequest) (*EnrollResponse, error)
 	mustEmbedUnimplementedDaemonGatewayServer()
 }
 
@@ -67,6 +80,9 @@ type UnimplementedDaemonGatewayServer struct{}
 
 func (UnimplementedDaemonGatewayServer) Connect(grpc.BidiStreamingServer[DaemonMessage, GatewayMessage]) error {
 	return status.Error(codes.Unimplemented, "method Connect not implemented")
+}
+func (UnimplementedDaemonGatewayServer) Enroll(context.Context, *EnrollRequest) (*EnrollResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method Enroll not implemented")
 }
 func (UnimplementedDaemonGatewayServer) mustEmbedUnimplementedDaemonGatewayServer() {}
 func (UnimplementedDaemonGatewayServer) testEmbeddedByValue()                       {}
@@ -96,13 +112,36 @@ func _DaemonGateway_Connect_Handler(srv interface{}, stream grpc.ServerStream) e
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type DaemonGateway_ConnectServer = grpc.BidiStreamingServer[DaemonMessage, GatewayMessage]
 
+func _DaemonGateway_Enroll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EnrollRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DaemonGatewayServer).Enroll(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DaemonGateway_Enroll_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DaemonGatewayServer).Enroll(ctx, req.(*EnrollRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DaemonGateway_ServiceDesc is the grpc.ServiceDesc for DaemonGateway service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var DaemonGateway_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "gameap.DaemonGateway",
 	HandlerType: (*DaemonGatewayServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Enroll",
+			Handler:    _DaemonGateway_Enroll_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "Connect",

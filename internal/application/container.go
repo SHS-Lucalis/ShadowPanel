@@ -21,6 +21,7 @@ import (
 	"github.com/gameap/gameap/internal/config"
 	"github.com/gameap/gameap/internal/daemon"
 	"github.com/gameap/gameap/internal/domain"
+	"github.com/gameap/gameap/internal/enrollment"
 	"github.com/gameap/gameap/internal/files"
 	internalgrpc "github.com/gameap/gameap/internal/grpc"
 	"github.com/gameap/gameap/internal/grpc/filetransfer"
@@ -123,6 +124,9 @@ type Container struct {
 	cache                cache.Cache
 	fileManager          files.FileManager
 	certificatesService  *certificates.Service
+
+	// Enrollment
+	enrollmentService *enrollment.Service
 
 	// Daemon Services
 	daemonStatus   *daemon.StatusService
@@ -1077,6 +1081,20 @@ func (c *Container) CertificatesService() *certificates.Service {
 	return c.certificatesService
 }
 
+func (c *Container) EnrollmentService() *enrollment.Service {
+	if c.enrollmentService == nil {
+		keyManager := enrollment.NewSetupKeyManager(c.Cache(), c.config.DaemonSetupKey)
+		c.enrollmentService = enrollment.NewService(
+			keyManager,
+			c.NodeRepository(),
+			c.ClientCertificateRepository(),
+			c.CertificatesService(),
+		)
+	}
+
+	return c.enrollmentService
+}
+
 func (c *Container) GlobalAPIService() *services.GlobalAPIService {
 	if c.globalAPIService == nil {
 		c.globalAPIService = c.createGlobalAPIService()
@@ -1353,6 +1371,7 @@ func (c *Container) GatewayService() *gateway.Service {
 			c.TaskHandler(),
 			c.CommandHandler(),
 			c.ServerStatusHandler(),
+			c.EnrollmentService(),
 			slog.Default(),
 		)
 	}

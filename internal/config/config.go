@@ -135,6 +135,8 @@ type Config struct {
 		FileTransferBasePath string `env:"GRPC_FILE_TRANSFER_BASE_PATH" envDefault:""`
 		RequireMTLS          bool   `env:"GRPC_REQUIRE_MTLS" envDefault:"false"`
 	}
+
+	DaemonSetupKey string `env:"DAEMON_SETUP_KEY" envDefault:""`
 }
 
 func LoadConfig() (*Config, error) {

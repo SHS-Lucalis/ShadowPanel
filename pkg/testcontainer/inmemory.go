@@ -11,6 +11,7 @@ import (
 	"github.com/gameap/gameap/internal/config"
 	"github.com/gameap/gameap/internal/daemon"
 	"github.com/gameap/gameap/internal/domain"
+	"github.com/gameap/gameap/internal/enrollment"
 	"github.com/gameap/gameap/internal/files"
 	internalplugin "github.com/gameap/gameap/internal/plugin"
 	"github.com/gameap/gameap/internal/rbac"
@@ -114,6 +115,15 @@ func (c *InmemoryContainer) PelicanEggImporter() *pelicaneggimporter.Importer { 
 func (c *InmemoryContainer) GameAPImporter() *gameapimporter.Importer         { return nil }
 func (c *InmemoryContainer) GameExporter() *gameexporter.Exporter             { return nil }
 func (c *InmemoryContainer) TaskDispatcher() *taskdispatcher.Dispatcher       { return nil }
+func (c *InmemoryContainer) EnrollmentService() *enrollment.Service {
+	keyManager := enrollment.NewSetupKeyManager(c.cacheService, "")
+	return enrollment.NewService(
+		keyManager,
+		c.nodeRepo,
+		c.clientCertificateRepo,
+		c.certificatesService,
+	)
+}
 
 func LoadInmemoryContainer() (*InmemoryContainer, error) {
 	c := buildInmemoryTestContainer()

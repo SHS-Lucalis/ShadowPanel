@@ -284,6 +284,8 @@ paths:
     $ref: './paths/nodes.yaml#/~1api~1nodes~1{id}~1daemon'
   /api/nodes/{id}/logs.zip:
     $ref: './paths/nodes.yaml#/~1api~1nodes~1{id}~1logs.zip'
+  /api/nodes/setup-key:
+    $ref: './paths/nodes-setup-key.yaml#/~1api~1nodes~1setup-key'
   /api/dedicated_servers:
     $ref: './paths/nodes.yaml#/~1api~1dedicated_servers'
   /api/dedicated_servers/summary:

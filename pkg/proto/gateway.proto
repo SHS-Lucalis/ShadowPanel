@@ -11,6 +11,7 @@ import "pkg/proto/gamemod.proto";
 
 service DaemonGateway {
   rpc Connect(stream DaemonMessage) returns (stream GatewayMessage);
+  rpc Enroll(EnrollRequest) returns (EnrollResponse);
 }
 
 message DaemonMessage {
@@ -208,4 +209,23 @@ message FileInfo {
 message FileUploadTask {
   string transfer_id = 1;
   string path = 2;
+}
+
+message EnrollRequest {
+  string setup_key = 1;
+  string host = 2;
+  int32 port = 3;
+  string os = 4;
+  string version = 5;
+  repeated string capabilities = 6;
+}
+
+message EnrollResponse {
+  bool success = 1;
+  string error_message = 2;
+  uint64 node_id = 3;
+  string api_key = 4;
+  string root_certificate = 5;
+  string server_certificate = 6;
+  string server_private_key = 7;
 }

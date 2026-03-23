@@ -1,0 +1,8 @@
+DELETE {{host}}/api/nodes/setup-key
+Authorization: Bearer {{authToken}}
+
+> {%
+client.test("Setup key deleted", function() {
+    client.assert(response.status === 204, "Expected status 204");
+});
+%}

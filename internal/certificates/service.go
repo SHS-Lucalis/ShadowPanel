@@ -223,41 +223,11 @@ func (s *Service) Generate(
 		Bytes: pkcs8,
 	})
 
-	// Prepare CSR subject
 	subject := pkix.Name{
 		CommonName:   "GameAP",
 		Organization: []string{"GameAP"},
 	}
-
-	//nolint:nestif
-	if opts != nil {
-		if opts.CommonName != "" {
-			subject.CommonName = opts.CommonName
-		}
-		if opts.Organization != "" {
-			subject.Organization = []string{opts.Organization}
-		}
-		if opts.Country != "" {
-			subject.Country = []string{opts.Country}
-		}
-		if opts.State != "" {
-			subject.Province = []string{opts.State}
-		}
-		if opts.Locality != "" {
-			subject.Locality = []string{opts.Locality}
-		}
-		if opts.OrganizationalUnit != "" {
-			subject.OrganizationalUnit = []string{opts.OrganizationalUnit}
-		}
-		if opts.Email != "" {
-			subject.ExtraNames = []pkix.AttributeTypeAndValue{
-				{
-					Type:  []int{1, 2, 840, 113549, 1, 9, 1}, // emailAddress OID
-					Value: opts.Email,
-				},
-			}
-		}
-	}
+	applySignOptions(&subject, opts)
 
 	// Create CSR template
 	csrTemplate := &x509.CertificateRequest{
@@ -296,6 +266,53 @@ func (s *Service) Generate(
 	return certPEM, string(privateKeyPEM), nil
 }
 
+// GenerateInMemory generates a new certificate signed with the root certificate
+// without writing to disk. Returns the certificate PEM and private key PEM.
+func (s *Service) GenerateInMemory(ctx context.Context, opts *SignOptions) (string, string, error) {
+	privateKey, err := rsa.GenerateKey(rand.Reader, PrivateKeyBits)
+	if err != nil {
+		return "", "", errors.Wrap(err, "failed to generate private key")
+	}
+
+	pkcs8, err := x509.MarshalPKCS8PrivateKey(privateKey)
+	if err != nil {
+		return "", "", errors.Wrap(err, "failed to marshal private key to PKCS8")
+	}
+
+	privateKeyPEM := pem.EncodeToMemory(&pem.Block{
+		Type:  "PRIVATE KEY",
+		Bytes: pkcs8,
+	})
+
+	subject := pkix.Name{
+		CommonName:   "GameAP",
+		Organization: []string{"GameAP"},
+	}
+	applySignOptions(&subject, opts)
+
+	csrTemplate := &x509.CertificateRequest{
+		Subject:            subject,
+		SignatureAlgorithm: x509.SHA256WithRSA,
+	}
+
+	csrDER, err := x509.CreateCertificateRequest(rand.Reader, csrTemplate, privateKey)
+	if err != nil {
+		return "", "", errors.Wrap(err, "failed to create CSR")
+	}
+
+	csrPEM := pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE REQUEST",
+		Bytes: csrDER,
+	})
+
+	certPEM, err := s.Sign(ctx, string(csrPEM), opts)
+	if err != nil {
+		return "", "", errors.Wrap(err, "failed to sign CSR")
+	}
+
+	return certPEM, string(privateKeyPEM), nil
+}
+
 func (s *Service) Fingerprint(certPEM string) (string, error) {
 	block, _ := pem.Decode([]byte(certPEM))
 	if block == nil {
@@ -310,6 +327,38 @@ func (s *Service) Fingerprint(certPEM string) (string, error) {
 	hash := sha256.Sum256(cert.Raw)
 
 	return hex.EncodeToString(hash[:]), nil
+}
+
+func applySignOptions(subject *pkix.Name, opts *SignOptions) {
+	if opts == nil {
+		return
+	}
+	if opts.CommonName != "" {
+		subject.CommonName = opts.CommonName
+	}
+	if opts.Organization != "" {
+		subject.Organization = []string{opts.Organization}
+	}
+	if opts.Country != "" {
+		subject.Country = []string{opts.Country}
+	}
+	if opts.State != "" {
+		subject.Province = []string{opts.State}
+	}
+	if opts.Locality != "" {
+		subject.Locality = []string{opts.Locality}
+	}
+	if opts.OrganizationalUnit != "" {
+		subject.OrganizationalUnit = []string{opts.OrganizationalUnit}
+	}
+	if opts.Email != "" {
+		subject.ExtraNames = []pkix.AttributeTypeAndValue{
+			{
+				Type:  []int{1, 2, 840, 113549, 1, 9, 1}, // emailAddress OID
+				Value: opts.Email,
+			},
+		}
+	}
 }
 
 // generateRoot generates the root CA certificate and key.
