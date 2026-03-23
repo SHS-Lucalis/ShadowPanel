@@ -99,6 +99,9 @@ func convertGameToProto(g *domain.Game) *proto.Game {
 		RemoteRepositoryLinux:   g.RemoteRepositoryLinux,
 		RemoteRepositoryWindows: g.RemoteRepositoryWindows,
 		Enabled:                 g.Enabled != 0,
+		LocalRepositoryLinux:    g.LocalRepositoryLinux,
+		LocalRepositoryWindows:  g.LocalRepositoryWindows,
+		Metadata:                domainMetadataToProto(g.Metadata),
 	}
 }
 

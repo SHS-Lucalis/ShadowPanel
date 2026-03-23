@@ -83,14 +83,44 @@ func convertGameModsToProto(gms []domain.GameMod) []*proto.GameMod {
 }
 
 func convertGameModToProto(gm *domain.GameMod) *proto.GameMod {
+	fastRcon := make([]*proto.GameModFastRcon, 0, len(gm.FastRcon))
+	for _, fr := range gm.FastRcon {
+		fastRcon = append(fastRcon, &proto.GameModFastRcon{
+			Info:    fr.Info,
+			Command: fr.Command,
+		})
+	}
+
+	vars := make([]*proto.GameModVar, 0, len(gm.Vars))
+	for _, v := range gm.Vars {
+		vars = append(vars, &proto.GameModVar{
+			Var:      v.Var,
+			Default:  string(v.Default),
+			Info:     v.Info,
+			AdminVar: v.AdminVar,
+		})
+	}
+
 	return &proto.GameMod{
-		Id:              uint64(gm.ID),
-		GameCode:        gm.GameCode,
-		Name:            gm.Name,
-		StartCmdLinux:   gm.StartCmdLinux,
-		StartCmdWindows: gm.StartCmdWindows,
-		KickCmd:         gm.KickCmd,
-		BanCmd:          gm.BanCmd,
+		Id:                      uint64(gm.ID),
+		GameCode:                gm.GameCode,
+		Name:                    gm.Name,
+		StartCmdLinux:           gm.StartCmdLinux,
+		StartCmdWindows:         gm.StartCmdWindows,
+		KickCmd:                 gm.KickCmd,
+		BanCmd:                  gm.BanCmd,
+		FastRcon:                fastRcon,
+		Vars:                    vars,
+		RemoteRepositoryLinux:   gm.RemoteRepositoryLinux,
+		RemoteRepositoryWindows: gm.RemoteRepositoryWindows,
+		LocalRepositoryLinux:    gm.LocalRepositoryLinux,
+		LocalRepositoryWindows:  gm.LocalRepositoryWindows,
+		ChnameCmd:               gm.ChnameCmd,
+		SrestartCmd:             gm.SrestartCmd,
+		ChmapCmd:                gm.ChmapCmd,
+		SendmsgCmd:              gm.SendmsgCmd,
+		PasswdCmd:               gm.PasswdCmd,
+		Metadata:                domainMetadataToProto(gm.Metadata),
 	}
 }
 

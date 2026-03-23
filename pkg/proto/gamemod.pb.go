@@ -9,6 +9,7 @@ package proto
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	anypb "google.golang.org/protobuf/types/known/anypb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -21,22 +22,154 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type GameModFastRcon struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Info          string                 `protobuf:"bytes,1,opt,name=info,proto3" json:"info,omitempty"`
+	Command       string                 `protobuf:"bytes,2,opt,name=command,proto3" json:"command,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GameModFastRcon) Reset() {
+	*x = GameModFastRcon{}
+	mi := &file_pkg_proto_gamemod_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GameModFastRcon) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GameModFastRcon) ProtoMessage() {}
+
+func (x *GameModFastRcon) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_gamemod_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GameModFastRcon.ProtoReflect.Descriptor instead.
+func (*GameModFastRcon) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_gamemod_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *GameModFastRcon) GetInfo() string {
+	if x != nil {
+		return x.Info
+	}
+	return ""
+}
+
+func (x *GameModFastRcon) GetCommand() string {
+	if x != nil {
+		return x.Command
+	}
+	return ""
+}
+
+type GameModVar struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Var           string                 `protobuf:"bytes,1,opt,name=var,proto3" json:"var,omitempty"`
+	Default       string                 `protobuf:"bytes,2,opt,name=default,proto3" json:"default,omitempty"`
+	Info          string                 `protobuf:"bytes,3,opt,name=info,proto3" json:"info,omitempty"`
+	AdminVar      bool                   `protobuf:"varint,4,opt,name=admin_var,json=adminVar,proto3" json:"admin_var,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GameModVar) Reset() {
+	*x = GameModVar{}
+	mi := &file_pkg_proto_gamemod_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GameModVar) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GameModVar) ProtoMessage() {}
+
+func (x *GameModVar) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_gamemod_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GameModVar.ProtoReflect.Descriptor instead.
+func (*GameModVar) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_gamemod_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *GameModVar) GetVar() string {
+	if x != nil {
+		return x.Var
+	}
+	return ""
+}
+
+func (x *GameModVar) GetDefault() string {
+	if x != nil {
+		return x.Default
+	}
+	return ""
+}
+
+func (x *GameModVar) GetInfo() string {
+	if x != nil {
+		return x.Info
+	}
+	return ""
+}
+
+func (x *GameModVar) GetAdminVar() bool {
+	if x != nil {
+		return x.AdminVar
+	}
+	return false
+}
+
 type GameMod struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	Id              uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	GameCode        string                 `protobuf:"bytes,2,opt,name=game_code,json=gameCode,proto3" json:"game_code,omitempty"`
-	Name            string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	StartCmdLinux   *string                `protobuf:"bytes,4,opt,name=start_cmd_linux,json=startCmdLinux,proto3,oneof" json:"start_cmd_linux,omitempty"`
-	StartCmdWindows *string                `protobuf:"bytes,5,opt,name=start_cmd_windows,json=startCmdWindows,proto3,oneof" json:"start_cmd_windows,omitempty"`
-	KickCmd         *string                `protobuf:"bytes,6,opt,name=kick_cmd,json=kickCmd,proto3,oneof" json:"kick_cmd,omitempty"`
-	BanCmd          *string                `protobuf:"bytes,7,opt,name=ban_cmd,json=banCmd,proto3,oneof" json:"ban_cmd,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	state                   protoimpl.MessageState `protogen:"open.v1"`
+	Id                      uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	GameCode                string                 `protobuf:"bytes,2,opt,name=game_code,json=gameCode,proto3" json:"game_code,omitempty"`
+	Name                    string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	StartCmdLinux           *string                `protobuf:"bytes,4,opt,name=start_cmd_linux,json=startCmdLinux,proto3,oneof" json:"start_cmd_linux,omitempty"`
+	StartCmdWindows         *string                `protobuf:"bytes,5,opt,name=start_cmd_windows,json=startCmdWindows,proto3,oneof" json:"start_cmd_windows,omitempty"`
+	KickCmd                 *string                `protobuf:"bytes,6,opt,name=kick_cmd,json=kickCmd,proto3,oneof" json:"kick_cmd,omitempty"`
+	BanCmd                  *string                `protobuf:"bytes,7,opt,name=ban_cmd,json=banCmd,proto3,oneof" json:"ban_cmd,omitempty"`
+	FastRcon                []*GameModFastRcon     `protobuf:"bytes,8,rep,name=fast_rcon,json=fastRcon,proto3" json:"fast_rcon,omitempty"`
+	Vars                    []*GameModVar          `protobuf:"bytes,9,rep,name=vars,proto3" json:"vars,omitempty"`
+	RemoteRepositoryLinux   *string                `protobuf:"bytes,10,opt,name=remote_repository_linux,json=remoteRepositoryLinux,proto3,oneof" json:"remote_repository_linux,omitempty"`
+	RemoteRepositoryWindows *string                `protobuf:"bytes,11,opt,name=remote_repository_windows,json=remoteRepositoryWindows,proto3,oneof" json:"remote_repository_windows,omitempty"`
+	LocalRepositoryLinux    *string                `protobuf:"bytes,12,opt,name=local_repository_linux,json=localRepositoryLinux,proto3,oneof" json:"local_repository_linux,omitempty"`
+	LocalRepositoryWindows  *string                `protobuf:"bytes,13,opt,name=local_repository_windows,json=localRepositoryWindows,proto3,oneof" json:"local_repository_windows,omitempty"`
+	ChnameCmd               *string                `protobuf:"bytes,14,opt,name=chname_cmd,json=chnameCmd,proto3,oneof" json:"chname_cmd,omitempty"`
+	SrestartCmd             *string                `protobuf:"bytes,15,opt,name=srestart_cmd,json=srestartCmd,proto3,oneof" json:"srestart_cmd,omitempty"`
+	ChmapCmd                *string                `protobuf:"bytes,16,opt,name=chmap_cmd,json=chmapCmd,proto3,oneof" json:"chmap_cmd,omitempty"`
+	SendmsgCmd              *string                `protobuf:"bytes,17,opt,name=sendmsg_cmd,json=sendmsgCmd,proto3,oneof" json:"sendmsg_cmd,omitempty"`
+	PasswdCmd               *string                `protobuf:"bytes,18,opt,name=passwd_cmd,json=passwdCmd,proto3,oneof" json:"passwd_cmd,omitempty"`
+	Metadata                map[string]*anypb.Any  `protobuf:"bytes,19,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
 }
 
 func (x *GameMod) Reset() {
 	*x = GameMod{}
-	mi := &file_pkg_proto_gamemod_proto_msgTypes[0]
+	mi := &file_pkg_proto_gamemod_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -48,7 +181,7 @@ func (x *GameMod) String() string {
 func (*GameMod) ProtoMessage() {}
 
 func (x *GameMod) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_proto_gamemod_proto_msgTypes[0]
+	mi := &file_pkg_proto_gamemod_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -61,7 +194,7 @@ func (x *GameMod) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GameMod.ProtoReflect.Descriptor instead.
 func (*GameMod) Descriptor() ([]byte, []int) {
-	return file_pkg_proto_gamemod_proto_rawDescGZIP(), []int{0}
+	return file_pkg_proto_gamemod_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *GameMod) GetId() uint64 {
@@ -113,11 +246,104 @@ func (x *GameMod) GetBanCmd() string {
 	return ""
 }
 
+func (x *GameMod) GetFastRcon() []*GameModFastRcon {
+	if x != nil {
+		return x.FastRcon
+	}
+	return nil
+}
+
+func (x *GameMod) GetVars() []*GameModVar {
+	if x != nil {
+		return x.Vars
+	}
+	return nil
+}
+
+func (x *GameMod) GetRemoteRepositoryLinux() string {
+	if x != nil && x.RemoteRepositoryLinux != nil {
+		return *x.RemoteRepositoryLinux
+	}
+	return ""
+}
+
+func (x *GameMod) GetRemoteRepositoryWindows() string {
+	if x != nil && x.RemoteRepositoryWindows != nil {
+		return *x.RemoteRepositoryWindows
+	}
+	return ""
+}
+
+func (x *GameMod) GetLocalRepositoryLinux() string {
+	if x != nil && x.LocalRepositoryLinux != nil {
+		return *x.LocalRepositoryLinux
+	}
+	return ""
+}
+
+func (x *GameMod) GetLocalRepositoryWindows() string {
+	if x != nil && x.LocalRepositoryWindows != nil {
+		return *x.LocalRepositoryWindows
+	}
+	return ""
+}
+
+func (x *GameMod) GetChnameCmd() string {
+	if x != nil && x.ChnameCmd != nil {
+		return *x.ChnameCmd
+	}
+	return ""
+}
+
+func (x *GameMod) GetSrestartCmd() string {
+	if x != nil && x.SrestartCmd != nil {
+		return *x.SrestartCmd
+	}
+	return ""
+}
+
+func (x *GameMod) GetChmapCmd() string {
+	if x != nil && x.ChmapCmd != nil {
+		return *x.ChmapCmd
+	}
+	return ""
+}
+
+func (x *GameMod) GetSendmsgCmd() string {
+	if x != nil && x.SendmsgCmd != nil {
+		return *x.SendmsgCmd
+	}
+	return ""
+}
+
+func (x *GameMod) GetPasswdCmd() string {
+	if x != nil && x.PasswdCmd != nil {
+		return *x.PasswdCmd
+	}
+	return ""
+}
+
+func (x *GameMod) GetMetadata() map[string]*anypb.Any {
+	if x != nil {
+		return x.Metadata
+	}
+	return nil
+}
+
 var File_pkg_proto_gamemod_proto protoreflect.FileDescriptor
 
 const file_pkg_proto_gamemod_proto_rawDesc = "" +
 	"\n" +
-	"\x17pkg/proto/gamemod.proto\x12\x06gameap\"\xa9\x02\n" +
+	"\x17pkg/proto/gamemod.proto\x12\x06gameap\x1a\x19google/protobuf/any.proto\"?\n" +
+	"\x0fGameModFastRcon\x12\x12\n" +
+	"\x04info\x18\x01 \x01(\tR\x04info\x12\x18\n" +
+	"\acommand\x18\x02 \x01(\tR\acommand\"i\n" +
+	"\n" +
+	"GameModVar\x12\x10\n" +
+	"\x03var\x18\x01 \x01(\tR\x03var\x12\x18\n" +
+	"\adefault\x18\x02 \x01(\tR\adefault\x12\x12\n" +
+	"\x04info\x18\x03 \x01(\tR\x04info\x12\x1b\n" +
+	"\tadmin_var\x18\x04 \x01(\bR\badminVar\"\x84\t\n" +
 	"\aGameMod\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x1b\n" +
 	"\tgame_code\x18\x02 \x01(\tR\bgameCode\x12\x12\n" +
@@ -125,12 +351,42 @@ const file_pkg_proto_gamemod_proto_rawDesc = "" +
 	"\x0fstart_cmd_linux\x18\x04 \x01(\tH\x00R\rstartCmdLinux\x88\x01\x01\x12/\n" +
 	"\x11start_cmd_windows\x18\x05 \x01(\tH\x01R\x0fstartCmdWindows\x88\x01\x01\x12\x1e\n" +
 	"\bkick_cmd\x18\x06 \x01(\tH\x02R\akickCmd\x88\x01\x01\x12\x1c\n" +
-	"\aban_cmd\x18\a \x01(\tH\x03R\x06banCmd\x88\x01\x01B\x12\n" +
+	"\aban_cmd\x18\a \x01(\tH\x03R\x06banCmd\x88\x01\x01\x124\n" +
+	"\tfast_rcon\x18\b \x03(\v2\x17.gameap.GameModFastRconR\bfastRcon\x12&\n" +
+	"\x04vars\x18\t \x03(\v2\x12.gameap.GameModVarR\x04vars\x12;\n" +
+	"\x17remote_repository_linux\x18\n" +
+	" \x01(\tH\x04R\x15remoteRepositoryLinux\x88\x01\x01\x12?\n" +
+	"\x19remote_repository_windows\x18\v \x01(\tH\x05R\x17remoteRepositoryWindows\x88\x01\x01\x129\n" +
+	"\x16local_repository_linux\x18\f \x01(\tH\x06R\x14localRepositoryLinux\x88\x01\x01\x12=\n" +
+	"\x18local_repository_windows\x18\r \x01(\tH\aR\x16localRepositoryWindows\x88\x01\x01\x12\"\n" +
+	"\n" +
+	"chname_cmd\x18\x0e \x01(\tH\bR\tchnameCmd\x88\x01\x01\x12&\n" +
+	"\fsrestart_cmd\x18\x0f \x01(\tH\tR\vsrestartCmd\x88\x01\x01\x12 \n" +
+	"\tchmap_cmd\x18\x10 \x01(\tH\n" +
+	"R\bchmapCmd\x88\x01\x01\x12$\n" +
+	"\vsendmsg_cmd\x18\x11 \x01(\tH\vR\n" +
+	"sendmsgCmd\x88\x01\x01\x12\"\n" +
+	"\n" +
+	"passwd_cmd\x18\x12 \x01(\tH\fR\tpasswdCmd\x88\x01\x01\x129\n" +
+	"\bmetadata\x18\x13 \x03(\v2\x1d.gameap.GameMod.MetadataEntryR\bmetadata\x1aQ\n" +
+	"\rMetadataEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12*\n" +
+	"\x05value\x18\x02 \x01(\v2\x14.google.protobuf.AnyR\x05value:\x028\x01B\x12\n" +
 	"\x10_start_cmd_linuxB\x14\n" +
 	"\x12_start_cmd_windowsB\v\n" +
 	"\t_kick_cmdB\n" +
 	"\n" +
-	"\b_ban_cmdB$Z\"github.com/gameap/gameap/pkg/protob\x06proto3"
+	"\b_ban_cmdB\x1a\n" +
+	"\x18_remote_repository_linuxB\x1c\n" +
+	"\x1a_remote_repository_windowsB\x19\n" +
+	"\x17_local_repository_linuxB\x1b\n" +
+	"\x19_local_repository_windowsB\r\n" +
+	"\v_chname_cmdB\x0f\n" +
+	"\r_srestart_cmdB\f\n" +
+	"\n" +
+	"_chmap_cmdB\x0e\n" +
+	"\f_sendmsg_cmdB\r\n" +
+	"\v_passwd_cmdB$Z\"github.com/gameap/gameap/pkg/protob\x06proto3"
 
 var (
 	file_pkg_proto_gamemod_proto_rawDescOnce sync.Once
@@ -144,16 +400,24 @@ func file_pkg_proto_gamemod_proto_rawDescGZIP() []byte {
 	return file_pkg_proto_gamemod_proto_rawDescData
 }
 
-var file_pkg_proto_gamemod_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_pkg_proto_gamemod_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_pkg_proto_gamemod_proto_goTypes = []any{
-	(*GameMod)(nil), // 0: gameap.GameMod
+	(*GameModFastRcon)(nil), // 0: gameap.GameModFastRcon
+	(*GameModVar)(nil),      // 1: gameap.GameModVar
+	(*GameMod)(nil),         // 2: gameap.GameMod
+	nil,                     // 3: gameap.GameMod.MetadataEntry
+	(*anypb.Any)(nil),       // 4: google.protobuf.Any
 }
 var file_pkg_proto_gamemod_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	0, // 0: gameap.GameMod.fast_rcon:type_name -> gameap.GameModFastRcon
+	1, // 1: gameap.GameMod.vars:type_name -> gameap.GameModVar
+	3, // 2: gameap.GameMod.metadata:type_name -> gameap.GameMod.MetadataEntry
+	4, // 3: gameap.GameMod.MetadataEntry.value:type_name -> google.protobuf.Any
+	4, // [4:4] is the sub-list for method output_type
+	4, // [4:4] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_pkg_proto_gamemod_proto_init() }
@@ -161,14 +425,14 @@ func file_pkg_proto_gamemod_proto_init() {
 	if File_pkg_proto_gamemod_proto != nil {
 		return
 	}
-	file_pkg_proto_gamemod_proto_msgTypes[0].OneofWrappers = []any{}
+	file_pkg_proto_gamemod_proto_msgTypes[2].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_proto_gamemod_proto_rawDesc), len(file_pkg_proto_gamemod_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -49,6 +49,7 @@ import (
 	"github.com/gameap/gameap/internal/services/pelicaneggimporter"
 	"github.com/gameap/gameap/internal/services/pluginstore"
 	"github.com/gameap/gameap/internal/services/servercontrol"
+	"github.com/gameap/gameap/internal/services/taskdispatcher"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
 	pkgplugin "github.com/gameap/gameap/pkg/plugin"
@@ -111,6 +112,7 @@ type Container struct {
 	authService          auth.Service
 	userService          *services.UserService
 	serverControlService *servercontrol.Service
+	taskDispatcher       *taskdispatcher.Dispatcher
 	globalAPIService     *services.GlobalAPIService
 	pluginStoreService   *pluginstore.Service
 	gameUpgrader         *services.GameUpgradeService
@@ -482,12 +484,28 @@ func (c *Container) createServerControlService() *servercontrol.Service {
 		))
 	}
 
+	if c.config.GRPC.Enabled {
+		opts = append(opts, servercontrol.WithTaskDispatcher(c.TaskDispatcher()))
+	}
+
 	return servercontrol.NewService(
 		c.DaemonTaskRepository(),
 		c.ServerSettingRepository(),
 		c.TransactionManager(),
 		opts...,
 	)
+}
+
+func (c *Container) TaskDispatcher() *taskdispatcher.Dispatcher {
+	if c.taskDispatcher == nil {
+		c.taskDispatcher = taskdispatcher.NewDispatcher(
+			c.SessionRegistry(),
+			c.DaemonTaskRepository(),
+			slog.Default(),
+		)
+	}
+
+	return c.taskDispatcher
 }
 
 func (c *Container) AuthService() auth.Service {

@@ -15,9 +15,15 @@ import (
 	"github.com/pkg/errors"
 )
 
+// TaskDispatcher is an interface for dispatching daemon tasks via gRPC.
+type TaskDispatcher interface {
+	Dispatch(ctx context.Context, task *domain.DaemonTask) error
+}
+
 type Handler struct {
 	serverRepo     repositories.ServerRepository
 	daemonTaskRepo repositories.DaemonTaskRepository
+	taskDispatcher TaskDispatcher
 	rbac           base.RBAC
 	responder      base.Responder
 }
@@ -25,12 +31,14 @@ type Handler struct {
 func NewHandler(
 	serverRepo repositories.ServerRepository,
 	daemonTaskRepo repositories.DaemonTaskRepository,
+	taskDispatcher TaskDispatcher,
 	rbac base.RBAC,
 	responder base.Responder,
 ) *Handler {
 	return &Handler{
 		serverRepo:     serverRepo,
 		daemonTaskRepo: daemonTaskRepo,
+		taskDispatcher: taskDispatcher,
 		rbac:           rbac,
 		responder:      responder,
 	}
@@ -158,34 +166,50 @@ func (h *Handler) createDeleteFileTasks(ctx context.Context, server *domain.Serv
 	var runAftID *uint
 
 	if server.IsOnline() {
+		now := time.Now()
 		stopTask := &domain.DaemonTask{
 			DedicatedServerID: server.DSID,
 			ServerID:          new(server.ID),
 			Task:              domain.DaemonTaskTypeServerStop,
 			Status:            domain.DaemonTaskStatusWaiting,
-			CreatedAt:         new(time.Now()),
-			UpdatedAt:         new(time.Now()),
+			CreatedAt:         &now,
+			UpdatedAt:         &now,
 		}
 
-		if err := h.daemonTaskRepo.Save(ctx, stopTask); err != nil {
-			return errors.WithMessage(err, "failed to create stop task")
+		var err error
+		if h.taskDispatcher != nil {
+			err = h.taskDispatcher.Dispatch(ctx, stopTask)
+		} else {
+			err = h.daemonTaskRepo.Save(ctx, stopTask)
+		}
+
+		if err != nil {
+			return errors.WithMessage(err, "failed to dispatch stop task")
 		}
 
 		runAftID = new(stopTask.ID)
 	}
 
+	now := time.Now()
 	deleteTask := &domain.DaemonTask{
 		RunAftID:          runAftID,
 		DedicatedServerID: server.DSID,
 		ServerID:          new(server.ID),
 		Task:              domain.DaemonTaskTypeServerDelete,
 		Status:            domain.DaemonTaskStatusWaiting,
-		CreatedAt:         new(time.Now()),
-		UpdatedAt:         new(time.Now()),
+		CreatedAt:         &now,
+		UpdatedAt:         &now,
 	}
 
-	if err := h.daemonTaskRepo.Save(ctx, deleteTask); err != nil {
-		return errors.WithMessage(err, "failed to create delete task")
+	var err error
+	if h.taskDispatcher != nil {
+		err = h.taskDispatcher.Dispatch(ctx, deleteTask)
+	} else {
+		err = h.daemonTaskRepo.Save(ctx, deleteTask)
+	}
+
+	if err != nil {
+		return errors.WithMessage(err, "failed to dispatch delete task")
 	}
 
 	return nil

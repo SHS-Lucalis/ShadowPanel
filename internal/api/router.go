@@ -141,6 +141,7 @@ import (
 	"github.com/gameap/gameap/internal/services/pelicaneggimporter"
 	"github.com/gameap/gameap/internal/services/pluginstore"
 	"github.com/gameap/gameap/internal/services/servercontrol"
+	"github.com/gameap/gameap/internal/services/taskdispatcher"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
 	"github.com/gameap/gameap/pkg/plugin"
@@ -186,6 +187,7 @@ type container interface {
 	PluginLoader() *internalplugin.Loader
 	PluginStoreService() *pluginstore.Service
 	PluginsDir() string
+	TaskDispatcher() *taskdispatcher.Dispatcher
 }
 
 func CreateRouter(c container) *http.ServeMux {
@@ -412,6 +414,7 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 				c.GameModRepository(),
 				c.DaemonTaskRepository(),
 				c.ServerSettingRepository(),
+				c.TaskDispatcher(),
 				c.Responder(),
 			),
 			AdminOnly: true,
@@ -459,6 +462,7 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 			Handler: deleteserver.NewHandler(
 				c.ServerRepository(),
 				c.DaemonTaskRepository(),
+				c.TaskDispatcher(),
 				c.RBAC(),
 				c.Responder(),
 			),

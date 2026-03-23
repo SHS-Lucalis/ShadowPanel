@@ -455,7 +455,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
 			_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
 
-			handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, responder)
+			handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
 
 			body := []byte(tt.requestBody)
 			req := httptest.NewRequest(http.MethodPost, "/api/servers", bytes.NewBuffer(body))
@@ -506,7 +506,7 @@ func TestHandler_ServerPersistence(t *testing.T) {
 	_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
 	_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
 
-	handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, responder)
+	handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
 
 	serverData := map[string]any{
 		"install":     true,
@@ -578,7 +578,7 @@ func TestHandler_MultipleServers(t *testing.T) {
 	_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
 	_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 2, GameCode: "valve"})
 
-	handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, responder)
+	handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
 
 	servers := []map[string]any{
 		{
@@ -644,7 +644,7 @@ func TestHandler_ServerWithSettings(t *testing.T) {
 		},
 	})
 
-	handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, responder)
+	handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
 
 	serverData := map[string]any{
 		"name":        "Server with settings",
@@ -714,7 +714,7 @@ func TestHandler_ServerWithoutSettings_BackwardCompatibility(t *testing.T) {
 	_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
 	_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
 
-	handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, responder)
+	handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
 
 	serverData := map[string]any{
 		"name":        "Server without settings",
@@ -759,7 +759,7 @@ func TestHandler_SettingEmptyName_ValidationError(t *testing.T) {
 	_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
 	_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
 
-	handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, responder)
+	handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
 
 	serverData := map[string]any{
 		"name":        "Server with invalid setting",
@@ -810,7 +810,7 @@ func TestHandler_DisallowedSettings_Ignored(t *testing.T) {
 		},
 	})
 
-	handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, responder)
+	handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
 
 	serverData := map[string]any{
 		"name":        "Server with disallowed settings",

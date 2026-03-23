@@ -23,6 +23,7 @@ import (
 	"github.com/gameap/gameap/internal/services/pelicaneggimporter"
 	"github.com/gameap/gameap/internal/services/pluginstore"
 	"github.com/gameap/gameap/internal/services/servercontrol"
+	"github.com/gameap/gameap/internal/services/taskdispatcher"
 	pkgapi "github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
 	"github.com/gameap/gameap/pkg/plugin"
@@ -112,6 +113,7 @@ func (c *InmemoryContainer) PluginsDir() string                               { 
 func (c *InmemoryContainer) PelicanEggImporter() *pelicaneggimporter.Importer { return nil }
 func (c *InmemoryContainer) GameAPImporter() *gameapimporter.Importer         { return nil }
 func (c *InmemoryContainer) GameExporter() *gameexporter.Exporter             { return nil }
+func (c *InmemoryContainer) TaskDispatcher() *taskdispatcher.Dispatcher       { return nil }
 
 func LoadInmemoryContainer() (*InmemoryContainer, error) {
 	c := buildInmemoryTestContainer()

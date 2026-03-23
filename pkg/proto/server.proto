@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package gameap;
 
+import "google/protobuf/any.proto";
+
 option go_package = "github.com/gameap/gameap/pkg/proto";
 
 enum ServerInstalledStatus {
@@ -42,4 +44,5 @@ message Server {
   optional int64 created_at = 29;
   optional int64 updated_at = 30;
   optional int64 deleted_at = 31;
+  map<string, google.protobuf.Any> metadata = 32;
 }

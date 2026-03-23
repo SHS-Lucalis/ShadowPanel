@@ -9,6 +9,7 @@ package proto
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	anypb "google.golang.org/protobuf/types/known/anypb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -103,6 +104,7 @@ type Server struct {
 	CreatedAt        *int64                 `protobuf:"varint,29,opt,name=created_at,json=createdAt,proto3,oneof" json:"created_at,omitempty"`
 	UpdatedAt        *int64                 `protobuf:"varint,30,opt,name=updated_at,json=updatedAt,proto3,oneof" json:"updated_at,omitempty"`
 	DeletedAt        *int64                 `protobuf:"varint,31,opt,name=deleted_at,json=deletedAt,proto3,oneof" json:"deleted_at,omitempty"`
+	Metadata         map[string]*anypb.Any  `protobuf:"bytes,32,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -354,12 +356,18 @@ func (x *Server) GetDeletedAt() int64 {
 	return 0
 }
 
+func (x *Server) GetMetadata() map[string]*anypb.Any {
+	if x != nil {
+		return x.Metadata
+	}
+	return nil
+}
+
 var File_pkg_proto_server_proto protoreflect.FileDescriptor
 
 const file_pkg_proto_server_proto_rawDesc = "" +
 	"\n" +
-	"\x16pkg/proto/server.proto\x12\x06gameap\"\x85\n" +
-	"\n" +
+	"\x16pkg/proto/server.proto\x12\x06gameap\x1a\x19google/protobuf/any.proto\"\x92\v\n" +
 	"\x06Server\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x12\n" +
 	"\x04uuid\x18\x02 \x01(\tR\x04uuid\x12\x1d\n" +
@@ -399,7 +407,11 @@ const file_pkg_proto_server_proto_rawDesc = "" +
 	"\n" +
 	"updated_at\x18\x1e \x01(\x03H\x0fR\tupdatedAt\x88\x01\x01\x12\"\n" +
 	"\n" +
-	"deleted_at\x18\x1f \x01(\x03H\x10R\tdeletedAt\x88\x01\x01B\n" +
+	"deleted_at\x18\x1f \x01(\x03H\x10R\tdeletedAt\x88\x01\x01\x128\n" +
+	"\bmetadata\x18  \x03(\v2\x1c.gameap.Server.MetadataEntryR\bmetadata\x1aQ\n" +
+	"\rMetadataEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12*\n" +
+	"\x05value\x18\x02 \x01(\v2\x14.google.protobuf.AnyR\x05value:\x028\x01B\n" +
 	"\n" +
 	"\b_expiresB\r\n" +
 	"\v_query_portB\f\n" +
@@ -441,18 +453,22 @@ func file_pkg_proto_server_proto_rawDescGZIP() []byte {
 }
 
 var file_pkg_proto_server_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_pkg_proto_server_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_pkg_proto_server_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_pkg_proto_server_proto_goTypes = []any{
 	(ServerInstalledStatus)(0), // 0: gameap.ServerInstalledStatus
 	(*Server)(nil),             // 1: gameap.Server
+	nil,                        // 2: gameap.Server.MetadataEntry
+	(*anypb.Any)(nil),          // 3: google.protobuf.Any
 }
 var file_pkg_proto_server_proto_depIdxs = []int32{
 	0, // 0: gameap.Server.installed:type_name -> gameap.ServerInstalledStatus
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	2, // 1: gameap.Server.metadata:type_name -> gameap.Server.MetadataEntry
+	3, // 2: gameap.Server.MetadataEntry.value:type_name -> google.protobuf.Any
+	3, // [3:3] is the sub-list for method output_type
+	3, // [3:3] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_pkg_proto_server_proto_init() }
@@ -467,7 +483,7 @@ func file_pkg_proto_server_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_proto_server_proto_rawDesc), len(file_pkg_proto_server_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   1,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

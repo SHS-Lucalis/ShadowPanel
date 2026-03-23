@@ -2,10 +2,13 @@ package gateway
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/pkg/proto"
 	"github.com/samber/lo"
+	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 func domainServerToProto(srv *domain.Server) *proto.Server {
@@ -86,6 +89,7 @@ func domainServerToProto(srv *domain.Server) *proto.Server {
 		CreatedAt:        createdAt,
 		UpdatedAt:        updatedAt,
 		DeletedAt:        deletedAt,
+		Metadata:         domainMetadataToProto(srv.Metadata),
 	}
 }
 
@@ -122,19 +126,69 @@ func domainGameToProto(g *domain.Game) *proto.Game {
 		RemoteRepositoryLinux:   g.RemoteRepositoryLinux,
 		RemoteRepositoryWindows: g.RemoteRepositoryWindows,
 		Enabled:                 g.Enabled != 0,
+		LocalRepositoryLinux:    g.LocalRepositoryLinux,
+		LocalRepositoryWindows:  g.LocalRepositoryWindows,
+		Metadata:                domainMetadataToProto(g.Metadata),
 	}
 }
 
 func domainGameModToProto(gm *domain.GameMod) *proto.GameMod {
-	return &proto.GameMod{
-		Id:              uint64(gm.ID),
-		GameCode:        gm.GameCode,
-		Name:            gm.Name,
-		StartCmdLinux:   gm.StartCmdLinux,
-		StartCmdWindows: gm.StartCmdWindows,
-		KickCmd:         gm.KickCmd,
-		BanCmd:          gm.BanCmd,
+	fastRcon := make([]*proto.GameModFastRcon, 0, len(gm.FastRcon))
+	for _, fr := range gm.FastRcon {
+		fastRcon = append(fastRcon, &proto.GameModFastRcon{
+			Info:    fr.Info,
+			Command: fr.Command,
+		})
 	}
+
+	vars := make([]*proto.GameModVar, 0, len(gm.Vars))
+	for _, v := range gm.Vars {
+		vars = append(vars, &proto.GameModVar{
+			Var:      v.Var,
+			Default:  string(v.Default),
+			Info:     v.Info,
+			AdminVar: v.AdminVar,
+		})
+	}
+
+	return &proto.GameMod{
+		Id:                      uint64(gm.ID),
+		GameCode:                gm.GameCode,
+		Name:                    gm.Name,
+		StartCmdLinux:           gm.StartCmdLinux,
+		StartCmdWindows:         gm.StartCmdWindows,
+		KickCmd:                 gm.KickCmd,
+		BanCmd:                  gm.BanCmd,
+		FastRcon:                fastRcon,
+		Vars:                    vars,
+		RemoteRepositoryLinux:   gm.RemoteRepositoryLinux,
+		RemoteRepositoryWindows: gm.RemoteRepositoryWindows,
+		LocalRepositoryLinux:    gm.LocalRepositoryLinux,
+		LocalRepositoryWindows:  gm.LocalRepositoryWindows,
+		ChnameCmd:               gm.ChnameCmd,
+		SrestartCmd:             gm.SrestartCmd,
+		ChmapCmd:                gm.ChmapCmd,
+		SendmsgCmd:              gm.SendmsgCmd,
+		PasswdCmd:               gm.PasswdCmd,
+		Metadata:                domainMetadataToProto(gm.Metadata),
+	}
+}
+
+func domainMetadataToProto(metadata domain.Metadata) map[string]*anypb.Any {
+	if metadata == nil {
+		return nil
+	}
+
+	result := make(map[string]*anypb.Any, len(metadata))
+	for k, v := range metadata {
+		anyVal, err := anypb.New(wrapperspb.String(fmt.Sprint(v)))
+		if err != nil {
+			continue
+		}
+		result[k] = anyVal
+	}
+
+	return result
 }
 
 func DomainDaemonTaskToProto(task *domain.DaemonTask) *proto.DaemonTask {

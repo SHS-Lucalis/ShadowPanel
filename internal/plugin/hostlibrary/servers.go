@@ -163,6 +163,7 @@ func convertServerToProto(s *domain.Server) *proto.Server {
 		SuUser:        suUser,
 		StartCommand:  startCommand,
 		ProcessActive: s.ProcessActive,
+		Metadata:      domainMetadataToProto(s.Metadata),
 	}
 }
 

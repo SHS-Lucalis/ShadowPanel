@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/gameap/gameap/internal/api/base"
 	"github.com/gameap/gameap/internal/domain"
@@ -13,12 +14,18 @@ import (
 	"github.com/pkg/errors"
 )
 
+// TaskDispatcher is an interface for dispatching daemon tasks via gRPC.
+type TaskDispatcher interface {
+	Dispatch(ctx context.Context, task *domain.DaemonTask) error
+}
+
 type Handler struct {
 	serverRepo         repositories.ServerRepository
 	nodeRepo           repositories.NodeRepository
 	gameModRepo        repositories.GameModRepository
 	daemonTaskRepo     repositories.DaemonTaskRepository
 	serverSettingsRepo repositories.ServerSettingRepository
+	taskDispatcher     TaskDispatcher
 	responder          base.Responder
 }
 
@@ -28,6 +35,7 @@ func NewHandler(
 	gameModRepo repositories.GameModRepository,
 	daemonTaskRepo repositories.DaemonTaskRepository,
 	serverSettingsRepo repositories.ServerSettingRepository,
+	taskDispatcher TaskDispatcher,
 	responder base.Responder,
 ) *Handler {
 	return &Handler{
@@ -36,6 +44,7 @@ func NewHandler(
 		gameModRepo:        gameModRepo,
 		daemonTaskRepo:     daemonTaskRepo,
 		serverSettingsRepo: serverSettingsRepo,
+		taskDispatcher:     taskDispatcher,
 		responder:          responder,
 	}
 }
@@ -164,16 +173,25 @@ func (h *Handler) prepareServer(
 }
 
 func (h *Handler) createInstallTask(ctx context.Context, server *domain.Server) (uint, error) {
+	now := time.Now()
 	task := &domain.DaemonTask{
 		DedicatedServerID: server.DSID,
 		ServerID:          &server.ID,
 		Task:              domain.DaemonTaskTypeServerInstall,
 		Status:            domain.DaemonTaskStatusWaiting,
+		CreatedAt:         &now,
+		UpdatedAt:         &now,
 	}
 
-	err := h.daemonTaskRepo.Save(ctx, task)
+	var err error
+	if h.taskDispatcher != nil {
+		err = h.taskDispatcher.Dispatch(ctx, task)
+	} else {
+		err = h.daemonTaskRepo.Save(ctx, task)
+	}
+
 	if err != nil {
-		return 0, errors.WithMessage(err, "failed to save daemon task")
+		return 0, errors.WithMessage(err, "failed to dispatch daemon task")
 	}
 
 	return task.ID, nil

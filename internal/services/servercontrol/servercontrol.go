@@ -61,6 +61,11 @@ type PluginDispatcher interface {
 	) *PluginDispatchResult
 }
 
+// TaskDispatcher is an interface for dispatching daemon tasks via gRPC.
+type TaskDispatcher interface {
+	Dispatch(ctx context.Context, task *domain.DaemonTask) error
+}
+
 type TaskAlreadyExistsError struct {
 	taskName string
 }
@@ -81,6 +86,7 @@ type Service struct {
 	serverSettingRepo repositories.ServerSettingRepository
 	tm                base.TransactionManager
 	pluginDispatcher  PluginDispatcher
+	taskDispatcher    TaskDispatcher
 }
 
 // ServiceOption is a functional option for configuring the Service.
@@ -90,6 +96,14 @@ type ServiceOption func(*Service)
 func WithPluginDispatcher(dispatcher PluginDispatcher) ServiceOption {
 	return func(s *Service) {
 		s.pluginDispatcher = dispatcher
+	}
+}
+
+// WithTaskDispatcher sets the task dispatcher for the service.
+// When set, tasks are dispatched via gRPC instead of just being saved to the database.
+func WithTaskDispatcher(dispatcher TaskDispatcher) ServiceOption {
+	return func(s *Service) {
+		s.taskDispatcher = dispatcher
 	}
 }
 
@@ -110,6 +124,16 @@ func NewService(
 	}
 
 	return s
+}
+
+// dispatchOrSaveTask dispatches a task via gRPC if taskDispatcher is available,
+// otherwise falls back to saving directly to the repository.
+func (s *Service) dispatchOrSaveTask(ctx context.Context, task *domain.DaemonTask) error {
+	if s.taskDispatcher != nil {
+		return s.taskDispatcher.Dispatch(ctx, task)
+	}
+
+	return s.daemonTaskRepo.Save(ctx, task)
 }
 
 // dispatchPreEvent dispatches a pre-event and returns an error if cancelled.
@@ -339,8 +363,8 @@ func (s *Service) addServerStart(
 		UpdatedAt:         new(time.Now()),
 	}
 
-	if err := s.daemonTaskRepo.Save(ctx, task); err != nil {
-		return 0, errors.WithMessage(err, "failed to save daemon task")
+	if err := s.dispatchOrSaveTask(ctx, task); err != nil {
+		return 0, errors.WithMessage(err, "failed to dispatch daemon task")
 	}
 
 	return task.ID, nil
@@ -377,8 +401,8 @@ func (s *Service) addServerStop(
 		task.RunAftID = new(runAftID)
 	}
 
-	if err := s.daemonTaskRepo.Save(ctx, task); err != nil {
-		return 0, errors.WithMessage(err, "failed to save daemon task")
+	if err := s.dispatchOrSaveTask(ctx, task); err != nil {
+		return 0, errors.WithMessage(err, "failed to dispatch daemon task")
 	}
 
 	return task.ID, nil
@@ -419,8 +443,8 @@ func (s *Service) addServerRestart(
 		task.RunAftID = new(runAftID)
 	}
 
-	if err := s.daemonTaskRepo.Save(ctx, task); err != nil {
-		return 0, errors.WithMessage(err, "failed to save daemon task")
+	if err := s.dispatchOrSaveTask(ctx, task); err != nil {
+		return 0, errors.WithMessage(err, "failed to dispatch daemon task")
 	}
 
 	return task.ID, nil
@@ -460,8 +484,8 @@ func (s *Service) addServerUpdate(
 		task.RunAftID = new(runAftID)
 	}
 
-	if err := s.daemonTaskRepo.Save(ctx, task); err != nil {
-		return 0, errors.WithMessage(err, "failed to save daemon task")
+	if err := s.dispatchOrSaveTask(ctx, task); err != nil {
+		return 0, errors.WithMessage(err, "failed to dispatch daemon task")
 	}
 
 	return task.ID, nil
@@ -501,8 +525,8 @@ func (s *Service) addServerInstall(
 		task.RunAftID = new(runAftID)
 	}
 
-	if err := s.daemonTaskRepo.Save(ctx, task); err != nil {
-		return 0, errors.WithMessage(err, "failed to save daemon task")
+	if err := s.dispatchOrSaveTask(ctx, task); err != nil {
+		return 0, errors.WithMessage(err, "failed to dispatch daemon task")
 	}
 
 	return task.ID, nil
@@ -539,8 +563,8 @@ func (s *Service) addServerDelete(
 		task.RunAftID = new(runAftID)
 	}
 
-	if err := s.daemonTaskRepo.Save(ctx, task); err != nil {
-		return 0, errors.WithMessage(err, "failed to save daemon task")
+	if err := s.dispatchOrSaveTask(ctx, task); err != nil {
+		return 0, errors.WithMessage(err, "failed to dispatch daemon task")
 	}
 
 	return task.ID, nil

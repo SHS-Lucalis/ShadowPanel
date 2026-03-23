@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package gameap;
 
+import "google/protobuf/any.proto";
+
 option go_package = "github.com/gameap/gameap/pkg/proto";
 
 message Game {
@@ -15,4 +17,7 @@ message Game {
   optional string remote_repository_linux = 8;
   optional string remote_repository_windows = 9;
   bool enabled = 10;
+  optional string local_repository_linux = 11;
+  optional string local_repository_windows = 12;
+  map<string, google.protobuf.Any> metadata = 13;
 }

@@ -9,6 +9,7 @@ package proto
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	anypb "google.golang.org/protobuf/types/known/anypb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -33,6 +34,9 @@ type Game struct {
 	RemoteRepositoryLinux   *string                `protobuf:"bytes,8,opt,name=remote_repository_linux,json=remoteRepositoryLinux,proto3,oneof" json:"remote_repository_linux,omitempty"`
 	RemoteRepositoryWindows *string                `protobuf:"bytes,9,opt,name=remote_repository_windows,json=remoteRepositoryWindows,proto3,oneof" json:"remote_repository_windows,omitempty"`
 	Enabled                 bool                   `protobuf:"varint,10,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	LocalRepositoryLinux    *string                `protobuf:"bytes,11,opt,name=local_repository_linux,json=localRepositoryLinux,proto3,oneof" json:"local_repository_linux,omitempty"`
+	LocalRepositoryWindows  *string                `protobuf:"bytes,12,opt,name=local_repository_windows,json=localRepositoryWindows,proto3,oneof" json:"local_repository_windows,omitempty"`
+	Metadata                map[string]*anypb.Any  `protobuf:"bytes,13,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields           protoimpl.UnknownFields
 	sizeCache               protoimpl.SizeCache
 }
@@ -137,11 +141,32 @@ func (x *Game) GetEnabled() bool {
 	return false
 }
 
+func (x *Game) GetLocalRepositoryLinux() string {
+	if x != nil && x.LocalRepositoryLinux != nil {
+		return *x.LocalRepositoryLinux
+	}
+	return ""
+}
+
+func (x *Game) GetLocalRepositoryWindows() string {
+	if x != nil && x.LocalRepositoryWindows != nil {
+		return *x.LocalRepositoryWindows
+	}
+	return ""
+}
+
+func (x *Game) GetMetadata() map[string]*anypb.Any {
+	if x != nil {
+		return x.Metadata
+	}
+	return nil
+}
+
 var File_pkg_proto_game_proto protoreflect.FileDescriptor
 
 const file_pkg_proto_game_proto_rawDesc = "" +
 	"\n" +
-	"\x14pkg/proto/game.proto\x12\x06gameap\"\xa6\x04\n" +
+	"\x14pkg/proto/game.proto\x12\x06gameap\x1a\x19google/protobuf/any.proto\"\xe3\x06\n" +
 	"\x04Game\x12\x12\n" +
 	"\x04code\x18\x01 \x01(\tR\x04code\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x16\n" +
@@ -153,12 +178,20 @@ const file_pkg_proto_game_proto_rawDesc = "" +
 	"\x17remote_repository_linux\x18\b \x01(\tH\x03R\x15remoteRepositoryLinux\x88\x01\x01\x12?\n" +
 	"\x19remote_repository_windows\x18\t \x01(\tH\x04R\x17remoteRepositoryWindows\x88\x01\x01\x12\x18\n" +
 	"\aenabled\x18\n" +
-	" \x01(\bR\aenabledB\x15\n" +
+	" \x01(\bR\aenabled\x129\n" +
+	"\x16local_repository_linux\x18\v \x01(\tH\x05R\x14localRepositoryLinux\x88\x01\x01\x12=\n" +
+	"\x18local_repository_windows\x18\f \x01(\tH\x06R\x16localRepositoryWindows\x88\x01\x01\x126\n" +
+	"\bmetadata\x18\r \x03(\v2\x1a.gameap.Game.MetadataEntryR\bmetadata\x1aQ\n" +
+	"\rMetadataEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12*\n" +
+	"\x05value\x18\x02 \x01(\v2\x14.google.protobuf.AnyR\x05value:\x028\x01B\x15\n" +
 	"\x13_steam_app_id_linuxB\x17\n" +
 	"\x15_steam_app_id_windowsB\x17\n" +
 	"\x15_steam_app_set_configB\x1a\n" +
 	"\x18_remote_repository_linuxB\x1c\n" +
-	"\x1a_remote_repository_windowsB$Z\"github.com/gameap/gameap/pkg/protob\x06proto3"
+	"\x1a_remote_repository_windowsB\x19\n" +
+	"\x17_local_repository_linuxB\x1b\n" +
+	"\x19_local_repository_windowsB$Z\"github.com/gameap/gameap/pkg/protob\x06proto3"
 
 var (
 	file_pkg_proto_game_proto_rawDescOnce sync.Once
@@ -172,16 +205,20 @@ func file_pkg_proto_game_proto_rawDescGZIP() []byte {
 	return file_pkg_proto_game_proto_rawDescData
 }
 
-var file_pkg_proto_game_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_pkg_proto_game_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_pkg_proto_game_proto_goTypes = []any{
-	(*Game)(nil), // 0: gameap.Game
+	(*Game)(nil),      // 0: gameap.Game
+	nil,               // 1: gameap.Game.MetadataEntry
+	(*anypb.Any)(nil), // 2: google.protobuf.Any
 }
 var file_pkg_proto_game_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	1, // 0: gameap.Game.metadata:type_name -> gameap.Game.MetadataEntry
+	2, // 1: gameap.Game.MetadataEntry.value:type_name -> google.protobuf.Any
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_pkg_proto_game_proto_init() }
@@ -196,7 +233,7 @@ func file_pkg_proto_game_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_proto_game_proto_rawDesc), len(file_pkg_proto_game_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
