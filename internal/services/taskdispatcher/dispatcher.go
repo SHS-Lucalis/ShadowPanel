@@ -50,7 +50,6 @@ func (d *Dispatcher) Dispatch(ctx context.Context, task *domain.DaemonTask) erro
 
 	err := d.registry.SendTask(ctx, uint64(task.DedicatedServerID), msg)
 	if err == nil {
-		task.Status = domain.DaemonTaskStatusWorking
 		if err := d.daemonTaskRepo.Save(ctx, task); err != nil {
 			d.logger.Warn("failed to update task status after dispatch",
 				"task_id", task.ID,
