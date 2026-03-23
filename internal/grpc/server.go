@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/reflection"
 )
 
 type ServerConfig struct {
@@ -19,6 +20,7 @@ type ServerConfig struct {
 	MaxConcurrentStreams uint32
 	RequireMTLS          bool
 	FileTransferBasePath string
+	EnableReflection     bool
 }
 
 func DefaultServerConfig() *ServerConfig {
@@ -75,6 +77,10 @@ func NewServer(config *ServerConfig, deps *ServerDependencies) *grpc.Server {
 
 	if deps.FileTransferService != nil {
 		proto.RegisterFileTransferServiceServer(server, deps.FileTransferService)
+	}
+
+	if config.EnableReflection {
+		reflection.Register(server)
 	}
 
 	healthServer := health.NewServer()

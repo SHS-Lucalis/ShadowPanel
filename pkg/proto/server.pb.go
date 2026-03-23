@@ -10,6 +10,7 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	anypb "google.golang.org/protobuf/types/known/anypb"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -83,7 +84,7 @@ type Server struct {
 	GameId           string                 `protobuf:"bytes,8,opt,name=game_id,json=gameId,proto3" json:"game_id,omitempty"`
 	DsId             uint64                 `protobuf:"varint,9,opt,name=ds_id,json=dsId,proto3" json:"ds_id,omitempty"`
 	GameModId        uint64                 `protobuf:"varint,10,opt,name=game_mod_id,json=gameModId,proto3" json:"game_mod_id,omitempty"`
-	Expires          *int64                 `protobuf:"varint,11,opt,name=expires,proto3,oneof" json:"expires,omitempty"`
+	Expires          *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=expires,proto3,oneof" json:"expires,omitempty"`
 	ServerIp         string                 `protobuf:"bytes,12,opt,name=server_ip,json=serverIp,proto3" json:"server_ip,omitempty"`
 	ServerPort       int32                  `protobuf:"varint,13,opt,name=server_port,json=serverPort,proto3" json:"server_port,omitempty"`
 	QueryPort        *int32                 `protobuf:"varint,14,opt,name=query_port,json=queryPort,proto3,oneof" json:"query_port,omitempty"`
@@ -99,11 +100,11 @@ type Server struct {
 	ForceStopCommand *string                `protobuf:"bytes,24,opt,name=force_stop_command,json=forceStopCommand,proto3,oneof" json:"force_stop_command,omitempty"`
 	RestartCommand   *string                `protobuf:"bytes,25,opt,name=restart_command,json=restartCommand,proto3,oneof" json:"restart_command,omitempty"`
 	ProcessActive    bool                   `protobuf:"varint,26,opt,name=process_active,json=processActive,proto3" json:"process_active,omitempty"`
-	LastProcessCheck *int64                 `protobuf:"varint,27,opt,name=last_process_check,json=lastProcessCheck,proto3,oneof" json:"last_process_check,omitempty"`
+	LastProcessCheck *timestamppb.Timestamp `protobuf:"bytes,27,opt,name=last_process_check,json=lastProcessCheck,proto3,oneof" json:"last_process_check,omitempty"`
 	Vars             *string                `protobuf:"bytes,28,opt,name=vars,proto3,oneof" json:"vars,omitempty"`
-	CreatedAt        *int64                 `protobuf:"varint,29,opt,name=created_at,json=createdAt,proto3,oneof" json:"created_at,omitempty"`
-	UpdatedAt        *int64                 `protobuf:"varint,30,opt,name=updated_at,json=updatedAt,proto3,oneof" json:"updated_at,omitempty"`
-	DeletedAt        *int64                 `protobuf:"varint,31,opt,name=deleted_at,json=deletedAt,proto3,oneof" json:"deleted_at,omitempty"`
+	CreatedAt        *timestamppb.Timestamp `protobuf:"bytes,29,opt,name=created_at,json=createdAt,proto3,oneof" json:"created_at,omitempty"`
+	UpdatedAt        *timestamppb.Timestamp `protobuf:"bytes,30,opt,name=updated_at,json=updatedAt,proto3,oneof" json:"updated_at,omitempty"`
+	DeletedAt        *timestamppb.Timestamp `protobuf:"bytes,31,opt,name=deleted_at,json=deletedAt,proto3,oneof" json:"deleted_at,omitempty"`
 	Metadata         map[string]*anypb.Any  `protobuf:"bytes,32,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
@@ -209,11 +210,11 @@ func (x *Server) GetGameModId() uint64 {
 	return 0
 }
 
-func (x *Server) GetExpires() int64 {
-	if x != nil && x.Expires != nil {
-		return *x.Expires
+func (x *Server) GetExpires() *timestamppb.Timestamp {
+	if x != nil {
+		return x.Expires
 	}
-	return 0
+	return nil
 }
 
 func (x *Server) GetServerIp() string {
@@ -321,11 +322,11 @@ func (x *Server) GetProcessActive() bool {
 	return false
 }
 
-func (x *Server) GetLastProcessCheck() int64 {
-	if x != nil && x.LastProcessCheck != nil {
-		return *x.LastProcessCheck
+func (x *Server) GetLastProcessCheck() *timestamppb.Timestamp {
+	if x != nil {
+		return x.LastProcessCheck
 	}
-	return 0
+	return nil
 }
 
 func (x *Server) GetVars() string {
@@ -335,25 +336,25 @@ func (x *Server) GetVars() string {
 	return ""
 }
 
-func (x *Server) GetCreatedAt() int64 {
-	if x != nil && x.CreatedAt != nil {
-		return *x.CreatedAt
+func (x *Server) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
 	}
-	return 0
+	return nil
 }
 
-func (x *Server) GetUpdatedAt() int64 {
-	if x != nil && x.UpdatedAt != nil {
-		return *x.UpdatedAt
+func (x *Server) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
 	}
-	return 0
+	return nil
 }
 
-func (x *Server) GetDeletedAt() int64 {
-	if x != nil && x.DeletedAt != nil {
-		return *x.DeletedAt
+func (x *Server) GetDeletedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.DeletedAt
 	}
-	return 0
+	return nil
 }
 
 func (x *Server) GetMetadata() map[string]*anypb.Any {
@@ -367,7 +368,7 @@ var File_pkg_proto_server_proto protoreflect.FileDescriptor
 
 const file_pkg_proto_server_proto_rawDesc = "" +
 	"\n" +
-	"\x16pkg/proto/server.proto\x12\x06gameap\x1a\x19google/protobuf/any.proto\"\x92\v\n" +
+	"\x16pkg/proto/server.proto\x12\x06gameap\x1a\x19google/protobuf/any.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x9e\f\n" +
 	"\x06Server\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x12\n" +
 	"\x04uuid\x18\x02 \x01(\tR\x04uuid\x12\x1d\n" +
@@ -380,8 +381,8 @@ const file_pkg_proto_server_proto_rawDesc = "" +
 	"\agame_id\x18\b \x01(\tR\x06gameId\x12\x13\n" +
 	"\x05ds_id\x18\t \x01(\x04R\x04dsId\x12\x1e\n" +
 	"\vgame_mod_id\x18\n" +
-	" \x01(\x04R\tgameModId\x12\x1d\n" +
-	"\aexpires\x18\v \x01(\x03H\x00R\aexpires\x88\x01\x01\x12\x1b\n" +
+	" \x01(\x04R\tgameModId\x129\n" +
+	"\aexpires\x18\v \x01(\v2\x1a.google.protobuf.TimestampH\x00R\aexpires\x88\x01\x01\x12\x1b\n" +
 	"\tserver_ip\x18\f \x01(\tR\bserverIp\x12\x1f\n" +
 	"\vserver_port\x18\r \x01(\x05R\n" +
 	"serverPort\x12\"\n" +
@@ -399,15 +400,15 @@ const file_pkg_proto_server_proto_rawDesc = "" +
 	"\x12force_stop_command\x18\x18 \x01(\tH\n" +
 	"R\x10forceStopCommand\x88\x01\x01\x12,\n" +
 	"\x0frestart_command\x18\x19 \x01(\tH\vR\x0erestartCommand\x88\x01\x01\x12%\n" +
-	"\x0eprocess_active\x18\x1a \x01(\bR\rprocessActive\x121\n" +
-	"\x12last_process_check\x18\x1b \x01(\x03H\fR\x10lastProcessCheck\x88\x01\x01\x12\x17\n" +
-	"\x04vars\x18\x1c \x01(\tH\rR\x04vars\x88\x01\x01\x12\"\n" +
+	"\x0eprocess_active\x18\x1a \x01(\bR\rprocessActive\x12M\n" +
+	"\x12last_process_check\x18\x1b \x01(\v2\x1a.google.protobuf.TimestampH\fR\x10lastProcessCheck\x88\x01\x01\x12\x17\n" +
+	"\x04vars\x18\x1c \x01(\tH\rR\x04vars\x88\x01\x01\x12>\n" +
 	"\n" +
-	"created_at\x18\x1d \x01(\x03H\x0eR\tcreatedAt\x88\x01\x01\x12\"\n" +
+	"created_at\x18\x1d \x01(\v2\x1a.google.protobuf.TimestampH\x0eR\tcreatedAt\x88\x01\x01\x12>\n" +
 	"\n" +
-	"updated_at\x18\x1e \x01(\x03H\x0fR\tupdatedAt\x88\x01\x01\x12\"\n" +
+	"updated_at\x18\x1e \x01(\v2\x1a.google.protobuf.TimestampH\x0fR\tupdatedAt\x88\x01\x01\x12>\n" +
 	"\n" +
-	"deleted_at\x18\x1f \x01(\x03H\x10R\tdeletedAt\x88\x01\x01\x128\n" +
+	"deleted_at\x18\x1f \x01(\v2\x1a.google.protobuf.TimestampH\x10R\tdeletedAt\x88\x01\x01\x128\n" +
 	"\bmetadata\x18  \x03(\v2\x1c.gameap.Server.MetadataEntryR\bmetadata\x1aQ\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12*\n" +
@@ -455,20 +456,26 @@ func file_pkg_proto_server_proto_rawDescGZIP() []byte {
 var file_pkg_proto_server_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_pkg_proto_server_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_pkg_proto_server_proto_goTypes = []any{
-	(ServerInstalledStatus)(0), // 0: gameap.ServerInstalledStatus
-	(*Server)(nil),             // 1: gameap.Server
-	nil,                        // 2: gameap.Server.MetadataEntry
-	(*anypb.Any)(nil),          // 3: google.protobuf.Any
+	(ServerInstalledStatus)(0),    // 0: gameap.ServerInstalledStatus
+	(*Server)(nil),                // 1: gameap.Server
+	nil,                           // 2: gameap.Server.MetadataEntry
+	(*timestamppb.Timestamp)(nil), // 3: google.protobuf.Timestamp
+	(*anypb.Any)(nil),             // 4: google.protobuf.Any
 }
 var file_pkg_proto_server_proto_depIdxs = []int32{
 	0, // 0: gameap.Server.installed:type_name -> gameap.ServerInstalledStatus
-	2, // 1: gameap.Server.metadata:type_name -> gameap.Server.MetadataEntry
-	3, // 2: gameap.Server.MetadataEntry.value:type_name -> google.protobuf.Any
-	3, // [3:3] is the sub-list for method output_type
-	3, // [3:3] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	3, // 1: gameap.Server.expires:type_name -> google.protobuf.Timestamp
+	3, // 2: gameap.Server.last_process_check:type_name -> google.protobuf.Timestamp
+	3, // 3: gameap.Server.created_at:type_name -> google.protobuf.Timestamp
+	3, // 4: gameap.Server.updated_at:type_name -> google.protobuf.Timestamp
+	3, // 5: gameap.Server.deleted_at:type_name -> google.protobuf.Timestamp
+	2, // 6: gameap.Server.metadata:type_name -> gameap.Server.MetadataEntry
+	4, // 7: gameap.Server.MetadataEntry.value:type_name -> google.protobuf.Any
+	8, // [8:8] is the sub-list for method output_type
+	8, // [8:8] is the sub-list for method input_type
+	8, // [8:8] is the sub-list for extension type_name
+	8, // [8:8] is the sub-list for extension extendee
+	0, // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_pkg_proto_server_proto_init() }

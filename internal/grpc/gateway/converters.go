@@ -8,26 +8,27 @@ import (
 	"github.com/gameap/gameap/pkg/proto"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 func domainServerToProto(srv *domain.Server) *proto.Server {
-	var createdAt, updatedAt, deletedAt, expires, lastProcessCheck *int64
+	var createdAt, updatedAt, deletedAt, expires, lastProcessCheck *timestamppb.Timestamp
 
 	if srv.CreatedAt != nil {
-		createdAt = lo.ToPtr(srv.CreatedAt.Unix())
+		createdAt = timestamppb.New(*srv.CreatedAt)
 	}
 	if srv.UpdatedAt != nil {
-		updatedAt = lo.ToPtr(srv.UpdatedAt.Unix())
+		updatedAt = timestamppb.New(*srv.UpdatedAt)
 	}
 	if srv.DeletedAt != nil {
-		deletedAt = lo.ToPtr(srv.DeletedAt.Unix())
+		deletedAt = timestamppb.New(*srv.DeletedAt)
 	}
 	if srv.Expires != nil {
-		expires = lo.ToPtr(srv.Expires.Unix())
+		expires = timestamppb.New(*srv.Expires)
 	}
 	if srv.LastProcessCheck != nil {
-		lastProcessCheck = lo.ToPtr(srv.LastProcessCheck.Unix())
+		lastProcessCheck = timestamppb.New(*srv.LastProcessCheck)
 	}
 
 	var queryPort, rconPort *int32
@@ -192,12 +193,12 @@ func domainMetadataToProto(metadata domain.Metadata) map[string]*anypb.Any {
 }
 
 func DomainDaemonTaskToProto(task *domain.DaemonTask) *proto.DaemonTask {
-	var createdAt, updatedAt *int64
+	var createdAt, updatedAt *timestamppb.Timestamp
 	if task.CreatedAt != nil {
-		createdAt = lo.ToPtr(task.CreatedAt.Unix())
+		createdAt = timestamppb.New(*task.CreatedAt)
 	}
 	if task.UpdatedAt != nil {
-		updatedAt = lo.ToPtr(task.UpdatedAt.Unix())
+		updatedAt = timestamppb.New(*task.UpdatedAt)
 	}
 
 	var serverID *uint64

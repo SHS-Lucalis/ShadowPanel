@@ -8,7 +8,11 @@ import (
 	binary "encoding/binary"
 	fmt "fmt"
 	protohelpers "github.com/planetscale/vtprotobuf/protohelpers"
+	durationpb "github.com/planetscale/vtprotobuf/types/known/durationpb"
+	timestamppb "github.com/planetscale/vtprotobuf/types/known/timestamppb"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	durationpb1 "google.golang.org/protobuf/types/known/durationpb"
+	timestamppb1 "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 )
@@ -654,10 +658,15 @@ func (m *InFlightTask) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
-	if m.StartedAtUnix != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.StartedAtUnix))
+	if m.StartedAt != nil {
+		size, err := (*timestamppb.Timestamp)(m.StartedAt).MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x20
+		dAtA[i] = 0x22
 	}
 	if len(m.PartialOutput) > 0 {
 		i -= len(m.PartialOutput)
@@ -709,10 +718,15 @@ func (m *RegisterAck) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
-	if m.HeartbeatIntervalSeconds != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.HeartbeatIntervalSeconds))
+	if m.HeartbeatInterval != nil {
+		size, err := (*durationpb.Duration)(m.HeartbeatInterval).MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x38
+		dAtA[i] = 0x3a
 	}
 	if len(m.GameMods) > 0 {
 		for iNdEx := len(m.GameMods) - 1; iNdEx >= 0; iNdEx-- {
@@ -822,10 +836,15 @@ func (m *Heartbeat) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x12
 	}
-	if m.TimestampUnix != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.TimestampUnix))
+	if m.Timestamp != nil {
+		size, err := (*timestamppb.Timestamp)(m.Timestamp).MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -1097,10 +1116,15 @@ func (m *CommandRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x28
 	}
-	if m.TimeoutSeconds != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.TimeoutSeconds))
+	if m.Timeout != nil {
+		size, err := (*durationpb.Duration)(m.Timeout).MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x20
+		dAtA[i] = 0x22
 	}
 	if len(m.Command) > 0 {
 		i -= len(m.Command)
@@ -1260,34 +1284,15 @@ func (m *ServerStatus) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
-	if m.LastCheckUnix != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.LastCheckUnix))
+	if m.LastCheck != nil {
+		size, err := (*timestamppb.Timestamp)(m.LastCheck).MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x38
-	}
-	if len(m.ServerName) > 0 {
-		i -= len(m.ServerName)
-		copy(dAtA[i:], m.ServerName)
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.ServerName)))
-		i--
-		dAtA[i] = 0x32
-	}
-	if len(m.MapName) > 0 {
-		i -= len(m.MapName)
-		copy(dAtA[i:], m.MapName)
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.MapName)))
-		i--
-		dAtA[i] = 0x2a
-	}
-	if m.MaxPlayers != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.MaxPlayers))
-		i--
-		dAtA[i] = 0x20
-	}
-	if m.PlayersOnline != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.PlayersOnline))
-		i--
-		dAtA[i] = 0x18
+		dAtA[i] = 0x1a
 	}
 	if m.IsRunning {
 		i--
@@ -1427,10 +1432,15 @@ func (m *ShutdownNotification) MarshalToSizedBufferVT(dAtA []byte) (int, error) 
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
-	if m.ReconnectDelaySeconds != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.ReconnectDelaySeconds))
+	if m.ReconnectDelay != nil {
+		size, err := (*durationpb.Duration)(m.ReconnectDelay).MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x10
+		dAtA[i] = 0x12
 	}
 	if len(m.Reason) > 0 {
 		i -= len(m.Reason)
@@ -1843,10 +1853,15 @@ func (m *FileInfo) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x30
 	}
-	if m.ModifiedUnix != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.ModifiedUnix))
+	if m.ModifiedAt != nil {
+		size, err := (*timestamppb.Timestamp)(m.ModifiedAt).MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x28
+		dAtA[i] = 0x2a
 	}
 	if m.Mode != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Mode))
@@ -2415,8 +2430,9 @@ func (m *InFlightTask) SizeVT() (n int) {
 	if l > 0 {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
-	if m.StartedAtUnix != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.StartedAtUnix))
+	if m.StartedAt != nil {
+		l = (*timestamppb.Timestamp)(m.StartedAt).SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	n += len(m.unknownFields)
 	return n
@@ -2459,8 +2475,9 @@ func (m *RegisterAck) SizeVT() (n int) {
 			n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 		}
 	}
-	if m.HeartbeatIntervalSeconds != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.HeartbeatIntervalSeconds))
+	if m.HeartbeatInterval != nil {
+		l = (*durationpb.Duration)(m.HeartbeatInterval).SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	n += len(m.unknownFields)
 	return n
@@ -2472,8 +2489,9 @@ func (m *Heartbeat) SizeVT() (n int) {
 	}
 	var l int
 	_ = l
-	if m.TimestampUnix != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.TimestampUnix))
+	if m.Timestamp != nil {
+		l = (*timestamppb.Timestamp)(m.Timestamp).SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	if m.SystemStats != nil {
 		l = m.SystemStats.SizeVT()
@@ -2591,8 +2609,9 @@ func (m *CommandRequest) SizeVT() (n int) {
 	if l > 0 {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
-	if m.TimeoutSeconds != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.TimeoutSeconds))
+	if m.Timeout != nil {
+		l = (*durationpb.Duration)(m.Timeout).SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	if m.StreamOutput {
 		n += 2
@@ -2656,22 +2675,9 @@ func (m *ServerStatus) SizeVT() (n int) {
 	if m.IsRunning {
 		n += 2
 	}
-	if m.PlayersOnline != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.PlayersOnline))
-	}
-	if m.MaxPlayers != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.MaxPlayers))
-	}
-	l = len(m.MapName)
-	if l > 0 {
+	if m.LastCheck != nil {
+		l = (*timestamppb.Timestamp)(m.LastCheck).SizeVT()
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
-	}
-	l = len(m.ServerName)
-	if l > 0 {
-		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
-	}
-	if m.LastCheckUnix != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.LastCheckUnix))
 	}
 	n += len(m.unknownFields)
 	return n
@@ -2719,8 +2725,9 @@ func (m *ShutdownNotification) SizeVT() (n int) {
 	if l > 0 {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
-	if m.ReconnectDelaySeconds != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.ReconnectDelaySeconds))
+	if m.ReconnectDelay != nil {
+		l = (*durationpb.Duration)(m.ReconnectDelay).SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	n += len(m.unknownFields)
 	return n
@@ -2885,8 +2892,9 @@ func (m *FileInfo) SizeVT() (n int) {
 	if m.Mode != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.Mode))
 	}
-	if m.ModifiedUnix != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.ModifiedUnix))
+	if m.ModifiedAt != nil {
+		l = (*timestamppb.Timestamp)(m.ModifiedAt).SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	if m.IsDir {
 		n += 2
@@ -4311,10 +4319,10 @@ func (m *InFlightTask) UnmarshalVT(dAtA []byte) error {
 			m.PartialOutput = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field StartedAtUnix", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartedAt", wireType)
 			}
-			m.StartedAtUnix = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return protohelpers.ErrIntOverflow
@@ -4324,11 +4332,28 @@ func (m *InFlightTask) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.StartedAtUnix |= int64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.StartedAt == nil {
+				m.StartedAt = &timestamppb1.Timestamp{}
+			}
+			if err := (*timestamppb.Timestamp)(m.StartedAt).UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -4569,10 +4594,10 @@ func (m *RegisterAck) UnmarshalVT(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 7:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field HeartbeatIntervalSeconds", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HeartbeatInterval", wireType)
 			}
-			m.HeartbeatIntervalSeconds = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return protohelpers.ErrIntOverflow
@@ -4582,11 +4607,28 @@ func (m *RegisterAck) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.HeartbeatIntervalSeconds |= int32(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.HeartbeatInterval == nil {
+				m.HeartbeatInterval = &durationpb1.Duration{}
+			}
+			if err := (*durationpb.Duration)(m.HeartbeatInterval).UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -4639,10 +4681,10 @@ func (m *Heartbeat) UnmarshalVT(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TimestampUnix", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
 			}
-			m.TimestampUnix = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return protohelpers.ErrIntOverflow
@@ -4652,11 +4694,28 @@ func (m *Heartbeat) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.TimestampUnix |= int64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Timestamp == nil {
+				m.Timestamp = &timestamppb1.Timestamp{}
+			}
+			if err := (*timestamppb.Timestamp)(m.Timestamp).UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SystemStats", wireType)
@@ -5346,10 +5405,10 @@ func (m *CommandRequest) UnmarshalVT(dAtA []byte) error {
 			m.Command = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TimeoutSeconds", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Timeout", wireType)
 			}
-			m.TimeoutSeconds = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return protohelpers.ErrIntOverflow
@@ -5359,11 +5418,28 @@ func (m *CommandRequest) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.TimeoutSeconds |= int32(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Timeout == nil {
+				m.Timeout = &durationpb1.Duration{}
+			}
+			if err := (*durationpb.Duration)(m.Timeout).UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 5:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field StreamOutput", wireType)
@@ -5760,48 +5836,10 @@ func (m *ServerStatus) UnmarshalVT(dAtA []byte) error {
 			}
 			m.IsRunning = bool(v != 0)
 		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PlayersOnline", wireType)
-			}
-			m.PlayersOnline = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.PlayersOnline |= int32(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxPlayers", wireType)
-			}
-			m.MaxPlayers = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.MaxPlayers |= int32(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 5:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MapName", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field LastCheck", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return protohelpers.ErrIntOverflow
@@ -5811,75 +5849,28 @@ func (m *ServerStatus) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return protohelpers.ErrInvalidLength
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return protohelpers.ErrInvalidLength
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.MapName = string(dAtA[iNdEx:postIndex])
+			if m.LastCheck == nil {
+				m.LastCheck = &timestamppb1.Timestamp{}
+			}
+			if err := (*timestamppb.Timestamp)(m.LastCheck).UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ServerName", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return protohelpers.ErrInvalidLength
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return protohelpers.ErrInvalidLength
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ServerName = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 7:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LastCheckUnix", wireType)
-			}
-			m.LastCheckUnix = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.LastCheckUnix |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -6134,10 +6125,10 @@ func (m *ShutdownNotification) UnmarshalVT(dAtA []byte) error {
 			m.Reason = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ReconnectDelaySeconds", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ReconnectDelay", wireType)
 			}
-			m.ReconnectDelaySeconds = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return protohelpers.ErrIntOverflow
@@ -6147,11 +6138,28 @@ func (m *ShutdownNotification) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ReconnectDelaySeconds |= int32(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ReconnectDelay == nil {
+				m.ReconnectDelay = &durationpb1.Duration{}
+			}
+			if err := (*durationpb.Duration)(m.ReconnectDelay).UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -7204,10 +7212,10 @@ func (m *FileInfo) UnmarshalVT(dAtA []byte) error {
 				}
 			}
 		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ModifiedUnix", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ModifiedAt", wireType)
 			}
-			m.ModifiedUnix = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return protohelpers.ErrIntOverflow
@@ -7217,11 +7225,28 @@ func (m *FileInfo) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ModifiedUnix |= int64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ModifiedAt == nil {
+				m.ModifiedAt = &timestamppb1.Timestamp{}
+			}
+			if err := (*timestamppb.Timestamp)(m.ModifiedAt).UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 6:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field IsDir", wireType)

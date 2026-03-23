@@ -9,6 +9,7 @@ package proto
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -157,8 +158,8 @@ type DaemonTask struct {
 	Cmd           *string                `protobuf:"bytes,7,opt,name=cmd,proto3,oneof" json:"cmd,omitempty"`
 	Output        *string                `protobuf:"bytes,8,opt,name=output,proto3,oneof" json:"output,omitempty"`
 	Status        DaemonTaskStatus       `protobuf:"varint,9,opt,name=status,proto3,enum=gameap.DaemonTaskStatus" json:"status,omitempty"`
-	CreatedAt     *int64                 `protobuf:"varint,10,opt,name=created_at,json=createdAt,proto3,oneof" json:"created_at,omitempty"`
-	UpdatedAt     *int64                 `protobuf:"varint,11,opt,name=updated_at,json=updatedAt,proto3,oneof" json:"updated_at,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3,oneof" json:"created_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=updated_at,json=updatedAt,proto3,oneof" json:"updated_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -256,25 +257,25 @@ func (x *DaemonTask) GetStatus() DaemonTaskStatus {
 	return DaemonTaskStatus_DAEMON_TASK_STATUS_UNSPECIFIED
 }
 
-func (x *DaemonTask) GetCreatedAt() int64 {
-	if x != nil && x.CreatedAt != nil {
-		return *x.CreatedAt
+func (x *DaemonTask) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
 	}
-	return 0
+	return nil
 }
 
-func (x *DaemonTask) GetUpdatedAt() int64 {
-	if x != nil && x.UpdatedAt != nil {
-		return *x.UpdatedAt
+func (x *DaemonTask) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
 	}
-	return 0
+	return nil
 }
 
 var File_pkg_proto_daemontask_proto protoreflect.FileDescriptor
 
 const file_pkg_proto_daemontask_proto_rawDesc = "" +
 	"\n" +
-	"\x1apkg/proto/daemontask.proto\x12\x06gameap\"\xd3\x03\n" +
+	"\x1apkg/proto/daemontask.proto\x12\x06gameap\x1a\x1fgoogle/protobuf/timestamp.proto\"\x8b\x04\n" +
 	"\n" +
 	"DaemonTask\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12%\n" +
@@ -286,12 +287,12 @@ const file_pkg_proto_daemontask_proto_rawDesc = "" +
 	"\x04data\x18\x06 \x01(\tH\x02R\x04data\x88\x01\x01\x12\x15\n" +
 	"\x03cmd\x18\a \x01(\tH\x03R\x03cmd\x88\x01\x01\x12\x1b\n" +
 	"\x06output\x18\b \x01(\tH\x04R\x06output\x88\x01\x01\x120\n" +
-	"\x06status\x18\t \x01(\x0e2\x18.gameap.DaemonTaskStatusR\x06status\x12\"\n" +
+	"\x06status\x18\t \x01(\x0e2\x18.gameap.DaemonTaskStatusR\x06status\x12>\n" +
 	"\n" +
 	"created_at\x18\n" +
-	" \x01(\x03H\x05R\tcreatedAt\x88\x01\x01\x12\"\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampH\x05R\tcreatedAt\x88\x01\x01\x12>\n" +
 	"\n" +
-	"updated_at\x18\v \x01(\x03H\x06R\tupdatedAt\x88\x01\x01B\x0f\n" +
+	"updated_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampH\x06R\tupdatedAt\x88\x01\x01B\x0f\n" +
 	"\r_run_after_idB\f\n" +
 	"\n" +
 	"_server_idB\a\n" +
@@ -333,18 +334,21 @@ func file_pkg_proto_daemontask_proto_rawDescGZIP() []byte {
 var file_pkg_proto_daemontask_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
 var file_pkg_proto_daemontask_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_pkg_proto_daemontask_proto_goTypes = []any{
-	(DaemonTaskStatus)(0), // 0: gameap.DaemonTaskStatus
-	(DaemonTaskType)(0),   // 1: gameap.DaemonTaskType
-	(*DaemonTask)(nil),    // 2: gameap.DaemonTask
+	(DaemonTaskStatus)(0),         // 0: gameap.DaemonTaskStatus
+	(DaemonTaskType)(0),           // 1: gameap.DaemonTaskType
+	(*DaemonTask)(nil),            // 2: gameap.DaemonTask
+	(*timestamppb.Timestamp)(nil), // 3: google.protobuf.Timestamp
 }
 var file_pkg_proto_daemontask_proto_depIdxs = []int32{
 	1, // 0: gameap.DaemonTask.task_type:type_name -> gameap.DaemonTaskType
 	0, // 1: gameap.DaemonTask.status:type_name -> gameap.DaemonTaskStatus
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	3, // 2: gameap.DaemonTask.created_at:type_name -> google.protobuf.Timestamp
+	3, // 3: gameap.DaemonTask.updated_at:type_name -> google.protobuf.Timestamp
+	4, // [4:4] is the sub-list for method output_type
+	4, // [4:4] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_pkg_proto_daemontask_proto_init() }

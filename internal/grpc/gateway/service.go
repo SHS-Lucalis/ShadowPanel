@@ -15,10 +15,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 const (
-	defaultHeartbeatInterval = 30
+	defaultHeartbeatInterval = 30 * time.Second
 	smallFileThreshold       = 1 * 1024 * 1024
 )
 
@@ -235,12 +236,12 @@ func (s *Service) buildRegisterAck(ctx context.Context, reg *proto.RegisterReque
 	}
 
 	return &proto.RegisterAck{
-		Success:                  true,
-		Servers:                  protoServers,
-		PendingTasks:             pendingTasks,
-		Games:                    protoGames,
-		GameMods:                 protoGameMods,
-		HeartbeatIntervalSeconds: defaultHeartbeatInterval,
+		Success:           true,
+		Servers:           protoServers,
+		PendingTasks:      pendingTasks,
+		Games:             protoGames,
+		GameMods:          protoGameMods,
+		HeartbeatInterval: durationpb.New(defaultHeartbeatInterval),
 	}, nil
 }
 

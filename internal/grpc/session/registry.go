@@ -13,6 +13,7 @@ import (
 	"github.com/gameap/gameap/internal/pubsub/messages"
 	"github.com/gameap/gameap/pkg/proto"
 	"github.com/pkg/errors"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 type Registry struct {
@@ -257,7 +258,7 @@ func (r *Registry) dispatchCommandViaPubSub(ctx context.Context, nodeID uint64, 
 		CommandID: cmd.CommandId,
 		ServerID:  cmd.ServerId,
 		Command:   cmd.Command,
-		Timeout:   cmd.TimeoutSeconds,
+		Timeout:   int32(cmd.Timeout.AsDuration().Seconds()),
 	})
 	if err != nil {
 		return errors.Wrap(err, "create command dispatch message")
@@ -284,12 +285,12 @@ func (r *Registry) BroadcastToAll(ctx context.Context, msg *proto.GatewayMessage
 	}
 }
 
-func (r *Registry) BroadcastShutdown(ctx context.Context, reason string, reconnectDelay int32) {
+func (r *Registry) BroadcastShutdown(ctx context.Context, reason string, reconnectDelay time.Duration) {
 	msg := &proto.GatewayMessage{
 		Payload: &proto.GatewayMessage_Shutdown{
 			Shutdown: &proto.ShutdownNotification{
-				Reason:                reason,
-				ReconnectDelaySeconds: reconnectDelay,
+				Reason:         reason,
+				ReconnectDelay: durationpb.New(reconnectDelay),
 			},
 		},
 	}

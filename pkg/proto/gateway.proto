@@ -4,6 +4,8 @@ package gameap;
 
 option go_package = "github.com/gameap/gameap/pkg/proto";
 
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
 import "pkg/proto/daemontask.proto";
 import "pkg/proto/server.proto";
 import "pkg/proto/game.proto";
@@ -69,7 +71,7 @@ message InFlightTask {
   uint64 task_id = 1;
   DaemonTaskStatus status = 2;
   string partial_output = 3;
-  int64 started_at_unix = 4;
+  google.protobuf.Timestamp started_at = 4;
 }
 
 message RegisterAck {
@@ -79,11 +81,11 @@ message RegisterAck {
   repeated DaemonTask pending_tasks = 4;
   repeated Game games = 5;
   repeated GameMod game_mods = 6;
-  int32 heartbeat_interval_seconds = 7;
+  google.protobuf.Duration heartbeat_interval = 7;
 }
 
 message Heartbeat {
-  int64 timestamp_unix = 1;
+  google.protobuf.Timestamp timestamp = 1;
   SystemStats system_stats = 2;
 }
 
@@ -119,7 +121,7 @@ message CommandRequest {
   string command_id = 1;
   uint64 server_id = 2;
   string command = 3;
-  int32 timeout_seconds = 4;
+  google.protobuf.Duration timeout = 4;
   bool stream_output = 5;
 }
 
@@ -138,11 +140,7 @@ message CommandResult {
 message ServerStatus {
   uint64 server_id = 1;
   bool is_running = 2;
-  int32 players_online = 3;
-  int32 max_players = 4;
-  string map_name = 5;
-  string server_name = 6;
-  int64 last_check_unix = 7;
+  google.protobuf.Timestamp last_check = 3;
 }
 
 message ServerStatusBatch {
@@ -155,7 +153,7 @@ message ServerConfigBatch {
 
 message ShutdownNotification {
   string reason = 1;
-  int32 reconnect_delay_seconds = 2;
+  google.protobuf.Duration reconnect_delay = 2;
 }
 
 message FileReadRequest {
@@ -202,7 +200,7 @@ message FileInfo {
   string path = 2;
   int64 size = 3;
   int32 mode = 4;
-  int64 modified_unix = 5;
+  google.protobuf.Timestamp modified_at = 5;
   bool is_dir = 6;
 }
 

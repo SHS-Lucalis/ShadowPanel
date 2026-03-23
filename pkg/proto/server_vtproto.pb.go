@@ -8,8 +8,10 @@ import (
 	fmt "fmt"
 	protohelpers "github.com/planetscale/vtprotobuf/protohelpers"
 	anypb "github.com/planetscale/vtprotobuf/types/known/anypb"
+	timestamppb "github.com/planetscale/vtprotobuf/types/known/timestamppb"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	anypb1 "google.golang.org/protobuf/types/known/anypb"
+	timestamppb1 "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 )
 
@@ -75,25 +77,40 @@ func (m *Server) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		}
 	}
 	if m.DeletedAt != nil {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(*m.DeletedAt))
+		size, err := (*timestamppb.Timestamp)(m.DeletedAt).MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0xf8
+		dAtA[i] = 0xfa
 	}
 	if m.UpdatedAt != nil {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(*m.UpdatedAt))
+		size, err := (*timestamppb.Timestamp)(m.UpdatedAt).MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0xf0
+		dAtA[i] = 0xf2
 	}
 	if m.CreatedAt != nil {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(*m.CreatedAt))
+		size, err := (*timestamppb.Timestamp)(m.CreatedAt).MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0xe8
+		dAtA[i] = 0xea
 	}
 	if m.Vars != nil {
 		i -= len(*m.Vars)
@@ -105,11 +122,16 @@ func (m *Server) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		dAtA[i] = 0xe2
 	}
 	if m.LastProcessCheck != nil {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(*m.LastProcessCheck))
+		size, err := (*timestamppb.Timestamp)(m.LastProcessCheck).MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0xd8
+		dAtA[i] = 0xda
 	}
 	if m.ProcessActive {
 		i--
@@ -230,9 +252,14 @@ func (m *Server) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		dAtA[i] = 0x62
 	}
 	if m.Expires != nil {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(*m.Expires))
+		size, err := (*timestamppb.Timestamp)(m.Expires).MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x58
+		dAtA[i] = 0x5a
 	}
 	if m.GameModId != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.GameModId))
@@ -346,7 +373,8 @@ func (m *Server) SizeVT() (n int) {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.GameModId))
 	}
 	if m.Expires != nil {
-		n += 1 + protohelpers.SizeOfVarint(uint64(*m.Expires))
+		l = (*timestamppb.Timestamp)(m.Expires).SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	l = len(m.ServerIp)
 	if l > 0 {
@@ -402,20 +430,24 @@ func (m *Server) SizeVT() (n int) {
 		n += 3
 	}
 	if m.LastProcessCheck != nil {
-		n += 2 + protohelpers.SizeOfVarint(uint64(*m.LastProcessCheck))
+		l = (*timestamppb.Timestamp)(m.LastProcessCheck).SizeVT()
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	if m.Vars != nil {
 		l = len(*m.Vars)
 		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	if m.CreatedAt != nil {
-		n += 2 + protohelpers.SizeOfVarint(uint64(*m.CreatedAt))
+		l = (*timestamppb.Timestamp)(m.CreatedAt).SizeVT()
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	if m.UpdatedAt != nil {
-		n += 2 + protohelpers.SizeOfVarint(uint64(*m.UpdatedAt))
+		l = (*timestamppb.Timestamp)(m.UpdatedAt).SizeVT()
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	if m.DeletedAt != nil {
-		n += 2 + protohelpers.SizeOfVarint(uint64(*m.DeletedAt))
+		l = (*timestamppb.Timestamp)(m.DeletedAt).SizeVT()
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	if len(m.Metadata) > 0 {
 		for k, v := range m.Metadata {
@@ -708,10 +740,10 @@ func (m *Server) UnmarshalVT(dAtA []byte) error {
 				}
 			}
 		case 11:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Expires", wireType)
 			}
-			var v int64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return protohelpers.ErrIntOverflow
@@ -721,12 +753,28 @@ func (m *Server) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= int64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.Expires = &v
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Expires == nil {
+				m.Expires = &timestamppb1.Timestamp{}
+			}
+			if err := (*timestamppb.Timestamp)(m.Expires).UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 12:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ServerIp", wireType)
@@ -1129,10 +1177,10 @@ func (m *Server) UnmarshalVT(dAtA []byte) error {
 			}
 			m.ProcessActive = bool(v != 0)
 		case 27:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field LastProcessCheck", wireType)
 			}
-			var v int64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return protohelpers.ErrIntOverflow
@@ -1142,12 +1190,28 @@ func (m *Server) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= int64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.LastProcessCheck = &v
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.LastProcessCheck == nil {
+				m.LastProcessCheck = &timestamppb1.Timestamp{}
+			}
+			if err := (*timestamppb.Timestamp)(m.LastProcessCheck).UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 28:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Vars", wireType)
@@ -1182,10 +1246,10 @@ func (m *Server) UnmarshalVT(dAtA []byte) error {
 			m.Vars = &s
 			iNdEx = postIndex
 		case 29:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CreatedAt", wireType)
 			}
-			var v int64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return protohelpers.ErrIntOverflow
@@ -1195,17 +1259,33 @@ func (m *Server) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= int64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.CreatedAt = &v
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.CreatedAt == nil {
+				m.CreatedAt = &timestamppb1.Timestamp{}
+			}
+			if err := (*timestamppb.Timestamp)(m.CreatedAt).UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 30:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field UpdatedAt", wireType)
 			}
-			var v int64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return protohelpers.ErrIntOverflow
@@ -1215,17 +1295,33 @@ func (m *Server) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= int64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.UpdatedAt = &v
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.UpdatedAt == nil {
+				m.UpdatedAt = &timestamppb1.Timestamp{}
+			}
+			if err := (*timestamppb.Timestamp)(m.UpdatedAt).UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 31:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DeletedAt", wireType)
 			}
-			var v int64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return protohelpers.ErrIntOverflow
@@ -1235,12 +1331,28 @@ func (m *Server) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= int64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.DeletedAt = &v
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.DeletedAt == nil {
+				m.DeletedAt = &timestamppb1.Timestamp{}
+			}
+			if err := (*timestamppb.Timestamp)(m.DeletedAt).UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 32:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)

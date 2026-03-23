@@ -9,6 +9,8 @@ package proto
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	durationpb "google.golang.org/protobuf/types/known/durationpb"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -554,7 +556,7 @@ type InFlightTask struct {
 	TaskId        uint64                 `protobuf:"varint,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
 	Status        DaemonTaskStatus       `protobuf:"varint,2,opt,name=status,proto3,enum=gameap.DaemonTaskStatus" json:"status,omitempty"`
 	PartialOutput string                 `protobuf:"bytes,3,opt,name=partial_output,json=partialOutput,proto3" json:"partial_output,omitempty"`
-	StartedAtUnix int64                  `protobuf:"varint,4,opt,name=started_at_unix,json=startedAtUnix,proto3" json:"started_at_unix,omitempty"`
+	StartedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -610,24 +612,24 @@ func (x *InFlightTask) GetPartialOutput() string {
 	return ""
 }
 
-func (x *InFlightTask) GetStartedAtUnix() int64 {
+func (x *InFlightTask) GetStartedAt() *timestamppb.Timestamp {
 	if x != nil {
-		return x.StartedAtUnix
+		return x.StartedAt
 	}
-	return 0
+	return nil
 }
 
 type RegisterAck struct {
-	state                    protoimpl.MessageState `protogen:"open.v1"`
-	Success                  bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-	ErrorMessage             string                 `protobuf:"bytes,2,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
-	Servers                  []*Server              `protobuf:"bytes,3,rep,name=servers,proto3" json:"servers,omitempty"`
-	PendingTasks             []*DaemonTask          `protobuf:"bytes,4,rep,name=pending_tasks,json=pendingTasks,proto3" json:"pending_tasks,omitempty"`
-	Games                    []*Game                `protobuf:"bytes,5,rep,name=games,proto3" json:"games,omitempty"`
-	GameMods                 []*GameMod             `protobuf:"bytes,6,rep,name=game_mods,json=gameMods,proto3" json:"game_mods,omitempty"`
-	HeartbeatIntervalSeconds int32                  `protobuf:"varint,7,opt,name=heartbeat_interval_seconds,json=heartbeatIntervalSeconds,proto3" json:"heartbeat_interval_seconds,omitempty"`
-	unknownFields            protoimpl.UnknownFields
-	sizeCache                protoimpl.SizeCache
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Success           bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	ErrorMessage      string                 `protobuf:"bytes,2,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
+	Servers           []*Server              `protobuf:"bytes,3,rep,name=servers,proto3" json:"servers,omitempty"`
+	PendingTasks      []*DaemonTask          `protobuf:"bytes,4,rep,name=pending_tasks,json=pendingTasks,proto3" json:"pending_tasks,omitempty"`
+	Games             []*Game                `protobuf:"bytes,5,rep,name=games,proto3" json:"games,omitempty"`
+	GameMods          []*GameMod             `protobuf:"bytes,6,rep,name=game_mods,json=gameMods,proto3" json:"game_mods,omitempty"`
+	HeartbeatInterval *durationpb.Duration   `protobuf:"bytes,7,opt,name=heartbeat_interval,json=heartbeatInterval,proto3" json:"heartbeat_interval,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *RegisterAck) Reset() {
@@ -702,16 +704,16 @@ func (x *RegisterAck) GetGameMods() []*GameMod {
 	return nil
 }
 
-func (x *RegisterAck) GetHeartbeatIntervalSeconds() int32 {
+func (x *RegisterAck) GetHeartbeatInterval() *durationpb.Duration {
 	if x != nil {
-		return x.HeartbeatIntervalSeconds
+		return x.HeartbeatInterval
 	}
-	return 0
+	return nil
 }
 
 type Heartbeat struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	TimestampUnix int64                  `protobuf:"varint,1,opt,name=timestamp_unix,json=timestampUnix,proto3" json:"timestamp_unix,omitempty"`
+	Timestamp     *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	SystemStats   *SystemStats           `protobuf:"bytes,2,opt,name=system_stats,json=systemStats,proto3" json:"system_stats,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -747,11 +749,11 @@ func (*Heartbeat) Descriptor() ([]byte, []int) {
 	return file_pkg_proto_gateway_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *Heartbeat) GetTimestampUnix() int64 {
+func (x *Heartbeat) GetTimestamp() *timestamppb.Timestamp {
 	if x != nil {
-		return x.TimestampUnix
+		return x.Timestamp
 	}
-	return 0
+	return nil
 }
 
 func (x *Heartbeat) GetSystemStats() *SystemStats {
@@ -1034,14 +1036,14 @@ func (x *TaskCancel) GetReason() string {
 }
 
 type CommandRequest struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	CommandId      string                 `protobuf:"bytes,1,opt,name=command_id,json=commandId,proto3" json:"command_id,omitempty"`
-	ServerId       uint64                 `protobuf:"varint,2,opt,name=server_id,json=serverId,proto3" json:"server_id,omitempty"`
-	Command        string                 `protobuf:"bytes,3,opt,name=command,proto3" json:"command,omitempty"`
-	TimeoutSeconds int32                  `protobuf:"varint,4,opt,name=timeout_seconds,json=timeoutSeconds,proto3" json:"timeout_seconds,omitempty"`
-	StreamOutput   bool                   `protobuf:"varint,5,opt,name=stream_output,json=streamOutput,proto3" json:"stream_output,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommandId     string                 `protobuf:"bytes,1,opt,name=command_id,json=commandId,proto3" json:"command_id,omitempty"`
+	ServerId      uint64                 `protobuf:"varint,2,opt,name=server_id,json=serverId,proto3" json:"server_id,omitempty"`
+	Command       string                 `protobuf:"bytes,3,opt,name=command,proto3" json:"command,omitempty"`
+	Timeout       *durationpb.Duration   `protobuf:"bytes,4,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	StreamOutput  bool                   `protobuf:"varint,5,opt,name=stream_output,json=streamOutput,proto3" json:"stream_output,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CommandRequest) Reset() {
@@ -1095,11 +1097,11 @@ func (x *CommandRequest) GetCommand() string {
 	return ""
 }
 
-func (x *CommandRequest) GetTimeoutSeconds() int32 {
+func (x *CommandRequest) GetTimeout() *durationpb.Duration {
 	if x != nil {
-		return x.TimeoutSeconds
+		return x.Timeout
 	}
-	return 0
+	return nil
 }
 
 func (x *CommandRequest) GetStreamOutput() bool {
@@ -1233,11 +1235,7 @@ type ServerStatus struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ServerId      uint64                 `protobuf:"varint,1,opt,name=server_id,json=serverId,proto3" json:"server_id,omitempty"`
 	IsRunning     bool                   `protobuf:"varint,2,opt,name=is_running,json=isRunning,proto3" json:"is_running,omitempty"`
-	PlayersOnline int32                  `protobuf:"varint,3,opt,name=players_online,json=playersOnline,proto3" json:"players_online,omitempty"`
-	MaxPlayers    int32                  `protobuf:"varint,4,opt,name=max_players,json=maxPlayers,proto3" json:"max_players,omitempty"`
-	MapName       string                 `protobuf:"bytes,5,opt,name=map_name,json=mapName,proto3" json:"map_name,omitempty"`
-	ServerName    string                 `protobuf:"bytes,6,opt,name=server_name,json=serverName,proto3" json:"server_name,omitempty"`
-	LastCheckUnix int64                  `protobuf:"varint,7,opt,name=last_check_unix,json=lastCheckUnix,proto3" json:"last_check_unix,omitempty"`
+	LastCheck     *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=last_check,json=lastCheck,proto3" json:"last_check,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1286,39 +1284,11 @@ func (x *ServerStatus) GetIsRunning() bool {
 	return false
 }
 
-func (x *ServerStatus) GetPlayersOnline() int32 {
+func (x *ServerStatus) GetLastCheck() *timestamppb.Timestamp {
 	if x != nil {
-		return x.PlayersOnline
+		return x.LastCheck
 	}
-	return 0
-}
-
-func (x *ServerStatus) GetMaxPlayers() int32 {
-	if x != nil {
-		return x.MaxPlayers
-	}
-	return 0
-}
-
-func (x *ServerStatus) GetMapName() string {
-	if x != nil {
-		return x.MapName
-	}
-	return ""
-}
-
-func (x *ServerStatus) GetServerName() string {
-	if x != nil {
-		return x.ServerName
-	}
-	return ""
-}
-
-func (x *ServerStatus) GetLastCheckUnix() int64 {
-	if x != nil {
-		return x.LastCheckUnix
-	}
-	return 0
+	return nil
 }
 
 type ServerStatusBatch struct {
@@ -1410,11 +1380,11 @@ func (x *ServerConfigBatch) GetServers() []*Server {
 }
 
 type ShutdownNotification struct {
-	state                 protoimpl.MessageState `protogen:"open.v1"`
-	Reason                string                 `protobuf:"bytes,1,opt,name=reason,proto3" json:"reason,omitempty"`
-	ReconnectDelaySeconds int32                  `protobuf:"varint,2,opt,name=reconnect_delay_seconds,json=reconnectDelaySeconds,proto3" json:"reconnect_delay_seconds,omitempty"`
-	unknownFields         protoimpl.UnknownFields
-	sizeCache             protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Reason         string                 `protobuf:"bytes,1,opt,name=reason,proto3" json:"reason,omitempty"`
+	ReconnectDelay *durationpb.Duration   `protobuf:"bytes,2,opt,name=reconnect_delay,json=reconnectDelay,proto3" json:"reconnect_delay,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *ShutdownNotification) Reset() {
@@ -1454,11 +1424,11 @@ func (x *ShutdownNotification) GetReason() string {
 	return ""
 }
 
-func (x *ShutdownNotification) GetReconnectDelaySeconds() int32 {
+func (x *ShutdownNotification) GetReconnectDelay() *durationpb.Duration {
 	if x != nil {
-		return x.ReconnectDelaySeconds
+		return x.ReconnectDelay
 	}
-	return 0
+	return nil
 }
 
 type FileReadRequest struct {
@@ -1851,7 +1821,7 @@ type FileInfo struct {
 	Path          string                 `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
 	Size          int64                  `protobuf:"varint,3,opt,name=size,proto3" json:"size,omitempty"`
 	Mode          int32                  `protobuf:"varint,4,opt,name=mode,proto3" json:"mode,omitempty"`
-	ModifiedUnix  int64                  `protobuf:"varint,5,opt,name=modified_unix,json=modifiedUnix,proto3" json:"modified_unix,omitempty"`
+	ModifiedAt    *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=modified_at,json=modifiedAt,proto3" json:"modified_at,omitempty"`
 	IsDir         bool                   `protobuf:"varint,6,opt,name=is_dir,json=isDir,proto3" json:"is_dir,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1915,11 +1885,11 @@ func (x *FileInfo) GetMode() int32 {
 	return 0
 }
 
-func (x *FileInfo) GetModifiedUnix() int64 {
+func (x *FileInfo) GetModifiedAt() *timestamppb.Timestamp {
 	if x != nil {
-		return x.ModifiedUnix
+		return x.ModifiedAt
 	}
-	return 0
+	return nil
 }
 
 func (x *FileInfo) GetIsDir() bool {
@@ -2161,7 +2131,7 @@ var File_pkg_proto_gateway_proto protoreflect.FileDescriptor
 
 const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"\n" +
-	"\x17pkg/proto/gateway.proto\x12\x06gameap\x1a\x1apkg/proto/daemontask.proto\x1a\x16pkg/proto/server.proto\x1a\x14pkg/proto/game.proto\x1a\x17pkg/proto/gamemod.proto\"\xbe\x05\n" +
+	"\x17pkg/proto/gateway.proto\x12\x06gameap\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x1apkg/proto/daemontask.proto\x1a\x16pkg/proto/server.proto\x1a\x14pkg/proto/game.proto\x1a\x17pkg/proto/gamemod.proto\"\xbe\x05\n" +
 	"\rDaemonMessage\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x01 \x01(\tR\trequestId\x125\n" +
@@ -2202,22 +2172,23 @@ const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"\aapi_key\x18\x02 \x01(\tR\x06apiKey\x12\x18\n" +
 	"\aversion\x18\x03 \x01(\tR\aversion\x12\"\n" +
 	"\fcapabilities\x18\x04 \x03(\tR\fcapabilities\x12<\n" +
-	"\x0fin_flight_tasks\x18\x05 \x03(\v2\x14.gameap.InFlightTaskR\rinFlightTasks\"\xa8\x01\n" +
+	"\x0fin_flight_tasks\x18\x05 \x03(\v2\x14.gameap.InFlightTaskR\rinFlightTasks\"\xbb\x01\n" +
 	"\fInFlightTask\x12\x17\n" +
 	"\atask_id\x18\x01 \x01(\x04R\x06taskId\x120\n" +
 	"\x06status\x18\x02 \x01(\x0e2\x18.gameap.DaemonTaskStatusR\x06status\x12%\n" +
-	"\x0epartial_output\x18\x03 \x01(\tR\rpartialOutput\x12&\n" +
-	"\x0fstarted_at_unix\x18\x04 \x01(\x03R\rstartedAtUnix\"\xbf\x02\n" +
+	"\x0epartial_output\x18\x03 \x01(\tR\rpartialOutput\x129\n" +
+	"\n" +
+	"started_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\"\xcb\x02\n" +
 	"\vRegisterAck\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12#\n" +
 	"\rerror_message\x18\x02 \x01(\tR\ferrorMessage\x12(\n" +
 	"\aservers\x18\x03 \x03(\v2\x0e.gameap.ServerR\aservers\x127\n" +
 	"\rpending_tasks\x18\x04 \x03(\v2\x12.gameap.DaemonTaskR\fpendingTasks\x12\"\n" +
 	"\x05games\x18\x05 \x03(\v2\f.gameap.GameR\x05games\x12,\n" +
-	"\tgame_mods\x18\x06 \x03(\v2\x0f.gameap.GameModR\bgameMods\x12<\n" +
-	"\x1aheartbeat_interval_seconds\x18\a \x01(\x05R\x18heartbeatIntervalSeconds\"j\n" +
-	"\tHeartbeat\x12%\n" +
-	"\x0etimestamp_unix\x18\x01 \x01(\x03R\rtimestampUnix\x126\n" +
+	"\tgame_mods\x18\x06 \x03(\v2\x0f.gameap.GameModR\bgameMods\x12H\n" +
+	"\x12heartbeat_interval\x18\a \x01(\v2\x19.google.protobuf.DurationR\x11heartbeatInterval\"}\n" +
+	"\tHeartbeat\x128\n" +
+	"\ttimestamp\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\x126\n" +
 	"\fsystem_stats\x18\x02 \x01(\v2\x13.gameap.SystemStatsR\vsystemStats\"\xdf\x02\n" +
 	"\vSystemStats\x12*\n" +
 	"\x11cpu_usage_percent\x18\x01 \x01(\x01R\x0fcpuUsagePercent\x12*\n" +
@@ -2240,13 +2211,13 @@ const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"\n" +
 	"TaskCancel\x12\x17\n" +
 	"\atask_id\x18\x01 \x01(\x04R\x06taskId\x12\x16\n" +
-	"\x06reason\x18\x02 \x01(\tR\x06reason\"\xb4\x01\n" +
+	"\x06reason\x18\x02 \x01(\tR\x06reason\"\xc0\x01\n" +
 	"\x0eCommandRequest\x12\x1d\n" +
 	"\n" +
 	"command_id\x18\x01 \x01(\tR\tcommandId\x12\x1b\n" +
 	"\tserver_id\x18\x02 \x01(\x04R\bserverId\x12\x18\n" +
-	"\acommand\x18\x03 \x01(\tR\acommand\x12'\n" +
-	"\x0ftimeout_seconds\x18\x04 \x01(\x05R\x0etimeoutSeconds\x12#\n" +
+	"\acommand\x18\x03 \x01(\tR\acommand\x123\n" +
+	"\atimeout\x18\x04 \x01(\v2\x19.google.protobuf.DurationR\atimeout\x12#\n" +
 	"\rstream_output\x18\x05 \x01(\bR\fstreamOutput\"Q\n" +
 	"\rCommandOutput\x12\x1d\n" +
 	"\n" +
@@ -2257,25 +2228,20 @@ const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"command_id\x18\x01 \x01(\tR\tcommandId\x12\x1b\n" +
 	"\texit_code\x18\x02 \x01(\x05R\bexitCode\x12\x16\n" +
 	"\x06output\x18\x03 \x01(\fR\x06output\x12\x14\n" +
-	"\x05error\x18\x04 \x01(\tR\x05error\"\xf6\x01\n" +
+	"\x05error\x18\x04 \x01(\tR\x05error\"\x85\x01\n" +
 	"\fServerStatus\x12\x1b\n" +
 	"\tserver_id\x18\x01 \x01(\x04R\bserverId\x12\x1d\n" +
 	"\n" +
-	"is_running\x18\x02 \x01(\bR\tisRunning\x12%\n" +
-	"\x0eplayers_online\x18\x03 \x01(\x05R\rplayersOnline\x12\x1f\n" +
-	"\vmax_players\x18\x04 \x01(\x05R\n" +
-	"maxPlayers\x12\x19\n" +
-	"\bmap_name\x18\x05 \x01(\tR\amapName\x12\x1f\n" +
-	"\vserver_name\x18\x06 \x01(\tR\n" +
-	"serverName\x12&\n" +
-	"\x0flast_check_unix\x18\a \x01(\x03R\rlastCheckUnix\"E\n" +
+	"is_running\x18\x02 \x01(\bR\tisRunning\x129\n" +
+	"\n" +
+	"last_check\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tlastCheck\"E\n" +
 	"\x11ServerStatusBatch\x120\n" +
 	"\bstatuses\x18\x01 \x03(\v2\x14.gameap.ServerStatusR\bstatuses\"=\n" +
 	"\x11ServerConfigBatch\x12(\n" +
-	"\aservers\x18\x01 \x03(\v2\x0e.gameap.ServerR\aservers\"f\n" +
+	"\aservers\x18\x01 \x03(\v2\x0e.gameap.ServerR\aservers\"r\n" +
 	"\x14ShutdownNotification\x12\x16\n" +
-	"\x06reason\x18\x01 \x01(\tR\x06reason\x126\n" +
-	"\x17reconnect_delay_seconds\x18\x02 \x01(\x05R\x15reconnectDelaySeconds\"@\n" +
+	"\x06reason\x18\x01 \x01(\tR\x06reason\x12B\n" +
+	"\x0freconnect_delay\x18\x02 \x01(\v2\x19.google.protobuf.DurationR\x0ereconnectDelay\"@\n" +
 	"\x0fFileReadRequest\x12\x12\n" +
 	"\x04path\x18\x01 \x01(\tR\x04path\x12\x19\n" +
 	"\bmax_size\x18\x02 \x01(\x03R\amaxSize\"\x9c\x01\n" +
@@ -2307,13 +2273,14 @@ const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"request_id\x18\x01 \x01(\tR\trequestId\x12\x18\n" +
 	"\asuccess\x18\x02 \x01(\bR\asuccess\x12&\n" +
 	"\x05files\x18\x03 \x03(\v2\x10.gameap.FileInfoR\x05files\x12\x14\n" +
-	"\x05error\x18\x04 \x01(\tR\x05error\"\x96\x01\n" +
+	"\x05error\x18\x04 \x01(\tR\x05error\"\xae\x01\n" +
 	"\bFileInfo\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
 	"\x04path\x18\x02 \x01(\tR\x04path\x12\x12\n" +
 	"\x04size\x18\x03 \x01(\x03R\x04size\x12\x12\n" +
-	"\x04mode\x18\x04 \x01(\x05R\x04mode\x12#\n" +
-	"\rmodified_unix\x18\x05 \x01(\x03R\fmodifiedUnix\x12\x15\n" +
+	"\x04mode\x18\x04 \x01(\x05R\x04mode\x12;\n" +
+	"\vmodified_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"modifiedAt\x12\x15\n" +
 	"\x06is_dir\x18\x06 \x01(\bR\x05isDir\"E\n" +
 	"\x0eFileUploadTask\x12\x1f\n" +
 	"\vtransfer_id\x18\x01 \x01(\tR\n" +
@@ -2352,38 +2319,40 @@ func file_pkg_proto_gateway_proto_rawDescGZIP() []byte {
 
 var file_pkg_proto_gateway_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
 var file_pkg_proto_gateway_proto_goTypes = []any{
-	(*DaemonMessage)(nil),        // 0: gameap.DaemonMessage
-	(*GatewayMessage)(nil),       // 1: gameap.GatewayMessage
-	(*RegisterRequest)(nil),      // 2: gameap.RegisterRequest
-	(*InFlightTask)(nil),         // 3: gameap.InFlightTask
-	(*RegisterAck)(nil),          // 4: gameap.RegisterAck
-	(*Heartbeat)(nil),            // 5: gameap.Heartbeat
-	(*SystemStats)(nil),          // 6: gameap.SystemStats
-	(*TaskStatusUpdate)(nil),     // 7: gameap.TaskStatusUpdate
-	(*TaskOutput)(nil),           // 8: gameap.TaskOutput
-	(*TaskCancel)(nil),           // 9: gameap.TaskCancel
-	(*CommandRequest)(nil),       // 10: gameap.CommandRequest
-	(*CommandOutput)(nil),        // 11: gameap.CommandOutput
-	(*CommandResult)(nil),        // 12: gameap.CommandResult
-	(*ServerStatus)(nil),         // 13: gameap.ServerStatus
-	(*ServerStatusBatch)(nil),    // 14: gameap.ServerStatusBatch
-	(*ServerConfigBatch)(nil),    // 15: gameap.ServerConfigBatch
-	(*ShutdownNotification)(nil), // 16: gameap.ShutdownNotification
-	(*FileReadRequest)(nil),      // 17: gameap.FileReadRequest
-	(*FileReadResponse)(nil),     // 18: gameap.FileReadResponse
-	(*FileWriteRequest)(nil),     // 19: gameap.FileWriteRequest
-	(*FileWriteResponse)(nil),    // 20: gameap.FileWriteResponse
-	(*FileListRequest)(nil),      // 21: gameap.FileListRequest
-	(*FileListResponse)(nil),     // 22: gameap.FileListResponse
-	(*FileInfo)(nil),             // 23: gameap.FileInfo
-	(*FileUploadTask)(nil),       // 24: gameap.FileUploadTask
-	(*EnrollRequest)(nil),        // 25: gameap.EnrollRequest
-	(*EnrollResponse)(nil),       // 26: gameap.EnrollResponse
-	(*DaemonTask)(nil),           // 27: gameap.DaemonTask
-	(*Server)(nil),               // 28: gameap.Server
-	(DaemonTaskStatus)(0),        // 29: gameap.DaemonTaskStatus
-	(*Game)(nil),                 // 30: gameap.Game
-	(*GameMod)(nil),              // 31: gameap.GameMod
+	(*DaemonMessage)(nil),         // 0: gameap.DaemonMessage
+	(*GatewayMessage)(nil),        // 1: gameap.GatewayMessage
+	(*RegisterRequest)(nil),       // 2: gameap.RegisterRequest
+	(*InFlightTask)(nil),          // 3: gameap.InFlightTask
+	(*RegisterAck)(nil),           // 4: gameap.RegisterAck
+	(*Heartbeat)(nil),             // 5: gameap.Heartbeat
+	(*SystemStats)(nil),           // 6: gameap.SystemStats
+	(*TaskStatusUpdate)(nil),      // 7: gameap.TaskStatusUpdate
+	(*TaskOutput)(nil),            // 8: gameap.TaskOutput
+	(*TaskCancel)(nil),            // 9: gameap.TaskCancel
+	(*CommandRequest)(nil),        // 10: gameap.CommandRequest
+	(*CommandOutput)(nil),         // 11: gameap.CommandOutput
+	(*CommandResult)(nil),         // 12: gameap.CommandResult
+	(*ServerStatus)(nil),          // 13: gameap.ServerStatus
+	(*ServerStatusBatch)(nil),     // 14: gameap.ServerStatusBatch
+	(*ServerConfigBatch)(nil),     // 15: gameap.ServerConfigBatch
+	(*ShutdownNotification)(nil),  // 16: gameap.ShutdownNotification
+	(*FileReadRequest)(nil),       // 17: gameap.FileReadRequest
+	(*FileReadResponse)(nil),      // 18: gameap.FileReadResponse
+	(*FileWriteRequest)(nil),      // 19: gameap.FileWriteRequest
+	(*FileWriteResponse)(nil),     // 20: gameap.FileWriteResponse
+	(*FileListRequest)(nil),       // 21: gameap.FileListRequest
+	(*FileListResponse)(nil),      // 22: gameap.FileListResponse
+	(*FileInfo)(nil),              // 23: gameap.FileInfo
+	(*FileUploadTask)(nil),        // 24: gameap.FileUploadTask
+	(*EnrollRequest)(nil),         // 25: gameap.EnrollRequest
+	(*EnrollResponse)(nil),        // 26: gameap.EnrollResponse
+	(*DaemonTask)(nil),            // 27: gameap.DaemonTask
+	(*Server)(nil),                // 28: gameap.Server
+	(DaemonTaskStatus)(0),         // 29: gameap.DaemonTaskStatus
+	(*timestamppb.Timestamp)(nil), // 30: google.protobuf.Timestamp
+	(*Game)(nil),                  // 31: gameap.Game
+	(*GameMod)(nil),               // 32: gameap.GameMod
+	(*durationpb.Duration)(nil),   // 33: google.protobuf.Duration
 }
 var file_pkg_proto_gateway_proto_depIdxs = []int32{
 	2,  // 0: gameap.DaemonMessage.register:type_name -> gameap.RegisterRequest
@@ -2409,24 +2378,31 @@ var file_pkg_proto_gateway_proto_depIdxs = []int32{
 	24, // 20: gameap.GatewayMessage.file_upload_task:type_name -> gameap.FileUploadTask
 	3,  // 21: gameap.RegisterRequest.in_flight_tasks:type_name -> gameap.InFlightTask
 	29, // 22: gameap.InFlightTask.status:type_name -> gameap.DaemonTaskStatus
-	28, // 23: gameap.RegisterAck.servers:type_name -> gameap.Server
-	27, // 24: gameap.RegisterAck.pending_tasks:type_name -> gameap.DaemonTask
-	30, // 25: gameap.RegisterAck.games:type_name -> gameap.Game
-	31, // 26: gameap.RegisterAck.game_mods:type_name -> gameap.GameMod
-	6,  // 27: gameap.Heartbeat.system_stats:type_name -> gameap.SystemStats
-	29, // 28: gameap.TaskStatusUpdate.status:type_name -> gameap.DaemonTaskStatus
-	13, // 29: gameap.ServerStatusBatch.statuses:type_name -> gameap.ServerStatus
-	28, // 30: gameap.ServerConfigBatch.servers:type_name -> gameap.Server
-	23, // 31: gameap.FileListResponse.files:type_name -> gameap.FileInfo
-	0,  // 32: gameap.DaemonGateway.Connect:input_type -> gameap.DaemonMessage
-	25, // 33: gameap.DaemonGateway.Enroll:input_type -> gameap.EnrollRequest
-	1,  // 34: gameap.DaemonGateway.Connect:output_type -> gameap.GatewayMessage
-	26, // 35: gameap.DaemonGateway.Enroll:output_type -> gameap.EnrollResponse
-	34, // [34:36] is the sub-list for method output_type
-	32, // [32:34] is the sub-list for method input_type
-	32, // [32:32] is the sub-list for extension type_name
-	32, // [32:32] is the sub-list for extension extendee
-	0,  // [0:32] is the sub-list for field type_name
+	30, // 23: gameap.InFlightTask.started_at:type_name -> google.protobuf.Timestamp
+	28, // 24: gameap.RegisterAck.servers:type_name -> gameap.Server
+	27, // 25: gameap.RegisterAck.pending_tasks:type_name -> gameap.DaemonTask
+	31, // 26: gameap.RegisterAck.games:type_name -> gameap.Game
+	32, // 27: gameap.RegisterAck.game_mods:type_name -> gameap.GameMod
+	33, // 28: gameap.RegisterAck.heartbeat_interval:type_name -> google.protobuf.Duration
+	30, // 29: gameap.Heartbeat.timestamp:type_name -> google.protobuf.Timestamp
+	6,  // 30: gameap.Heartbeat.system_stats:type_name -> gameap.SystemStats
+	29, // 31: gameap.TaskStatusUpdate.status:type_name -> gameap.DaemonTaskStatus
+	33, // 32: gameap.CommandRequest.timeout:type_name -> google.protobuf.Duration
+	30, // 33: gameap.ServerStatus.last_check:type_name -> google.protobuf.Timestamp
+	13, // 34: gameap.ServerStatusBatch.statuses:type_name -> gameap.ServerStatus
+	28, // 35: gameap.ServerConfigBatch.servers:type_name -> gameap.Server
+	33, // 36: gameap.ShutdownNotification.reconnect_delay:type_name -> google.protobuf.Duration
+	23, // 37: gameap.FileListResponse.files:type_name -> gameap.FileInfo
+	30, // 38: gameap.FileInfo.modified_at:type_name -> google.protobuf.Timestamp
+	0,  // 39: gameap.DaemonGateway.Connect:input_type -> gameap.DaemonMessage
+	25, // 40: gameap.DaemonGateway.Enroll:input_type -> gameap.EnrollRequest
+	1,  // 41: gameap.DaemonGateway.Connect:output_type -> gameap.GatewayMessage
+	26, // 42: gameap.DaemonGateway.Enroll:output_type -> gameap.EnrollResponse
+	41, // [41:43] is the sub-list for method output_type
+	39, // [39:41] is the sub-list for method input_type
+	39, // [39:39] is the sub-list for extension type_name
+	39, // [39:39] is the sub-list for extension extendee
+	0,  // [0:39] is the sub-list for field type_name
 }
 
 func init() { file_pkg_proto_gateway_proto_init() }

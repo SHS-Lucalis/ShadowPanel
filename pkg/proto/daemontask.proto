@@ -4,6 +4,8 @@ package gameap;
 
 option go_package = "github.com/gameap/gameap/pkg/proto";
 
+import "google/protobuf/timestamp.proto";
+
 enum DaemonTaskStatus {
   DAEMON_TASK_STATUS_UNSPECIFIED = 0;
   DAEMON_TASK_STATUS_WAITING = 1;
@@ -35,6 +37,6 @@ message DaemonTask {
   optional string cmd = 7;
   optional string output = 8;
   DaemonTaskStatus status = 9;
-  optional int64 created_at = 10;
-  optional int64 updated_at = 11;
+  optional google.protobuf.Timestamp created_at = 10;
+  optional google.protobuf.Timestamp updated_at = 11;
 }

@@ -7,7 +7,9 @@ package proto
 import (
 	fmt "fmt"
 	protohelpers "github.com/planetscale/vtprotobuf/protohelpers"
+	timestamppb "github.com/planetscale/vtprotobuf/types/known/timestamppb"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb1 "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 )
 
@@ -525,15 +527,25 @@ func (m *FileStat) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x48
 	}
-	if m.AccessedUnix != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.AccessedUnix))
+	if m.AccessedAt != nil {
+		size, err := (*timestamppb.Timestamp)(m.AccessedAt).MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x40
+		dAtA[i] = 0x42
 	}
-	if m.ModifiedUnix != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.ModifiedUnix))
+	if m.ModifiedAt != nil {
+		size, err := (*timestamppb.Timestamp)(m.ModifiedAt).MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x38
+		dAtA[i] = 0x3a
 	}
 	if m.Gid != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Gid))
@@ -909,11 +921,13 @@ func (m *FileStat) SizeVT() (n int) {
 	if m.Gid != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.Gid))
 	}
-	if m.ModifiedUnix != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.ModifiedUnix))
+	if m.ModifiedAt != nil {
+		l = (*timestamppb.Timestamp)(m.ModifiedAt).SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
-	if m.AccessedUnix != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.AccessedUnix))
+	if m.AccessedAt != nil {
+		l = (*timestamppb.Timestamp)(m.AccessedAt).SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	if m.IsDir {
 		n += 2
@@ -2298,10 +2312,10 @@ func (m *FileStat) UnmarshalVT(dAtA []byte) error {
 				}
 			}
 		case 7:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ModifiedUnix", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ModifiedAt", wireType)
 			}
-			m.ModifiedUnix = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return protohelpers.ErrIntOverflow
@@ -2311,16 +2325,33 @@ func (m *FileStat) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ModifiedUnix |= int64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ModifiedAt == nil {
+				m.ModifiedAt = &timestamppb1.Timestamp{}
+			}
+			if err := (*timestamppb.Timestamp)(m.ModifiedAt).UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 8:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AccessedUnix", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AccessedAt", wireType)
 			}
-			m.AccessedUnix = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return protohelpers.ErrIntOverflow
@@ -2330,11 +2361,28 @@ func (m *FileStat) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.AccessedUnix |= int64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.AccessedAt == nil {
+				m.AccessedAt = &timestamppb1.Timestamp{}
+			}
+			if err := (*timestamppb.Timestamp)(m.AccessedAt).UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 9:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field IsDir", wireType)

@@ -73,7 +73,6 @@ func (h *ServerStatusHandler) HandleServerStatuses(
 		h.logger.Debug("server status updated",
 			"server_id", status.ServerId,
 			"is_running", status.IsRunning,
-			"players", status.PlayersOnline,
 		)
 	}
 

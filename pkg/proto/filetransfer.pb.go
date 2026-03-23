@@ -9,6 +9,7 @@ package proto
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -599,8 +600,8 @@ type FileStat struct {
 	Mode          int32                  `protobuf:"varint,4,opt,name=mode,proto3" json:"mode,omitempty"`
 	Uid           int32                  `protobuf:"varint,5,opt,name=uid,proto3" json:"uid,omitempty"`
 	Gid           int32                  `protobuf:"varint,6,opt,name=gid,proto3" json:"gid,omitempty"`
-	ModifiedUnix  int64                  `protobuf:"varint,7,opt,name=modified_unix,json=modifiedUnix,proto3" json:"modified_unix,omitempty"`
-	AccessedUnix  int64                  `protobuf:"varint,8,opt,name=accessed_unix,json=accessedUnix,proto3" json:"accessed_unix,omitempty"`
+	ModifiedAt    *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=modified_at,json=modifiedAt,proto3" json:"modified_at,omitempty"`
+	AccessedAt    *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=accessed_at,json=accessedAt,proto3" json:"accessed_at,omitempty"`
 	IsDir         bool                   `protobuf:"varint,9,opt,name=is_dir,json=isDir,proto3" json:"is_dir,omitempty"`
 	IsSymlink     bool                   `protobuf:"varint,10,opt,name=is_symlink,json=isSymlink,proto3" json:"is_symlink,omitempty"`
 	SymlinkTarget string                 `protobuf:"bytes,11,opt,name=symlink_target,json=symlinkTarget,proto3" json:"symlink_target,omitempty"`
@@ -680,18 +681,18 @@ func (x *FileStat) GetGid() int32 {
 	return 0
 }
 
-func (x *FileStat) GetModifiedUnix() int64 {
+func (x *FileStat) GetModifiedAt() *timestamppb.Timestamp {
 	if x != nil {
-		return x.ModifiedUnix
+		return x.ModifiedAt
 	}
-	return 0
+	return nil
 }
 
-func (x *FileStat) GetAccessedUnix() int64 {
+func (x *FileStat) GetAccessedAt() *timestamppb.Timestamp {
 	if x != nil {
-		return x.AccessedUnix
+		return x.AccessedAt
 	}
-	return 0
+	return nil
 }
 
 func (x *FileStat) GetIsDir() bool {
@@ -863,7 +864,7 @@ var File_pkg_proto_filetransfer_proto protoreflect.FileDescriptor
 
 const file_pkg_proto_filetransfer_proto_rawDesc = "" +
 	"\n" +
-	"\x1cpkg/proto/filetransfer.proto\x12\x06gameap\"U\n" +
+	"\x1cpkg/proto/filetransfer.proto\x12\x06gameap\x1a\x1fgoogle/protobuf/timestamp.proto\"U\n" +
 	"\vUploadChunk\x122\n" +
 	"\bmetadata\x18\x01 \x01(\v2\x16.gameap.UploadMetadataR\bmetadata\x12\x12\n" +
 	"\x04data\x18\x02 \x01(\fR\x04data\"\xc2\x01\n" +
@@ -905,16 +906,18 @@ const file_pkg_proto_filetransfer_proto_rawDesc = "" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x14\n" +
 	"\x05error\x18\x02 \x01(\tR\x05error\x12$\n" +
 	"\x04stat\x18\x03 \x01(\v2\x10.gameap.FileStatR\x04stat\x12\x16\n" +
-	"\x06exists\x18\x04 \x01(\bR\x06exists\"\xa5\x02\n" +
+	"\x06exists\x18\x04 \x01(\bR\x06exists\"\xd5\x02\n" +
 	"\bFileStat\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
 	"\x04path\x18\x02 \x01(\tR\x04path\x12\x12\n" +
 	"\x04size\x18\x03 \x01(\x03R\x04size\x12\x12\n" +
 	"\x04mode\x18\x04 \x01(\x05R\x04mode\x12\x10\n" +
 	"\x03uid\x18\x05 \x01(\x05R\x03uid\x12\x10\n" +
-	"\x03gid\x18\x06 \x01(\x05R\x03gid\x12#\n" +
-	"\rmodified_unix\x18\a \x01(\x03R\fmodifiedUnix\x12#\n" +
-	"\raccessed_unix\x18\b \x01(\x03R\faccessedUnix\x12\x15\n" +
+	"\x03gid\x18\x06 \x01(\x05R\x03gid\x12;\n" +
+	"\vmodified_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"modifiedAt\x12;\n" +
+	"\vaccessed_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"accessedAt\x12\x15\n" +
 	"\x06is_dir\x18\t \x01(\bR\x05isDir\x12\x1d\n" +
 	"\n" +
 	"is_symlink\x18\n" +
@@ -976,25 +979,28 @@ var file_pkg_proto_filetransfer_proto_goTypes = []any{
 	(*FileStat)(nil),              // 8: gameap.FileStat
 	(*ListDirectoryRequest)(nil),  // 9: gameap.ListDirectoryRequest
 	(*ListDirectoryResponse)(nil), // 10: gameap.ListDirectoryResponse
+	(*timestamppb.Timestamp)(nil), // 11: google.protobuf.Timestamp
 }
 var file_pkg_proto_filetransfer_proto_depIdxs = []int32{
 	2,  // 0: gameap.UploadChunk.metadata:type_name -> gameap.UploadMetadata
 	0,  // 1: gameap.FileOperationRequest.operation:type_name -> gameap.FileOperationType
 	8,  // 2: gameap.FileOperationResponse.stat:type_name -> gameap.FileStat
-	8,  // 3: gameap.ListDirectoryResponse.files:type_name -> gameap.FileStat
-	1,  // 4: gameap.FileTransferService.UploadFile:input_type -> gameap.UploadChunk
-	4,  // 5: gameap.FileTransferService.DownloadFile:input_type -> gameap.DownloadRequest
-	6,  // 6: gameap.FileTransferService.FileOperation:input_type -> gameap.FileOperationRequest
-	9,  // 7: gameap.FileTransferService.ListDirectory:input_type -> gameap.ListDirectoryRequest
-	3,  // 8: gameap.FileTransferService.UploadFile:output_type -> gameap.UploadResult
-	5,  // 9: gameap.FileTransferService.DownloadFile:output_type -> gameap.DownloadChunk
-	7,  // 10: gameap.FileTransferService.FileOperation:output_type -> gameap.FileOperationResponse
-	10, // 11: gameap.FileTransferService.ListDirectory:output_type -> gameap.ListDirectoryResponse
-	8,  // [8:12] is the sub-list for method output_type
-	4,  // [4:8] is the sub-list for method input_type
-	4,  // [4:4] is the sub-list for extension type_name
-	4,  // [4:4] is the sub-list for extension extendee
-	0,  // [0:4] is the sub-list for field type_name
+	11, // 3: gameap.FileStat.modified_at:type_name -> google.protobuf.Timestamp
+	11, // 4: gameap.FileStat.accessed_at:type_name -> google.protobuf.Timestamp
+	8,  // 5: gameap.ListDirectoryResponse.files:type_name -> gameap.FileStat
+	1,  // 6: gameap.FileTransferService.UploadFile:input_type -> gameap.UploadChunk
+	4,  // 7: gameap.FileTransferService.DownloadFile:input_type -> gameap.DownloadRequest
+	6,  // 8: gameap.FileTransferService.FileOperation:input_type -> gameap.FileOperationRequest
+	9,  // 9: gameap.FileTransferService.ListDirectory:input_type -> gameap.ListDirectoryRequest
+	3,  // 10: gameap.FileTransferService.UploadFile:output_type -> gameap.UploadResult
+	5,  // 11: gameap.FileTransferService.DownloadFile:output_type -> gameap.DownloadChunk
+	7,  // 12: gameap.FileTransferService.FileOperation:output_type -> gameap.FileOperationResponse
+	10, // 13: gameap.FileTransferService.ListDirectory:output_type -> gameap.ListDirectoryResponse
+	10, // [10:14] is the sub-list for method output_type
+	6,  // [6:10] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_pkg_proto_filetransfer_proto_init() }

@@ -16,6 +16,7 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 const (
@@ -473,12 +474,12 @@ func (s *Service) ListDirectory(ctx context.Context, req *proto.ListDirectoryReq
 		relPath, _ := filepath.Rel(safePath, path)
 
 		files = append(files, &proto.FileStat{
-			Name:         info.Name(),
-			Path:         relPath,
-			Size:         info.Size(),
-			Mode:         int32(info.Mode()),
-			ModifiedUnix: info.ModTime().Unix(),
-			IsDir:        info.IsDir(),
+			Name:       info.Name(),
+			Path:       relPath,
+			Size:       info.Size(),
+			Mode:       int32(info.Mode()),
+			ModifiedAt: timestamppb.New(info.ModTime()),
+			IsDir:      info.IsDir(),
 		})
 
 		return nil
@@ -665,12 +666,12 @@ func (s *Service) handleStat(path string) (*proto.FileOperationResponse, error) 
 	}
 
 	stat := &proto.FileStat{
-		Name:         info.Name(),
-		Path:         path,
-		Size:         info.Size(),
-		Mode:         int32(info.Mode()),
-		ModifiedUnix: info.ModTime().Unix(),
-		IsDir:        info.IsDir(),
+		Name:       info.Name(),
+		Path:       path,
+		Size:       info.Size(),
+		Mode:       int32(info.Mode()),
+		ModifiedAt: timestamppb.New(info.ModTime()),
+		IsDir:      info.IsDir(),
 	}
 
 	if info.Mode()&os.ModeSymlink != 0 {

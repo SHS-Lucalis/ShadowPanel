@@ -4,6 +4,8 @@ package gameap;
 
 option go_package = "github.com/gameap/gameap/pkg/proto";
 
+import "google/protobuf/timestamp.proto";
+
 service FileTransferService {
   rpc UploadFile(stream UploadChunk) returns (UploadResult);
   rpc DownloadFile(DownloadRequest) returns (stream DownloadChunk);
@@ -83,8 +85,8 @@ message FileStat {
   int32 mode = 4;
   int32 uid = 5;
   int32 gid = 6;
-  int64 modified_unix = 7;
-  int64 accessed_unix = 8;
+  google.protobuf.Timestamp modified_at = 7;
+  google.protobuf.Timestamp accessed_at = 8;
   bool is_dir = 9;
   bool is_symlink = 10;
   string symlink_target = 11;
