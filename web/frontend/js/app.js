@@ -53,7 +53,7 @@ import ContentView from './components/ContentView.vue';
 
 import KeyValueTable from "@/components/KeyValueTable.vue";
 import GameapSelect from "@/components/input/GameapSelect.vue";
-import TaskOutput from "@/components/TaskOutput.vue";
+
 
 const InputTextList = defineAsyncComponent(() =>
     import('./components/input/InputTextList.vue')
@@ -168,7 +168,7 @@ app.component('ServerStatus', ServerStatus);
 app.component('ServerTasks', ServerTasks);
 app.component('SettingsParameters', SettingsParameters);
 app.component('SmartPortSelector', SmartPortSelector);
-app.component('TaskOutput', TaskOutput);
+
 app.component('UserServerPrivileges', UserServerPrivileges);
 app.component('CreateNodeModal', CreateNodeModal);
 

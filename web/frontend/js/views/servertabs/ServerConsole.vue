@@ -19,9 +19,7 @@
             <div class="relative flex items-stretch w-full">
               <div class="w-full">
                 <div class="inline">{{ consoleHostname }}:>&nbsp;</div>
-                <GIcon v-if="sendCommandLoading" name="loading" class="animate-spin" />
                 <input
-                    v-else
                     v-on:keyup.enter="sendCommand"
                     v-model="inputText"
                     type="text"
@@ -44,14 +42,12 @@
 </template>
 
 <script setup>
-import {ref, onMounted, onUnmounted} from 'vue';
-import axios from '@/config/axios';
+import {ref, computed, watch, nextTick} from 'vue';
 import { replace } from 'lodash-es';
 import {
   NDivider,
 } from "naive-ui"
-import { GIcon } from '@gameap/ui'
-import {errorNotification} from "@/parts/dialogs";
+import { useConsoleWebSocket } from '@/composables/useConsoleWebSocket'
 
 const props = defineProps({
   serverId: Number,
@@ -62,12 +58,15 @@ const props = defineProps({
 
 const consoleRef = ref();
 const inputRef = ref();
-const output = ref(null);
-const inputText = ref(null);
-const lock = ref(false);
-const sendCommandLoading = ref(false);
-const updateConsole = ref(true);
+const inputText = ref('');
 const autoScroll = ref(true);
+
+const { output: rawOutput, sendCommand: wsSendCommand } = useConsoleWebSocket(props.serverId)
+
+const output = computed(() => {
+  if (!rawOutput.value) return ''
+  return replace(rawOutput.value, /(\r\n|\n|\r)/gm, '\n')
+})
 
 function scroll() {
   if (autoScroll.value && consoleRef.value) {
@@ -75,60 +74,19 @@ function scroll() {
   }
 }
 
-function getConsole() {
-  if (!updateConsole.value) {
-    return;
-  }
-
-  axios.get(`/api/servers/${props.serverId}/console`)
-      .then(response => {
-        output.value = replace(response.data.console, /(\r\n|\n|\r)/gm, "\n")
-        setTimeout(scroll, 1000);
-      })
-      .catch(error => {
-        console.log(error);
-        updateConsole.value = false;
-      });
-}
+watch(output, () => {
+  nextTick(scroll)
+})
 
 function sendCommand() {
-  if (lock.value) {
-    return;
-  }
-
-  lock.value = true;
-  sendCommandLoading.value = true;
-  axios.post(`/api/servers/${props.serverId}/console`, { command: inputText.value })
-      .then(response => {
-        inputText.value = '';
-        lock.value = false;
-        updateConsole.value = true;
-        setTimeout(getConsole, 1000);
-      })
-      .catch(error => {
-        lock.value = false;
-        console.log(error);
-        errorNotification(error)
-      }).finally(() => {
-        sendCommandLoading.value = false;
-
-        setTimeout(() => {
-          if (inputRef.value) {
-            inputRef.value.select();
-          }
-
-        }, 200);
-      });
+  const command = inputText.value.trim()
+  if (!command) return
+  wsSendCommand(command)
+  inputText.value = ''
+  nextTick(() => {
+    if (inputRef.value) {
+      inputRef.value.select()
+    }
+  })
 }
-
-let interval;
-
-onMounted(() => {
-  getConsole();
-  interval = setInterval(getConsole, 10000);
-});
-onUnmounted(() => {
-  updateConsole.value = false;
-  clearInterval(interval);
-});
 </script>

@@ -11,7 +11,7 @@
       </tr>
       <tr>
         <td><strong>{{ trans('gdaemon_tasks.status') }}:</strong></td>
-        <td><GStatusBadge v-if="task.status" :status="task.status" /></td>
+        <td><GStatusBadge v-if="displayStatus" :status="displayStatus" /></td>
       </tr>
       <tr>
         <td><strong>{{ trans('gdaemon_tasks.created') }}:</strong></td>
@@ -43,41 +43,19 @@
 
 <script setup>
 import { GBreadcrumbs, GStatusBadge, Loading, GTable } from "@gameap/ui"
-import {computed, onMounted, onUnmounted, watch} from "vue"
+import {computed, onMounted} from "vue"
 import {trans} from "../../i18n/i18n"
-import {errorNotification, notification} from "../../parts/dialogs"
+import {errorNotification} from "../../parts/dialogs"
 import {useRoute} from "vue-router"
 import {storeToRefs} from "pinia"
-import {useDaemonTaskStore} from "../../store/daemonTask";
-import { replace } from "lodash-es";
+import {useDaemonTaskStore} from "../../store/daemonTask"
+import { replace } from "lodash-es"
+import { useTaskWebSocket } from '@/composables/useTaskWebSocket'
 
 const daemonTaskStore = useDaemonTaskStore()
 const route = useRoute()
 
-const POLL_INTERVAL = 3000
-let pollIntervalId = null
-
-function shouldPoll(status) {
-  return status === 'waiting' || status === 'working'
-}
-
-function startPolling() {
-  if (pollIntervalId) return
-
-  pollIntervalId = setInterval(() => {
-    daemonTaskStore.fetchTaskOutput(true).catch((error) => {
-      errorNotification(error)
-      stopPolling()
-    })
-  }, POLL_INTERVAL)
-}
-
-function stopPolling() {
-  if (pollIntervalId) {
-    clearInterval(pollIntervalId)
-    pollIntervalId = null
-  }
-}
+const { taskStatus, taskOutput } = useTaskWebSocket(route.params.id)
 
 const breadcrumbs = computed(() => {
   let result = [
@@ -97,34 +75,21 @@ const breadcrumbs = computed(() => {
 
 const {loading, task} = storeToRefs(daemonTaskStore)
 
+const displayStatus = computed(() => taskStatus.value || task.value.status)
+
 onMounted(() => {
   daemonTaskStore.setTaskId(route.params.id)
   daemonTaskStore.fetchTaskOutput()
-    .then(() => {
-      if (shouldPoll(task.value.status)) {
-        startPolling()
-      }
-    })
     .catch((error) => {
       errorNotification(error)
     })
 })
 
-watch(() => task.value.status, (newStatus) => {
-  if (!shouldPoll(newStatus)) {
-    stopPolling()
-  }
-})
-
-onUnmounted(() => {
-  stopPolling()
-})
-
 const output = computed(() => {
-  if (!task.value.output) {
+  if (!taskOutput.value) {
     return ''
   }
 
-  return replace(task.value.output, /(\r\n|\n|\r)/gm, "\n")
+  return replace(taskOutput.value, /(\r\n|\n|\r)/gm, "\n")
 })
 </script>

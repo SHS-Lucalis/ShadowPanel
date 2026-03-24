@@ -6,6 +6,7 @@
   import axios from "@/config/axios";
   import { GIcon } from '@gameap/ui';
   import GButton from "@/components/GButton.vue";
+  import { useTaskWebSocket } from '@/composables/useTaskWebSocket'
 
   const authStore = useAuthStore();
 
@@ -13,7 +14,6 @@
       width: "600px"
   }
 
-  const WATCH_TASK_TIMEOUT            = 2000; // 2 sec
   const CLEAR_STATE_TIMEOUT           = 2000; // 2 sec
   const LONG_WAITING_TIME             = 20000; // 20 sec
 
@@ -67,6 +67,7 @@
   const progressModalTitle = ref('');
   const progressDetails = ref('');
   const currentTaskId = ref(null);
+  const currentCommand = ref(null);
 
   const props = defineProps([
       'button',
@@ -79,11 +80,54 @@
   ]);
 
   // state
-  let watchTaskData = {}
   let watchTaskStartedTime;
-  let watchTaskStopped = false;
   let detailedError = false;
   let statusTries = CHECK_SERVER_STATUS_TRIES;
+  let clearStateTimer = null;
+
+  useTaskWebSocket(currentTaskId, {
+    onStatusChange(status) {
+      handleTaskStatus(currentCommand.value, status)
+    },
+    onComplete(status) {
+      handleTaskComplete(currentCommand.value, status)
+    },
+  })
+
+  function handleTaskStatus(command, status) {
+    if (status === 'waiting') {
+      progressDetails.value = trans('servers.command_progress_waiting')
+      progress.value = PROGRESS_PERCENT_WAITING
+      checkLongWaiting()
+    } else if (status === 'working') {
+      progressDetails.value = trans('servers.command_progress_executed')
+      progress.value = PROGRESS_PERCENT_WORKING
+      hideAdditionalInfo()
+    }
+  }
+
+  function handleTaskComplete(command, status) {
+    if (status === 'success') {
+      progress.value = PROGRESS_PERCENT_TASK_SUCCESS
+
+      if (commandConfiguration[command]?.checkServerStatusAfterTask) {
+        progressDetails.value = trans('servers.command_progress_waiting_status')
+        setTimeout(watchServerStatus, CHECK_SERVER_STATUS_TIMEOUT, command)
+      } else {
+        progressDetails.value = ""
+        taskSuccess(commandConfiguration[command]?.successMessage)
+        setTimeout(clearState, CLEAR_STATE_TIMEOUT)
+      }
+    } else if (status === 'canceled') {
+      progressDetails.value = ""
+      progress.value = PROGRESS_PERCENT_NULL
+      taskError(trans('gdaemon_tasks.common_canceled_msg'))
+    } else {
+      progressDetails.value = ""
+      progress.value = PROGRESS_PERCENT_COMPLETE
+      taskError(trans('gdaemon_tasks.common_error_msg'))
+    }
+  }
 
   function run(command) {
       confirm(trans('main.confirm_message'), () => runCommand(command));
@@ -99,75 +143,19 @@
       axios.post('/api/servers/' + props.serverId + '/' + command)
           .then(function (response) {
               const taskId = response.data.gdaemonTaskId;
-              currentTaskId.value = taskId;
 
               showProgressbar.value = true
               progressModalTitle.value = commandConfiguration[command].title
 
               watchTaskStartedTime = (new Date()).getTime();
-              watchTaskStopped = false;
-              watchTask(command, taskId);
+
+              clearTimeout(clearStateTimer)
+              currentCommand.value = command
+              currentTaskId.value = taskId
           }).catch(function (error) {
             errorNotification(error.response.data.message, function() {
                 location.reload();
             });
-      });
-  }
-
-  function watchTask(command, id) {
-      getTask(id);
-      let checkAgain = true;
-
-      if (Object.keys(watchTaskData).length !== 0) {
-          if (watchTaskData.status === 'waiting') {
-              progressDetails.value = trans('servers.command_progress_waiting');
-              progress.value = PROGRESS_PERCENT_WAITING;
-              checkLongWaiting();
-          } else if (watchTaskData.status === 'working') {
-              progressDetails.value = trans('servers.command_progress_executed');
-              progress.value = PROGRESS_PERCENT_WORKING;
-              hideAdditionalInfo();
-          } else if (watchTaskData.status === 'success') {
-              checkAgain = false;
-              progress.value = PROGRESS_PERCENT_TASK_SUCCESS;
-
-              if (commandConfiguration[command].checkServerStatusAfterTask) {
-                  progressDetails.value = trans('servers.command_progress_waiting_status');
-                  setTimeout(watchServerStatus, CHECK_SERVER_STATUS_TIMEOUT, command);
-              } else {
-                  progressDetails.value = "";
-                  taskSuccess(commandConfiguration[command].successMessage);
-                  setTimeout(clearState, CLEAR_STATE_TIMEOUT);
-              }
-          } else if (watchTaskData.status === 'canceled') {
-              progressDetails.value = "";
-              checkAgain = false;
-              progress.value = PROGRESS_PERCENT_NULL;
-              taskError(trans('gdaemon_tasks.common_canceled_msg'));
-          } else if (watchTaskData.status === 'error') {
-              progressDetails.value = "";
-              checkAgain = false;
-              progress.value = PROGRESS_PERCENT_COMPLETE;
-              taskError(trans('gdaemon_tasks.common_error_msg'));
-          } else {
-              progressDetails.value = "";
-              checkAgain = false;
-              progress.value = PROGRESS_PERCENT_COMPLETE;
-              taskError(trans('gdaemon_tasks.common_error_msg'));
-          }
-      }
-
-      if (checkAgain && !watchTaskStopped) {
-          setTimeout(watchTask, WATCH_TASK_TIMEOUT, command, id);
-      }
-  }
-
-  function getTask(id) {
-      axios.get('/api/gdaemon_tasks/' + id)
-          .then(function (response) {
-              watchTaskData = response.data;
-          }).catch(function(error) {
-              taskError(error.response.data.message);
       });
   }
 
@@ -194,16 +182,15 @@
           errorMsg = trans('gdaemon_tasks.common_error_msg')
       }
 
-      watchTaskStopped = true;
-
       let content = "";
-      if (detailedError) {
+      if (detailedError && currentTaskId.value) {
+          const taskId = currentTaskId.value
           content = () => [
               h('div', {class: 'my-4'}, [
                   h('span', {class: 'mr-2'}, trans('servers.task_see_log')),
                   h(
                       GButton,
-                      {color: 'black', size: 'small', onClick: () => { window.location.href = '/admin/gdaemon_tasks/' + watchTaskData.id; }},
+                      {color: 'black', size: 'small', onClick: () => { window.location.href = '/admin/gdaemon_tasks/' + taskId; }},
                       () => [
                           h('span', {class: 'inline'}, trans('main.details')),
                           h(GIcon, {name: 'chevron-double-right'})
@@ -227,7 +214,6 @@
   }
 
   function taskSuccess(msg) {
-      watchTaskStopped = true;
       hideAdditionalInfo();
 
       watchTaskStartedTime = 0;
@@ -248,7 +234,7 @@
   function taskComplete() {
       showProgressbar.value = false
 
-      setTimeout(clearState, CLEAR_STATE_TIMEOUT);
+      clearStateTimer = setTimeout(clearState, CLEAR_STATE_TIMEOUT);
   }
 
   function watchServerStatus(command) {
@@ -279,16 +265,19 @@
   }
 
   function clearState() {
+      clearStateTimer = null;
       progress.value = 0;
-      watchTaskData = {};
       statusTries = CHECK_SERVER_STATUS_TRIES;
       currentTaskId.value = null;
+      currentCommand.value = null;
   }
 
   function progressModalChanged(show) {
       if (!show) {
           showProgressbar.value = false
-          watchTaskStopped = true
+          clearTimeout(clearStateTimer)
+          currentTaskId.value = null
+          currentCommand.value = null
       }
   }
 </script>

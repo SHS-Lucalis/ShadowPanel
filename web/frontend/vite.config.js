@@ -53,6 +53,7 @@ export default defineConfig({
             '/api': {
                 target: 'http://localhost:8025',
                 changeOrigin: true,
+                ws: true,
             },
             '/plugins.css': {
                 target: 'http://localhost:8025',
