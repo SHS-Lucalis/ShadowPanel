@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -133,7 +134,7 @@ func Run(runParams RunParams) {
 	startPubSub(ctx, container)
 
 	if cfg.GRPC.Enabled {
-		runMultiplexed(ctx, cfg, container)
+		runWithGRPC(ctx, cfg, container)
 	} else {
 		runHTTPOnly(ctx, cfg, container)
 	}
@@ -155,24 +156,42 @@ func runHTTPOnly(ctx context.Context, cfg *config.Config, container *Container) 
 	}
 }
 
-func runMultiplexed(ctx context.Context, _ *config.Config, container *Container) {
+func runWithGRPC(ctx context.Context, cfg *config.Config, container *Container) {
 	if err := container.SessionRegistry().Start(ctx); err != nil {
 		slog.ErrorContext(ctx, "Failed to start session registry", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
 
-	mux, err := container.MultiplexedServer()
+	grpcServer := container.GRPCServer()
+	grpcAddr := fmt.Sprintf("%s:%d", cfg.HTTPHost, cfg.GRPC.Port)
+
+	lis, err := net.Listen("tcp", grpcAddr)
 	if err != nil {
-		slog.ErrorContext(ctx, "Failed to create multiplexed server", slog.String("error", err.Error()))
+		slog.ErrorContext(ctx, "Failed to listen for gRPC", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
 
-	addr := mux.Address().String()
-	slog.InfoContext(ctx, "Starting multiplexed server (HTTP + gRPC)", slog.String("address", addr))
+	go func() {
+		slog.InfoContext(ctx, "Starting gRPC server", slog.String("address", grpcAddr))
+		if err := grpcServer.Serve(lis); err != nil {
+			slog.ErrorContext(ctx, "gRPC server error", slog.String("error", err.Error()))
+		}
+	}()
 
-	err = mux.Serve(ctx)
-	if err != nil && !errors.Is(err, http.ErrServerClosed) && !errors.Is(err, context.Canceled) {
-		slog.Error("Multiplexed server error", slog.String("error", err.Error()))
+	go func() {
+		<-ctx.Done()
+		grpcServer.GracefulStop()
+	}()
+
+	if cfg.TLSEnabled() {
+		startHTTPSServer(ctx, cfg, container)
+	}
+
+	server := container.HTTPServer()
+	slog.InfoContext(ctx, fmt.Sprintf("Starting HTTP server on %s:%d", cfg.HTTPHost, cfg.HTTPPort))
+
+	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		slog.Error(err.Error())
 		os.Exit(1)
 	}
 }

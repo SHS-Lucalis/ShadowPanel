@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"database/sql"
 	"log/slog"
 	"net/http"
@@ -1394,6 +1395,15 @@ func (c *Container) FileTransferService() *filetransfer.Service {
 
 func (c *Container) GRPCServer() *grpc.Server {
 	if c.grpcServer == nil {
+		var tlsConfig *tls.Config
+		if c.config.GRPC.Enabled {
+			var err error
+			tlsConfig, err = c.buildGRPCTLSConfig()
+			if err != nil {
+				slog.Error("Failed to build gRPC TLS config", slog.String("error", err.Error()))
+			}
+		}
+
 		c.grpcServer = internalgrpc.NewServer(
 			&internalgrpc.ServerConfig{
 				MaxRecvMsgSize:       c.config.GRPC.MaxRecvMsgSize,
@@ -1402,6 +1412,7 @@ func (c *Container) GRPCServer() *grpc.Server {
 				RequireMTLS:          c.config.GRPC.RequireMTLS,
 				FileTransferBasePath: c.config.GRPC.FileTransferBasePath,
 				EnableReflection:     c.config.GRPC.EnableReflection,
+				TLSConfig:            tlsConfig,
 			},
 			&internalgrpc.ServerDependencies{
 				GatewayService:      c.GatewayService(),
@@ -1419,6 +1430,47 @@ func (c *Container) GRPCServer() *grpc.Server {
 	}
 
 	return c.grpcServer
+}
+
+func (c *Container) buildGRPCTLSConfig() (*tls.Config, error) {
+	ctx := c.context
+	certSvc := c.CertificatesService()
+
+	certPEM, keyPEM, err := certSvc.EnsureGenerated(ctx,
+		certificates.ServerCertificatesPath+"/api-server.crt",
+		certificates.ServerCertificatesPath+"/api-server.key",
+		&certificates.SignOptions{CommonName: "GameAP API Server"},
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to ensure gRPC server certificate")
+	}
+
+	cert, err := tls.X509KeyPair([]byte(certPEM), []byte(keyPEM))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to load gRPC server certificate")
+	}
+
+	tlsCfg := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		MinVersion:   tls.VersionTLS12,
+	}
+
+	if c.config.GRPC.RequireMTLS {
+		rootCAPEM, err := certSvc.Root(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to load root CA for mTLS")
+		}
+
+		caPool := x509.NewCertPool()
+		if !caPool.AppendCertsFromPEM([]byte(rootCAPEM)) {
+			return nil, errors.New("failed to add root CA to pool")
+		}
+
+		tlsCfg.ClientAuth = tls.RequireAndVerifyClientCert
+		tlsCfg.ClientCAs = caPool
+	}
+
+	return tlsCfg, nil
 }
 
 func (c *Container) MultiplexedServer() (*MultiplexedServer, error) {

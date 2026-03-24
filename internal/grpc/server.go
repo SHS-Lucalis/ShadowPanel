@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	"crypto/tls"
 	"log/slog"
 
 	"github.com/gameap/gameap/internal/grpc/filetransfer"
@@ -9,6 +10,7 @@ import (
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/pkg/proto"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
@@ -21,6 +23,7 @@ type ServerConfig struct {
 	RequireMTLS          bool
 	FileTransferBasePath string
 	EnableReflection     bool
+	TLSConfig            *tls.Config
 }
 
 func DefaultServerConfig() *ServerConfig {
@@ -57,6 +60,13 @@ func NewServer(config *ServerConfig, deps *ServerDependencies) *grpc.Server {
 		grpc.MaxRecvMsgSize(config.MaxRecvMsgSize),
 		grpc.MaxSendMsgSize(config.MaxSendMsgSize),
 		grpc.MaxConcurrentStreams(config.MaxConcurrentStreams),
+	}
+
+	if config.TLSConfig != nil {
+		opts = append(opts, grpc.Creds(credentials.NewTLS(config.TLSConfig)))
+	}
+
+	opts = append(opts,
 		grpc.ChainStreamInterceptor(
 			recoveryInterceptor.StreamServerInterceptor(),
 			loggingInterceptor.StreamServerInterceptor(),
@@ -67,7 +77,7 @@ func NewServer(config *ServerConfig, deps *ServerDependencies) *grpc.Server {
 			loggingInterceptor.UnaryServerInterceptor(),
 			authInterceptor.UnaryServerInterceptor(),
 		),
-	}
+	)
 
 	server := grpc.NewServer(opts...)
 

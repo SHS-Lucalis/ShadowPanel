@@ -266,6 +266,30 @@ func (s *Service) Generate(
 	return certPEM, string(privateKeyPEM), nil
 }
 
+// EnsureGenerated generates a new certificate only if the files do not already exist.
+// If the files exist, it reads and returns them. Otherwise it delegates to Generate.
+func (s *Service) EnsureGenerated(
+	ctx context.Context,
+	certificatePath, keyPath string,
+	opts *SignOptions,
+) (string, string, error) {
+	if s.fileManager.Exists(ctx, certificatePath) && s.fileManager.Exists(ctx, keyPath) {
+		certPEM, err := s.fileManager.Read(ctx, certificatePath)
+		if err != nil {
+			return "", "", errors.Wrap(err, "failed to read existing certificate")
+		}
+
+		keyPEM, err := s.fileManager.Read(ctx, keyPath)
+		if err != nil {
+			return "", "", errors.Wrap(err, "failed to read existing private key")
+		}
+
+		return string(certPEM), string(keyPEM), nil
+	}
+
+	return s.Generate(ctx, certificatePath, keyPath, opts)
+}
+
 // GenerateInMemory generates a new certificate signed with the root certificate
 // without writing to disk. Returns the certificate PEM and private key PEM.
 func (s *Service) GenerateInMemory(ctx context.Context, opts *SignOptions) (string, string, error) {
