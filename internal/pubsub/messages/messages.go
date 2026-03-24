@@ -23,6 +23,7 @@ const (
 
 	TypeTaskStatus    = "task.status"
 	TypeTaskOutput    = "task.output"
+	TypeTaskComplete  = "task.complete"
 	TypeConsoleOutput = "console.output"
 	TypeConsoleResult = "console.result"
 )
@@ -90,6 +91,12 @@ type TaskOutputPayload struct {
 	TaskID  uint64 `json:"task_id"`
 	Chunk   string `json:"chunk"`
 	IsFinal bool   `json:"is_final"`
+}
+
+type TaskCompletePayload struct {
+	TaskID   uint64 `json:"task_id"`
+	Status   string `json:"status"`
+	ServerID uint   `json:"server_id"`
 }
 
 type ConsoleOutputPayload struct {

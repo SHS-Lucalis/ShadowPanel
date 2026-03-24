@@ -220,6 +220,10 @@ func (h *Handler) getConsoleLog(ctx context.Context, server *domain.Server, node
 		return result.Output, nil
 	}
 
+	if h.registry.IsConnected(uint64(node.ID)) {
+		return "", nil
+	}
+
 	return h.downloadOutputFile(ctx, node, server.Dir)
 }
 

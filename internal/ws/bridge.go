@@ -46,6 +46,11 @@ func (b *Bridge) Start(ctx context.Context) error {
 }
 
 func (b *Bridge) handleMessage(_ context.Context, msg *pubsub.Message) error {
+	b.logger.Info("bridge received pubsub message",
+		"channel", msg.Channel,
+		"type", msg.Type,
+	)
+
 	topic := ChannelToTopic(msg.Channel)
 	if topic == "" {
 		return nil

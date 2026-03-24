@@ -131,9 +131,10 @@ type Container struct {
 	enrollmentService *enrollment.Service
 
 	// Daemon Services
-	daemonStatus   *daemon.StatusService
-	daemonFiles    *daemon.FileService
-	daemonCommands *daemon.CommandService
+	daemonStatus      *daemon.StatusService
+	daemonFiles       *daemon.FileService
+	daemonFilesLegacy *daemon.FileBINNService //nolint:staticcheck // legacy fallback
+	daemonCommands    *daemon.CommandService
 
 	// Plugins
 	pluginManager    *pkgplugin.Manager
@@ -1193,12 +1194,25 @@ func (c *Container) DaemonStatus() *daemon.StatusService {
 func (c *Container) DaemonFiles() *daemon.FileService {
 	if c.daemonFiles == nil {
 		c.daemonFiles = daemon.NewFileService(
+			c.GatewayService(),
+			c.SessionRegistry(),
+			c.DaemonFilesLegacy(),
+		)
+	}
+
+	return c.daemonFiles
+}
+
+//nolint:staticcheck // legacy fallback for daemons not supporting gRPC
+func (c *Container) DaemonFilesLegacy() *daemon.FileBINNService {
+	if c.daemonFilesLegacy == nil {
+		c.daemonFilesLegacy = daemon.NewFileBINNService( //nolint:staticcheck // legacy fallback
 			c.ClientCertificateRepository(),
 			c.FileManager(),
 		)
 	}
 
-	return c.daemonFiles
+	return c.daemonFilesLegacy
 }
 
 func (c *Container) DaemonCommands() *daemon.CommandService {
@@ -1364,7 +1378,7 @@ func (c *Container) SessionRegistry() *session.Registry {
 
 func (c *Container) TaskHandler() *handlers.TaskHandler {
 	if c.taskHandler == nil {
-		c.taskHandler = handlers.NewTaskHandler(c.DaemonTaskRepository(), slog.Default())
+		c.taskHandler = handlers.NewTaskHandler(c.DaemonTaskRepository(), c.PubSub(), slog.Default())
 	}
 
 	return c.taskHandler
@@ -1423,11 +1437,19 @@ func (c *Container) FileTransferService() *filetransfer.Service {
 func (c *Container) GRPCServer() *grpc.Server {
 	if c.grpcServer == nil {
 		var tlsConfig *tls.Config
-		if c.config.GRPC.Enabled {
+		if c.config.GRPC.Enabled && c.config.GRPC.TLSEnabled {
 			var err error
 			tlsConfig, err = c.buildGRPCTLSConfig()
 			if err != nil {
 				slog.Error("Failed to build gRPC TLS config", slog.String("error", err.Error()))
+			}
+		}
+
+		if c.config.GRPC.Enabled && !c.config.GRPC.TLSEnabled {
+			slog.Warn("gRPC server is running without TLS. It is recommended to enable TLS for security")
+
+			if c.config.GRPC.RequireMTLS {
+				slog.Warn("GRPC_REQUIRE_MTLS is enabled but GRPC_TLS_ENABLED is false; mTLS will not work without TLS")
 			}
 		}
 

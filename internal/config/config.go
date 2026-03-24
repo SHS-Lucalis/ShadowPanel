@@ -129,6 +129,7 @@ type Config struct {
 
 	GRPC struct {
 		Enabled              bool   `env:"GRPC_ENABLED" envDefault:"false"`
+		TLSEnabled           bool   `env:"GRPC_TLS_ENABLED" envDefault:"true"`
 		Port                 uint16 `env:"GRPC_PORT" envDefault:"31718"`
 		MaxRecvMsgSize       int    `env:"GRPC_MAX_RECV_MSG_SIZE" envDefault:"10485760"`
 		MaxSendMsgSize       int    `env:"GRPC_MAX_SEND_MSG_SIZE" envDefault:"10485760"`

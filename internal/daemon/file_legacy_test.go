@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func setupFileServiceTest(t *testing.T, mockServer *MockDaemonServer) (*FileService, *domain.Node) {
+func setupFileServiceTest(t *testing.T, mockServer *MockDaemonServer) (*FileBINNService, *domain.Node) {
 	t.Helper()
 
 	nodeRepo := inmemory.NewNodeRepository()
@@ -58,7 +58,7 @@ func setupFileServiceTest(t *testing.T, mockServer *MockDaemonServer) (*FileServ
 	err = fileManager.Write(ctx, node.GdaemonServerCert, []byte(daemonServerCert))
 	require.NoError(t, err)
 
-	fileService := NewFileService(certRepo, fileManager)
+	fileService := NewFileBINNService(certRepo, fileManager)
 
 	return fileService, node
 }
@@ -425,7 +425,7 @@ func TestFileService_NodeNotFound(t *testing.T) {
 	certRepo := inmemory.NewClientCertificateRepository()
 	fileManager := files.NewInMemoryFileManager()
 
-	fileService := NewFileService(certRepo, fileManager)
+	fileService := NewFileBINNService(certRepo, fileManager)
 
 	// ACT
 	ctx := context.Background()

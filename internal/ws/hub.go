@@ -70,6 +70,12 @@ func (h *Hub) Unregister(client *Client) {
 func (h *Hub) Broadcast(topic string, msg []byte) {
 	h.mu.RLock()
 	clients := h.topics[topic]
+
+	h.logger.Info("hub broadcasting",
+		"topic", topic,
+		"subscriber_count", len(clients),
+	)
+
 	if len(clients) == 0 {
 		h.mu.RUnlock()
 

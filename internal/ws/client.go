@@ -70,7 +70,7 @@ func (c *Client) Send(msg []byte) {
 	select {
 	case c.send <- msg:
 	default:
-		c.logger.Warn("client send buffer full, dropping message")
+		c.logger.Warn("client send buffer full, dropping message", "msg_size", len(msg))
 	}
 }
 
