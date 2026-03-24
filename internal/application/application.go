@@ -230,6 +230,10 @@ func startPubSub(ctx context.Context, container *Container) {
 		slog.ErrorContext(ctx, "Failed to start cache invalidator", slog.String("error", err.Error()))
 	}
 
+	if err := container.WSBridge().Start(ctx); err != nil {
+		slog.ErrorContext(ctx, "Failed to start WebSocket bridge", slog.String("error", err.Error()))
+	}
+
 	go func() {
 		slog.InfoContext(ctx, "Starting pub-sub listener",
 			slog.String("driver", container.Config().PubSub.Driver),

@@ -2,6 +2,7 @@ package api //nolint:revive,nolintlint
 
 import (
 	"database/sql"
+	"fmt"
 	"io"
 	"io/fs"
 	"log/slog"
@@ -125,6 +126,8 @@ import (
 	"github.com/gameap/gameap/internal/api/users/postusers"
 	"github.com/gameap/gameap/internal/api/users/putserverperms"
 	"github.com/gameap/gameap/internal/api/users/putuser"
+	wsconsole "github.com/gameap/gameap/internal/api/ws/console"
+	wstaskstatus "github.com/gameap/gameap/internal/api/ws/taskstatus"
 	"github.com/gameap/gameap/internal/cache"
 	"github.com/gameap/gameap/internal/certificates"
 	"github.com/gameap/gameap/internal/config"
@@ -132,6 +135,8 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/enrollment"
 	"github.com/gameap/gameap/internal/files"
+	grpchandlers "github.com/gameap/gameap/internal/grpc/handlers"
+	"github.com/gameap/gameap/internal/grpc/session"
 	"github.com/gameap/gameap/internal/i18n"
 	internalplugin "github.com/gameap/gameap/internal/plugin"
 	"github.com/gameap/gameap/internal/rbac"
@@ -144,6 +149,7 @@ import (
 	"github.com/gameap/gameap/internal/services/pluginstore"
 	"github.com/gameap/gameap/internal/services/servercontrol"
 	"github.com/gameap/gameap/internal/services/taskdispatcher"
+	"github.com/gameap/gameap/internal/ws"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
 	"github.com/gameap/gameap/pkg/plugin"
@@ -191,6 +197,9 @@ type container interface {
 	PluginsDir() string
 	TaskDispatcher() *taskdispatcher.Dispatcher
 	EnrollmentService() *enrollment.Service
+	WSHub() *ws.Hub
+	SessionRegistry() *session.Registry
+	CommandHandler() *grpchandlers.CommandHandler
 }
 
 func CreateRouter(c container) *http.ServeMux {
@@ -1556,6 +1565,36 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 			),
 			AdminOnly: true,
 		},
+
+		// WebSocket
+		{
+			Method: http.MethodGet,
+			Path:   "/api/ws/tasks/{id}",
+			Handler: wstaskstatus.NewHandler(
+				c.DaemonTaskRepository(),
+				c.ServerRepository(),
+				c.RBAC(),
+				c.WSHub(),
+				wsOriginPatterns(c.Config()),
+				c.Responder(),
+			),
+		},
+		{
+			Method: http.MethodGet,
+			Path:   "/api/ws/servers/{server}/console",
+			Handler: wsconsole.NewHandler(
+				c.ServerRepository(),
+				c.NodeRepository(),
+				c.RBAC(),
+				c.WSHub(),
+				wsOriginPatterns(c.Config()),
+				c.SessionRegistry(),
+				c.CommandHandler(),
+				c.DaemonCommands(),
+				c.DaemonFiles(),
+				c.Responder(),
+			),
+		},
 	}
 
 	authMiddleware := middlewares.NewAuthMiddleware(
@@ -1883,4 +1922,18 @@ type notImplementedHandler struct{}
 
 func (h *notImplementedHandler) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
+}
+
+func wsOriginPatterns(cfg *config.Config) []string {
+	host := cfg.HTTPHost
+	if host == "" || host == "0.0.0.0" {
+		return []string{"*"}
+	}
+
+	origin := "http://" + host
+	if cfg.HTTPPort != 80 && cfg.HTTPPort != 443 { //nolint:mnd
+		origin = fmt.Sprintf("%s:%d", origin, cfg.HTTPPort)
+	}
+
+	return []string{origin}
 }

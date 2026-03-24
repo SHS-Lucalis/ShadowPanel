@@ -9,6 +9,9 @@ import (
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/grpc/gateway"
 	"github.com/gameap/gameap/internal/grpc/session"
+	"github.com/gameap/gameap/internal/pubsub"
+	"github.com/gameap/gameap/internal/pubsub/channels"
+	"github.com/gameap/gameap/internal/pubsub/messages"
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/pkg/proto"
 	"github.com/pkg/errors"
@@ -17,20 +20,24 @@ import (
 type Dispatcher struct {
 	registry       *session.Registry
 	daemonTaskRepo repositories.DaemonTaskRepository
+	publisher      pubsub.Publisher
 	logger         *slog.Logger
 }
 
 func NewDispatcher(
 	registry *session.Registry,
 	daemonTaskRepo repositories.DaemonTaskRepository,
+	publisher pubsub.Publisher,
 	logger *slog.Logger,
 ) *Dispatcher {
 	if logger == nil {
 		logger = slog.Default()
 	}
+
 	return &Dispatcher{
 		registry:       registry,
 		daemonTaskRepo: daemonTaskRepo,
+		publisher:      publisher,
 		logger:         logger,
 	}
 }
@@ -60,6 +67,7 @@ func (d *Dispatcher) Dispatch(ctx context.Context, task *domain.DaemonTask) erro
 			"task_id", task.ID,
 			"node_id", task.DedicatedServerID,
 		)
+
 		return nil
 	}
 
@@ -102,6 +110,7 @@ func (d *Dispatcher) FlushPending(ctx context.Context, nodeID uint64) error {
 				"node_id", nodeID,
 				"error", err,
 			)
+
 			return errors.Wrap(err, "send pending task")
 		}
 
@@ -152,6 +161,7 @@ func (d *Dispatcher) HandleTaskStatusUpdate(ctx context.Context, nodeID uint64, 
 			"task_id", update.TaskId,
 			"node_id", nodeID,
 		)
+
 		return nil
 	}
 
@@ -163,6 +173,7 @@ func (d *Dispatcher) HandleTaskStatusUpdate(ctx context.Context, nodeID uint64, 
 			"expected_node_id", task.DedicatedServerID,
 			"actual_node_id", nodeID,
 		)
+
 		return nil
 	}
 
@@ -170,6 +181,8 @@ func (d *Dispatcher) HandleTaskStatusUpdate(ctx context.Context, nodeID uint64, 
 	if err := d.daemonTaskRepo.Save(ctx, task); err != nil {
 		return errors.Wrap(err, "update task status")
 	}
+
+	d.publishTaskStatus(ctx, update.TaskId, string(task.Status), task.DedicatedServerID, update.Message)
 
 	d.logger.Debug("task status updated",
 		"task_id", task.ID,
@@ -179,7 +192,7 @@ func (d *Dispatcher) HandleTaskStatusUpdate(ctx context.Context, nodeID uint64, 
 	return nil
 }
 
-func (d *Dispatcher) HandleTaskOutput(ctx context.Context, nodeID uint64, output *proto.TaskOutput) error {
+func (d *Dispatcher) HandleTaskOutput(ctx context.Context, _ uint64, output *proto.TaskOutput) error {
 	if len(output.OutputChunk) == 0 {
 		return nil
 	}
@@ -187,6 +200,8 @@ func (d *Dispatcher) HandleTaskOutput(ctx context.Context, nodeID uint64, output
 	if err := d.daemonTaskRepo.AppendOutput(ctx, uint(output.TaskId), string(output.OutputChunk)); err != nil {
 		return errors.Wrap(err, "append task output")
 	}
+
+	d.publishTaskOutput(ctx, output.TaskId, string(output.OutputChunk), output.IsFinal)
 
 	return nil
 }
@@ -232,6 +247,55 @@ func (d *Dispatcher) CancelTask(ctx context.Context, taskID uint64, reason strin
 	return nil
 }
 
+func (d *Dispatcher) publishTaskStatus(
+	ctx context.Context, taskID uint64, status string, serverID uint, message string,
+) {
+	if d.publisher == nil {
+		return
+	}
+
+	channel := channels.BuildRealtimeTaskStatusChannel(taskID)
+
+	msg, err := messages.NewMessage(channel, messages.TypeTaskStatus, messages.TaskStatusPayload{
+		TaskID:   taskID,
+		Status:   status,
+		ServerID: serverID,
+		Message:  message,
+	})
+	if err != nil {
+		d.logger.Warn("failed to create task status message", "error", err)
+
+		return
+	}
+
+	if err := d.publisher.Publish(ctx, channel, msg); err != nil {
+		d.logger.Warn("failed to publish task status", "task_id", taskID, "error", err)
+	}
+}
+
+func (d *Dispatcher) publishTaskOutput(ctx context.Context, taskID uint64, chunk string, isFinal bool) {
+	if d.publisher == nil {
+		return
+	}
+
+	channel := channels.BuildRealtimeTaskOutputChannel(taskID)
+
+	msg, err := messages.NewMessage(channel, messages.TypeTaskOutput, messages.TaskOutputPayload{
+		TaskID:  taskID,
+		Chunk:   chunk,
+		IsFinal: isFinal,
+	})
+	if err != nil {
+		d.logger.Warn("failed to create task output message", "error", err)
+
+		return
+	}
+
+	if err := d.publisher.Publish(ctx, channel, msg); err != nil {
+		d.logger.Warn("failed to publish task output", "task_id", taskID, "error", err)
+	}
+}
+
 func generateRequestID(taskID uint) string {
 	return time.Now().Format("20060102150405") + "-task-" + uintToString(taskID)
 }
@@ -247,5 +311,6 @@ func uintToString(n uint) string {
 		buf[i] = byte('0' + n%10)
 		n /= 10
 	}
+
 	return string(buf[i:])
 }

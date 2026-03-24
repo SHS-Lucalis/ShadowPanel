@@ -13,6 +13,8 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/enrollment"
 	"github.com/gameap/gameap/internal/files"
+	grpchandlers "github.com/gameap/gameap/internal/grpc/handlers"
+	"github.com/gameap/gameap/internal/grpc/session"
 	internalplugin "github.com/gameap/gameap/internal/plugin"
 	"github.com/gameap/gameap/internal/rbac"
 	"github.com/gameap/gameap/internal/repositories"
@@ -25,6 +27,7 @@ import (
 	"github.com/gameap/gameap/internal/services/pluginstore"
 	"github.com/gameap/gameap/internal/services/servercontrol"
 	"github.com/gameap/gameap/internal/services/taskdispatcher"
+	"github.com/gameap/gameap/internal/ws"
 	pkgapi "github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
 	"github.com/gameap/gameap/pkg/plugin"
@@ -115,8 +118,12 @@ func (c *InmemoryContainer) PelicanEggImporter() *pelicaneggimporter.Importer { 
 func (c *InmemoryContainer) GameAPImporter() *gameapimporter.Importer         { return nil }
 func (c *InmemoryContainer) GameExporter() *gameexporter.Exporter             { return nil }
 func (c *InmemoryContainer) TaskDispatcher() *taskdispatcher.Dispatcher       { return nil }
+func (c *InmemoryContainer) WSHub() *ws.Hub                                   { return ws.NewHub(nil) }
+func (c *InmemoryContainer) SessionRegistry() *session.Registry               { return nil }
+func (c *InmemoryContainer) CommandHandler() *grpchandlers.CommandHandler     { return nil }
 func (c *InmemoryContainer) EnrollmentService() *enrollment.Service {
 	keyManager := enrollment.NewSetupKeyManager(c.cacheService, "")
+
 	return enrollment.NewService(
 		keyManager,
 		c.nodeRepo,

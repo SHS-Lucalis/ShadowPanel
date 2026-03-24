@@ -20,6 +20,11 @@ const (
 	TypeDaemonTask         = "daemon.task"
 	TypeDaemonCommand      = "daemon.command"
 	TypeDaemonServerConfig = "daemon.server_config"
+
+	TypeTaskStatus    = "task.status"
+	TypeTaskOutput    = "task.output"
+	TypeConsoleOutput = "console.output"
+	TypeConsoleResult = "console.result"
 )
 
 type CacheInvalidatePayload struct {
@@ -72,6 +77,32 @@ type DaemonCommandDispatchPayload struct {
 	ServerID  uint64 `json:"server_id"`
 	Command   string `json:"command"`
 	Timeout   int32  `json:"timeout"`
+}
+
+type TaskStatusPayload struct {
+	TaskID   uint64 `json:"task_id"`
+	Status   string `json:"status"`
+	ServerID uint   `json:"server_id"`
+	Message  string `json:"message,omitempty"`
+}
+
+type TaskOutputPayload struct {
+	TaskID  uint64 `json:"task_id"`
+	Chunk   string `json:"chunk"`
+	IsFinal bool   `json:"is_final"`
+}
+
+type ConsoleOutputPayload struct {
+	ServerID  uint64 `json:"server_id"`
+	CommandID string `json:"command_id,omitempty"`
+	Chunk     string `json:"chunk"`
+}
+
+type ConsoleResultPayload struct {
+	ServerID  uint64 `json:"server_id"`
+	CommandID string `json:"command_id,omitempty"`
+	ExitCode  int32  `json:"exit_code"`
+	Error     string `json:"error,omitempty"`
 }
 
 type DaemonServerConfigPayload struct {

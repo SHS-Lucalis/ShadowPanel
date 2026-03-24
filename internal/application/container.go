@@ -52,6 +52,7 @@ import (
 	"github.com/gameap/gameap/internal/services/pluginstore"
 	"github.com/gameap/gameap/internal/services/servercontrol"
 	"github.com/gameap/gameap/internal/services/taskdispatcher"
+	"github.com/gameap/gameap/internal/ws"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
 	pkgplugin "github.com/gameap/gameap/pkg/plugin"
@@ -148,6 +149,10 @@ type Container struct {
 
 	// PubSub
 	pubsub pubsub.PubSub
+
+	// WebSocket
+	wsHub    *ws.Hub
+	wsBridge *ws.Bridge
 
 	// gRPC
 	sessionRegistry     *session.Registry
@@ -506,6 +511,7 @@ func (c *Container) TaskDispatcher() *taskdispatcher.Dispatcher {
 		c.taskDispatcher = taskdispatcher.NewDispatcher(
 			c.SessionRegistry(),
 			c.DaemonTaskRepository(),
+			c.PubSub(),
 			slog.Default(),
 		)
 	}
@@ -1323,6 +1329,27 @@ func (c *Container) PluginsDir() string {
 	return "plugins"
 }
 
+func (c *Container) WSHub() *ws.Hub {
+	if c.wsHub == nil {
+		c.wsHub = ws.NewHub(slog.Default())
+		c.appendShutdownFunc(func() error {
+			c.wsHub.Close()
+
+			return nil
+		})
+	}
+
+	return c.wsHub
+}
+
+func (c *Container) WSBridge() *ws.Bridge {
+	if c.wsBridge == nil {
+		c.wsBridge = ws.NewBridge(c.WSHub(), c.PubSub(), slog.Default())
+	}
+
+	return c.wsBridge
+}
+
 func (c *Container) SessionRegistry() *session.Registry {
 	if c.sessionRegistry == nil {
 		instanceID := c.config.PubSub.InstanceID
@@ -1345,7 +1372,7 @@ func (c *Container) TaskHandler() *handlers.TaskHandler {
 
 func (c *Container) CommandHandler() *handlers.CommandHandler {
 	if c.commandHandler == nil {
-		c.commandHandler = handlers.NewCommandHandler(slog.Default())
+		c.commandHandler = handlers.NewCommandHandler(c.PubSub(), slog.Default())
 	}
 
 	return c.commandHandler

@@ -8,6 +8,7 @@ require (
 	github.com/avito-tech/go-transaction-manager/drivers/sql/v2 v2.0.2
 	github.com/avito-tech/go-transaction-manager/trm/v2 v2.0.2
 	github.com/caarlos0/env/v11 v11.4.0
+	github.com/coder/websocket v1.8.14
 	github.com/et-nik/binngo v0.3.0
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/goccy/go-yaml v1.19.2
@@ -27,12 +28,15 @@ require (
 	github.com/rs/xid v1.6.0
 	github.com/rumblefrog/go-a2s v1.0.2
 	github.com/samber/lo v1.53.0
+	github.com/soheilhy/cmux v0.1.5
 	github.com/stretchr/testify v1.11.1
 	github.com/tetratelabs/wazero v1.11.0
 	go.uber.org/mock v0.6.0
 	go.uber.org/multierr v1.11.0
 	golang.org/x/crypto v0.49.0
+	golang.org/x/sync v0.20.0
 	golang.org/x/text v0.35.0
+	google.golang.org/grpc v1.79.3
 	google.golang.org/protobuf v1.36.11
 	modernc.org/sqlite v1.46.1
 )
@@ -63,16 +67,13 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/sethvargo/go-retry v0.3.0 // indirect
-	github.com/soheilhy/cmux v0.1.5 // indirect
 	github.com/tinylib/msgp v1.6.1 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/exp v0.0.0-20260218203240-3dfff04db8fa // indirect
 	golang.org/x/net v0.51.0 // indirect
-	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.42.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260217215200-42d3e9bedb6d // indirect
-	google.golang.org/grpc v1.79.3 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/libc v1.68.0 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
