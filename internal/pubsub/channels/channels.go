@@ -44,6 +44,11 @@ const (
 	DaemonCommandDispatch  = DaemonPrefix + "command:dispatch:"
 	DaemonSessionAll       = DaemonPrefix + "session:*"
 	DaemonTaskDispatchAll  = DaemonPrefix + "task:dispatch:*"
+
+	DaemonFileRequest          = DaemonPrefix + "file:request:"
+	DaemonFileResponse         = DaemonPrefix + "file:response:"
+	DaemonFileRequestAll       = DaemonPrefix + "file:request:*"
+	DaemonFileTransferComplete = DaemonPrefix + "file:transfer:complete:"
 )
 
 func BuildCacheInvalidateChannel(entityType string, entityID string) string {
@@ -104,6 +109,36 @@ func BuildRealtimeConsoleOutputChannel(serverID uint64) string {
 
 	sb.WriteString(RealtimeConsoleOutput)
 	sb.WriteString(strconv.FormatUint(serverID, 10))
+
+	return sb.String()
+}
+
+func BuildDaemonFileRequestChannel(nodeID uint64) string {
+	sb := strings.Builder{}
+	sb.Grow(len(DaemonFileRequest) + 20)
+
+	sb.WriteString(DaemonFileRequest)
+	sb.WriteString(strconv.FormatUint(nodeID, 10))
+
+	return sb.String()
+}
+
+func BuildDaemonFileResponseChannel(instanceID string) string {
+	sb := strings.Builder{}
+	sb.Grow(len(DaemonFileResponse) + 20)
+
+	sb.WriteString(DaemonFileResponse)
+	sb.WriteString(instanceID)
+
+	return sb.String()
+}
+
+func BuildDaemonFileTransferCompleteChannel(transferID string) string {
+	sb := strings.Builder{}
+	sb.Grow(len(DaemonFileTransferComplete) + 20)
+
+	sb.WriteString(DaemonFileTransferComplete)
+	sb.WriteString(transferID)
 
 	return sb.String()
 }

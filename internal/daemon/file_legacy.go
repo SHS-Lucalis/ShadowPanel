@@ -23,40 +23,6 @@ const (
 	filesRetryDelay = 10 * time.Millisecond
 )
 
-// FileInfo represents basic information about a file or directory.
-type FileInfo struct {
-	Name         string
-	Size         uint64
-	TimeModified uint64
-	Type         FileType
-	Perm         uint32
-}
-
-// FileDetails represents detailed information about a file or directory.
-type FileDetails struct {
-	Name             string
-	Mime             string
-	Size             uint64
-	ModificationTime uint64
-	AccessTime       uint64
-	CreateTime       uint64
-	Perm             uint32
-	Type             FileType
-}
-
-type FileType uint8
-
-const (
-	FileTypeUnknown     FileType = 0
-	FileTypeDir         FileType = 1
-	FileTypeFile        FileType = 2
-	FileTypeDevice      FileType = 3
-	FileTypeBlockDevice FileType = 4
-	FileTypeNamedPipe   FileType = 5
-	FileTypeSymlink     FileType = 6
-	FileTypeSocket      FileType = 7
-)
-
 // Deprecated: Use FileService instead. FileBINNService uses the legacy BinAPI protocol.
 type FileBINNService struct {
 	configMaker *configMaker

@@ -274,6 +274,7 @@ type GatewayMessage struct {
 	//	*GatewayMessage_FileList
 	//	*GatewayMessage_FileUploadTask
 	//	*GatewayMessage_FileOperation
+	//	*GatewayMessage_FileDownloadTask
 	Payload       isGatewayMessage_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -431,6 +432,15 @@ func (x *GatewayMessage) GetFileOperation() *FileOperationRequest {
 	return nil
 }
 
+func (x *GatewayMessage) GetFileDownloadTask() *FileDownloadTask {
+	if x != nil {
+		if x, ok := x.Payload.(*GatewayMessage_FileDownloadTask); ok {
+			return x.FileDownloadTask
+		}
+	}
+	return nil
+}
+
 type isGatewayMessage_Payload interface {
 	isGatewayMessage_Payload()
 }
@@ -483,6 +493,10 @@ type GatewayMessage_FileOperation struct {
 	FileOperation *FileOperationRequest `protobuf:"bytes,64,opt,name=file_operation,json=fileOperation,proto3,oneof"`
 }
 
+type GatewayMessage_FileDownloadTask struct {
+	FileDownloadTask *FileDownloadTask `protobuf:"bytes,65,opt,name=file_download_task,json=fileDownloadTask,proto3,oneof"`
+}
+
 func (*GatewayMessage_RegisterAck) isGatewayMessage_Payload() {}
 
 func (*GatewayMessage_Shutdown) isGatewayMessage_Payload() {}
@@ -506,6 +520,8 @@ func (*GatewayMessage_FileList) isGatewayMessage_Payload() {}
 func (*GatewayMessage_FileUploadTask) isGatewayMessage_Payload() {}
 
 func (*GatewayMessage_FileOperation) isGatewayMessage_Payload() {}
+
+func (*GatewayMessage_FileDownloadTask) isGatewayMessage_Payload() {}
 
 type RegisterRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1783,7 +1799,7 @@ type FileListResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	RequestId     string                 `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
 	Success       bool                   `protobuf:"varint,2,opt,name=success,proto3" json:"success,omitempty"`
-	Files         []*FileInfo            `protobuf:"bytes,3,rep,name=files,proto3" json:"files,omitempty"`
+	Files         []*FileStat            `protobuf:"bytes,3,rep,name=files,proto3" json:"files,omitempty"`
 	Error         string                 `protobuf:"bytes,4,opt,name=error,proto3" json:"error,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1833,7 +1849,7 @@ func (x *FileListResponse) GetSuccess() bool {
 	return false
 }
 
-func (x *FileListResponse) GetFiles() []*FileInfo {
+func (x *FileListResponse) GetFiles() []*FileStat {
 	if x != nil {
 		return x.Files
 	}
@@ -1847,101 +1863,19 @@ func (x *FileListResponse) GetError() string {
 	return ""
 }
 
-type FileInfo struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Path          string                 `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
-	Size          int64                  `protobuf:"varint,3,opt,name=size,proto3" json:"size,omitempty"`
-	Mode          int32                  `protobuf:"varint,4,opt,name=mode,proto3" json:"mode,omitempty"`
-	ModifiedAt    *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=modified_at,json=modifiedAt,proto3" json:"modified_at,omitempty"`
-	IsDir         bool                   `protobuf:"varint,6,opt,name=is_dir,json=isDir,proto3" json:"is_dir,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *FileInfo) Reset() {
-	*x = FileInfo{}
-	mi := &file_pkg_proto_gateway_proto_msgTypes[23]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *FileInfo) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*FileInfo) ProtoMessage() {}
-
-func (x *FileInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_proto_gateway_proto_msgTypes[23]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use FileInfo.ProtoReflect.Descriptor instead.
-func (*FileInfo) Descriptor() ([]byte, []int) {
-	return file_pkg_proto_gateway_proto_rawDescGZIP(), []int{23}
-}
-
-func (x *FileInfo) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *FileInfo) GetPath() string {
-	if x != nil {
-		return x.Path
-	}
-	return ""
-}
-
-func (x *FileInfo) GetSize() int64 {
-	if x != nil {
-		return x.Size
-	}
-	return 0
-}
-
-func (x *FileInfo) GetMode() int32 {
-	if x != nil {
-		return x.Mode
-	}
-	return 0
-}
-
-func (x *FileInfo) GetModifiedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.ModifiedAt
-	}
-	return nil
-}
-
-func (x *FileInfo) GetIsDir() bool {
-	if x != nil {
-		return x.IsDir
-	}
-	return false
-}
-
 type FileUploadTask struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	TransferId    string                 `protobuf:"bytes,1,opt,name=transfer_id,json=transferId,proto3" json:"transfer_id,omitempty"`
-	Path          string                 `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	TransferId     string                 `protobuf:"bytes,1,opt,name=transfer_id,json=transferId,proto3" json:"transfer_id,omitempty"`
+	Path           string                 `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
+	ChecksumSha256 string                 `protobuf:"bytes,3,opt,name=checksum_sha256,json=checksumSha256,proto3" json:"checksum_sha256,omitempty"`
+	TotalSize      int64                  `protobuf:"varint,4,opt,name=total_size,json=totalSize,proto3" json:"total_size,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *FileUploadTask) Reset() {
 	*x = FileUploadTask{}
-	mi := &file_pkg_proto_gateway_proto_msgTypes[24]
+	mi := &file_pkg_proto_gateway_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1953,7 +1887,7 @@ func (x *FileUploadTask) String() string {
 func (*FileUploadTask) ProtoMessage() {}
 
 func (x *FileUploadTask) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_proto_gateway_proto_msgTypes[24]
+	mi := &file_pkg_proto_gateway_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1966,7 +1900,7 @@ func (x *FileUploadTask) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileUploadTask.ProtoReflect.Descriptor instead.
 func (*FileUploadTask) Descriptor() ([]byte, []int) {
-	return file_pkg_proto_gateway_proto_rawDescGZIP(), []int{24}
+	return file_pkg_proto_gateway_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *FileUploadTask) GetTransferId() string {
@@ -1979,6 +1913,80 @@ func (x *FileUploadTask) GetTransferId() string {
 func (x *FileUploadTask) GetPath() string {
 	if x != nil {
 		return x.Path
+	}
+	return ""
+}
+
+func (x *FileUploadTask) GetChecksumSha256() string {
+	if x != nil {
+		return x.ChecksumSha256
+	}
+	return ""
+}
+
+func (x *FileUploadTask) GetTotalSize() int64 {
+	if x != nil {
+		return x.TotalSize
+	}
+	return 0
+}
+
+type FileDownloadTask struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	TransferId     string                 `protobuf:"bytes,1,opt,name=transfer_id,json=transferId,proto3" json:"transfer_id,omitempty"`
+	Path           string                 `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
+	ChecksumSha256 string                 `protobuf:"bytes,3,opt,name=checksum_sha256,json=checksumSha256,proto3" json:"checksum_sha256,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *FileDownloadTask) Reset() {
+	*x = FileDownloadTask{}
+	mi := &file_pkg_proto_gateway_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FileDownloadTask) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FileDownloadTask) ProtoMessage() {}
+
+func (x *FileDownloadTask) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_gateway_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FileDownloadTask.ProtoReflect.Descriptor instead.
+func (*FileDownloadTask) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_gateway_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *FileDownloadTask) GetTransferId() string {
+	if x != nil {
+		return x.TransferId
+	}
+	return ""
+}
+
+func (x *FileDownloadTask) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+func (x *FileDownloadTask) GetChecksumSha256() string {
+	if x != nil {
+		return x.ChecksumSha256
 	}
 	return ""
 }
@@ -2181,7 +2189,7 @@ const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"\x13file_write_response\x18= \x01(\v2\x19.gameap.FileWriteResponseH\x00R\x11fileWriteResponse\x12H\n" +
 	"\x12file_list_response\x18> \x01(\v2\x18.gameap.FileListResponseH\x00R\x10fileListResponse\x12W\n" +
 	"\x17file_operation_response\x18? \x01(\v2\x1d.gameap.FileOperationResponseH\x00R\x15fileOperationResponseB\t\n" +
-	"\apayload\"\xff\x05\n" +
+	"\apayload\"\xc9\x06\n" +
 	"\x0eGatewayMessage\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x01 \x01(\tR\trequestId\x128\n" +
@@ -2199,7 +2207,8 @@ const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"file_write\x18= \x01(\v2\x18.gameap.FileWriteRequestH\x00R\tfileWrite\x126\n" +
 	"\tfile_list\x18> \x01(\v2\x17.gameap.FileListRequestH\x00R\bfileList\x12B\n" +
 	"\x10file_upload_task\x18? \x01(\v2\x16.gameap.FileUploadTaskH\x00R\x0efileUploadTask\x12E\n" +
-	"\x0efile_operation\x18@ \x01(\v2\x1c.gameap.FileOperationRequestH\x00R\rfileOperationB\t\n" +
+	"\x0efile_operation\x18@ \x01(\v2\x1c.gameap.FileOperationRequestH\x00R\rfileOperation\x12H\n" +
+	"\x12file_download_task\x18A \x01(\v2\x18.gameap.FileDownloadTaskH\x00R\x10fileDownloadTaskB\t\n" +
 	"\apayload\"\xbf\x01\n" +
 	"\x0fRegisterRequest\x12\x17\n" +
 	"\anode_id\x18\x01 \x01(\x04R\x06nodeId\x12\x17\n" +
@@ -2306,20 +2315,20 @@ const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"\n" +
 	"request_id\x18\x01 \x01(\tR\trequestId\x12\x18\n" +
 	"\asuccess\x18\x02 \x01(\bR\asuccess\x12&\n" +
-	"\x05files\x18\x03 \x03(\v2\x10.gameap.FileInfoR\x05files\x12\x14\n" +
-	"\x05error\x18\x04 \x01(\tR\x05error\"\xae\x01\n" +
-	"\bFileInfo\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
-	"\x04path\x18\x02 \x01(\tR\x04path\x12\x12\n" +
-	"\x04size\x18\x03 \x01(\x03R\x04size\x12\x12\n" +
-	"\x04mode\x18\x04 \x01(\x05R\x04mode\x12;\n" +
-	"\vmodified_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"modifiedAt\x12\x15\n" +
-	"\x06is_dir\x18\x06 \x01(\bR\x05isDir\"E\n" +
+	"\x05files\x18\x03 \x03(\v2\x10.gameap.FileStatR\x05files\x12\x14\n" +
+	"\x05error\x18\x04 \x01(\tR\x05error\"\x8d\x01\n" +
 	"\x0eFileUploadTask\x12\x1f\n" +
 	"\vtransfer_id\x18\x01 \x01(\tR\n" +
 	"transferId\x12\x12\n" +
-	"\x04path\x18\x02 \x01(\tR\x04path\"\xa2\x01\n" +
+	"\x04path\x18\x02 \x01(\tR\x04path\x12'\n" +
+	"\x0fchecksum_sha256\x18\x03 \x01(\tR\x0echecksumSha256\x12\x1d\n" +
+	"\n" +
+	"total_size\x18\x04 \x01(\x03R\ttotalSize\"p\n" +
+	"\x10FileDownloadTask\x12\x1f\n" +
+	"\vtransfer_id\x18\x01 \x01(\tR\n" +
+	"transferId\x12\x12\n" +
+	"\x04path\x18\x02 \x01(\tR\x04path\x12'\n" +
+	"\x0fchecksum_sha256\x18\x03 \x01(\tR\x0echecksumSha256\"\xa2\x01\n" +
 	"\rEnrollRequest\x12\x1b\n" +
 	"\tsetup_key\x18\x01 \x01(\tR\bsetupKey\x12\x12\n" +
 	"\x04host\x18\x02 \x01(\tR\x04host\x12\x12\n" +
@@ -2376,8 +2385,8 @@ var file_pkg_proto_gateway_proto_goTypes = []any{
 	(*FileWriteResponse)(nil),     // 20: gameap.FileWriteResponse
 	(*FileListRequest)(nil),       // 21: gameap.FileListRequest
 	(*FileListResponse)(nil),      // 22: gameap.FileListResponse
-	(*FileInfo)(nil),              // 23: gameap.FileInfo
-	(*FileUploadTask)(nil),        // 24: gameap.FileUploadTask
+	(*FileUploadTask)(nil),        // 23: gameap.FileUploadTask
+	(*FileDownloadTask)(nil),      // 24: gameap.FileDownloadTask
 	(*EnrollRequest)(nil),         // 25: gameap.EnrollRequest
 	(*EnrollResponse)(nil),        // 26: gameap.EnrollResponse
 	(*FileOperationResponse)(nil), // 27: gameap.FileOperationResponse
@@ -2389,6 +2398,7 @@ var file_pkg_proto_gateway_proto_goTypes = []any{
 	(*Game)(nil),                  // 33: gameap.Game
 	(*GameMod)(nil),               // 34: gameap.GameMod
 	(*durationpb.Duration)(nil),   // 35: google.protobuf.Duration
+	(*FileStat)(nil),              // 36: gameap.FileStat
 }
 var file_pkg_proto_gateway_proto_depIdxs = []int32{
 	2,  // 0: gameap.DaemonMessage.register:type_name -> gameap.RegisterRequest
@@ -2412,26 +2422,26 @@ var file_pkg_proto_gateway_proto_depIdxs = []int32{
 	17, // 18: gameap.GatewayMessage.file_read:type_name -> gameap.FileReadRequest
 	19, // 19: gameap.GatewayMessage.file_write:type_name -> gameap.FileWriteRequest
 	21, // 20: gameap.GatewayMessage.file_list:type_name -> gameap.FileListRequest
-	24, // 21: gameap.GatewayMessage.file_upload_task:type_name -> gameap.FileUploadTask
+	23, // 21: gameap.GatewayMessage.file_upload_task:type_name -> gameap.FileUploadTask
 	30, // 22: gameap.GatewayMessage.file_operation:type_name -> gameap.FileOperationRequest
-	3,  // 23: gameap.RegisterRequest.in_flight_tasks:type_name -> gameap.InFlightTask
-	31, // 24: gameap.InFlightTask.status:type_name -> gameap.DaemonTaskStatus
-	32, // 25: gameap.InFlightTask.started_at:type_name -> google.protobuf.Timestamp
-	29, // 26: gameap.RegisterAck.servers:type_name -> gameap.Server
-	28, // 27: gameap.RegisterAck.pending_tasks:type_name -> gameap.DaemonTask
-	33, // 28: gameap.RegisterAck.games:type_name -> gameap.Game
-	34, // 29: gameap.RegisterAck.game_mods:type_name -> gameap.GameMod
-	35, // 30: gameap.RegisterAck.heartbeat_interval:type_name -> google.protobuf.Duration
-	32, // 31: gameap.Heartbeat.timestamp:type_name -> google.protobuf.Timestamp
-	6,  // 32: gameap.Heartbeat.system_stats:type_name -> gameap.SystemStats
-	31, // 33: gameap.TaskStatusUpdate.status:type_name -> gameap.DaemonTaskStatus
-	35, // 34: gameap.CommandRequest.timeout:type_name -> google.protobuf.Duration
-	32, // 35: gameap.ServerStatus.last_check:type_name -> google.protobuf.Timestamp
-	13, // 36: gameap.ServerStatusBatch.statuses:type_name -> gameap.ServerStatus
-	29, // 37: gameap.ServerConfigBatch.servers:type_name -> gameap.Server
-	35, // 38: gameap.ShutdownNotification.reconnect_delay:type_name -> google.protobuf.Duration
-	23, // 39: gameap.FileListResponse.files:type_name -> gameap.FileInfo
-	32, // 40: gameap.FileInfo.modified_at:type_name -> google.protobuf.Timestamp
+	24, // 23: gameap.GatewayMessage.file_download_task:type_name -> gameap.FileDownloadTask
+	3,  // 24: gameap.RegisterRequest.in_flight_tasks:type_name -> gameap.InFlightTask
+	31, // 25: gameap.InFlightTask.status:type_name -> gameap.DaemonTaskStatus
+	32, // 26: gameap.InFlightTask.started_at:type_name -> google.protobuf.Timestamp
+	29, // 27: gameap.RegisterAck.servers:type_name -> gameap.Server
+	28, // 28: gameap.RegisterAck.pending_tasks:type_name -> gameap.DaemonTask
+	33, // 29: gameap.RegisterAck.games:type_name -> gameap.Game
+	34, // 30: gameap.RegisterAck.game_mods:type_name -> gameap.GameMod
+	35, // 31: gameap.RegisterAck.heartbeat_interval:type_name -> google.protobuf.Duration
+	32, // 32: gameap.Heartbeat.timestamp:type_name -> google.protobuf.Timestamp
+	6,  // 33: gameap.Heartbeat.system_stats:type_name -> gameap.SystemStats
+	31, // 34: gameap.TaskStatusUpdate.status:type_name -> gameap.DaemonTaskStatus
+	35, // 35: gameap.CommandRequest.timeout:type_name -> google.protobuf.Duration
+	32, // 36: gameap.ServerStatus.last_check:type_name -> google.protobuf.Timestamp
+	13, // 37: gameap.ServerStatusBatch.statuses:type_name -> gameap.ServerStatus
+	29, // 38: gameap.ServerConfigBatch.servers:type_name -> gameap.Server
+	35, // 39: gameap.ShutdownNotification.reconnect_delay:type_name -> google.protobuf.Duration
+	36, // 40: gameap.FileListResponse.files:type_name -> gameap.FileStat
 	0,  // 41: gameap.DaemonGateway.Connect:input_type -> gameap.DaemonMessage
 	25, // 42: gameap.DaemonGateway.Enroll:input_type -> gameap.EnrollRequest
 	1,  // 43: gameap.DaemonGateway.Connect:output_type -> gameap.GatewayMessage
@@ -2479,6 +2489,7 @@ func file_pkg_proto_gateway_proto_init() {
 		(*GatewayMessage_FileList)(nil),
 		(*GatewayMessage_FileUploadTask)(nil),
 		(*GatewayMessage_FileOperation)(nil),
+		(*GatewayMessage_FileDownloadTask)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{

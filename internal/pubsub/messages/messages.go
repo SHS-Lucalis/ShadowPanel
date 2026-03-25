@@ -26,6 +26,10 @@ const (
 	TypeTaskComplete  = "task.complete"
 	TypeConsoleOutput = "console.output"
 	TypeConsoleResult = "console.result"
+
+	TypeDaemonFileRequest          = "daemon.file.request"
+	TypeDaemonFileResponse         = "daemon.file.response"
+	TypeDaemonFileTransferComplete = "daemon.file.transfer.complete"
 )
 
 type CacheInvalidatePayload struct {
@@ -110,6 +114,30 @@ type ConsoleResultPayload struct {
 	CommandID string `json:"command_id,omitempty"`
 	ExitCode  int32  `json:"exit_code"`
 	Error     string `json:"error,omitempty"`
+}
+
+type DaemonFileRequestPayload struct {
+	NodeID      uint64 `json:"node_id"`
+	RequestID   string `json:"request_id"`
+	InstanceID  string `json:"instance_id"`
+	Operation   string `json:"operation"`
+	Data        []byte `json:"data,omitempty"`
+	TransferID  string `json:"transfer_id,omitempty"`
+	StoragePath string `json:"storage_path,omitempty"`
+}
+
+type DaemonFileResponsePayload struct {
+	RequestID   string `json:"request_id"`
+	Error       string `json:"error,omitempty"`
+	Data        []byte `json:"data,omitempty"`
+	StoragePath string `json:"storage_path,omitempty"`
+}
+
+type FileTransferCompletePayload struct {
+	TransferID string `json:"transfer_id"`
+	Success    bool   `json:"success"`
+	Error      string `json:"error,omitempty"`
+	Checksum   string `json:"checksum,omitempty"`
 }
 
 type DaemonServerConfigPayload struct {

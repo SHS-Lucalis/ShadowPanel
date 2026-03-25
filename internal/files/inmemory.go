@@ -1,8 +1,10 @@
 package files
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"strings"
 	"sync"
 )
@@ -73,4 +75,52 @@ func (fm *InMemoryFileManager) List(_ context.Context, dir string) ([]string, er
 	return result, nil
 }
 
-var _ FileManager = (*InMemoryFileManager)(nil)
+func (fm *InMemoryFileManager) ReadStream(_ context.Context, path string) (io.ReadCloser, error) {
+	fm.mu.RLock()
+	defer fm.mu.RUnlock()
+
+	data, exists := fm.files[path]
+	if !exists {
+		return nil, fmt.Errorf("file not found: %s", path) //nolint:err113
+	}
+
+	cp := make([]byte, len(data))
+	copy(cp, data)
+
+	return io.NopCloser(bytes.NewReader(cp)), nil
+}
+
+func (fm *InMemoryFileManager) ReadStreamAt(_ context.Context, path string, offset int64) (io.ReadCloser, error) {
+	fm.mu.RLock()
+	defer fm.mu.RUnlock()
+
+	data, exists := fm.files[path]
+	if !exists {
+		return nil, fmt.Errorf("file not found: %s", path) //nolint:err113
+	}
+
+	if offset >= int64(len(data)) {
+		return io.NopCloser(bytes.NewReader(nil)), nil
+	}
+
+	cp := make([]byte, int64(len(data))-offset)
+	copy(cp, data[offset:])
+
+	return io.NopCloser(bytes.NewReader(cp)), nil
+}
+
+func (fm *InMemoryFileManager) WriteStream(_ context.Context, path string, data io.Reader) error {
+	content, err := io.ReadAll(data)
+	if err != nil {
+		return fmt.Errorf("failed to read stream data: %w", err)
+	}
+
+	fm.mu.Lock()
+	defer fm.mu.Unlock()
+
+	fm.files[path] = content
+
+	return nil
+}
+
+var _ StreamFileManager = (*InMemoryFileManager)(nil)

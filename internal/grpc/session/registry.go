@@ -23,6 +23,9 @@ type Registry struct {
 
 	mu            sync.RWMutex
 	localSessions map[uint64]*Session
+
+	globalMu    sync.RWMutex
+	globalNodes map[uint64]string
 }
 
 func NewRegistry(ps pubsub.PubSub, instanceID string, logger *slog.Logger) *Registry {
@@ -35,6 +38,7 @@ func NewRegistry(ps pubsub.PubSub, instanceID string, logger *slog.Logger) *Regi
 		instanceID:    instanceID,
 		logger:        logger,
 		localSessions: make(map[uint64]*Session),
+		globalNodes:   make(map[uint64]string),
 	}
 }
 
@@ -42,6 +46,11 @@ func (r *Registry) Start(ctx context.Context) error {
 	err := r.pubsub.Subscribe(ctx, channels.DaemonTaskDispatchAll, r.handleTaskDispatch)
 	if err != nil {
 		return errors.Wrap(err, "subscribe to task dispatch")
+	}
+
+	err = r.pubsub.Subscribe(ctx, channels.DaemonSessionAll, r.handleSessionEvent)
+	if err != nil {
+		return errors.Wrap(err, "subscribe to session events")
 	}
 
 	r.logger.Info("session registry started", "instance_id", r.instanceID)
@@ -140,6 +149,61 @@ func (r *Registry) IsConnected(nodeID uint64) bool {
 	_, ok := r.GetSession(nodeID)
 
 	return ok
+}
+
+func (r *Registry) IsConnectedAnywhere(nodeID uint64) bool {
+	if r.IsConnected(nodeID) {
+		return true
+	}
+
+	r.globalMu.RLock()
+	_, ok := r.globalNodes[nodeID]
+	r.globalMu.RUnlock()
+
+	return ok
+}
+
+func (r *Registry) handleSessionEvent(_ context.Context, msg *pubsub.Message) error {
+	switch msg.Type {
+	case messages.TypeDaemonConnected:
+		payload, err := messages.ParsePayload[messages.DaemonSessionPayload](msg)
+		if err != nil {
+			r.logger.Warn("failed to parse session connected payload", "error", err)
+
+			return nil
+		}
+
+		if payload.InstanceID == r.instanceID {
+			return nil
+		}
+
+		r.globalMu.Lock()
+		r.globalNodes[payload.NodeID] = payload.InstanceID
+		r.globalMu.Unlock()
+
+		r.logger.Debug("tracked remote daemon session",
+			"node_id", payload.NodeID,
+			"instance_id", payload.InstanceID,
+		)
+
+	case messages.TypeDaemonClosed:
+		payload, err := messages.ParsePayload[messages.DaemonSessionPayload](msg)
+		if err != nil {
+			r.logger.Warn("failed to parse session closed payload", "error", err)
+
+			return nil
+		}
+
+		r.globalMu.Lock()
+		delete(r.globalNodes, payload.NodeID)
+		r.globalMu.Unlock()
+
+		r.logger.Debug("removed remote daemon session",
+			"node_id", payload.NodeID,
+		)
+	}
+
+	return nil
 }
 
 func (r *Registry) SendTask(ctx context.Context, nodeID uint64, task *proto.GatewayMessage) error {

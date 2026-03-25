@@ -59,6 +59,7 @@ message GatewayMessage {
     FileListRequest file_list = 62;
     FileUploadTask file_upload_task = 63;
     FileOperationRequest file_operation = 64;
+    FileDownloadTask file_download_task = 65;
   }
 }
 
@@ -201,6 +202,14 @@ message FileListResponse {
 message FileUploadTask {
   string transfer_id = 1;
   string path = 2;
+  string checksum_sha256 = 3;
+  int64 total_size = 4;
+}
+
+message FileDownloadTask {
+  string transfer_id = 1;
+  string path = 2;
+  string checksum_sha256 = 3;
 }
 
 message EnrollRequest {

@@ -131,10 +131,10 @@ type Container struct {
 	enrollmentService *enrollment.Service
 
 	// Daemon Services
-	daemonStatus      *daemon.StatusService
-	daemonFiles       *daemon.FileService
-	daemonFilesLegacy *daemon.FileBINNService //nolint:staticcheck // legacy fallback
-	daemonCommands    *daemon.CommandService
+	daemonStatus   *daemon.StatusService
+	daemonFiles    *daemon.FileService
+	fileDispatcher daemon.FileDispatcher
+	daemonCommands *daemon.CommandService
 
 	// Plugins
 	pluginManager    *pkgplugin.Manager
@@ -1081,6 +1081,17 @@ func (c *Container) createFileManager() files.FileManager {
 	}
 }
 
+func (c *Container) StreamFileManager() files.StreamFileManager {
+	fm := c.FileManager()
+
+	sfm, ok := fm.(files.StreamFileManager)
+	if !ok {
+		panic("file manager does not implement StreamFileManager")
+	}
+
+	return sfm
+}
+
 func (c *Container) CertificatesService() *certificates.Service {
 	if c.certificatesService == nil {
 		c.certificatesService = certificates.NewService(c.FileManager())
@@ -1196,23 +1207,33 @@ func (c *Container) DaemonFiles() *daemon.FileService {
 		c.daemonFiles = daemon.NewFileService(
 			c.GatewayService(),
 			c.SessionRegistry(),
-			c.DaemonFilesLegacy(),
+			c.FileDispatcher(),
+			c.StreamFileManager(),
+			slog.Default(),
 		)
 	}
 
 	return c.daemonFiles
 }
 
-//nolint:staticcheck // legacy fallback for daemons not supporting gRPC
-func (c *Container) DaemonFilesLegacy() *daemon.FileBINNService {
-	if c.daemonFilesLegacy == nil {
-		c.daemonFilesLegacy = daemon.NewFileBINNService( //nolint:staticcheck // legacy fallback
-			c.ClientCertificateRepository(),
-			c.FileManager(),
+func (c *Container) FileDispatcher() daemon.FileDispatcher {
+	if c.fileDispatcher == nil {
+		instanceID := c.config.PubSub.InstanceID
+		if instanceID == "" {
+			instanceID = "default"
+		}
+
+		c.fileDispatcher = daemon.NewFileDispatcher(
+			c.PubSub(),
+			c.GatewayService(),
+			c.SessionRegistry(),
+			c.StreamFileManager(),
+			instanceID,
+			slog.Default(),
 		)
 	}
 
-	return c.daemonFilesLegacy
+	return c.fileDispatcher
 }
 
 func (c *Container) DaemonCommands() *daemon.CommandService {
@@ -1423,12 +1444,11 @@ func (c *Container) GatewayService() *gateway.Service {
 
 func (c *Container) FileTransferService() *filetransfer.Service {
 	if c.fileTransferService == nil {
-		basePath := c.config.GRPC.FileTransferBasePath
-		if basePath == "" {
-			basePath = path.Join(c.config.Legacy.Path, "storage", "app")
-		}
-
-		c.fileTransferService = filetransfer.NewService(basePath, slog.Default())
+		c.fileTransferService = filetransfer.NewService(
+			c.StreamFileManager(),
+			c.PubSub(),
+			slog.Default(),
+		)
 	}
 
 	return c.fileTransferService

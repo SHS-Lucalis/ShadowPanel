@@ -3,6 +3,7 @@ package files
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -119,3 +120,50 @@ func (fm *LocalFileManager) List(_ context.Context, dir string) ([]string, error
 
 	return files, nil
 }
+
+func (fm *LocalFileManager) ReadStream(_ context.Context, path string) (io.ReadCloser, error) {
+	file, err := fm.root.Open(path)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to open file for reading")
+	}
+
+	return file, nil
+}
+
+func (fm *LocalFileManager) ReadStreamAt(_ context.Context, path string, offset int64) (io.ReadCloser, error) {
+	file, err := fm.root.Open(path)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to open file for reading at offset")
+	}
+
+	if _, err := file.Seek(offset, io.SeekStart); err != nil {
+		_ = file.Close()
+
+		return nil, errors.Wrap(err, "failed to seek to offset")
+	}
+
+	return file, nil
+}
+
+func (fm *LocalFileManager) WriteStream(ctx context.Context, path string, data io.Reader) error {
+	if !fm.Exists(ctx, path) {
+		if err := fm.mkdirAll(filepath.Dir(path)); err != nil {
+			return errors.Wrapf(err, "failed to create directories: %s", filepath.Dir(path))
+		}
+	}
+
+	file, err := fm.root.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, defaultLocalFilePerm)
+	if err != nil {
+		return errors.Wrap(err, "failed to open file for writing")
+	}
+
+	if _, err := io.Copy(file, data); err != nil {
+		_ = file.Close()
+
+		return errors.Wrap(err, "failed to write stream data")
+	}
+
+	return file.Close()
+}
+
+var _ StreamFileManager = (*LocalFileManager)(nil)

@@ -107,3 +107,39 @@ func (fm *S3FileManager) List(ctx context.Context, dir string) ([]string, error)
 
 	return files, nil
 }
+
+func (fm *S3FileManager) ReadStream(ctx context.Context, path string) (io.ReadCloser, error) {
+	object, err := fm.client.GetObject(ctx, fm.bucket, path, minio.GetObjectOptions{})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get object stream")
+	}
+
+	return object, nil
+}
+
+func (fm *S3FileManager) ReadStreamAt(ctx context.Context, path string, offset int64) (io.ReadCloser, error) {
+	opts := minio.GetObjectOptions{}
+	if err := opts.SetRange(offset, 0); err != nil {
+		return nil, errors.Wrap(err, "failed to set range")
+	}
+
+	object, err := fm.client.GetObject(ctx, fm.bucket, path, opts)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get object stream at offset")
+	}
+
+	return object, nil
+}
+
+func (fm *S3FileManager) WriteStream(ctx context.Context, path string, data io.Reader) error {
+	_, err := fm.client.PutObject(ctx, fm.bucket, path, data, -1, minio.PutObjectOptions{
+		ContentType: "application/octet-stream",
+	})
+	if err != nil {
+		return errors.Wrap(err, "failed to put object stream")
+	}
+
+	return nil
+}
+
+var _ StreamFileManager = (*S3FileManager)(nil)

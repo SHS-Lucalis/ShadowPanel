@@ -17,5 +17,6 @@ type StreamFileManager interface {
 	FileManager
 
 	ReadStream(ctx context.Context, path string) (io.ReadCloser, error)
+	ReadStreamAt(ctx context.Context, path string, offset int64) (io.ReadCloser, error)
 	WriteStream(ctx context.Context, path string, data io.Reader) error
 }
