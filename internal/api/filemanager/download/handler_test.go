@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gameap/gameap/internal/daemon"
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/rbac"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
@@ -72,6 +73,7 @@ var testNode = domain.Node{
 
 type mockFileService struct {
 	downloadStreamFunc func(ctx context.Context, node *domain.Node, filePath string) (io.ReadCloser, error)
+	getFileInfoFunc    func(ctx context.Context, node *domain.Node, path string) (*daemon.FileDetails, error)
 }
 
 func (m *mockFileService) DownloadStream(
@@ -84,6 +86,18 @@ func (m *mockFileService) DownloadStream(
 	}
 
 	return nil, errors.New("not implemented")
+}
+
+func (m *mockFileService) GetFileInfo(
+	ctx context.Context,
+	node *domain.Node,
+	path string,
+) (*daemon.FileDetails, error) {
+	if m.getFileInfoFunc != nil {
+		return m.getFileInfoFunc(ctx, node, path)
+	}
+
+	return &daemon.FileDetails{}, nil
 }
 
 type mockReadCloser struct {

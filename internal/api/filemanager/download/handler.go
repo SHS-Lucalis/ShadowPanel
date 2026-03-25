@@ -7,10 +7,12 @@ import (
 	"mime"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/gameap/gameap/internal/api/base"
 	serversbase "github.com/gameap/gameap/internal/api/servers/base"
+	"github.com/gameap/gameap/internal/daemon"
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
@@ -29,6 +31,7 @@ var (
 
 type fileService interface {
 	DownloadStream(ctx context.Context, node *domain.Node, filePath string) (io.ReadCloser, error)
+	GetFileInfo(ctx context.Context, node *domain.Node, path string) (*daemon.FileDetails, error)
 }
 
 type Handler struct {
@@ -147,6 +150,13 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	fullPath := filepath.Join(node.WorkPath, server.Dir, path)
 
+	fileInfo, err := h.daemonFiles.GetFileInfo(ctx, node, fullPath)
+	if err != nil {
+		h.responder.WriteError(ctx, rw, errors.WithMessage(err, "failed to get file info"))
+
+		return
+	}
+
 	fileStream, err := h.daemonFiles.DownloadStream(ctx, node, fullPath)
 	if err != nil {
 		h.responder.WriteError(ctx, rw, errors.WithMessage(err, "failed to download file"))
@@ -169,6 +179,10 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	rw.Header().Set("Content-Type", contentType)
 	rw.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
+
+	if fileInfo.Size > 0 {
+		rw.Header().Set("Content-Length", strconv.FormatUint(fileInfo.Size, 10))
+	}
 
 	_, err = io.Copy(rw, fileStream)
 	if err != nil {

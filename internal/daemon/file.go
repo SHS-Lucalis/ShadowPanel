@@ -21,7 +21,12 @@ const (
 	transferPrefix     = "transfers/"
 )
 
-var ErrDaemonNotConnected = errors.New("daemon not connected")
+type daemonNotConnectedError struct{}
+
+func (e *daemonNotConnectedError) Error() string   { return "daemon not connected" }
+func (e *daemonNotConnectedError) HTTPStatus() int { return 502 }
+
+var ErrDaemonNotConnected error = &daemonNotConnectedError{}
 
 type FileService struct {
 	gateway    FileGateway
