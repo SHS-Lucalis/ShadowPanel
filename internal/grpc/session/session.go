@@ -2,7 +2,6 @@ package session
 
 import (
 	"context"
-	"slices"
 	"sync"
 	"time"
 
@@ -29,7 +28,9 @@ type Session struct {
 	pendingReqs map[string]chan *proto.DaemonMessage
 }
 
-func NewSession(nodeID uint64, stream Stream, version string, capabilities []string, cancel context.CancelFunc) *Session {
+func NewSession(
+	nodeID uint64, stream Stream, version string, capabilities []string, cancel context.CancelFunc,
+) *Session {
 	return &Session{
 		NodeID:       nodeID,
 		Stream:       stream,
@@ -101,9 +102,4 @@ func (s *Session) CancelPendingRequest(requestID string) {
 		close(ch)
 	}
 	s.mu.Unlock()
-}
-
-func (s *Session) HasCapability(cap string) bool {
-
-	return slices.Contains(s.Capabilities, cap)
 }

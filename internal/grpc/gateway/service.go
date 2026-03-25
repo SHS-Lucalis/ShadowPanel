@@ -389,7 +389,9 @@ func (s *Service) RequestFileRead(
 	}
 }
 
-func (s *Service) RequestFileWrite(ctx context.Context, nodeID uint64, path string, content []byte, mode int32, createDirs bool) error {
+func (s *Service) RequestFileWrite(
+	ctx context.Context, nodeID uint64, path string, content []byte, mode int32, createDirs bool,
+) error {
 	sess, ok := s.registry.GetSession(nodeID)
 	if !ok {
 		return errors.New("node not connected")
@@ -432,7 +434,9 @@ func (s *Service) RequestFileWrite(ctx context.Context, nodeID uint64, path stri
 	}
 }
 
-func (s *Service) RequestFileList(ctx context.Context, nodeID uint64, path string, recursive bool, pattern string) (*proto.FileListResponse, error) {
+func (s *Service) RequestFileList(
+	ctx context.Context, nodeID uint64, path string, recursive bool, pattern string,
+) (*proto.FileListResponse, error) {
 	sess, ok := s.registry.GetSession(nodeID)
 	if !ok {
 		return nil, errors.New("node not connected")

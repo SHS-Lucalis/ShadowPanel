@@ -1434,25 +1434,33 @@ func (c *Container) FileTransferService() *filetransfer.Service {
 	return c.fileTransferService
 }
 
+func (c *Container) grpcTLSConfig() *tls.Config {
+	if !c.config.GRPC.Enabled {
+		return nil
+	}
+
+	if !c.config.GRPC.TLSEnabled {
+		slog.Warn("gRPC server is running without TLS. It is recommended to enable TLS for security")
+
+		if c.config.GRPC.RequireMTLS {
+			slog.Warn("GRPC_REQUIRE_MTLS is enabled but GRPC_TLS_ENABLED is false; mTLS will not work without TLS")
+		}
+
+		return nil
+	}
+
+	tlsConfig, err := c.buildGRPCTLSConfig()
+	if err != nil {
+		slog.Error("Failed to build gRPC TLS config", slog.String("error", err.Error()))
+
+		return nil
+	}
+
+	return tlsConfig
+}
+
 func (c *Container) GRPCServer() *grpc.Server {
 	if c.grpcServer == nil {
-		var tlsConfig *tls.Config
-		if c.config.GRPC.Enabled && c.config.GRPC.TLSEnabled {
-			var err error
-			tlsConfig, err = c.buildGRPCTLSConfig()
-			if err != nil {
-				slog.Error("Failed to build gRPC TLS config", slog.String("error", err.Error()))
-			}
-		}
-
-		if c.config.GRPC.Enabled && !c.config.GRPC.TLSEnabled {
-			slog.Warn("gRPC server is running without TLS. It is recommended to enable TLS for security")
-
-			if c.config.GRPC.RequireMTLS {
-				slog.Warn("GRPC_REQUIRE_MTLS is enabled but GRPC_TLS_ENABLED is false; mTLS will not work without TLS")
-			}
-		}
-
 		c.grpcServer = internalgrpc.NewServer(
 			&internalgrpc.ServerConfig{
 				MaxRecvMsgSize:       c.config.GRPC.MaxRecvMsgSize,
@@ -1461,7 +1469,7 @@ func (c *Container) GRPCServer() *grpc.Server {
 				RequireMTLS:          c.config.GRPC.RequireMTLS,
 				FileTransferBasePath: c.config.GRPC.FileTransferBasePath,
 				EnableReflection:     c.config.GRPC.EnableReflection,
-				TLSConfig:            tlsConfig,
+				TLSConfig:            c.grpcTLSConfig(),
 			},
 			&internalgrpc.ServerDependencies{
 				GatewayService:      c.GatewayService(),
@@ -1534,7 +1542,7 @@ func (c *Container) MultiplexedServer() (*MultiplexedServer, error) {
 
 	addr := c.getMultiplexerAddress()
 
-	server, err := NewMultiplexedServer(&MultiplexerConfig{
+	server, err := NewMultiplexedServer(c.context, &MultiplexerConfig{
 		Address:    addr,
 		TLSConfig:  tlsConfig,
 		GRPCServer: c.GRPCServer(),

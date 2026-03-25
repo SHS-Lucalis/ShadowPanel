@@ -52,7 +52,7 @@ func (i *AuthInterceptor) StreamServerInterceptor() grpc.StreamServerInterceptor
 	return func(
 		srv any,
 		ss grpc.ServerStream,
-		info *grpc.StreamServerInfo,
+		_ *grpc.StreamServerInfo,
 		handler grpc.StreamHandler,
 	) error {
 		ctx := ss.Context()

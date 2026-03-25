@@ -183,7 +183,7 @@ func (r *Registry) dispatchViaPubSub(ctx context.Context, nodeID uint64, gateway
 	return r.pubsub.Publish(ctx, channel, msg)
 }
 
-func (r *Registry) handleTaskDispatch(ctx context.Context, msg *pubsub.Message) error {
+func (r *Registry) handleTaskDispatch(_ context.Context, msg *pubsub.Message) error {
 	nodeID, err := extractNodeIDFromChannel(msg.Channel)
 	if err != nil {
 		r.logger.Warn("failed to extract node ID from channel",
@@ -276,7 +276,7 @@ func (r *Registry) dispatchCommandViaPubSub(ctx context.Context, nodeID uint64, 
 	return r.pubsub.Publish(ctx, channel, msg)
 }
 
-func (r *Registry) BroadcastToAll(ctx context.Context, msg *proto.GatewayMessage) {
+func (r *Registry) BroadcastToAll(_ context.Context, msg *proto.GatewayMessage) {
 	r.mu.RLock()
 	sessions := make([]*Session, 0, len(r.localSessions))
 	for _, s := range r.localSessions {

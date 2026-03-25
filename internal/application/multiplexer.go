@@ -30,7 +30,7 @@ type MultiplexerConfig struct {
 	Logger     *slog.Logger
 }
 
-func NewMultiplexedServer(config *MultiplexerConfig) (*MultiplexedServer, error) {
+func NewMultiplexedServer(ctx context.Context, config *MultiplexerConfig) (*MultiplexedServer, error) {
 	logger := config.Logger
 	if logger == nil {
 		logger = slog.Default()
@@ -42,7 +42,7 @@ func NewMultiplexedServer(config *MultiplexerConfig) (*MultiplexedServer, error)
 	if config.TLSConfig != nil {
 		listener, err = tls.Listen("tcp", config.Address, config.TLSConfig)
 	} else {
-		listener, err = net.Listen("tcp", config.Address)
+		listener, err = new(net.ListenConfig).Listen(ctx, "tcp", config.Address)
 	}
 
 	if err != nil {

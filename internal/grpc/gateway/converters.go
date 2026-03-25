@@ -3,6 +3,7 @@ package gateway
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/pkg/proto"
@@ -32,21 +33,21 @@ func domainServerToProto(srv *domain.Server) *proto.Server {
 
 	var queryPort, rconPort *int32
 	if srv.QueryPort != nil {
-		queryPort = new(int32(*srv.QueryPort))
+		queryPort = new(clampToInt32(*srv.QueryPort))
 	}
 	if srv.RconPort != nil {
-		rconPort = new(int32(*srv.RconPort))
+		rconPort = new(clampToInt32(*srv.RconPort))
 	}
 
 	var cpuLimit, ramLimit, netLimit *int32
 	if srv.CPULimit != nil {
-		cpuLimit = new(int32(*srv.CPULimit))
+		cpuLimit = new(clampToInt32(*srv.CPULimit))
 	}
 	if srv.RAMLimit != nil {
-		ramLimit = new(int32(*srv.RAMLimit))
+		ramLimit = new(clampToInt32(*srv.RAMLimit))
 	}
 	if srv.NetLimit != nil {
-		netLimit = new(int32(*srv.NetLimit))
+		netLimit = new(clampToInt32(*srv.NetLimit))
 	}
 
 	var varsStr *string
@@ -70,7 +71,7 @@ func domainServerToProto(srv *domain.Server) *proto.Server {
 		GameModId:        uint64(srv.GameModID),
 		Expires:          expires,
 		ServerIp:         srv.ServerIP,
-		ServerPort:       int32(srv.ServerPort),
+		ServerPort:       clampToInt32(srv.ServerPort),
 		QueryPort:        queryPort,
 		RconPort:         rconPort,
 		Rcon:             srv.Rcon,
@@ -109,10 +110,10 @@ func domainInstalledStatusToProto(status domain.ServerInstalledStatus) proto.Ser
 func domainGameToProto(g *domain.Game) *proto.Game {
 	var steamAppIDLinux, steamAppIDWindows *uint32
 	if g.SteamAppIDLinux != nil {
-		steamAppIDLinux = new(uint32(*g.SteamAppIDLinux))
+		steamAppIDLinux = new(clampToUint32(*g.SteamAppIDLinux))
 	}
 	if g.SteamAppIDWindows != nil {
-		steamAppIDWindows = new(uint32(*g.SteamAppIDWindows))
+		steamAppIDWindows = new(clampToUint32(*g.SteamAppIDWindows))
 	}
 
 	return &proto.Game{
@@ -280,4 +281,12 @@ func ProtoTaskStatusToDomain(status proto.DaemonTaskStatus) domain.DaemonTaskSta
 	default:
 		return domain.DaemonTaskStatusWaiting
 	}
+}
+
+func clampToInt32(v int) int32 {
+	return int32(min(v, math.MaxInt32)) //nolint:gosec // value clamped to int32 range
+}
+
+func clampToUint32(v uint) uint32 {
+	return uint32(min(v, math.MaxUint32)) //nolint:gosec // value clamped to uint32 range
 }

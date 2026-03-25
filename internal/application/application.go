@@ -165,7 +165,7 @@ func runWithGRPC(ctx context.Context, cfg *config.Config, container *Container) 
 	grpcServer := container.GRPCServer()
 	grpcAddr := fmt.Sprintf("%s:%d", cfg.HTTPHost, cfg.GRPC.Port)
 
-	lis, err := net.Listen("tcp", grpcAddr)
+	lis, err := new(net.ListenConfig).Listen(ctx, "tcp", grpcAddr)
 	if err != nil {
 		slog.ErrorContext(ctx, "Failed to listen for gRPC", slog.String("error", err.Error()))
 		os.Exit(1)
