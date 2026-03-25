@@ -40,6 +40,7 @@ func NewAuthInterceptor(
 	if logger == nil {
 		logger = slog.Default()
 	}
+
 	return &AuthInterceptor{
 		nodeRepo:    nodeRepo,
 		requireMTLS: requireMTLS,
@@ -49,7 +50,7 @@ func NewAuthInterceptor(
 
 func (i *AuthInterceptor) StreamServerInterceptor() grpc.StreamServerInterceptor {
 	return func(
-		srv interface{},
+		srv any,
 		ss grpc.ServerStream,
 		info *grpc.StreamServerInfo,
 		handler grpc.StreamHandler,
@@ -69,10 +70,10 @@ func (i *AuthInterceptor) StreamServerInterceptor() grpc.StreamServerInterceptor
 func (i *AuthInterceptor) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
-		req interface{},
+		req any,
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
-	) (interface{}, error) {
+	) (any, error) {
 		if info.FullMethod == enrollFullMethod {
 			return handler(ctx, req)
 		}
@@ -142,6 +143,7 @@ func (i *AuthInterceptor) extractAndVerifyAPIKey(ctx context.Context) (uint64, e
 	nodes, err := i.nodeRepo.Find(ctx, &filters.FindNode{IDs: []uint{uint(nodeID)}}, nil, nil)
 	if err != nil {
 		i.logger.Error("failed to find node", "node_id", nodeID, "error", err)
+
 		return 0, status.Error(codes.Internal, "failed to verify node")
 	}
 
@@ -172,6 +174,7 @@ func GetNodeIDFromContext(ctx context.Context) (uint64, bool) {
 		return 0, false
 	}
 	nodeID, ok := v.(uint64)
+
 	return nodeID, ok
 }
 
@@ -181,5 +184,6 @@ func GetNodeFromContext(ctx context.Context) (*domain.Node, bool) {
 		return nil, false
 	}
 	node, ok := v.(*domain.Node)
+
 	return node, ok
 }

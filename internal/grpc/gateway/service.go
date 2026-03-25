@@ -82,6 +82,7 @@ func NewService(
 	if logger == nil {
 		logger = slog.Default()
 	}
+
 	return &Service{
 		registry:       registry,
 		nodeRepo:       nodeRepo,
@@ -126,6 +127,7 @@ func (s *Service) Connect(stream proto.DaemonGateway_ConnectServer) error {
 
 	if err := s.registry.Register(ctx, sess); err != nil {
 		cancel()
+
 		return status.Error(codes.Internal, "failed to register session")
 	}
 
@@ -139,6 +141,7 @@ func (s *Service) Connect(stream proto.DaemonGateway_ConnectServer) error {
 			"node_id", reg.NodeId,
 			"error", err,
 		)
+
 		return status.Error(codes.Internal, "failed to build registration response")
 	}
 
@@ -164,6 +167,7 @@ func (s *Service) validateAuth(ctx context.Context, reg *proto.RegisterRequest) 
 	nodes, err := s.nodeRepo.Find(ctx, &filters.FindNode{IDs: []uint{uint(reg.NodeId)}}, nil, nil)
 	if err != nil {
 		s.logger.Error("failed to find node", "node_id", reg.NodeId, "error", err)
+
 		return status.Error(codes.Internal, "failed to verify node")
 	}
 
@@ -181,6 +185,7 @@ func (s *Service) validateAuth(ctx context.Context, reg *proto.RegisterRequest) 
 		valid, err := s.apiKeyVerifier.Verify(reg.ApiKey, reg.NodeId)
 		if err != nil {
 			s.logger.Error("failed to verify API key", "node_id", reg.NodeId, "error", err)
+
 			return status.Error(codes.Internal, "failed to verify API key")
 		}
 		if !valid {
@@ -264,6 +269,7 @@ func (s *Service) handleMessages(ctx context.Context, sess *session.Session) err
 				"node_id", sess.NodeID,
 				"error", err,
 			)
+
 			return err
 		}
 
@@ -280,6 +286,7 @@ func (s *Service) processMessage(ctx context.Context, sess *session.Session, msg
 	switch payload := msg.Payload.(type) {
 	case *proto.DaemonMessage_Heartbeat:
 		sess.UpdateLastPing()
+
 		return nil
 
 	case *proto.DaemonMessage_TaskStatus:
@@ -309,18 +316,22 @@ func (s *Service) processMessage(ctx context.Context, sess *session.Session, msg
 
 	case *proto.DaemonMessage_FileReadResponse:
 		sess.ResolvePendingRequest(payload.FileReadResponse.RequestId, msg)
+
 		return nil
 
 	case *proto.DaemonMessage_FileWriteResponse:
 		sess.ResolvePendingRequest(payload.FileWriteResponse.RequestId, msg)
+
 		return nil
 
 	case *proto.DaemonMessage_FileListResponse:
 		sess.ResolvePendingRequest(payload.FileListResponse.RequestId, msg)
+
 		return nil
 
 	case *proto.DaemonMessage_FileOperationResponse:
 		sess.ResolvePendingRequest(payload.FileOperationResponse.RequestId, msg)
+
 		return nil
 
 	default:
@@ -373,6 +384,7 @@ func (s *Service) RequestFileRead(
 		if fileResp == nil {
 			return nil, errors.New("unexpected response type")
 		}
+
 		return fileResp, nil
 	}
 }
@@ -415,6 +427,7 @@ func (s *Service) RequestFileWrite(ctx context.Context, nodeID uint64, path stri
 		if !fileResp.Success {
 			return errors.New(fileResp.Error)
 		}
+
 		return nil
 	}
 }
@@ -453,6 +466,7 @@ func (s *Service) RequestFileList(ctx context.Context, nodeID uint64, path strin
 		if fileResp == nil {
 			return nil, errors.New("unexpected response type")
 		}
+
 		return fileResp, nil
 	}
 }
@@ -550,5 +564,6 @@ func randomString(n int) string {
 	if _, err := rand.Read(b); err != nil {
 		panic(err)
 	}
+
 	return hex.EncodeToString(b)[:n]
 }

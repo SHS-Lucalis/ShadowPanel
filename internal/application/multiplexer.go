@@ -76,8 +76,10 @@ func (s *MultiplexedServer) Serve(ctx context.Context) error {
 				return nil
 			}
 			s.logger.Error("gRPC server error", "error", err)
+
 			return err
 		}
+
 		return nil
 	})
 
@@ -88,8 +90,10 @@ func (s *MultiplexedServer) Serve(ctx context.Context) error {
 				return nil
 			}
 			s.logger.Error("HTTP server error", "error", err)
+
 			return err
 		}
+
 		return nil
 	})
 
@@ -100,13 +104,16 @@ func (s *MultiplexedServer) Serve(ctx context.Context) error {
 				return nil
 			}
 			s.logger.Error("cmux server error", "error", err)
+
 			return err
 		}
+
 		return nil
 	})
 
 	g.Go(func() error {
 		<-gctx.Done()
+
 		return s.shutdown(context.Background())
 	})
 

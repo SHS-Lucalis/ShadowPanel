@@ -19,6 +19,7 @@ func NewLoggingInterceptor(logger *slog.Logger) *LoggingInterceptor {
 	if logger == nil {
 		logger = slog.Default()
 	}
+
 	return &LoggingInterceptor{
 		logger: logger,
 	}
@@ -26,7 +27,7 @@ func NewLoggingInterceptor(logger *slog.Logger) *LoggingInterceptor {
 
 func (i *LoggingInterceptor) StreamServerInterceptor() grpc.StreamServerInterceptor {
 	return func(
-		srv interface{},
+		srv any,
 		ss grpc.ServerStream,
 		info *grpc.StreamServerInfo,
 		handler grpc.StreamHandler,
@@ -71,10 +72,10 @@ func (i *LoggingInterceptor) StreamServerInterceptor() grpc.StreamServerIntercep
 func (i *LoggingInterceptor) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
-		req interface{},
+		req any,
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
-	) (interface{}, error) {
+	) (any, error) {
 		start := time.Now()
 
 		peerAddr := "unknown"

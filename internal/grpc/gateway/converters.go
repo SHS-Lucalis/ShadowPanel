@@ -6,7 +6,6 @@ import (
 
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/pkg/proto"
-	"github.com/samber/lo"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -33,28 +32,28 @@ func domainServerToProto(srv *domain.Server) *proto.Server {
 
 	var queryPort, rconPort *int32
 	if srv.QueryPort != nil {
-		queryPort = lo.ToPtr(int32(*srv.QueryPort))
+		queryPort = new(int32(*srv.QueryPort))
 	}
 	if srv.RconPort != nil {
-		rconPort = lo.ToPtr(int32(*srv.RconPort))
+		rconPort = new(int32(*srv.RconPort))
 	}
 
 	var cpuLimit, ramLimit, netLimit *int32
 	if srv.CPULimit != nil {
-		cpuLimit = lo.ToPtr(int32(*srv.CPULimit))
+		cpuLimit = new(int32(*srv.CPULimit))
 	}
 	if srv.RAMLimit != nil {
-		ramLimit = lo.ToPtr(int32(*srv.RAMLimit))
+		ramLimit = new(int32(*srv.RAMLimit))
 	}
 	if srv.NetLimit != nil {
-		netLimit = lo.ToPtr(int32(*srv.NetLimit))
+		netLimit = new(int32(*srv.NetLimit))
 	}
 
 	var varsStr *string
 	if srv.Vars != nil {
 		varsBytes, err := json.Marshal(srv.Vars)
 		if err == nil {
-			varsStr = lo.ToPtr(string(varsBytes))
+			varsStr = new(string(varsBytes))
 		}
 	}
 
@@ -110,10 +109,10 @@ func domainInstalledStatusToProto(status domain.ServerInstalledStatus) proto.Ser
 func domainGameToProto(g *domain.Game) *proto.Game {
 	var steamAppIDLinux, steamAppIDWindows *uint32
 	if g.SteamAppIDLinux != nil {
-		steamAppIDLinux = lo.ToPtr(uint32(*g.SteamAppIDLinux))
+		steamAppIDLinux = new(uint32(*g.SteamAppIDLinux))
 	}
 	if g.SteamAppIDWindows != nil {
-		steamAppIDWindows = lo.ToPtr(uint32(*g.SteamAppIDWindows))
+		steamAppIDWindows = new(uint32(*g.SteamAppIDWindows))
 	}
 
 	return &proto.Game{
@@ -203,12 +202,12 @@ func DomainDaemonTaskToProto(task *domain.DaemonTask) *proto.DaemonTask {
 
 	var serverID *uint64
 	if task.ServerID != nil {
-		serverID = lo.ToPtr(uint64(*task.ServerID))
+		serverID = new(uint64(*task.ServerID))
 	}
 
 	var runAfterID *uint64
 	if task.RunAftID != nil {
-		runAfterID = lo.ToPtr(uint64(*task.RunAftID))
+		runAfterID = new(uint64(*task.RunAftID))
 	}
 
 	return &proto.DaemonTask{

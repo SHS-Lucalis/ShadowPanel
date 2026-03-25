@@ -18,6 +18,7 @@ func NewRecoveryInterceptor(logger *slog.Logger) *RecoveryInterceptor {
 	if logger == nil {
 		logger = slog.Default()
 	}
+
 	return &RecoveryInterceptor{
 		logger: logger,
 	}
@@ -25,7 +26,7 @@ func NewRecoveryInterceptor(logger *slog.Logger) *RecoveryInterceptor {
 
 func (i *RecoveryInterceptor) StreamServerInterceptor() grpc.StreamServerInterceptor {
 	return func(
-		srv interface{},
+		srv any,
 		ss grpc.ServerStream,
 		info *grpc.StreamServerInfo,
 		handler grpc.StreamHandler,
@@ -48,10 +49,10 @@ func (i *RecoveryInterceptor) StreamServerInterceptor() grpc.StreamServerInterce
 func (i *RecoveryInterceptor) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
-		req interface{},
+		req any,
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
-	) (resp interface{}, err error) {
+	) (resp any, err error) {
 		defer func() {
 			if r := recover(); r != nil {
 				i.logger.Error("gRPC request panic recovered",

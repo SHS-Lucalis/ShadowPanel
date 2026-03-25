@@ -2,6 +2,7 @@ package session
 
 import (
 	"context"
+	"slices"
 	"sync"
 	"time"
 
@@ -54,6 +55,7 @@ func (s *Session) UpdateLastPing() {
 func (s *Session) LastPing() time.Time {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
+
 	return s.lastPing
 }
 
@@ -68,6 +70,7 @@ func (s *Session) RegisterPendingRequest(requestID string) chan *proto.DaemonMes
 	s.mu.Lock()
 	s.pendingReqs[requestID] = ch
 	s.mu.Unlock()
+
 	return ch
 }
 
@@ -86,6 +89,7 @@ func (s *Session) ResolvePendingRequest(requestID string, msg *proto.DaemonMessa
 		}
 		close(ch)
 	}
+
 	return ok
 }
 
@@ -100,10 +104,6 @@ func (s *Session) CancelPendingRequest(requestID string) {
 }
 
 func (s *Session) HasCapability(cap string) bool {
-	for _, c := range s.Capabilities {
-		if c == cap {
-			return true
-		}
-	}
-	return false
+
+	return slices.Contains(s.Capabilities, cap)
 }

@@ -29,6 +29,7 @@ func NewRegistry(ps pubsub.PubSub, instanceID string, logger *slog.Logger) *Regi
 	if logger == nil {
 		logger = slog.Default()
 	}
+
 	return &Registry{
 		pubsub:        ps,
 		instanceID:    instanceID,
@@ -44,6 +45,7 @@ func (r *Registry) Start(ctx context.Context) error {
 	}
 
 	r.logger.Info("session registry started", "instance_id", r.instanceID)
+
 	return nil
 }
 
@@ -130,11 +132,13 @@ func (r *Registry) GetSession(nodeID uint64) (*Session, bool) {
 	r.mu.RLock()
 	session, ok := r.localSessions[nodeID]
 	r.mu.RUnlock()
+
 	return session, ok
 }
 
 func (r *Registry) IsConnected(nodeID uint64) bool {
 	_, ok := r.GetSession(nodeID)
+
 	return ok
 }
 
@@ -147,6 +151,7 @@ func (r *Registry) SendTask(ctx context.Context, nodeID uint64, task *proto.Gate
 		if err := session.Stream.Send(task); err != nil {
 			return errors.Wrap(err, "send task to local session")
 		}
+
 		return nil
 	}
 
@@ -185,6 +190,7 @@ func (r *Registry) handleTaskDispatch(ctx context.Context, msg *pubsub.Message) 
 			"channel", msg.Channel,
 			"error", err,
 		)
+
 		return nil
 	}
 
@@ -202,6 +208,7 @@ func (r *Registry) handleTaskDispatch(ctx context.Context, msg *pubsub.Message) 
 			"channel", msg.Channel,
 			"error", err,
 		)
+
 		return nil
 	}
 
@@ -211,6 +218,7 @@ func (r *Registry) handleTaskDispatch(ctx context.Context, msg *pubsub.Message) 
 			"node_id", nodeID,
 			"error", err,
 		)
+
 		return nil
 	}
 
@@ -220,6 +228,7 @@ func (r *Registry) handleTaskDispatch(ctx context.Context, msg *pubsub.Message) 
 			"task_id", payload.TaskID,
 			"error", err,
 		)
+
 		return errors.Wrap(err, "send task to session")
 	}
 
@@ -305,12 +314,14 @@ func (r *Registry) ConnectedNodeIDs() []uint64 {
 	for id := range r.localSessions {
 		ids = append(ids, id)
 	}
+
 	return ids
 }
 
 func (r *Registry) SessionCount() int {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
+
 	return len(r.localSessions)
 }
 
