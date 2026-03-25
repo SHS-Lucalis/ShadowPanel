@@ -36,6 +36,8 @@ message DaemonMessage {
     FileWriteResponse file_write_response = 61;
     FileListResponse file_list_response = 62;
     FileOperationResponse file_operation_response = 63;
+
+    StatusResponse status_response = 70;
   }
 }
 
@@ -60,6 +62,8 @@ message GatewayMessage {
     FileUploadTask file_upload_task = 63;
     FileOperationRequest file_operation = 64;
     FileDownloadTask file_download_task = 65;
+
+    StatusRequest status_request = 70;
   }
 }
 
@@ -125,6 +129,7 @@ message CommandRequest {
   string command = 3;
   google.protobuf.Duration timeout = 4;
   bool stream_output = 5;
+  string work_dir = 6;
 }
 
 message CommandOutput {
@@ -137,6 +142,7 @@ message CommandResult {
   int32 exit_code = 2;
   bytes output = 3;
   string error = 4;
+  string request_id = 5;
 }
 
 message ServerStatus {
@@ -229,4 +235,18 @@ message EnrollResponse {
   string root_certificate = 5;
   string server_certificate = 6;
   string server_private_key = 7;
+}
+
+message StatusRequest {}
+
+message StatusResponse {
+  string request_id = 1;
+  bool success = 2;
+  string version = 3;
+  string build_date = 4;
+  int64 uptime_seconds = 5;
+  int32 working_tasks = 6;
+  int32 waiting_tasks = 7;
+  int32 online_servers = 8;
+  string error = 9;
 }

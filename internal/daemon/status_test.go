@@ -60,7 +60,7 @@ import (
 //	require.NoError(t, err)
 //
 //	// Create status service
-//	statusService := NewStatusService(certRepo, fileManager)
+//	statusService := NewStatusBINNService(certRepo, fileManager)
 //
 //	// ACT
 //	status, err := statusService.Status(ctx, node.ID)
@@ -145,7 +145,7 @@ func TestStatusService_Status_Success(t *testing.T) {
 	err = fileManager.Write(ctx, node.GdaemonServerCert, []byte(daemonServerCert))
 	require.NoError(t, err)
 
-	statusService := NewStatusService(certRepo, fileManager)
+	statusService := NewStatusBINNService(certRepo, fileManager)
 
 	// ACT
 	status, err := statusService.Status(ctx, node)
@@ -205,7 +205,7 @@ func TestStatusService_Status_MissingServerCertificate(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create status service
-	statusService := NewStatusService(certRepo, fileManager)
+	statusService := NewStatusBINNService(certRepo, fileManager)
 
 	// Execute test
 	status, err := statusService.Status(ctx, node)
@@ -255,7 +255,7 @@ func TestStatusService_Status_MissingClientCertificate(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create status service
-	statusService := NewStatusService(certRepo, fileManager)
+	statusService := NewStatusBINNService(certRepo, fileManager)
 
 	// Execute test
 	status, err := statusService.Status(ctx, node)
@@ -309,7 +309,7 @@ func TestStatusService_Status_MissingPrivateKey(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create status service
-	statusService := NewStatusService(certRepo, fileManager)
+	statusService := NewStatusBINNService(certRepo, fileManager)
 
 	// Execute test
 	status, err := statusService.Status(ctx, node)
@@ -375,7 +375,7 @@ func TestStatusService_Status_PoolReuse(t *testing.T) {
 	err = fileManager.Write(ctx, node.GdaemonServerCert, []byte(daemonServerCert))
 	require.NoError(t, err)
 
-	statusService := NewStatusService(certRepo, fileManager)
+	statusService := NewStatusBINNService(certRepo, fileManager)
 
 	// ACT - Execute multiple status requests
 	status1, err := statusService.Status(ctx, node)
@@ -469,7 +469,7 @@ func TestStatusService_Status_MultipleNodes(t *testing.T) {
 	err = fileManager.Write(ctx, node1.GdaemonServerCert, []byte(daemonServerCert))
 	require.NoError(t, err)
 
-	statusService := NewStatusService(certRepo, fileManager)
+	statusService := NewStatusBINNService(certRepo, fileManager)
 
 	// ACT
 	status1, err := statusService.Status(ctx, node1)
@@ -499,7 +499,7 @@ func TestStatusService_Status_InvalidNodeID(t *testing.T) {
 	fileManager := files.NewInMemoryFileManager()
 
 	// Create status service
-	statusService := NewStatusService(certRepo, fileManager)
+	statusService := NewStatusBINNService(certRepo, fileManager)
 
 	// Execute test with invalid node ID (0)
 	ctx := context.Background()
@@ -580,7 +580,7 @@ func TestStatusService_Status_WithMockDaemon(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create status service
-	statusService := NewStatusService(certRepo, fileManager)
+	statusService := NewStatusBINNService(certRepo, fileManager)
 
 	// Execute test
 	status, err := statusService.Status(ctx, node)

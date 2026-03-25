@@ -2,7 +2,6 @@ package channels
 
 import (
 	"strconv"
-	"strings"
 )
 
 const (
@@ -49,6 +48,14 @@ const (
 	DaemonFileResponse         = DaemonPrefix + "file:response:"
 	DaemonFileRequestAll       = DaemonPrefix + "file:request:*"
 	DaemonFileTransferComplete = DaemonPrefix + "file:transfer:complete:"
+
+	DaemonCommandRequest    = DaemonPrefix + "command:request:"
+	DaemonCommandResponse   = DaemonPrefix + "command:response:"
+	DaemonCommandRequestAll = DaemonPrefix + "command:request:*"
+
+	DaemonStatusRequest    = DaemonPrefix + "status:request:"
+	DaemonStatusResponse   = DaemonPrefix + "status:response:"
+	DaemonStatusRequestAll = DaemonPrefix + "status:request:*"
 )
 
 func BuildCacheInvalidateChannel(entityType string, entityID string) string {
@@ -64,91 +71,53 @@ func BuildPluginEventChannel(eventType string) string {
 }
 
 func BuildDaemonTaskDispatchChannel(nodeID uint64) string {
-	sb := strings.Builder{}
-	sb.Grow(len(DaemonTaskDispatch) + 20)
-
-	sb.WriteString(DaemonTaskDispatch)
-	sb.WriteString(strconv.FormatUint(nodeID, 10))
-
-	return sb.String()
+	return DaemonTaskDispatch + strconv.FormatUint(nodeID, 10)
 }
 
 func BuildDaemonCommandDispatchChannel(nodeID uint64) string {
-	sb := strings.Builder{}
-	sb.Grow(len(DaemonCommandDispatch) + 20)
-
-	sb.WriteString(DaemonCommandDispatch)
-	sb.WriteString(strconv.FormatUint(nodeID, 10))
-
-	return sb.String()
+	return DaemonCommandDispatch + strconv.FormatUint(nodeID, 10)
 }
 
 func BuildRealtimeTaskStatusChannel(taskID uint64) string {
-	sb := strings.Builder{}
-	sb.Grow(len(RealtimeTaskStatus) + 20)
-
-	sb.WriteString(RealtimeTaskStatus)
-	sb.WriteString(strconv.FormatUint(taskID, 10))
-
-	return sb.String()
+	return RealtimeTaskStatus + strconv.FormatUint(taskID, 10)
 }
 
 func BuildRealtimeTaskOutputChannel(taskID uint64) string {
-	sb := strings.Builder{}
-	sb.Grow(len(RealtimeTaskOutput) + 20)
-
-	sb.WriteString(RealtimeTaskOutput)
-	sb.WriteString(strconv.FormatUint(taskID, 10))
-
-	return sb.String()
+	return RealtimeTaskOutput + strconv.FormatUint(taskID, 10)
 }
 
 func BuildRealtimeConsoleOutputChannel(serverID uint64) string {
-	sb := strings.Builder{}
-	sb.Grow(len(RealtimeConsoleOutput) + 20)
-
-	sb.WriteString(RealtimeConsoleOutput)
-	sb.WriteString(strconv.FormatUint(serverID, 10))
-
-	return sb.String()
+	return RealtimeConsoleOutput + strconv.FormatUint(serverID, 10)
 }
 
 func BuildDaemonFileRequestChannel(nodeID uint64) string {
-	sb := strings.Builder{}
-	sb.Grow(len(DaemonFileRequest) + 20)
-
-	sb.WriteString(DaemonFileRequest)
-	sb.WriteString(strconv.FormatUint(nodeID, 10))
-
-	return sb.String()
+	return DaemonFileRequest + strconv.FormatUint(nodeID, 10)
 }
 
 func BuildDaemonFileResponseChannel(instanceID string) string {
-	sb := strings.Builder{}
-	sb.Grow(len(DaemonFileResponse) + 20)
-
-	sb.WriteString(DaemonFileResponse)
-	sb.WriteString(instanceID)
-
-	return sb.String()
+	return DaemonFileResponse + instanceID
 }
 
 func BuildDaemonFileTransferCompleteChannel(transferID string) string {
-	sb := strings.Builder{}
-	sb.Grow(len(DaemonFileTransferComplete) + 20)
-
-	sb.WriteString(DaemonFileTransferComplete)
-	sb.WriteString(transferID)
-
-	return sb.String()
+	return DaemonFileTransferComplete + transferID
 }
 
 func BuildRealtimeConsoleResultChannel(serverID uint64) string {
-	sb := strings.Builder{}
-	sb.Grow(len(RealtimeConsoleResult) + 20)
+	return RealtimeConsoleResult + strconv.FormatUint(serverID, 10)
+}
 
-	sb.WriteString(RealtimeConsoleResult)
-	sb.WriteString(strconv.FormatUint(serverID, 10))
+func BuildDaemonCommandRequestChannel(nodeID uint64) string {
+	return DaemonCommandRequest + strconv.FormatUint(nodeID, 10)
+}
 
-	return sb.String()
+func BuildDaemonCommandResponseChannel(instanceID string) string {
+	return DaemonCommandResponse + instanceID
+}
+
+func BuildDaemonStatusRequestChannel(nodeID uint64) string {
+	return DaemonStatusRequest + strconv.FormatUint(nodeID, 10)
+}
+
+func BuildDaemonStatusResponseChannel(instanceID string) string {
+	return DaemonStatusResponse + instanceID
 }

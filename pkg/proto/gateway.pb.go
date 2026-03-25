@@ -39,6 +39,7 @@ type DaemonMessage struct {
 	//	*DaemonMessage_FileWriteResponse
 	//	*DaemonMessage_FileListResponse
 	//	*DaemonMessage_FileOperationResponse
+	//	*DaemonMessage_StatusResponse
 	Payload       isDaemonMessage_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -187,6 +188,15 @@ func (x *DaemonMessage) GetFileOperationResponse() *FileOperationResponse {
 	return nil
 }
 
+func (x *DaemonMessage) GetStatusResponse() *StatusResponse {
+	if x != nil {
+		if x, ok := x.Payload.(*DaemonMessage_StatusResponse); ok {
+			return x.StatusResponse
+		}
+	}
+	return nil
+}
+
 type isDaemonMessage_Payload interface {
 	isDaemonMessage_Payload()
 }
@@ -235,6 +245,10 @@ type DaemonMessage_FileOperationResponse struct {
 	FileOperationResponse *FileOperationResponse `protobuf:"bytes,63,opt,name=file_operation_response,json=fileOperationResponse,proto3,oneof"`
 }
 
+type DaemonMessage_StatusResponse struct {
+	StatusResponse *StatusResponse `protobuf:"bytes,70,opt,name=status_response,json=statusResponse,proto3,oneof"`
+}
+
 func (*DaemonMessage_Register) isDaemonMessage_Payload() {}
 
 func (*DaemonMessage_Heartbeat) isDaemonMessage_Payload() {}
@@ -257,6 +271,8 @@ func (*DaemonMessage_FileListResponse) isDaemonMessage_Payload() {}
 
 func (*DaemonMessage_FileOperationResponse) isDaemonMessage_Payload() {}
 
+func (*DaemonMessage_StatusResponse) isDaemonMessage_Payload() {}
+
 type GatewayMessage struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
 	RequestId string                 `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
@@ -275,6 +291,7 @@ type GatewayMessage struct {
 	//	*GatewayMessage_FileUploadTask
 	//	*GatewayMessage_FileOperation
 	//	*GatewayMessage_FileDownloadTask
+	//	*GatewayMessage_StatusRequest
 	Payload       isGatewayMessage_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -441,6 +458,15 @@ func (x *GatewayMessage) GetFileDownloadTask() *FileDownloadTask {
 	return nil
 }
 
+func (x *GatewayMessage) GetStatusRequest() *StatusRequest {
+	if x != nil {
+		if x, ok := x.Payload.(*GatewayMessage_StatusRequest); ok {
+			return x.StatusRequest
+		}
+	}
+	return nil
+}
+
 type isGatewayMessage_Payload interface {
 	isGatewayMessage_Payload()
 }
@@ -497,6 +523,10 @@ type GatewayMessage_FileDownloadTask struct {
 	FileDownloadTask *FileDownloadTask `protobuf:"bytes,65,opt,name=file_download_task,json=fileDownloadTask,proto3,oneof"`
 }
 
+type GatewayMessage_StatusRequest struct {
+	StatusRequest *StatusRequest `protobuf:"bytes,70,opt,name=status_request,json=statusRequest,proto3,oneof"`
+}
+
 func (*GatewayMessage_RegisterAck) isGatewayMessage_Payload() {}
 
 func (*GatewayMessage_Shutdown) isGatewayMessage_Payload() {}
@@ -522,6 +552,8 @@ func (*GatewayMessage_FileUploadTask) isGatewayMessage_Payload() {}
 func (*GatewayMessage_FileOperation) isGatewayMessage_Payload() {}
 
 func (*GatewayMessage_FileDownloadTask) isGatewayMessage_Payload() {}
+
+func (*GatewayMessage_StatusRequest) isGatewayMessage_Payload() {}
 
 type RegisterRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1074,6 +1106,7 @@ type CommandRequest struct {
 	Command       string                 `protobuf:"bytes,3,opt,name=command,proto3" json:"command,omitempty"`
 	Timeout       *durationpb.Duration   `protobuf:"bytes,4,opt,name=timeout,proto3" json:"timeout,omitempty"`
 	StreamOutput  bool                   `protobuf:"varint,5,opt,name=stream_output,json=streamOutput,proto3" json:"stream_output,omitempty"`
+	WorkDir       string                 `protobuf:"bytes,6,opt,name=work_dir,json=workDir,proto3" json:"work_dir,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1143,6 +1176,13 @@ func (x *CommandRequest) GetStreamOutput() bool {
 	return false
 }
 
+func (x *CommandRequest) GetWorkDir() string {
+	if x != nil {
+		return x.WorkDir
+	}
+	return ""
+}
+
 type CommandOutput struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	CommandId     string                 `protobuf:"bytes,1,opt,name=command_id,json=commandId,proto3" json:"command_id,omitempty"`
@@ -1201,6 +1241,7 @@ type CommandResult struct {
 	ExitCode      int32                  `protobuf:"varint,2,opt,name=exit_code,json=exitCode,proto3" json:"exit_code,omitempty"`
 	Output        []byte                 `protobuf:"bytes,3,opt,name=output,proto3" json:"output,omitempty"`
 	Error         string                 `protobuf:"bytes,4,opt,name=error,proto3" json:"error,omitempty"`
+	RequestId     string                 `protobuf:"bytes,5,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1259,6 +1300,13 @@ func (x *CommandResult) GetOutput() []byte {
 func (x *CommandResult) GetError() string {
 	if x != nil {
 		return x.Error
+	}
+	return ""
+}
+
+func (x *CommandResult) GetRequestId() string {
+	if x != nil {
+		return x.RequestId
 	}
 	return ""
 }
@@ -2167,11 +2215,155 @@ func (x *EnrollResponse) GetServerPrivateKey() string {
 	return ""
 }
 
+type StatusRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StatusRequest) Reset() {
+	*x = StatusRequest{}
+	mi := &file_pkg_proto_gateway_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StatusRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StatusRequest) ProtoMessage() {}
+
+func (x *StatusRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_gateway_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StatusRequest.ProtoReflect.Descriptor instead.
+func (*StatusRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_gateway_proto_rawDescGZIP(), []int{27}
+}
+
+type StatusResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RequestId     string                 `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	Success       bool                   `protobuf:"varint,2,opt,name=success,proto3" json:"success,omitempty"`
+	Version       string                 `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`
+	BuildDate     string                 `protobuf:"bytes,4,opt,name=build_date,json=buildDate,proto3" json:"build_date,omitempty"`
+	UptimeSeconds int64                  `protobuf:"varint,5,opt,name=uptime_seconds,json=uptimeSeconds,proto3" json:"uptime_seconds,omitempty"`
+	WorkingTasks  int32                  `protobuf:"varint,6,opt,name=working_tasks,json=workingTasks,proto3" json:"working_tasks,omitempty"`
+	WaitingTasks  int32                  `protobuf:"varint,7,opt,name=waiting_tasks,json=waitingTasks,proto3" json:"waiting_tasks,omitempty"`
+	OnlineServers int32                  `protobuf:"varint,8,opt,name=online_servers,json=onlineServers,proto3" json:"online_servers,omitempty"`
+	Error         string                 `protobuf:"bytes,9,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StatusResponse) Reset() {
+	*x = StatusResponse{}
+	mi := &file_pkg_proto_gateway_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StatusResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StatusResponse) ProtoMessage() {}
+
+func (x *StatusResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_gateway_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StatusResponse.ProtoReflect.Descriptor instead.
+func (*StatusResponse) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_gateway_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *StatusResponse) GetRequestId() string {
+	if x != nil {
+		return x.RequestId
+	}
+	return ""
+}
+
+func (x *StatusResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *StatusResponse) GetVersion() string {
+	if x != nil {
+		return x.Version
+	}
+	return ""
+}
+
+func (x *StatusResponse) GetBuildDate() string {
+	if x != nil {
+		return x.BuildDate
+	}
+	return ""
+}
+
+func (x *StatusResponse) GetUptimeSeconds() int64 {
+	if x != nil {
+		return x.UptimeSeconds
+	}
+	return 0
+}
+
+func (x *StatusResponse) GetWorkingTasks() int32 {
+	if x != nil {
+		return x.WorkingTasks
+	}
+	return 0
+}
+
+func (x *StatusResponse) GetWaitingTasks() int32 {
+	if x != nil {
+		return x.WaitingTasks
+	}
+	return 0
+}
+
+func (x *StatusResponse) GetOnlineServers() int32 {
+	if x != nil {
+		return x.OnlineServers
+	}
+	return 0
+}
+
+func (x *StatusResponse) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
 var File_pkg_proto_gateway_proto protoreflect.FileDescriptor
 
 const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"\n" +
-	"\x17pkg/proto/gateway.proto\x12\x06gameap\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x1apkg/proto/daemontask.proto\x1a\x16pkg/proto/server.proto\x1a\x14pkg/proto/game.proto\x1a\x17pkg/proto/gamemod.proto\x1a\x1cpkg/proto/filetransfer.proto\"\x97\x06\n" +
+	"\x17pkg/proto/gateway.proto\x12\x06gameap\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x1apkg/proto/daemontask.proto\x1a\x16pkg/proto/server.proto\x1a\x14pkg/proto/game.proto\x1a\x17pkg/proto/gamemod.proto\x1a\x1cpkg/proto/filetransfer.proto\"\xda\x06\n" +
 	"\rDaemonMessage\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x01 \x01(\tR\trequestId\x125\n" +
@@ -2188,8 +2380,9 @@ const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"\x12file_read_response\x18< \x01(\v2\x18.gameap.FileReadResponseH\x00R\x10fileReadResponse\x12K\n" +
 	"\x13file_write_response\x18= \x01(\v2\x19.gameap.FileWriteResponseH\x00R\x11fileWriteResponse\x12H\n" +
 	"\x12file_list_response\x18> \x01(\v2\x18.gameap.FileListResponseH\x00R\x10fileListResponse\x12W\n" +
-	"\x17file_operation_response\x18? \x01(\v2\x1d.gameap.FileOperationResponseH\x00R\x15fileOperationResponseB\t\n" +
-	"\apayload\"\xc9\x06\n" +
+	"\x17file_operation_response\x18? \x01(\v2\x1d.gameap.FileOperationResponseH\x00R\x15fileOperationResponse\x12A\n" +
+	"\x0fstatus_response\x18F \x01(\v2\x16.gameap.StatusResponseH\x00R\x0estatusResponseB\t\n" +
+	"\apayload\"\x89\a\n" +
 	"\x0eGatewayMessage\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x01 \x01(\tR\trequestId\x128\n" +
@@ -2208,7 +2401,8 @@ const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"\tfile_list\x18> \x01(\v2\x17.gameap.FileListRequestH\x00R\bfileList\x12B\n" +
 	"\x10file_upload_task\x18? \x01(\v2\x16.gameap.FileUploadTaskH\x00R\x0efileUploadTask\x12E\n" +
 	"\x0efile_operation\x18@ \x01(\v2\x1c.gameap.FileOperationRequestH\x00R\rfileOperation\x12H\n" +
-	"\x12file_download_task\x18A \x01(\v2\x18.gameap.FileDownloadTaskH\x00R\x10fileDownloadTaskB\t\n" +
+	"\x12file_download_task\x18A \x01(\v2\x18.gameap.FileDownloadTaskH\x00R\x10fileDownloadTask\x12>\n" +
+	"\x0estatus_request\x18F \x01(\v2\x15.gameap.StatusRequestH\x00R\rstatusRequestB\t\n" +
 	"\apayload\"\xbf\x01\n" +
 	"\x0fRegisterRequest\x12\x17\n" +
 	"\anode_id\x18\x01 \x01(\x04R\x06nodeId\x12\x17\n" +
@@ -2252,24 +2446,27 @@ const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"\n" +
 	"TaskCancel\x12\x17\n" +
 	"\atask_id\x18\x01 \x01(\x04R\x06taskId\x12\x16\n" +
-	"\x06reason\x18\x02 \x01(\tR\x06reason\"\xc0\x01\n" +
+	"\x06reason\x18\x02 \x01(\tR\x06reason\"\xdb\x01\n" +
 	"\x0eCommandRequest\x12\x1d\n" +
 	"\n" +
 	"command_id\x18\x01 \x01(\tR\tcommandId\x12\x1b\n" +
 	"\tserver_id\x18\x02 \x01(\x04R\bserverId\x12\x18\n" +
 	"\acommand\x18\x03 \x01(\tR\acommand\x123\n" +
 	"\atimeout\x18\x04 \x01(\v2\x19.google.protobuf.DurationR\atimeout\x12#\n" +
-	"\rstream_output\x18\x05 \x01(\bR\fstreamOutput\"Q\n" +
+	"\rstream_output\x18\x05 \x01(\bR\fstreamOutput\x12\x19\n" +
+	"\bwork_dir\x18\x06 \x01(\tR\aworkDir\"Q\n" +
 	"\rCommandOutput\x12\x1d\n" +
 	"\n" +
 	"command_id\x18\x01 \x01(\tR\tcommandId\x12!\n" +
-	"\foutput_chunk\x18\x02 \x01(\fR\voutputChunk\"y\n" +
+	"\foutput_chunk\x18\x02 \x01(\fR\voutputChunk\"\x98\x01\n" +
 	"\rCommandResult\x12\x1d\n" +
 	"\n" +
 	"command_id\x18\x01 \x01(\tR\tcommandId\x12\x1b\n" +
 	"\texit_code\x18\x02 \x01(\x05R\bexitCode\x12\x16\n" +
 	"\x06output\x18\x03 \x01(\fR\x06output\x12\x14\n" +
-	"\x05error\x18\x04 \x01(\tR\x05error\"\x85\x01\n" +
+	"\x05error\x18\x04 \x01(\tR\x05error\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x05 \x01(\tR\trequestId\"\x85\x01\n" +
 	"\fServerStatus\x12\x1b\n" +
 	"\tserver_id\x18\x01 \x01(\x04R\bserverId\x12\x1d\n" +
 	"\n" +
@@ -2343,7 +2540,20 @@ const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"\aapi_key\x18\x04 \x01(\tR\x06apiKey\x12)\n" +
 	"\x10root_certificate\x18\x05 \x01(\tR\x0frootCertificate\x12-\n" +
 	"\x12server_certificate\x18\x06 \x01(\tR\x11serverCertificate\x12,\n" +
-	"\x12server_private_key\x18\a \x01(\tR\x10serverPrivateKey2\x86\x01\n" +
+	"\x12server_private_key\x18\a \x01(\tR\x10serverPrivateKey\"\x0f\n" +
+	"\rStatusRequest\"\xb0\x02\n" +
+	"\x0eStatusResponse\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x01 \x01(\tR\trequestId\x12\x18\n" +
+	"\asuccess\x18\x02 \x01(\bR\asuccess\x12\x18\n" +
+	"\aversion\x18\x03 \x01(\tR\aversion\x12\x1d\n" +
+	"\n" +
+	"build_date\x18\x04 \x01(\tR\tbuildDate\x12%\n" +
+	"\x0euptime_seconds\x18\x05 \x01(\x03R\ruptimeSeconds\x12#\n" +
+	"\rworking_tasks\x18\x06 \x01(\x05R\fworkingTasks\x12#\n" +
+	"\rwaiting_tasks\x18\a \x01(\x05R\fwaitingTasks\x12%\n" +
+	"\x0eonline_servers\x18\b \x01(\x05R\ronlineServers\x12\x14\n" +
+	"\x05error\x18\t \x01(\tR\x05error2\x86\x01\n" +
 	"\rDaemonGateway\x12<\n" +
 	"\aConnect\x12\x15.gameap.DaemonMessage\x1a\x16.gameap.GatewayMessage(\x010\x01\x127\n" +
 	"\x06Enroll\x12\x15.gameap.EnrollRequest\x1a\x16.gameap.EnrollResponseB$Z\"github.com/gameap/gameap/pkg/protob\x06proto3"
@@ -2360,7 +2570,7 @@ func file_pkg_proto_gateway_proto_rawDescGZIP() []byte {
 	return file_pkg_proto_gateway_proto_rawDescData
 }
 
-var file_pkg_proto_gateway_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
+var file_pkg_proto_gateway_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
 var file_pkg_proto_gateway_proto_goTypes = []any{
 	(*DaemonMessage)(nil),         // 0: gameap.DaemonMessage
 	(*GatewayMessage)(nil),        // 1: gameap.GatewayMessage
@@ -2389,16 +2599,18 @@ var file_pkg_proto_gateway_proto_goTypes = []any{
 	(*FileDownloadTask)(nil),      // 24: gameap.FileDownloadTask
 	(*EnrollRequest)(nil),         // 25: gameap.EnrollRequest
 	(*EnrollResponse)(nil),        // 26: gameap.EnrollResponse
-	(*FileOperationResponse)(nil), // 27: gameap.FileOperationResponse
-	(*DaemonTask)(nil),            // 28: gameap.DaemonTask
-	(*Server)(nil),                // 29: gameap.Server
-	(*FileOperationRequest)(nil),  // 30: gameap.FileOperationRequest
-	(DaemonTaskStatus)(0),         // 31: gameap.DaemonTaskStatus
-	(*timestamppb.Timestamp)(nil), // 32: google.protobuf.Timestamp
-	(*Game)(nil),                  // 33: gameap.Game
-	(*GameMod)(nil),               // 34: gameap.GameMod
-	(*durationpb.Duration)(nil),   // 35: google.protobuf.Duration
-	(*FileStat)(nil),              // 36: gameap.FileStat
+	(*StatusRequest)(nil),         // 27: gameap.StatusRequest
+	(*StatusResponse)(nil),        // 28: gameap.StatusResponse
+	(*FileOperationResponse)(nil), // 29: gameap.FileOperationResponse
+	(*DaemonTask)(nil),            // 30: gameap.DaemonTask
+	(*Server)(nil),                // 31: gameap.Server
+	(*FileOperationRequest)(nil),  // 32: gameap.FileOperationRequest
+	(DaemonTaskStatus)(0),         // 33: gameap.DaemonTaskStatus
+	(*timestamppb.Timestamp)(nil), // 34: google.protobuf.Timestamp
+	(*Game)(nil),                  // 35: gameap.Game
+	(*GameMod)(nil),               // 36: gameap.GameMod
+	(*durationpb.Duration)(nil),   // 37: google.protobuf.Duration
+	(*FileStat)(nil),              // 38: gameap.FileStat
 }
 var file_pkg_proto_gateway_proto_depIdxs = []int32{
 	2,  // 0: gameap.DaemonMessage.register:type_name -> gameap.RegisterRequest
@@ -2411,46 +2623,48 @@ var file_pkg_proto_gateway_proto_depIdxs = []int32{
 	18, // 7: gameap.DaemonMessage.file_read_response:type_name -> gameap.FileReadResponse
 	20, // 8: gameap.DaemonMessage.file_write_response:type_name -> gameap.FileWriteResponse
 	22, // 9: gameap.DaemonMessage.file_list_response:type_name -> gameap.FileListResponse
-	27, // 10: gameap.DaemonMessage.file_operation_response:type_name -> gameap.FileOperationResponse
-	4,  // 11: gameap.GatewayMessage.register_ack:type_name -> gameap.RegisterAck
-	16, // 12: gameap.GatewayMessage.shutdown:type_name -> gameap.ShutdownNotification
-	28, // 13: gameap.GatewayMessage.task:type_name -> gameap.DaemonTask
-	9,  // 14: gameap.GatewayMessage.task_cancel:type_name -> gameap.TaskCancel
-	10, // 15: gameap.GatewayMessage.command:type_name -> gameap.CommandRequest
-	29, // 16: gameap.GatewayMessage.server_config:type_name -> gameap.Server
-	15, // 17: gameap.GatewayMessage.server_config_batch:type_name -> gameap.ServerConfigBatch
-	17, // 18: gameap.GatewayMessage.file_read:type_name -> gameap.FileReadRequest
-	19, // 19: gameap.GatewayMessage.file_write:type_name -> gameap.FileWriteRequest
-	21, // 20: gameap.GatewayMessage.file_list:type_name -> gameap.FileListRequest
-	23, // 21: gameap.GatewayMessage.file_upload_task:type_name -> gameap.FileUploadTask
-	30, // 22: gameap.GatewayMessage.file_operation:type_name -> gameap.FileOperationRequest
-	24, // 23: gameap.GatewayMessage.file_download_task:type_name -> gameap.FileDownloadTask
-	3,  // 24: gameap.RegisterRequest.in_flight_tasks:type_name -> gameap.InFlightTask
-	31, // 25: gameap.InFlightTask.status:type_name -> gameap.DaemonTaskStatus
-	32, // 26: gameap.InFlightTask.started_at:type_name -> google.protobuf.Timestamp
-	29, // 27: gameap.RegisterAck.servers:type_name -> gameap.Server
-	28, // 28: gameap.RegisterAck.pending_tasks:type_name -> gameap.DaemonTask
-	33, // 29: gameap.RegisterAck.games:type_name -> gameap.Game
-	34, // 30: gameap.RegisterAck.game_mods:type_name -> gameap.GameMod
-	35, // 31: gameap.RegisterAck.heartbeat_interval:type_name -> google.protobuf.Duration
-	32, // 32: gameap.Heartbeat.timestamp:type_name -> google.protobuf.Timestamp
-	6,  // 33: gameap.Heartbeat.system_stats:type_name -> gameap.SystemStats
-	31, // 34: gameap.TaskStatusUpdate.status:type_name -> gameap.DaemonTaskStatus
-	35, // 35: gameap.CommandRequest.timeout:type_name -> google.protobuf.Duration
-	32, // 36: gameap.ServerStatus.last_check:type_name -> google.protobuf.Timestamp
-	13, // 37: gameap.ServerStatusBatch.statuses:type_name -> gameap.ServerStatus
-	29, // 38: gameap.ServerConfigBatch.servers:type_name -> gameap.Server
-	35, // 39: gameap.ShutdownNotification.reconnect_delay:type_name -> google.protobuf.Duration
-	36, // 40: gameap.FileListResponse.files:type_name -> gameap.FileStat
-	0,  // 41: gameap.DaemonGateway.Connect:input_type -> gameap.DaemonMessage
-	25, // 42: gameap.DaemonGateway.Enroll:input_type -> gameap.EnrollRequest
-	1,  // 43: gameap.DaemonGateway.Connect:output_type -> gameap.GatewayMessage
-	26, // 44: gameap.DaemonGateway.Enroll:output_type -> gameap.EnrollResponse
-	43, // [43:45] is the sub-list for method output_type
-	41, // [41:43] is the sub-list for method input_type
-	41, // [41:41] is the sub-list for extension type_name
-	41, // [41:41] is the sub-list for extension extendee
-	0,  // [0:41] is the sub-list for field type_name
+	29, // 10: gameap.DaemonMessage.file_operation_response:type_name -> gameap.FileOperationResponse
+	28, // 11: gameap.DaemonMessage.status_response:type_name -> gameap.StatusResponse
+	4,  // 12: gameap.GatewayMessage.register_ack:type_name -> gameap.RegisterAck
+	16, // 13: gameap.GatewayMessage.shutdown:type_name -> gameap.ShutdownNotification
+	30, // 14: gameap.GatewayMessage.task:type_name -> gameap.DaemonTask
+	9,  // 15: gameap.GatewayMessage.task_cancel:type_name -> gameap.TaskCancel
+	10, // 16: gameap.GatewayMessage.command:type_name -> gameap.CommandRequest
+	31, // 17: gameap.GatewayMessage.server_config:type_name -> gameap.Server
+	15, // 18: gameap.GatewayMessage.server_config_batch:type_name -> gameap.ServerConfigBatch
+	17, // 19: gameap.GatewayMessage.file_read:type_name -> gameap.FileReadRequest
+	19, // 20: gameap.GatewayMessage.file_write:type_name -> gameap.FileWriteRequest
+	21, // 21: gameap.GatewayMessage.file_list:type_name -> gameap.FileListRequest
+	23, // 22: gameap.GatewayMessage.file_upload_task:type_name -> gameap.FileUploadTask
+	32, // 23: gameap.GatewayMessage.file_operation:type_name -> gameap.FileOperationRequest
+	24, // 24: gameap.GatewayMessage.file_download_task:type_name -> gameap.FileDownloadTask
+	27, // 25: gameap.GatewayMessage.status_request:type_name -> gameap.StatusRequest
+	3,  // 26: gameap.RegisterRequest.in_flight_tasks:type_name -> gameap.InFlightTask
+	33, // 27: gameap.InFlightTask.status:type_name -> gameap.DaemonTaskStatus
+	34, // 28: gameap.InFlightTask.started_at:type_name -> google.protobuf.Timestamp
+	31, // 29: gameap.RegisterAck.servers:type_name -> gameap.Server
+	30, // 30: gameap.RegisterAck.pending_tasks:type_name -> gameap.DaemonTask
+	35, // 31: gameap.RegisterAck.games:type_name -> gameap.Game
+	36, // 32: gameap.RegisterAck.game_mods:type_name -> gameap.GameMod
+	37, // 33: gameap.RegisterAck.heartbeat_interval:type_name -> google.protobuf.Duration
+	34, // 34: gameap.Heartbeat.timestamp:type_name -> google.protobuf.Timestamp
+	6,  // 35: gameap.Heartbeat.system_stats:type_name -> gameap.SystemStats
+	33, // 36: gameap.TaskStatusUpdate.status:type_name -> gameap.DaemonTaskStatus
+	37, // 37: gameap.CommandRequest.timeout:type_name -> google.protobuf.Duration
+	34, // 38: gameap.ServerStatus.last_check:type_name -> google.protobuf.Timestamp
+	13, // 39: gameap.ServerStatusBatch.statuses:type_name -> gameap.ServerStatus
+	31, // 40: gameap.ServerConfigBatch.servers:type_name -> gameap.Server
+	37, // 41: gameap.ShutdownNotification.reconnect_delay:type_name -> google.protobuf.Duration
+	38, // 42: gameap.FileListResponse.files:type_name -> gameap.FileStat
+	0,  // 43: gameap.DaemonGateway.Connect:input_type -> gameap.DaemonMessage
+	25, // 44: gameap.DaemonGateway.Enroll:input_type -> gameap.EnrollRequest
+	1,  // 45: gameap.DaemonGateway.Connect:output_type -> gameap.GatewayMessage
+	26, // 46: gameap.DaemonGateway.Enroll:output_type -> gameap.EnrollResponse
+	45, // [45:47] is the sub-list for method output_type
+	43, // [43:45] is the sub-list for method input_type
+	43, // [43:43] is the sub-list for extension type_name
+	43, // [43:43] is the sub-list for extension extendee
+	0,  // [0:43] is the sub-list for field type_name
 }
 
 func init() { file_pkg_proto_gateway_proto_init() }
@@ -2475,6 +2689,7 @@ func file_pkg_proto_gateway_proto_init() {
 		(*DaemonMessage_FileWriteResponse)(nil),
 		(*DaemonMessage_FileListResponse)(nil),
 		(*DaemonMessage_FileOperationResponse)(nil),
+		(*DaemonMessage_StatusResponse)(nil),
 	}
 	file_pkg_proto_gateway_proto_msgTypes[1].OneofWrappers = []any{
 		(*GatewayMessage_RegisterAck)(nil),
@@ -2490,6 +2705,7 @@ func file_pkg_proto_gateway_proto_init() {
 		(*GatewayMessage_FileUploadTask)(nil),
 		(*GatewayMessage_FileOperation)(nil),
 		(*GatewayMessage_FileDownloadTask)(nil),
+		(*GatewayMessage_StatusRequest)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -2497,7 +2713,7 @@ func file_pkg_proto_gateway_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_proto_gateway_proto_rawDesc), len(file_pkg_proto_gateway_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   27,
+			NumMessages:   29,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

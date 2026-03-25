@@ -49,3 +49,25 @@ type FileReadResult struct {
 	Content     []byte
 	StoragePath string
 }
+
+type CommandGateway interface {
+	RequestCommand(
+		ctx context.Context, nodeID uint64, req *proto.CommandRequest,
+	) (*proto.CommandResult, error)
+}
+
+type StatusGateway interface {
+	RequestStatus(ctx context.Context, nodeID uint64) (*proto.StatusResponse, error)
+}
+
+type CommandDispatcher interface {
+	Start(ctx context.Context) error
+	DispatchCommand(
+		ctx context.Context, nodeID uint64, req *proto.CommandRequest,
+	) (*proto.CommandResult, error)
+}
+
+type StatusDispatcher interface {
+	Start(ctx context.Context) error
+	DispatchStatus(ctx context.Context, nodeID uint64) (*proto.StatusResponse, error)
+}

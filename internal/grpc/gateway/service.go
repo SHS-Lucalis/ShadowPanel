@@ -305,6 +305,9 @@ func (s *Service) processMessage(ctx context.Context, sess *session.Session, msg
 		}
 
 	case *proto.DaemonMessage_CommandResult:
+		if payload.CommandResult.RequestId != "" {
+			sess.ResolvePendingRequest(payload.CommandResult.RequestId, msg)
+		}
 		if s.commandHandler != nil {
 			return s.commandHandler.HandleCommandResult(ctx, sess.NodeID, payload.CommandResult)
 		}
@@ -331,6 +334,11 @@ func (s *Service) processMessage(ctx context.Context, sess *session.Session, msg
 
 	case *proto.DaemonMessage_FileOperationResponse:
 		sess.ResolvePendingRequest(payload.FileOperationResponse.RequestId, msg)
+
+		return nil
+
+	case *proto.DaemonMessage_StatusResponse:
+		sess.ResolvePendingRequest(payload.StatusResponse.RequestId, msg)
 
 		return nil
 
@@ -489,6 +497,8 @@ func (s *Service) RequestFileOperation(
 	respCh := sess.RegisterPendingRequest(requestID)
 	defer sess.CancelPendingRequest(requestID)
 
+	req.RequestId = requestID
+
 	if err := sess.Send(&proto.GatewayMessage{
 		RequestId: requestID,
 		Payload: &proto.GatewayMessage_FileOperation{
@@ -511,6 +521,83 @@ func (s *Service) RequestFileOperation(
 		}
 
 		return opResp, nil
+	}
+}
+
+func (s *Service) RequestCommand(
+	ctx context.Context,
+	nodeID uint64,
+	req *proto.CommandRequest,
+) (*proto.CommandResult, error) {
+	sess, ok := s.registry.GetSession(nodeID)
+	if !ok {
+		return nil, errors.New("node not connected")
+	}
+
+	requestID := generateRequestID()
+	respCh := sess.RegisterPendingRequest(requestID)
+	defer sess.CancelPendingRequest(requestID)
+
+	if err := sess.Send(&proto.GatewayMessage{
+		RequestId: requestID,
+		Payload: &proto.GatewayMessage_Command{
+			Command: req,
+		},
+	}); err != nil {
+		return nil, errors.Wrap(err, "send command request")
+	}
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case resp := <-respCh:
+		if resp == nil {
+			return nil, errors.New("request cancelled")
+		}
+		cmdResult := resp.GetCommandResult()
+		if cmdResult == nil {
+			return nil, errors.New("unexpected response type")
+		}
+
+		return cmdResult, nil
+	}
+}
+
+func (s *Service) RequestStatus(
+	ctx context.Context,
+	nodeID uint64,
+) (*proto.StatusResponse, error) {
+	sess, ok := s.registry.GetSession(nodeID)
+	if !ok {
+		return nil, errors.New("node not connected")
+	}
+
+	requestID := generateRequestID()
+	respCh := sess.RegisterPendingRequest(requestID)
+	defer sess.CancelPendingRequest(requestID)
+
+	if err := sess.Send(&proto.GatewayMessage{
+		RequestId: requestID,
+		Payload: &proto.GatewayMessage_StatusRequest{
+			StatusRequest: &proto.StatusRequest{},
+		},
+	}); err != nil {
+		return nil, errors.Wrap(err, "send status request")
+	}
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case resp := <-respCh:
+		if resp == nil {
+			return nil, errors.New("request cancelled")
+		}
+		statusResp := resp.GetStatusResponse()
+		if statusResp == nil {
+			return nil, errors.New("unexpected response type")
+		}
+
+		return statusResp, nil
 	}
 }
 

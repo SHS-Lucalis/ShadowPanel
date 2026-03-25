@@ -84,6 +84,7 @@ const (
 	httpServerWriteTimeout = 30 * time.Second
 	httpServerReadTimeout  = 15 * time.Second
 	httpServerIdleTimeout  = 60 * time.Second
+	defaultInstanceID      = "default"
 )
 
 type Container struct {
@@ -131,10 +132,14 @@ type Container struct {
 	enrollmentService *enrollment.Service
 
 	// Daemon Services
-	daemonStatus   *daemon.StatusService
-	daemonFiles    *daemon.FileService
-	fileDispatcher daemon.FileDispatcher
-	daemonCommands *daemon.CommandService
+	daemonStatus       *daemon.StatusService
+	daemonStatusLegacy *daemon.StatusBINNService
+	daemonFiles        *daemon.FileService
+	fileDispatcher     daemon.FileDispatcher
+	commandDispatcher  daemon.CommandDispatcher
+	statusDispatcher   daemon.StatusDispatcher
+	daemonCommands     *daemon.CommandService
+	daemonCommandsLeg  *daemon.CommandBINNService
 
 	// Plugins
 	pluginManager    *pkgplugin.Manager
@@ -1194,12 +1199,26 @@ func (c *Container) GameExporter() *gameexporter.Exporter {
 func (c *Container) DaemonStatus() *daemon.StatusService {
 	if c.daemonStatus == nil {
 		c.daemonStatus = daemon.NewStatusService(
+			c.GatewayService(),
+			c.SessionRegistry(),
+			c.StatusDispatcher(),
+			c.DaemonStatusLegacy(),
+			slog.Default(),
+		)
+	}
+
+	return c.daemonStatus
+}
+
+func (c *Container) DaemonStatusLegacy() *daemon.StatusBINNService {
+	if c.daemonStatusLegacy == nil {
+		c.daemonStatusLegacy = daemon.NewStatusBINNService(
 			c.ClientCertificateRepository(),
 			c.FileManager(),
 		)
 	}
 
-	return c.daemonStatus
+	return c.daemonStatusLegacy
 }
 
 func (c *Container) DaemonFiles() *daemon.FileService {
@@ -1220,7 +1239,7 @@ func (c *Container) FileDispatcher() daemon.FileDispatcher {
 	if c.fileDispatcher == nil {
 		instanceID := c.config.PubSub.InstanceID
 		if instanceID == "" {
-			instanceID = "default"
+			instanceID = defaultInstanceID
 		}
 
 		c.fileDispatcher = daemon.NewFileDispatcher(
@@ -1239,12 +1258,64 @@ func (c *Container) FileDispatcher() daemon.FileDispatcher {
 func (c *Container) DaemonCommands() *daemon.CommandService {
 	if c.daemonCommands == nil {
 		c.daemonCommands = daemon.NewCommandService(
+			c.GatewayService(),
+			c.SessionRegistry(),
+			c.CommandDispatcher(),
+			c.DaemonCommandsLegacy(),
+			slog.Default(),
+		)
+	}
+
+	return c.daemonCommands
+}
+
+func (c *Container) DaemonCommandsLegacy() *daemon.CommandBINNService {
+	if c.daemonCommandsLeg == nil {
+		c.daemonCommandsLeg = daemon.NewCommandBINNService(
 			c.ClientCertificateRepository(),
 			c.FileManager(),
 		)
 	}
 
-	return c.daemonCommands
+	return c.daemonCommandsLeg
+}
+
+func (c *Container) CommandDispatcher() daemon.CommandDispatcher {
+	if c.commandDispatcher == nil {
+		instanceID := c.config.PubSub.InstanceID
+		if instanceID == "" {
+			instanceID = defaultInstanceID
+		}
+
+		c.commandDispatcher = daemon.NewCommandDispatcher(
+			c.PubSub(),
+			c.GatewayService(),
+			c.SessionRegistry(),
+			instanceID,
+			slog.Default(),
+		)
+	}
+
+	return c.commandDispatcher
+}
+
+func (c *Container) StatusDispatcher() daemon.StatusDispatcher {
+	if c.statusDispatcher == nil {
+		instanceID := c.config.PubSub.InstanceID
+		if instanceID == "" {
+			instanceID = defaultInstanceID
+		}
+
+		c.statusDispatcher = daemon.NewStatusDispatcher(
+			c.PubSub(),
+			c.GatewayService(),
+			c.SessionRegistry(),
+			instanceID,
+			slog.Default(),
+		)
+	}
+
+	return c.statusDispatcher
 }
 
 func (c *Container) PluginManager() *pkgplugin.Manager {
@@ -1389,7 +1460,7 @@ func (c *Container) SessionRegistry() *session.Registry {
 	if c.sessionRegistry == nil {
 		instanceID := c.config.PubSub.InstanceID
 		if instanceID == "" {
-			instanceID = "default"
+			instanceID = defaultInstanceID
 		}
 		c.sessionRegistry = session.NewRegistry(c.PubSub(), instanceID, slog.Default())
 	}

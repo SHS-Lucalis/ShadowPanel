@@ -162,6 +162,18 @@ func runWithGRPC(ctx context.Context, cfg *config.Config, container *Container) 
 		os.Exit(1)
 	}
 
+	if err := container.FileDispatcher().Start(ctx); err != nil {
+		slog.ErrorContext(ctx, "Failed to start file dispatcher", slog.String("error", err.Error()))
+	}
+
+	if err := container.CommandDispatcher().Start(ctx); err != nil {
+		slog.ErrorContext(ctx, "Failed to start command dispatcher", slog.String("error", err.Error()))
+	}
+
+	if err := container.StatusDispatcher().Start(ctx); err != nil {
+		slog.ErrorContext(ctx, "Failed to start status dispatcher", slog.String("error", err.Error()))
+	}
+
 	grpcServer := container.GRPCServer()
 	grpcAddr := fmt.Sprintf("%s:%d", cfg.HTTPHost, cfg.GRPC.Port)
 

@@ -126,7 +126,7 @@ func TestCommandService_ExecuteCommand_WithMockDaemon(t *testing.T) {
 	err = fileManager.Write(ctx, node.GdaemonServerCert, []byte(daemonServerCert))
 	require.NoError(t, err)
 
-	service := NewCommandService(certRepo, fileManager)
+	service := NewCommandBINNService(certRepo, fileManager)
 
 	// ACT
 	result, err := service.ExecuteCommand(
@@ -202,7 +202,7 @@ func TestCommandService_ExecuteCommand_CommandFailure(t *testing.T) {
 	err = fileManager.Write(ctx, node.GdaemonServerCert, []byte(daemonServerCert))
 	require.NoError(t, err)
 
-	service := NewCommandService(certRepo, fileManager)
+	service := NewCommandBINNService(certRepo, fileManager)
 
 	// ACT
 	result, err := service.ExecuteCommand(
@@ -224,7 +224,7 @@ func TestCommandService_ExecuteCommand_NodeNotFound(t *testing.T) {
 	certRepo := inmemory.NewClientCertificateRepository()
 	fileManager := files.NewInMemoryFileManager()
 
-	service := NewCommandService(certRepo, fileManager)
+	service := NewCommandBINNService(certRepo, fileManager)
 
 	// ACT
 	ctx := context.Background()
@@ -265,7 +265,7 @@ func TestCommandService_ExecuteCommand_MissingServerCertificate(t *testing.T) {
 	err = nodeRepo.Save(ctx, node)
 	require.NoError(t, err)
 
-	service := NewCommandService(certRepo, fileManager)
+	service := NewCommandBINNService(certRepo, fileManager)
 
 	// ACT
 	result, err := service.ExecuteCommand(ctx, node, "ls -al")
@@ -309,7 +309,7 @@ func TestCommandService_ExecuteCommand_MissingClientCertificate(t *testing.T) {
 	err = fileManager.Write(ctx, node.GdaemonServerCert, []byte(daemonServerCert))
 	require.NoError(t, err)
 
-	service := NewCommandService(certRepo, fileManager)
+	service := NewCommandBINNService(certRepo, fileManager)
 
 	// ACT
 	result, err := service.ExecuteCommand(ctx, node, "ls -al")
@@ -356,7 +356,7 @@ func TestCommandService_ExecuteCommand_MissingPrivateKey(t *testing.T) {
 	err = fileManager.Write(ctx, node.GdaemonServerCert, []byte(daemonServerCert))
 	require.NoError(t, err)
 
-	service := NewCommandService(certRepo, fileManager)
+	service := NewCommandBINNService(certRepo, fileManager)
 
 	// ACT
 	result, err := service.ExecuteCommand(ctx, node, "ls -al")
@@ -431,7 +431,7 @@ func TestCommandService_ExecuteCommand_PoolReuse(t *testing.T) {
 	err = fileManager.Write(ctx, node.GdaemonServerCert, []byte(daemonServerCert))
 	require.NoError(t, err)
 
-	service := NewCommandService(certRepo, fileManager)
+	service := NewCommandBINNService(certRepo, fileManager)
 
 	// ACT
 	result1, err := service.ExecuteCommand(ctx, node, "echo test1", CommandServiceOptionWithWorkDir("/root"))
@@ -531,7 +531,7 @@ func TestCommandService_ExecuteCommand_MultipleNodes(t *testing.T) {
 	err = fileManager.Write(ctx, node1.GdaemonServerCert, []byte(daemonServerCert))
 	require.NoError(t, err)
 
-	service := NewCommandService(certRepo, fileManager)
+	service := NewCommandBINNService(certRepo, fileManager)
 
 	// ACT
 	result1, err := service.ExecuteCommand(ctx, node1, "echo node1")
@@ -612,7 +612,7 @@ func TestCommandService_ExecuteCommand_DifferentWorkDirectories(t *testing.T) {
 	err = fileManager.Write(ctx, node.GdaemonServerCert, []byte(daemonServerCert))
 	require.NoError(t, err)
 
-	service := NewCommandService(certRepo, fileManager)
+	service := NewCommandBINNService(certRepo, fileManager)
 
 	// ACT
 	result1, err := service.ExecuteCommand(
@@ -712,7 +712,7 @@ func TestCommandService_ExecuteCommand_DefaultWorkDirectory(t *testing.T) {
 	err = fileManager.Write(ctx, node.GdaemonServerCert, []byte(daemonServerCert))
 	require.NoError(t, err)
 
-	service := NewCommandService(certRepo, fileManager)
+	service := NewCommandBINNService(certRepo, fileManager)
 
 	// ACT
 	result, err := service.ExecuteCommand(ctx, node, "pwd")
