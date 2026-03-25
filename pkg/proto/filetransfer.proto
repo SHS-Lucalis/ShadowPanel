@@ -25,6 +25,7 @@ message UploadMetadata {
   string checksum_sha256 = 4;
   int32 mode = 5;
   bool create_dirs = 6;
+  int64 offset = 7;
 }
 
 message UploadResult {
@@ -48,6 +49,17 @@ message DownloadChunk {
   bool is_final = 5;
 }
 
+enum FileType {
+  FILE_TYPE_UNSPECIFIED = 0;
+  FILE_TYPE_REGULAR = 1;
+  FILE_TYPE_DIRECTORY = 2;
+  FILE_TYPE_SYMLINK = 3;
+  FILE_TYPE_SOCKET = 4;
+  FILE_TYPE_FIFO = 5;
+  FILE_TYPE_BLOCK_DEVICE = 6;
+  FILE_TYPE_CHAR_DEVICE = 7;
+}
+
 enum FileOperationType {
   FILE_OPERATION_TYPE_UNSPECIFIED = 0;
   FILE_OPERATION_TYPE_DELETE = 1;
@@ -63,33 +75,98 @@ enum FileOperationType {
 
 message FileOperationRequest {
   FileOperationType operation = 1;
-  string path = 2;
-  string destination = 3;
-  int32 mode = 4;
-  int32 uid = 5;
-  int32 gid = 6;
-  bool recursive = 7;
+  string request_id = 2;
+  oneof parameters {
+    DeleteParams delete_params = 3;
+    MoveParams move_params = 4;
+    CopyParams copy_params = 5;
+    ChmodParams chmod_params = 6;
+    ChownParams chown_params = 7;
+    MkdirParams mkdir_params = 8;
+    TouchParams touch_params = 9;
+    StatParams stat_params = 10;
+    ExistsParams exists_params = 11;
+  }
+}
+
+message DeleteParams {
+  string path = 1;
+  bool recursive = 2;
+}
+
+message MoveParams {
+  string source = 1;
+  string destination = 2;
+}
+
+message CopyParams {
+  string source = 1;
+  string destination = 2;
+  bool recursive = 3;
+}
+
+message ChmodParams {
+  string path = 1;
+  int32 mode = 2;
+}
+
+message ChownParams {
+  string path = 1;
+  int32 uid = 2;
+  int32 gid = 3;
+}
+
+message MkdirParams {
+  string path = 1;
+  bool recursive = 2;
+  int32 mode = 3;
+}
+
+message TouchParams {
+  string path = 1;
+}
+
+message StatParams {
+  string path = 1;
+}
+
+message ExistsParams {
+  string path = 1;
 }
 
 message FileOperationResponse {
   bool success = 1;
   string error = 2;
-  FileStat stat = 3;
-  bool exists = 4;
+  string request_id = 5;
+  oneof result {
+    StatResult stat_result = 6;
+    ExistsResult exists_result = 7;
+  }
+}
+
+message StatResult {
+  FileStat stat = 1;
+}
+
+message ExistsResult {
+  bool exists = 1;
 }
 
 message FileStat {
   string name = 1;
   string path = 2;
-  int64 size = 3;
-  int32 mode = 4;
-  int32 uid = 5;
-  int32 gid = 6;
-  google.protobuf.Timestamp modified_at = 7;
-  google.protobuf.Timestamp accessed_at = 8;
-  bool is_dir = 9;
-  bool is_symlink = 10;
-  string symlink_target = 11;
+  uint64 size = 3;
+  uint64 allocated_size = 4;
+  uint32 mode = 5;
+  uint32 uid  = 6;
+  uint32 gid  = 7;
+  google.protobuf.Timestamp modified_at = 8;
+  google.protobuf.Timestamp accessed_at = 9;
+  google.protobuf.Timestamp changed_at = 10;
+  google.protobuf.Timestamp created_at = 11;
+  FileType type = 12;
+  map<string, bytes> xattrs = 13;
+  string symlink_target = 14;
 }
 
 message ListDirectoryRequest {

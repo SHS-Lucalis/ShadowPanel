@@ -4,7 +4,9 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"io"
+	"io/fs"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -30,8 +32,8 @@ const (
 type Service struct {
 	proto.UnimplementedFileTransferServiceServer
 
-	basePath string
-	logger   *slog.Logger
+	root   *os.Root
+	logger *slog.Logger
 
 	mu              sync.RWMutex
 	activeTransfers map[string]*activeTransfer
@@ -50,22 +52,29 @@ func NewService(basePath string, logger *slog.Logger) *Service {
 	if logger == nil {
 		logger = slog.Default()
 	}
+
+	root, err := os.OpenRoot(basePath)
+	if err != nil {
+		panic(fmt.Sprintf("failed to open root directory %q: %v", basePath, err))
+	}
+
 	return &Service{
-		basePath:        basePath,
+		root:            root,
 		logger:          logger,
 		activeTransfers: make(map[string]*activeTransfer),
 	}
 }
 
-func (s *Service) CleanupStaleTempFiles(ctx context.Context) error {
-	if s.basePath == "" {
-		return nil
-	}
+func (s *Service) Close() error {
+	return s.root.Close()
+}
 
+func (s *Service) CleanupStaleTempFiles(ctx context.Context) error {
 	var cleaned int
-	err := filepath.Walk(s.basePath, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return nil
+
+	err := fs.WalkDir(s.root.FS(), ".", func(path string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return nil //nolint:nilerr // skip entries with walk errors
 		}
 
 		select {
@@ -74,16 +83,21 @@ func (s *Service) CleanupStaleTempFiles(ctx context.Context) error {
 		default:
 		}
 
-		if info.IsDir() {
+		if d.IsDir() {
 			return nil
 		}
 
-		if !strings.HasPrefix(info.Name(), tempFilePrefix) {
+		if !strings.HasPrefix(d.Name(), tempFilePrefix) {
 			return nil
+		}
+
+		info, infoErr := d.Info()
+		if infoErr != nil {
+			return nil //nolint:nilerr // skip entries we can't stat
 		}
 
 		if time.Since(info.ModTime()) > tempFileMaxAge {
-			if err := os.Remove(path); err != nil {
+			if err := s.root.Remove(path); err != nil {
 				s.logger.Warn("failed to remove stale temp file",
 					"path", path,
 					"error", err,
@@ -143,19 +157,16 @@ func (s *Service) UploadFile(stream proto.FileTransferService_UploadFileServer) 
 		return status.Error(codes.InvalidArgument, "file too large")
 	}
 
-	safePath, err := s.safePath(metadata.Path)
-	if err != nil {
-		return status.Error(codes.InvalidArgument, "invalid path")
-	}
+	path := metadata.Path
+	dir := filepath.Dir(path)
 
-	dir := filepath.Dir(safePath)
 	if metadata.CreateDirs {
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		if err := s.root.MkdirAll(dir, 0755); err != nil {
 			return status.Error(codes.Internal, "failed to create directories")
 		}
 	}
 
-	result, err := s.processUpload(ctx, stream, metadata, safePath, dir, firstChunk.Data)
+	result, err := s.processUpload(ctx, stream, metadata, path, dir, firstChunk.Data)
 	if err != nil {
 		return err
 	}
@@ -167,26 +178,40 @@ func (s *Service) processUpload(
 	ctx context.Context,
 	stream proto.FileTransferService_UploadFileServer,
 	metadata *proto.UploadMetadata,
-	safePath, dir string,
+	path, dir string,
 	firstChunkData []byte,
 ) (*proto.UploadResult, error) {
-	tempPath := filepath.Join(dir, ".tmp_"+metadata.TransferId)
+	tempPath := filepath.Join(dir, tempFilePrefix+metadata.TransferId)
 
-	file, err := os.OpenFile(tempPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.FileMode(metadata.Mode))
+	flags := os.O_CREATE | os.O_WRONLY
+	if metadata.Offset == 0 {
+		flags |= os.O_TRUNC
+	}
+
+	file, err := s.root.OpenFile(tempPath, flags, safeFileMode(metadata.Mode))
 	if err != nil {
 		s.logger.Error("failed to open temp file for writing",
 			"path", tempPath,
 			"error", err,
 		)
+
 		return nil, status.Error(codes.Internal, "failed to create file")
 	}
 
+	if metadata.Offset > 0 {
+		if _, err := file.Seek(metadata.Offset, io.SeekStart); err != nil {
+			_ = file.Close()
+
+			return nil, status.Error(codes.Internal, "failed to seek to offset")
+		}
+	}
+
 	transferCtx, cancel := context.WithCancel(ctx)
-	s.registerTransfer(metadata.TransferId, safePath, metadata.TotalSize, cancel)
+	s.registerTransfer(metadata.TransferId, path, metadata.TotalSize, cancel)
 
 	cleanup := func() {
 		_ = file.Close()
-		_ = os.Remove(tempPath)
+		_ = s.root.Remove(tempPath)
 		s.unregisterTransfer(metadata.TransferId)
 		cancel()
 	}
@@ -194,29 +219,34 @@ func (s *Service) processUpload(
 	totalWritten, checksum, err := s.receiveChunks(transferCtx, stream, file, metadata, firstChunkData)
 	if err != nil {
 		cleanup()
+
 		return nil, err
 	}
 
 	_ = file.Close()
 
-	if metadata.ChecksumSha256 != "" && checksum != metadata.ChecksumSha256 {
-		_ = os.Remove(tempPath)
+	if metadata.Offset == 0 && metadata.ChecksumSha256 != "" && checksum != metadata.ChecksumSha256 {
+		_ = s.root.Remove(tempPath)
 		s.unregisterTransfer(metadata.TransferId)
 		cancel()
+
 		return nil, status.Error(codes.DataLoss, "checksum mismatch")
 	}
 
-	if metadata.TotalSize > 0 && totalWritten != metadata.TotalSize {
-		_ = os.Remove(tempPath)
+	finalSize := metadata.Offset + totalWritten
+	if metadata.TotalSize > 0 && finalSize != metadata.TotalSize {
+		_ = s.root.Remove(tempPath)
 		s.unregisterTransfer(metadata.TransferId)
 		cancel()
+
 		return nil, status.Error(codes.DataLoss, "incomplete upload")
 	}
 
-	if err := os.Rename(tempPath, safePath); err != nil {
-		_ = os.Remove(tempPath)
+	if err := s.root.Rename(tempPath, path); err != nil {
+		_ = s.root.Remove(tempPath)
 		s.unregisterTransfer(metadata.TransferId)
 		cancel()
+
 		return nil, status.Error(codes.Internal, "failed to finalize file")
 	}
 
@@ -225,16 +255,21 @@ func (s *Service) processUpload(
 
 	s.logger.Info("file upload completed",
 		"transfer_id", metadata.TransferId,
-		"path", safePath,
-		"bytes_written", totalWritten,
+		"path", path,
+		"bytes_written", finalSize,
 		"checksum", checksum,
 	)
 
 	return &proto.UploadResult{
 		Success:        true,
-		BytesWritten:   totalWritten,
+		BytesWritten:   finalSize,
 		ChecksumSha256: checksum,
 	}, nil
+}
+
+type recvResult struct {
+	chunk *proto.UploadChunk
+	err   error
 }
 
 func (s *Service) receiveChunks(
@@ -254,55 +289,63 @@ func (s *Service) receiveChunks(
 		}
 		hasher.Write(firstChunkData)
 		totalWritten += int64(n)
-		s.updateTransferProgress(metadata.TransferId, totalWritten)
+		s.updateTransferProgress(metadata.TransferId, metadata.Offset+totalWritten)
 	}
 
 	for {
+		ch := make(chan recvResult, 1)
+		go func() {
+			chunk, err := stream.Recv()
+			ch <- recvResult{chunk, err}
+		}()
+
+		var res recvResult
 		select {
 		case <-ctx.Done():
 			return totalWritten, "", status.Error(codes.Canceled, "transfer canceled")
-		default:
+		case <-time.After(chunkReceiveTimeout):
+			return totalWritten, "", status.Error(codes.DeadlineExceeded, "chunk receive timeout")
+		case res = <-ch:
 		}
 
-		chunk, err := stream.Recv()
-		if errors.Is(err, io.EOF) {
+		if errors.Is(res.err, io.EOF) {
 			break
 		}
-		if err != nil {
+		if res.err != nil {
 			s.logger.Error("failed to receive chunk",
 				"transfer_id", metadata.TransferId,
-				"error", err,
+				"error", res.err,
 			)
+
 			return totalWritten, "", status.Error(codes.Internal, "failed to receive chunk")
 		}
 
-		if len(chunk.Data) == 0 {
+		if len(res.chunk.Data) == 0 {
 			continue
 		}
 
-		n, err := file.Write(chunk.Data)
+		n, err := file.Write(res.chunk.Data)
 		if err != nil {
 			return totalWritten, "", status.Error(codes.Internal, "failed to write data")
 		}
-		hasher.Write(chunk.Data)
+		hasher.Write(res.chunk.Data)
 		totalWritten += int64(n)
-		s.updateTransferProgress(metadata.TransferId, totalWritten)
+		s.updateTransferProgress(metadata.TransferId, metadata.Offset+totalWritten)
 	}
 
 	return totalWritten, hex.EncodeToString(hasher.Sum(nil)), nil
 }
 
-func (s *Service) DownloadFile(req *proto.DownloadRequest, stream proto.FileTransferService_DownloadFileServer) error {
-	safePath, err := s.safePath(req.Path)
-	if err != nil {
-		return status.Error(codes.InvalidArgument, "invalid path")
-	}
-
-	file, err := os.Open(safePath)
+func (s *Service) DownloadFile(
+	req *proto.DownloadRequest,
+	stream proto.FileTransferService_DownloadFileServer,
+) error {
+	file, err := s.root.Open(req.Path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return status.Error(codes.NotFound, "file not found")
 		}
+
 		return status.Error(codes.Internal, "failed to open file")
 	}
 	defer func() { _ = file.Close() }()
@@ -324,14 +367,14 @@ func (s *Service) DownloadFile(req *proto.DownloadRequest, stream proto.FileTran
 		}
 	}
 
-	var remaining int64 = totalSize - req.Offset
+	remaining := totalSize - req.Offset
 	if req.Length > 0 && req.Length < remaining {
 		remaining = req.Length
 	}
 
 	hasher := sha256.New()
 	buf := make([]byte, defaultChunkSize)
-	var offset int64 = req.Offset
+	offset := req.Offset
 
 	for remaining > 0 {
 		select {
@@ -340,10 +383,7 @@ func (s *Service) DownloadFile(req *proto.DownloadRequest, stream proto.FileTran
 		default:
 		}
 
-		toRead := int64(len(buf))
-		if toRead > remaining {
-			toRead = remaining
-		}
+		toRead := min(int64(len(buf)), remaining)
 
 		n, err := file.Read(buf[:toRead])
 		if err != nil && err != io.EOF {
@@ -379,83 +419,157 @@ func (s *Service) DownloadFile(req *proto.DownloadRequest, stream proto.FileTran
 	return nil
 }
 
-func (s *Service) FileOperation(ctx context.Context, req *proto.FileOperationRequest) (*proto.FileOperationResponse, error) {
-	safePath, err := s.safePath(req.Path)
-	if err != nil {
+func (s *Service) FileOperation(
+	_ context.Context,
+	req *proto.FileOperationRequest,
+) (*proto.FileOperationResponse, error) {
+	errResp := func(msg string) (*proto.FileOperationResponse, error) {
 		return &proto.FileOperationResponse{
-			Success: false,
-			Error:   "invalid path",
+			Success:   false,
+			Error:     msg,
+			RequestId: req.RequestId,
 		}, nil
 	}
 
-	switch req.Operation {
-	case proto.FileOperationType_FILE_OPERATION_TYPE_DELETE:
-		return s.handleDelete(safePath, req.Recursive)
+	switch p := req.Parameters.(type) {
+	case *proto.FileOperationRequest_DeleteParams:
+		return s.handleDelete(p.DeleteParams.Path, p.DeleteParams.Recursive)
 
-	case proto.FileOperationType_FILE_OPERATION_TYPE_MOVE:
-		destPath, err := s.safePath(req.Destination)
-		if err != nil {
-			return &proto.FileOperationResponse{Success: false, Error: "invalid destination path"}, nil
-		}
-		return s.handleMove(safePath, destPath)
+	case *proto.FileOperationRequest_MoveParams:
+		return s.handleMove(p.MoveParams.Source, p.MoveParams.Destination)
 
-	case proto.FileOperationType_FILE_OPERATION_TYPE_COPY:
-		destPath, err := s.safePath(req.Destination)
-		if err != nil {
-			return &proto.FileOperationResponse{Success: false, Error: "invalid destination path"}, nil
-		}
-		return s.handleCopy(safePath, destPath, req.Recursive)
+	case *proto.FileOperationRequest_CopyParams:
+		return s.handleCopy(
+			p.CopyParams.Source,
+			p.CopyParams.Destination,
+			p.CopyParams.Recursive,
+		)
 
-	case proto.FileOperationType_FILE_OPERATION_TYPE_CHMOD:
-		return s.handleChmod(safePath, req.Mode)
+	case *proto.FileOperationRequest_ChmodParams:
+		return s.handleChmod(p.ChmodParams.Path, p.ChmodParams.Mode)
 
-	case proto.FileOperationType_FILE_OPERATION_TYPE_MKDIR:
-		return s.handleMkdir(safePath, req.Mode, req.Recursive)
+	case *proto.FileOperationRequest_ChownParams:
+		return errResp("chown is not supported")
 
-	case proto.FileOperationType_FILE_OPERATION_TYPE_TOUCH:
-		return s.handleTouch(safePath)
+	case *proto.FileOperationRequest_MkdirParams:
+		return s.handleMkdir(
+			p.MkdirParams.Path,
+			p.MkdirParams.Mode,
+			p.MkdirParams.Recursive,
+		)
 
-	case proto.FileOperationType_FILE_OPERATION_TYPE_STAT:
-		return s.handleStat(safePath)
+	case *proto.FileOperationRequest_TouchParams:
+		return s.handleTouch(p.TouchParams.Path)
 
-	case proto.FileOperationType_FILE_OPERATION_TYPE_EXISTS:
-		return s.handleExists(safePath)
+	case *proto.FileOperationRequest_StatParams:
+		return s.handleStat(p.StatParams.Path)
+
+	case *proto.FileOperationRequest_ExistsParams:
+		return s.handleExists(p.ExistsParams.Path)
 
 	default:
-		return &proto.FileOperationResponse{Success: false, Error: "unsupported operation"}, nil
+		return errResp("unsupported operation")
 	}
 }
 
-func (s *Service) ListDirectory(ctx context.Context, req *proto.ListDirectoryRequest) (*proto.ListDirectoryResponse, error) {
-	safePath, err := s.safePath(req.Path)
+func (s *Service) ListDirectory(
+	ctx context.Context,
+	req *proto.ListDirectoryRequest,
+) (*proto.ListDirectoryResponse, error) {
+	path := req.Path
+	if path == "" {
+		path = "."
+	}
+
+	if !req.Recursive {
+		return s.listDirectoryFlat(path, req)
+	}
+
+	return s.listDirectoryRecursive(ctx, path, req)
+}
+
+func (s *Service) listDirectoryFlat(
+	dirPath string,
+	req *proto.ListDirectoryRequest,
+) (*proto.ListDirectoryResponse, error) {
+	dir, err := s.root.Open(dirPath)
 	if err != nil {
 		return &proto.ListDirectoryResponse{
 			Success: false,
-			Error:   "invalid path",
+			Error:   errors.Wrap(err, "failed to open directory").Error(),
+		}, nil
+	}
+	defer func() { _ = dir.Close() }()
+
+	entries, err := dir.ReadDir(-1)
+	if err != nil {
+		return &proto.ListDirectoryResponse{
+			Success: false,
+			Error:   errors.Wrap(err, "failed to read directory").Error(),
 		}, nil
 	}
 
 	var files []*proto.FileStat
 	var totalCount int32
 
-	walkFn := func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return nil
-		}
-
-		if path == safePath {
-			return nil
-		}
-
-		if !req.Recursive && filepath.Dir(path) != safePath {
-			if info.IsDir() {
-				return filepath.SkipDir
+	for _, entry := range entries {
+		if req.Pattern != "" {
+			matched, _ := filepath.Match(req.Pattern, entry.Name())
+			if !matched {
+				continue
 			}
+		}
+
+		totalCount++
+
+		if req.Offset > 0 && totalCount <= req.Offset {
+			continue
+		}
+
+		if req.Limit > 0 && len(files) >= int(req.Limit) {
+			continue
+		}
+
+		info, err := entry.Info()
+		if err != nil {
+			continue
+		}
+
+		files = append(files, makeFileStat(entry.Name(), info))
+	}
+
+	return &proto.ListDirectoryResponse{
+		Success:    true,
+		Files:      files,
+		TotalCount: totalCount,
+	}, nil
+}
+
+func (s *Service) listDirectoryRecursive(
+	ctx context.Context,
+	dirPath string,
+	req *proto.ListDirectoryRequest,
+) (*proto.ListDirectoryResponse, error) {
+	var files []*proto.FileStat
+	var totalCount int32
+
+	err := fs.WalkDir(s.root.FS(), dirPath, func(path string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return nil //nolint:nilerr // skip entries with walk errors
+		}
+
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
+		if path == dirPath {
 			return nil
 		}
 
 		if req.Pattern != "" {
-			matched, _ := filepath.Match(req.Pattern, info.Name())
+			matched, _ := filepath.Match(req.Pattern, d.Name())
 			if !matched {
 				return nil
 			}
@@ -463,29 +577,27 @@ func (s *Service) ListDirectory(ctx context.Context, req *proto.ListDirectoryReq
 
 		totalCount++
 
-		if req.Limit > 0 && int32(len(files)) >= req.Limit {
-			return nil
-		}
-
 		if req.Offset > 0 && totalCount <= req.Offset {
 			return nil
 		}
 
-		relPath, _ := filepath.Rel(safePath, path)
+		if req.Limit > 0 && len(files) >= int(req.Limit) {
+			return nil
+		}
 
-		files = append(files, &proto.FileStat{
-			Name:       info.Name(),
-			Path:       relPath,
-			Size:       info.Size(),
-			Mode:       int32(info.Mode()),
-			ModifiedAt: timestamppb.New(info.ModTime()),
-			IsDir:      info.IsDir(),
-		})
+		info, infoErr := d.Info()
+		if infoErr != nil {
+			return nil //nolint:nilerr // skip entries we can't stat
+		}
+
+		relPath, _ := filepath.Rel(dirPath, path)
+
+		files = append(files, makeFileStat(relPath, info))
 
 		return nil
-	}
+	})
 
-	if err := filepath.Walk(safePath, walkFn); err != nil {
+	if err != nil {
 		return &proto.ListDirectoryResponse{
 			Success: false,
 			Error:   errors.Wrap(err, "failed to list directory").Error(),
@@ -499,21 +611,11 @@ func (s *Service) ListDirectory(ctx context.Context, req *proto.ListDirectoryReq
 	}, nil
 }
 
-func (s *Service) safePath(path string) (string, error) {
-	if s.basePath == "" {
-		return filepath.Clean(path), nil
-	}
-
-	cleanPath := filepath.Clean(filepath.Join(s.basePath, path))
-
-	if !filepath.HasPrefix(cleanPath, s.basePath) {
-		return "", errors.New("path traversal attempt")
-	}
-
-	return cleanPath, nil
-}
-
-func (s *Service) registerTransfer(transferID, path string, totalSize int64, cancel context.CancelFunc) {
+func (s *Service) registerTransfer(
+	transferID, path string,
+	totalSize int64,
+	cancel context.CancelFunc,
+) {
 	s.mu.Lock()
 	s.activeTransfers[transferID] = &activeTransfer{
 		TransferID: transferID,
@@ -546,6 +648,7 @@ func (s *Service) CancelTransfer(transferID string) bool {
 		transfer.Cancel()
 	}
 	s.mu.Unlock()
+
 	return ok
 }
 
@@ -573,126 +676,161 @@ func (s *Service) CancelAll() {
 	s.mu.Unlock()
 }
 
-func (s *Service) handleDelete(path string, recursive bool) (*proto.FileOperationResponse, error) {
+func (s *Service) handleDelete(
+	path string,
+	recursive bool,
+) (*proto.FileOperationResponse, error) {
 	var err error
 	if recursive {
-		err = os.RemoveAll(path)
+		err = s.root.RemoveAll(path)
 	} else {
-		err = os.Remove(path)
+		err = s.root.Remove(path)
 	}
 
 	if err != nil {
-		return &proto.FileOperationResponse{Success: false, Error: err.Error()}, nil
+		return opErr(err), nil
 	}
 
 	return &proto.FileOperationResponse{Success: true}, nil
 }
 
-func (s *Service) handleMove(src, dst string) (*proto.FileOperationResponse, error) {
-	if err := os.Rename(src, dst); err != nil {
-		return &proto.FileOperationResponse{Success: false, Error: err.Error()}, nil
+func (s *Service) handleMove(
+	src, dst string,
+) (*proto.FileOperationResponse, error) {
+	if err := s.root.Rename(src, dst); err != nil {
+		return opErr(err), nil
 	}
+
 	return &proto.FileOperationResponse{Success: true}, nil
 }
 
-func (s *Service) handleCopy(src, dst string, recursive bool) (*proto.FileOperationResponse, error) {
-	srcInfo, err := os.Stat(src)
+func (s *Service) handleCopy(
+	src, dst string,
+	recursive bool,
+) (*proto.FileOperationResponse, error) {
+	srcInfo, err := s.root.Stat(src)
 	if err != nil {
-		return &proto.FileOperationResponse{Success: false, Error: err.Error()}, nil
+		return opErr(err), nil
 	}
 
 	if srcInfo.IsDir() {
 		if !recursive {
-			return &proto.FileOperationResponse{Success: false, Error: "source is directory, use recursive"}, nil
+			return opErr(errors.New("source is directory, use recursive")), nil
 		}
-		if err := copyDir(src, dst); err != nil {
-			return &proto.FileOperationResponse{Success: false, Error: err.Error()}, nil
+		if err := s.copyDir(src, dst); err != nil {
+			return opErr(err), nil
 		}
 	} else {
-		if err := copyFile(src, dst); err != nil {
-			return &proto.FileOperationResponse{Success: false, Error: err.Error()}, nil
+		if err := s.copyFile(src, dst); err != nil {
+			return opErr(err), nil
 		}
 	}
 
 	return &proto.FileOperationResponse{Success: true}, nil
 }
 
-func (s *Service) handleChmod(path string, mode int32) (*proto.FileOperationResponse, error) {
-	if err := os.Chmod(path, os.FileMode(mode)); err != nil {
-		return &proto.FileOperationResponse{Success: false, Error: err.Error()}, nil
+func (s *Service) handleChmod(
+	path string,
+	mode int32,
+) (*proto.FileOperationResponse, error) {
+	if err := s.root.Chmod(path, safeFileMode(mode)); err != nil {
+		return opErr(err), nil
 	}
+
 	return &proto.FileOperationResponse{Success: true}, nil
 }
 
-func (s *Service) handleMkdir(path string, mode int32, recursive bool) (*proto.FileOperationResponse, error) {
-	perm := os.FileMode(mode)
+func (s *Service) handleMkdir(
+	path string,
+	mode int32,
+	recursive bool,
+) (*proto.FileOperationResponse, error) {
+	perm := safeFileMode(mode)
 	if perm == 0 {
 		perm = 0755
 	}
 
 	var err error
 	if recursive {
-		err = os.MkdirAll(path, perm)
+		err = s.root.MkdirAll(path, perm)
 	} else {
-		err = os.Mkdir(path, perm)
+		err = s.root.Mkdir(path, perm)
 	}
 
 	if err != nil {
-		return &proto.FileOperationResponse{Success: false, Error: err.Error()}, nil
+		return opErr(err), nil
 	}
+
 	return &proto.FileOperationResponse{Success: true}, nil
 }
 
 func (s *Service) handleTouch(path string) (*proto.FileOperationResponse, error) {
 	now := time.Now()
-	if err := os.Chtimes(path, now, now); err != nil {
+	if err := s.root.Chtimes(path, now, now); err != nil {
 		if os.IsNotExist(err) {
-			file, err := os.Create(path)
-			if err != nil {
-				return &proto.FileOperationResponse{Success: false, Error: err.Error()}, nil
+			file, createErr := s.root.Create(path)
+			if createErr != nil {
+				return opErr(createErr), nil
 			}
 			_ = file.Close()
+
 			return &proto.FileOperationResponse{Success: true}, nil
 		}
-		return &proto.FileOperationResponse{Success: false, Error: err.Error()}, nil
+
+		return opErr(err), nil
 	}
+
 	return &proto.FileOperationResponse{Success: true}, nil
 }
 
 func (s *Service) handleStat(path string) (*proto.FileOperationResponse, error) {
-	info, err := os.Stat(path)
+	info, err := s.root.Lstat(path)
 	if err != nil {
-		return &proto.FileOperationResponse{Success: false, Error: err.Error()}, nil
+		return opErr(err), nil
 	}
 
-	stat := &proto.FileStat{
-		Name:       info.Name(),
-		Path:       path,
-		Size:       info.Size(),
-		Mode:       int32(info.Mode()),
-		ModifiedAt: timestamppb.New(info.ModTime()),
-		IsDir:      info.IsDir(),
-	}
+	stat := makeFileStat(path, info)
 
 	if info.Mode()&os.ModeSymlink != 0 {
-		stat.IsSymlink = true
-		target, err := os.Readlink(path)
-		if err == nil {
+		target, readlinkErr := s.root.Readlink(path)
+		if readlinkErr == nil {
 			stat.SymlinkTarget = target
 		}
 	}
 
-	return &proto.FileOperationResponse{Success: true, Stat: stat}, nil
+	return &proto.FileOperationResponse{
+		Success: true,
+		Result: &proto.FileOperationResponse_StatResult{
+			StatResult: &proto.StatResult{Stat: stat},
+		},
+	}, nil
 }
 
 func (s *Service) handleExists(path string) (*proto.FileOperationResponse, error) {
-	_, err := os.Stat(path)
-	exists := err == nil || !os.IsNotExist(err)
-	return &proto.FileOperationResponse{Success: true, Exists: exists}, nil
+	_, err := s.root.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return &proto.FileOperationResponse{
+				Success: true,
+				Result: &proto.FileOperationResponse_ExistsResult{
+					ExistsResult: &proto.ExistsResult{Exists: false},
+				},
+			}, nil
+		}
+
+		return opErr(err), nil
+	}
+
+	return &proto.FileOperationResponse{
+		Success: true,
+		Result: &proto.FileOperationResponse_ExistsResult{
+			ExistsResult: &proto.ExistsResult{Exists: true},
+		},
+	}, nil
 }
 
-func copyFile(src, dst string) error {
-	srcFile, err := os.Open(src)
+func (s *Service) copyFile(src, dst string) error {
+	srcFile, err := s.root.Open(src)
 	if err != nil {
 		return err
 	}
@@ -703,18 +841,37 @@ func copyFile(src, dst string) error {
 		return err
 	}
 
-	dstFile, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, srcInfo.Mode())
+	tmpDst := dst + ".tmp"
+	dstFile, err := s.root.OpenFile(tmpDst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, srcInfo.Mode())
 	if err != nil {
 		return err
 	}
-	defer func() { _ = dstFile.Close() }()
 
-	_, err = io.Copy(dstFile, srcFile)
-	return err
+	if _, err = io.Copy(dstFile, srcFile); err != nil {
+		_ = dstFile.Close()
+		_ = s.root.Remove(tmpDst)
+
+		return err
+	}
+
+	if err := dstFile.Sync(); err != nil {
+		_ = dstFile.Close()
+		_ = s.root.Remove(tmpDst)
+
+		return err
+	}
+
+	if err := dstFile.Close(); err != nil {
+		_ = s.root.Remove(tmpDst)
+
+		return err
+	}
+
+	return s.root.Rename(tmpDst, dst)
 }
 
-func copyDir(src, dst string) error {
-	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+func (s *Service) copyDir(src, dst string) error {
+	return fs.WalkDir(s.root.FS(), src, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -726,10 +883,53 @@ func copyDir(src, dst string) error {
 
 		dstPath := filepath.Join(dst, relPath)
 
-		if info.IsDir() {
-			return os.MkdirAll(dstPath, info.Mode())
+		if d.IsDir() {
+			info, err := d.Info()
+			if err != nil {
+				return err
+			}
+
+			return s.root.MkdirAll(dstPath, info.Mode())
 		}
 
-		return copyFile(path, dstPath)
+		return s.copyFile(path, dstPath)
 	})
+}
+
+func opErr(err error) *proto.FileOperationResponse {
+	return &proto.FileOperationResponse{Success: false, Error: err.Error()}
+}
+
+func makeFileStat(path string, info os.FileInfo) *proto.FileStat {
+	return &proto.FileStat{
+		Name:       info.Name(),
+		Path:       path,
+		Size:       uint64(max(0, info.Size())),
+		Mode:       uint32(info.Mode()),
+		ModifiedAt: timestamppb.New(info.ModTime()),
+		Type:       fileTypeFromMode(info.Mode()),
+	}
+}
+
+func safeFileMode(mode int32) os.FileMode {
+	return os.FileMode(mode) & os.ModePerm //nolint:gosec // masked to permission bits
+}
+
+func fileTypeFromMode(m os.FileMode) proto.FileType {
+	switch {
+	case m.IsDir():
+		return proto.FileType_FILE_TYPE_DIRECTORY
+	case m&os.ModeSymlink != 0:
+		return proto.FileType_FILE_TYPE_SYMLINK
+	case m&os.ModeSocket != 0:
+		return proto.FileType_FILE_TYPE_SOCKET
+	case m&os.ModeNamedPipe != 0:
+		return proto.FileType_FILE_TYPE_FIFO
+	case m&os.ModeDevice != 0 && m&os.ModeCharDevice != 0:
+		return proto.FileType_FILE_TYPE_CHAR_DEVICE
+	case m&os.ModeDevice != 0:
+		return proto.FileType_FILE_TYPE_BLOCK_DEVICE
+	default:
+		return proto.FileType_FILE_TYPE_REGULAR
+	}
 }

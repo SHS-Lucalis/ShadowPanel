@@ -5,7 +5,6 @@ import (
 	"context"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/gameap/gameap/internal/domain"
@@ -18,11 +17,14 @@ type FileGateway interface {
 		ctx context.Context, nodeID uint64, path string, recursive bool, pattern string,
 	) (*proto.FileListResponse, error)
 	RequestFileRead(
-		ctx context.Context, nodeID uint64, path string, maxSize int64,
+		ctx context.Context, nodeID uint64, path string, offset int64, length int64,
 	) (*proto.FileReadResponse, error)
 	RequestFileWrite(
 		ctx context.Context, nodeID uint64, path string, content []byte, mode int32, createDirs bool,
 	) error
+	RequestFileOperation(
+		ctx context.Context, nodeID uint64, req *proto.FileOperationRequest,
+	) (*proto.FileOperationResponse, error)
 }
 
 type ConnectionChecker interface {
@@ -81,7 +83,7 @@ func (s *FileService) Download(ctx context.Context, node *domain.Node, filePath 
 
 	if s.gateway != nil && s.registry.IsConnected(nodeID) {
 		relPath := stripWorkPath(node.WorkPath, filePath)
-		resp, err := s.gateway.RequestFileRead(ctx, nodeID, relPath, 0)
+		resp, err := s.gateway.RequestFileRead(ctx, nodeID, relPath, 0, 0)
 		if err != nil {
 			return nil, errors.WithMessage(err, "gRPC file read request failed")
 		}
@@ -105,7 +107,7 @@ func (s *FileService) DownloadStream(
 
 	if s.gateway != nil && s.registry.IsConnected(nodeID) {
 		relPath := stripWorkPath(node.WorkPath, filePath)
-		resp, err := s.gateway.RequestFileRead(ctx, nodeID, relPath, 0)
+		resp, err := s.gateway.RequestFileRead(ctx, nodeID, relPath, 0, 0)
 		if err != nil {
 			return nil, errors.WithMessage(err, "gRPC file read request failed")
 		}
@@ -168,58 +170,143 @@ func (s *FileService) MkDir(ctx context.Context, node *domain.Node, directory st
 	nodeID := uint64(node.ID)
 
 	if s.gateway != nil && s.registry.IsConnected(nodeID) {
-		relDir := stripWorkPath(node.WorkPath, directory)
-		keepFile := filepath.Join(relDir, ".keep")
-
-		return s.gateway.RequestFileWrite(ctx, nodeID, keepFile, []byte{}, 0o644, true)
+		return s.doFileOperation(ctx, nodeID, &proto.FileOperationRequest{
+			Operation: proto.FileOperationType_FILE_OPERATION_TYPE_MKDIR,
+			Parameters: &proto.FileOperationRequest_MkdirParams{
+				MkdirParams: &proto.MkdirParams{
+					Path:      stripWorkPath(node.WorkPath, directory),
+					Recursive: true,
+				},
+			},
+		})
 	}
 
 	return s.legacy.MkDir(ctx, node, directory)
 }
 
 func (s *FileService) Copy(ctx context.Context, node *domain.Node, source, destination string) error {
+	nodeID := uint64(node.ID)
+
+	if s.gateway != nil && s.registry.IsConnected(nodeID) {
+		return s.doFileOperation(ctx, nodeID, &proto.FileOperationRequest{
+			Operation: proto.FileOperationType_FILE_OPERATION_TYPE_COPY,
+			Parameters: &proto.FileOperationRequest_CopyParams{
+				CopyParams: &proto.CopyParams{
+					Source:      stripWorkPath(node.WorkPath, source),
+					Destination: stripWorkPath(node.WorkPath, destination),
+					Recursive:   true,
+				},
+			},
+		})
+	}
+
 	return s.legacy.Copy(ctx, node, source, destination)
 }
 
 func (s *FileService) Move(ctx context.Context, node *domain.Node, source, destination string) error {
+	nodeID := uint64(node.ID)
+
+	if s.gateway != nil && s.registry.IsConnected(nodeID) {
+		return s.doFileOperation(ctx, nodeID, &proto.FileOperationRequest{
+			Operation: proto.FileOperationType_FILE_OPERATION_TYPE_MOVE,
+			Parameters: &proto.FileOperationRequest_MoveParams{
+				MoveParams: &proto.MoveParams{
+					Source:      stripWorkPath(node.WorkPath, source),
+					Destination: stripWorkPath(node.WorkPath, destination),
+				},
+			},
+		})
+	}
+
 	return s.legacy.Move(ctx, node, source, destination)
 }
 
 func (s *FileService) Remove(ctx context.Context, node *domain.Node, path string, recursive bool) error {
-	return s.legacy.Remove(ctx, node, path, recursive)
-}
-
-func (s *FileService) GetFileInfo(ctx context.Context, node *domain.Node, path string) (*FileDetails, error) {
 	nodeID := uint64(node.ID)
 
 	if s.gateway != nil && s.registry.IsConnected(nodeID) {
-		relPath := stripWorkPath(node.WorkPath, path)
-		dir := filepath.Dir(relPath)
-		base := filepath.Base(relPath)
+		return s.doFileOperation(ctx, nodeID, &proto.FileOperationRequest{
+			Operation: proto.FileOperationType_FILE_OPERATION_TYPE_DELETE,
+			Parameters: &proto.FileOperationRequest_DeleteParams{
+				DeleteParams: &proto.DeleteParams{
+					Path:      stripWorkPath(node.WorkPath, path),
+					Recursive: recursive,
+				},
+			},
+		})
+	}
 
-		resp, err := s.gateway.RequestFileList(ctx, nodeID, dir, false, "")
+	return s.legacy.Remove(ctx, node, path, recursive)
+}
+
+func (s *FileService) GetFileInfo(
+	ctx context.Context,
+	node *domain.Node,
+	path string,
+) (*FileDetails, error) {
+	nodeID := uint64(node.ID)
+
+	if s.gateway != nil && s.registry.IsConnected(nodeID) {
+		resp, err := s.gateway.RequestFileOperation(ctx, nodeID, &proto.FileOperationRequest{
+			Operation: proto.FileOperationType_FILE_OPERATION_TYPE_STAT,
+			Parameters: &proto.FileOperationRequest_StatParams{
+				StatParams: &proto.StatParams{
+					Path: stripWorkPath(node.WorkPath, path),
+				},
+			},
+		})
 		if err != nil {
-			return nil, errors.WithMessage(err, "gRPC file list request failed")
+			return nil, errors.WithMessage(err, "gRPC stat request failed")
 		}
 
 		if !resp.Success {
-			return nil, errors.Errorf("gRPC file list failed: %s", resp.Error)
+			return nil, errors.Errorf("gRPC stat failed: %s", resp.Error)
 		}
 
-		for _, f := range resp.Files {
-			if f.Name == base {
-				return protoFileInfoToDetails(f, base), nil
-			}
+		statResult := resp.GetStatResult()
+		if statResult == nil {
+			return nil, errors.New("gRPC stat returned no result")
 		}
 
-		return nil, errors.Errorf("file not found: %s", base)
+		return protoFileStatToDetails(statResult.Stat), nil
 	}
 
 	return s.legacy.GetFileInfo(ctx, node, path)
 }
 
 func (s *FileService) Chmod(ctx context.Context, node *domain.Node, path string, perm uint32) error {
+	nodeID := uint64(node.ID)
+
+	if s.gateway != nil && s.registry.IsConnected(nodeID) {
+		return s.doFileOperation(ctx, nodeID, &proto.FileOperationRequest{
+			Operation: proto.FileOperationType_FILE_OPERATION_TYPE_CHMOD,
+			Parameters: &proto.FileOperationRequest_ChmodParams{
+				ChmodParams: &proto.ChmodParams{
+					Path: stripWorkPath(node.WorkPath, path),
+					Mode: int32(perm & 0x1FF),
+				},
+			},
+		})
+	}
+
 	return s.legacy.Chmod(ctx, node, path, perm)
+}
+
+func (s *FileService) doFileOperation(
+	ctx context.Context,
+	nodeID uint64,
+	req *proto.FileOperationRequest,
+) error {
+	resp, err := s.gateway.RequestFileOperation(ctx, nodeID, req)
+	if err != nil {
+		return errors.WithMessage(err, "gRPC file operation failed")
+	}
+
+	if !resp.Success {
+		return errors.Errorf("gRPC file operation failed: %s", resp.Error)
+	}
+
+	return nil
 }
 
 func protoFileInfoToDaemon(f *proto.FileInfo) *FileInfo {
@@ -259,35 +346,47 @@ func protoFileInfoToDaemon(f *proto.FileInfo) *FileInfo {
 	}
 }
 
-func protoFileInfoToDetails(f *proto.FileInfo, name string) *FileDetails {
-	var modTime uint64
-	if f.ModifiedAt != nil {
-		ts := f.ModifiedAt.AsTime().Unix()
+func protoFileStatToDetails(s *proto.FileStat) *FileDetails {
+	if s == nil {
+		return &FileDetails{}
+	}
+
+	var modTime, accessTime uint64
+	if s.ModifiedAt != nil {
+		ts := s.ModifiedAt.AsTime().Unix()
 		if ts > 0 {
 			modTime = uint64(ts)
 		}
 	}
-
-	var size uint64
-	if f.Size > 0 {
-		size = uint64(f.Size)
-	}
-
-	var perm uint32
-	if f.Mode >= 0 {
-		perm = uint32(f.Mode)
+	if s.AccessedAt != nil {
+		ts := s.AccessedAt.AsTime().Unix()
+		if ts > 0 {
+			accessTime = uint64(ts)
+		}
 	}
 
 	fileType := FileTypeFile
-	if f.IsDir {
+	switch s.Type {
+	case proto.FileType_FILE_TYPE_DIRECTORY:
 		fileType = FileTypeDir
+	case proto.FileType_FILE_TYPE_SYMLINK:
+		fileType = FileTypeSymlink
+	case proto.FileType_FILE_TYPE_SOCKET:
+		fileType = FileTypeSocket
+	case proto.FileType_FILE_TYPE_FIFO:
+		fileType = FileTypeNamedPipe
+	case proto.FileType_FILE_TYPE_BLOCK_DEVICE:
+		fileType = FileTypeBlockDevice
+	case proto.FileType_FILE_TYPE_CHAR_DEVICE:
+		fileType = FileTypeDevice
 	}
 
 	return &FileDetails{
-		Name:             name,
-		Size:             size,
+		Name:             s.Name,
+		Size:             s.Size,
 		ModificationTime: modTime,
-		Perm:             perm,
+		AccessTime:       accessTime,
+		Perm:             s.Mode,
 		Type:             fileType,
 	}
 }

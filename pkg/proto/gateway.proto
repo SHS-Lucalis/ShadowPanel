@@ -10,6 +10,7 @@ import "pkg/proto/daemontask.proto";
 import "pkg/proto/server.proto";
 import "pkg/proto/game.proto";
 import "pkg/proto/gamemod.proto";
+import "pkg/proto/filetransfer.proto";
 
 service DaemonGateway {
   rpc Connect(stream DaemonMessage) returns (stream GatewayMessage);
@@ -34,6 +35,7 @@ message DaemonMessage {
     FileReadResponse file_read_response = 60;
     FileWriteResponse file_write_response = 61;
     FileListResponse file_list_response = 62;
+    FileOperationResponse file_operation_response = 63;
   }
 }
 
@@ -56,6 +58,7 @@ message GatewayMessage {
     FileWriteRequest file_write = 61;
     FileListRequest file_list = 62;
     FileUploadTask file_upload_task = 63;
+    FileOperationRequest file_operation = 64;
   }
 }
 
@@ -90,14 +93,12 @@ message Heartbeat {
 }
 
 message SystemStats {
-  double cpu_usage_percent = 1;
-  uint64 memory_used_bytes = 2;
-  uint64 memory_total_bytes = 3;
-  uint64 disk_used_bytes = 4;
-  uint64 disk_total_bytes = 5;
-  double load_average_1m = 6;
-  double load_average_5m = 7;
-  double load_average_15m = 8;
+  double load_average_1m = 1;
+  double load_average_5m = 2;
+  double load_average_15m = 3;
+  double cpu_usage_percent = 4;
+  uint64 memory_used_bytes = 5;
+  uint64 memory_total_bytes = 6;
 }
 
 message TaskStatusUpdate {
@@ -159,6 +160,8 @@ message ShutdownNotification {
 message FileReadRequest {
   string path = 1;
   int64 max_size = 2;
+  int64 offset = 3;
+  int64 length = 4;
 }
 
 message FileReadResponse {
@@ -191,17 +194,8 @@ message FileListRequest {
 message FileListResponse {
   string request_id = 1;
   bool success = 2;
-  repeated FileInfo files = 3;
+  repeated FileStat files = 3;
   string error = 4;
-}
-
-message FileInfo {
-  string name = 1;
-  string path = 2;
-  int64 size = 3;
-  int32 mode = 4;
-  google.protobuf.Timestamp modified_at = 5;
-  bool is_dir = 6;
 }
 
 message FileUploadTask {

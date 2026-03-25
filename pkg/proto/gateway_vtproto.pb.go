@@ -279,6 +279,27 @@ func (m *DaemonMessage_FileListResponse) MarshalToSizedBufferVT(dAtA []byte) (in
 	}
 	return len(dAtA) - i, nil
 }
+func (m *DaemonMessage_FileOperationResponse) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *DaemonMessage_FileOperationResponse) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.FileOperationResponse != nil {
+		size, err := m.FileOperationResponse.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x3
+		i--
+		dAtA[i] = 0xfa
+	}
+	return len(dAtA) - i, nil
+}
 func (m *GatewayMessage) MarshalVT() (dAtA []byte, err error) {
 	if m == nil {
 		return nil, nil
@@ -552,6 +573,27 @@ func (m *GatewayMessage_FileUploadTask) MarshalToSizedBufferVT(dAtA []byte) (int
 		dAtA[i] = 0x3
 		i--
 		dAtA[i] = 0xfa
+	}
+	return len(dAtA) - i, nil
+}
+func (m *GatewayMessage_FileOperation) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GatewayMessage_FileOperation) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.FileOperation != nil {
+		size, err := m.FileOperation.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x4
+		i--
+		dAtA[i] = 0x82
 	}
 	return len(dAtA) - i, nil
 }
@@ -879,47 +921,37 @@ func (m *SystemStats) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
+	if m.MemoryTotalBytes != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.MemoryTotalBytes))
+		i--
+		dAtA[i] = 0x30
+	}
+	if m.MemoryUsedBytes != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.MemoryUsedBytes))
+		i--
+		dAtA[i] = 0x28
+	}
+	if m.CpuUsagePercent != 0 {
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.CpuUsagePercent))))
+		i--
+		dAtA[i] = 0x21
+	}
 	if m.LoadAverage_15M != 0 {
 		i -= 8
 		binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.LoadAverage_15M))))
 		i--
-		dAtA[i] = 0x41
+		dAtA[i] = 0x19
 	}
 	if m.LoadAverage_5M != 0 {
 		i -= 8
 		binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.LoadAverage_5M))))
 		i--
-		dAtA[i] = 0x39
+		dAtA[i] = 0x11
 	}
 	if m.LoadAverage_1M != 0 {
 		i -= 8
 		binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.LoadAverage_1M))))
-		i--
-		dAtA[i] = 0x31
-	}
-	if m.DiskTotalBytes != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.DiskTotalBytes))
-		i--
-		dAtA[i] = 0x28
-	}
-	if m.DiskUsedBytes != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.DiskUsedBytes))
-		i--
-		dAtA[i] = 0x20
-	}
-	if m.MemoryTotalBytes != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.MemoryTotalBytes))
-		i--
-		dAtA[i] = 0x18
-	}
-	if m.MemoryUsedBytes != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.MemoryUsedBytes))
-		i--
-		dAtA[i] = 0x10
-	}
-	if m.CpuUsagePercent != 0 {
-		i -= 8
-		binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.CpuUsagePercent))))
 		i--
 		dAtA[i] = 0x9
 	}
@@ -1481,6 +1513,16 @@ func (m *FileReadRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	if m.unknownFields != nil {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
+	}
+	if m.Length != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Length))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.Offset != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Offset))
+		i--
+		dAtA[i] = 0x18
 	}
 	if m.MaxSize != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.MaxSize))
@@ -2232,6 +2274,18 @@ func (m *DaemonMessage_FileListResponse) SizeVT() (n int) {
 	}
 	return n
 }
+func (m *DaemonMessage_FileOperationResponse) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.FileOperationResponse != nil {
+		l = m.FileOperationResponse.SizeVT()
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
 func (m *GatewayMessage) SizeVT() (n int) {
 	if m == nil {
 		return 0
@@ -2381,6 +2435,18 @@ func (m *GatewayMessage_FileUploadTask) SizeVT() (n int) {
 	}
 	return n
 }
+func (m *GatewayMessage_FileOperation) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.FileOperation != nil {
+		l = m.FileOperation.SizeVT()
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
 func (m *RegisterRequest) SizeVT() (n int) {
 	if m == nil {
 		return 0
@@ -2507,21 +2573,6 @@ func (m *SystemStats) SizeVT() (n int) {
 	}
 	var l int
 	_ = l
-	if m.CpuUsagePercent != 0 {
-		n += 9
-	}
-	if m.MemoryUsedBytes != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.MemoryUsedBytes))
-	}
-	if m.MemoryTotalBytes != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.MemoryTotalBytes))
-	}
-	if m.DiskUsedBytes != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.DiskUsedBytes))
-	}
-	if m.DiskTotalBytes != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.DiskTotalBytes))
-	}
 	if m.LoadAverage_1M != 0 {
 		n += 9
 	}
@@ -2530,6 +2581,15 @@ func (m *SystemStats) SizeVT() (n int) {
 	}
 	if m.LoadAverage_15M != 0 {
 		n += 9
+	}
+	if m.CpuUsagePercent != 0 {
+		n += 9
+	}
+	if m.MemoryUsedBytes != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.MemoryUsedBytes))
+	}
+	if m.MemoryTotalBytes != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.MemoryTotalBytes))
 	}
 	n += len(m.unknownFields)
 	return n
@@ -2745,6 +2805,12 @@ func (m *FileReadRequest) SizeVT() (n int) {
 	}
 	if m.MaxSize != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.MaxSize))
+	}
+	if m.Offset != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.Offset))
+	}
+	if m.Length != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.Length))
 	}
 	n += len(m.unknownFields)
 	return n
@@ -3463,6 +3529,47 @@ func (m *DaemonMessage) UnmarshalVT(dAtA []byte) error {
 				m.Payload = &DaemonMessage_FileListResponse{FileListResponse: v}
 			}
 			iNdEx = postIndex
+		case 63:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FileOperationResponse", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Payload.(*DaemonMessage_FileOperationResponse); ok {
+				if err := oneof.FileOperationResponse.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &FileOperationResponse{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Payload = &DaemonMessage_FileOperationResponse{FileOperationResponse: v}
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -3995,6 +4102,47 @@ func (m *GatewayMessage) UnmarshalVT(dAtA []byte) error {
 					return err
 				}
 				m.Payload = &GatewayMessage_FileUploadTask{FileUploadTask: v}
+			}
+			iNdEx = postIndex
+		case 64:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FileOperation", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Payload.(*GatewayMessage_FileOperation); ok {
+				if err := oneof.FileOperation.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &FileOperationRequest{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Payload = &GatewayMessage_FileOperation{FileOperation: v}
 			}
 			iNdEx = postIndex
 		default:
@@ -4805,6 +4953,39 @@ func (m *SystemStats) UnmarshalVT(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LoadAverage_1M", wireType)
+			}
+			var v uint64
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+			m.LoadAverage_1M = float64(math.Float64frombits(v))
+		case 2:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LoadAverage_5M", wireType)
+			}
+			var v uint64
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+			m.LoadAverage_5M = float64(math.Float64frombits(v))
+		case 3:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LoadAverage_15M", wireType)
+			}
+			var v uint64
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+			m.LoadAverage_15M = float64(math.Float64frombits(v))
+		case 4:
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CpuUsagePercent", wireType)
 			}
 			var v uint64
@@ -4814,7 +4995,7 @@ func (m *SystemStats) UnmarshalVT(dAtA []byte) error {
 			v = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
 			m.CpuUsagePercent = float64(math.Float64frombits(v))
-		case 2:
+		case 5:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MemoryUsedBytes", wireType)
 			}
@@ -4833,7 +5014,7 @@ func (m *SystemStats) UnmarshalVT(dAtA []byte) error {
 					break
 				}
 			}
-		case 3:
+		case 6:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MemoryTotalBytes", wireType)
 			}
@@ -4852,77 +5033,6 @@ func (m *SystemStats) UnmarshalVT(dAtA []byte) error {
 					break
 				}
 			}
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DiskUsedBytes", wireType)
-			}
-			m.DiskUsedBytes = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.DiskUsedBytes |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DiskTotalBytes", wireType)
-			}
-			m.DiskTotalBytes = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.DiskTotalBytes |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 6:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LoadAverage_1M", wireType)
-			}
-			var v uint64
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			v = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
-			m.LoadAverage_1M = float64(math.Float64frombits(v))
-		case 7:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LoadAverage_5M", wireType)
-			}
-			var v uint64
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			v = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
-			m.LoadAverage_5M = float64(math.Float64frombits(v))
-		case 8:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LoadAverage_15M", wireType)
-			}
-			var v uint64
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			v = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
-			m.LoadAverage_15M = float64(math.Float64frombits(v))
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -6258,6 +6368,44 @@ func (m *FileReadRequest) UnmarshalVT(dAtA []byte) error {
 				b := dAtA[iNdEx]
 				iNdEx++
 				m.MaxSize |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Offset", wireType)
+			}
+			m.Offset = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Offset |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Length", wireType)
+			}
+			m.Length = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Length |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

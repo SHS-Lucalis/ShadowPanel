@@ -38,6 +38,7 @@ type DaemonMessage struct {
 	//	*DaemonMessage_FileReadResponse
 	//	*DaemonMessage_FileWriteResponse
 	//	*DaemonMessage_FileListResponse
+	//	*DaemonMessage_FileOperationResponse
 	Payload       isDaemonMessage_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -177,6 +178,15 @@ func (x *DaemonMessage) GetFileListResponse() *FileListResponse {
 	return nil
 }
 
+func (x *DaemonMessage) GetFileOperationResponse() *FileOperationResponse {
+	if x != nil {
+		if x, ok := x.Payload.(*DaemonMessage_FileOperationResponse); ok {
+			return x.FileOperationResponse
+		}
+	}
+	return nil
+}
+
 type isDaemonMessage_Payload interface {
 	isDaemonMessage_Payload()
 }
@@ -221,6 +231,10 @@ type DaemonMessage_FileListResponse struct {
 	FileListResponse *FileListResponse `protobuf:"bytes,62,opt,name=file_list_response,json=fileListResponse,proto3,oneof"`
 }
 
+type DaemonMessage_FileOperationResponse struct {
+	FileOperationResponse *FileOperationResponse `protobuf:"bytes,63,opt,name=file_operation_response,json=fileOperationResponse,proto3,oneof"`
+}
+
 func (*DaemonMessage_Register) isDaemonMessage_Payload() {}
 
 func (*DaemonMessage_Heartbeat) isDaemonMessage_Payload() {}
@@ -241,6 +255,8 @@ func (*DaemonMessage_FileWriteResponse) isDaemonMessage_Payload() {}
 
 func (*DaemonMessage_FileListResponse) isDaemonMessage_Payload() {}
 
+func (*DaemonMessage_FileOperationResponse) isDaemonMessage_Payload() {}
+
 type GatewayMessage struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
 	RequestId string                 `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
@@ -257,6 +273,7 @@ type GatewayMessage struct {
 	//	*GatewayMessage_FileWrite
 	//	*GatewayMessage_FileList
 	//	*GatewayMessage_FileUploadTask
+	//	*GatewayMessage_FileOperation
 	Payload       isGatewayMessage_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -405,6 +422,15 @@ func (x *GatewayMessage) GetFileUploadTask() *FileUploadTask {
 	return nil
 }
 
+func (x *GatewayMessage) GetFileOperation() *FileOperationRequest {
+	if x != nil {
+		if x, ok := x.Payload.(*GatewayMessage_FileOperation); ok {
+			return x.FileOperation
+		}
+	}
+	return nil
+}
+
 type isGatewayMessage_Payload interface {
 	isGatewayMessage_Payload()
 }
@@ -453,6 +479,10 @@ type GatewayMessage_FileUploadTask struct {
 	FileUploadTask *FileUploadTask `protobuf:"bytes,63,opt,name=file_upload_task,json=fileUploadTask,proto3,oneof"`
 }
 
+type GatewayMessage_FileOperation struct {
+	FileOperation *FileOperationRequest `protobuf:"bytes,64,opt,name=file_operation,json=fileOperation,proto3,oneof"`
+}
+
 func (*GatewayMessage_RegisterAck) isGatewayMessage_Payload() {}
 
 func (*GatewayMessage_Shutdown) isGatewayMessage_Payload() {}
@@ -474,6 +504,8 @@ func (*GatewayMessage_FileWrite) isGatewayMessage_Payload() {}
 func (*GatewayMessage_FileList) isGatewayMessage_Payload() {}
 
 func (*GatewayMessage_FileUploadTask) isGatewayMessage_Payload() {}
+
+func (*GatewayMessage_FileOperation) isGatewayMessage_Payload() {}
 
 type RegisterRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -765,14 +797,12 @@ func (x *Heartbeat) GetSystemStats() *SystemStats {
 
 type SystemStats struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
-	CpuUsagePercent  float64                `protobuf:"fixed64,1,opt,name=cpu_usage_percent,json=cpuUsagePercent,proto3" json:"cpu_usage_percent,omitempty"`
-	MemoryUsedBytes  uint64                 `protobuf:"varint,2,opt,name=memory_used_bytes,json=memoryUsedBytes,proto3" json:"memory_used_bytes,omitempty"`
-	MemoryTotalBytes uint64                 `protobuf:"varint,3,opt,name=memory_total_bytes,json=memoryTotalBytes,proto3" json:"memory_total_bytes,omitempty"`
-	DiskUsedBytes    uint64                 `protobuf:"varint,4,opt,name=disk_used_bytes,json=diskUsedBytes,proto3" json:"disk_used_bytes,omitempty"`
-	DiskTotalBytes   uint64                 `protobuf:"varint,5,opt,name=disk_total_bytes,json=diskTotalBytes,proto3" json:"disk_total_bytes,omitempty"`
-	LoadAverage_1M   float64                `protobuf:"fixed64,6,opt,name=load_average_1m,json=loadAverage1m,proto3" json:"load_average_1m,omitempty"`
-	LoadAverage_5M   float64                `protobuf:"fixed64,7,opt,name=load_average_5m,json=loadAverage5m,proto3" json:"load_average_5m,omitempty"`
-	LoadAverage_15M  float64                `protobuf:"fixed64,8,opt,name=load_average_15m,json=loadAverage15m,proto3" json:"load_average_15m,omitempty"`
+	LoadAverage_1M   float64                `protobuf:"fixed64,1,opt,name=load_average_1m,json=loadAverage1m,proto3" json:"load_average_1m,omitempty"`
+	LoadAverage_5M   float64                `protobuf:"fixed64,2,opt,name=load_average_5m,json=loadAverage5m,proto3" json:"load_average_5m,omitempty"`
+	LoadAverage_15M  float64                `protobuf:"fixed64,3,opt,name=load_average_15m,json=loadAverage15m,proto3" json:"load_average_15m,omitempty"`
+	CpuUsagePercent  float64                `protobuf:"fixed64,4,opt,name=cpu_usage_percent,json=cpuUsagePercent,proto3" json:"cpu_usage_percent,omitempty"`
+	MemoryUsedBytes  uint64                 `protobuf:"varint,5,opt,name=memory_used_bytes,json=memoryUsedBytes,proto3" json:"memory_used_bytes,omitempty"`
+	MemoryTotalBytes uint64                 `protobuf:"varint,6,opt,name=memory_total_bytes,json=memoryTotalBytes,proto3" json:"memory_total_bytes,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -807,41 +837,6 @@ func (*SystemStats) Descriptor() ([]byte, []int) {
 	return file_pkg_proto_gateway_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *SystemStats) GetCpuUsagePercent() float64 {
-	if x != nil {
-		return x.CpuUsagePercent
-	}
-	return 0
-}
-
-func (x *SystemStats) GetMemoryUsedBytes() uint64 {
-	if x != nil {
-		return x.MemoryUsedBytes
-	}
-	return 0
-}
-
-func (x *SystemStats) GetMemoryTotalBytes() uint64 {
-	if x != nil {
-		return x.MemoryTotalBytes
-	}
-	return 0
-}
-
-func (x *SystemStats) GetDiskUsedBytes() uint64 {
-	if x != nil {
-		return x.DiskUsedBytes
-	}
-	return 0
-}
-
-func (x *SystemStats) GetDiskTotalBytes() uint64 {
-	if x != nil {
-		return x.DiskTotalBytes
-	}
-	return 0
-}
-
 func (x *SystemStats) GetLoadAverage_1M() float64 {
 	if x != nil {
 		return x.LoadAverage_1M
@@ -859,6 +854,27 @@ func (x *SystemStats) GetLoadAverage_5M() float64 {
 func (x *SystemStats) GetLoadAverage_15M() float64 {
 	if x != nil {
 		return x.LoadAverage_15M
+	}
+	return 0
+}
+
+func (x *SystemStats) GetCpuUsagePercent() float64 {
+	if x != nil {
+		return x.CpuUsagePercent
+	}
+	return 0
+}
+
+func (x *SystemStats) GetMemoryUsedBytes() uint64 {
+	if x != nil {
+		return x.MemoryUsedBytes
+	}
+	return 0
+}
+
+func (x *SystemStats) GetMemoryTotalBytes() uint64 {
+	if x != nil {
+		return x.MemoryTotalBytes
 	}
 	return 0
 }
@@ -1435,6 +1451,8 @@ type FileReadRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Path          string                 `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
 	MaxSize       int64                  `protobuf:"varint,2,opt,name=max_size,json=maxSize,proto3" json:"max_size,omitempty"`
+	Offset        int64                  `protobuf:"varint,3,opt,name=offset,proto3" json:"offset,omitempty"`
+	Length        int64                  `protobuf:"varint,4,opt,name=length,proto3" json:"length,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1479,6 +1497,20 @@ func (x *FileReadRequest) GetPath() string {
 func (x *FileReadRequest) GetMaxSize() int64 {
 	if x != nil {
 		return x.MaxSize
+	}
+	return 0
+}
+
+func (x *FileReadRequest) GetOffset() int64 {
+	if x != nil {
+		return x.Offset
+	}
+	return 0
+}
+
+func (x *FileReadRequest) GetLength() int64 {
+	if x != nil {
+		return x.Length
 	}
 	return 0
 }
@@ -2131,7 +2163,7 @@ var File_pkg_proto_gateway_proto protoreflect.FileDescriptor
 
 const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"\n" +
-	"\x17pkg/proto/gateway.proto\x12\x06gameap\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x1apkg/proto/daemontask.proto\x1a\x16pkg/proto/server.proto\x1a\x14pkg/proto/game.proto\x1a\x17pkg/proto/gamemod.proto\"\xbe\x05\n" +
+	"\x17pkg/proto/gateway.proto\x12\x06gameap\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x1apkg/proto/daemontask.proto\x1a\x16pkg/proto/server.proto\x1a\x14pkg/proto/game.proto\x1a\x17pkg/proto/gamemod.proto\x1a\x1cpkg/proto/filetransfer.proto\"\x97\x06\n" +
 	"\rDaemonMessage\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x01 \x01(\tR\trequestId\x125\n" +
@@ -2147,8 +2179,9 @@ const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"\x0fserver_statuses\x182 \x01(\v2\x19.gameap.ServerStatusBatchH\x00R\x0eserverStatuses\x12H\n" +
 	"\x12file_read_response\x18< \x01(\v2\x18.gameap.FileReadResponseH\x00R\x10fileReadResponse\x12K\n" +
 	"\x13file_write_response\x18= \x01(\v2\x19.gameap.FileWriteResponseH\x00R\x11fileWriteResponse\x12H\n" +
-	"\x12file_list_response\x18> \x01(\v2\x18.gameap.FileListResponseH\x00R\x10fileListResponseB\t\n" +
-	"\apayload\"\xb8\x05\n" +
+	"\x12file_list_response\x18> \x01(\v2\x18.gameap.FileListResponseH\x00R\x10fileListResponse\x12W\n" +
+	"\x17file_operation_response\x18? \x01(\v2\x1d.gameap.FileOperationResponseH\x00R\x15fileOperationResponseB\t\n" +
+	"\apayload\"\xff\x05\n" +
 	"\x0eGatewayMessage\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x01 \x01(\tR\trequestId\x128\n" +
@@ -2165,7 +2198,8 @@ const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"\n" +
 	"file_write\x18= \x01(\v2\x18.gameap.FileWriteRequestH\x00R\tfileWrite\x126\n" +
 	"\tfile_list\x18> \x01(\v2\x17.gameap.FileListRequestH\x00R\bfileList\x12B\n" +
-	"\x10file_upload_task\x18? \x01(\v2\x16.gameap.FileUploadTaskH\x00R\x0efileUploadTaskB\t\n" +
+	"\x10file_upload_task\x18? \x01(\v2\x16.gameap.FileUploadTaskH\x00R\x0efileUploadTask\x12E\n" +
+	"\x0efile_operation\x18@ \x01(\v2\x1c.gameap.FileOperationRequestH\x00R\rfileOperationB\t\n" +
 	"\apayload\"\xbf\x01\n" +
 	"\x0fRegisterRequest\x12\x17\n" +
 	"\anode_id\x18\x01 \x01(\x04R\x06nodeId\x12\x17\n" +
@@ -2189,16 +2223,14 @@ const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"\x12heartbeat_interval\x18\a \x01(\v2\x19.google.protobuf.DurationR\x11heartbeatInterval\"}\n" +
 	"\tHeartbeat\x128\n" +
 	"\ttimestamp\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\x126\n" +
-	"\fsystem_stats\x18\x02 \x01(\v2\x13.gameap.SystemStatsR\vsystemStats\"\xdf\x02\n" +
-	"\vSystemStats\x12*\n" +
-	"\x11cpu_usage_percent\x18\x01 \x01(\x01R\x0fcpuUsagePercent\x12*\n" +
-	"\x11memory_used_bytes\x18\x02 \x01(\x04R\x0fmemoryUsedBytes\x12,\n" +
-	"\x12memory_total_bytes\x18\x03 \x01(\x04R\x10memoryTotalBytes\x12&\n" +
-	"\x0fdisk_used_bytes\x18\x04 \x01(\x04R\rdiskUsedBytes\x12(\n" +
-	"\x10disk_total_bytes\x18\x05 \x01(\x04R\x0ediskTotalBytes\x12&\n" +
-	"\x0fload_average_1m\x18\x06 \x01(\x01R\rloadAverage1m\x12&\n" +
-	"\x0fload_average_5m\x18\a \x01(\x01R\rloadAverage5m\x12(\n" +
-	"\x10load_average_15m\x18\b \x01(\x01R\x0eloadAverage15m\"w\n" +
+	"\fsystem_stats\x18\x02 \x01(\v2\x13.gameap.SystemStatsR\vsystemStats\"\x8d\x02\n" +
+	"\vSystemStats\x12&\n" +
+	"\x0fload_average_1m\x18\x01 \x01(\x01R\rloadAverage1m\x12&\n" +
+	"\x0fload_average_5m\x18\x02 \x01(\x01R\rloadAverage5m\x12(\n" +
+	"\x10load_average_15m\x18\x03 \x01(\x01R\x0eloadAverage15m\x12*\n" +
+	"\x11cpu_usage_percent\x18\x04 \x01(\x01R\x0fcpuUsagePercent\x12*\n" +
+	"\x11memory_used_bytes\x18\x05 \x01(\x04R\x0fmemoryUsedBytes\x12,\n" +
+	"\x12memory_total_bytes\x18\x06 \x01(\x04R\x10memoryTotalBytes\"w\n" +
 	"\x10TaskStatusUpdate\x12\x17\n" +
 	"\atask_id\x18\x01 \x01(\x04R\x06taskId\x120\n" +
 	"\x06status\x18\x02 \x01(\x0e2\x18.gameap.DaemonTaskStatusR\x06status\x12\x18\n" +
@@ -2241,10 +2273,12 @@ const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"\aservers\x18\x01 \x03(\v2\x0e.gameap.ServerR\aservers\"r\n" +
 	"\x14ShutdownNotification\x12\x16\n" +
 	"\x06reason\x18\x01 \x01(\tR\x06reason\x12B\n" +
-	"\x0freconnect_delay\x18\x02 \x01(\v2\x19.google.protobuf.DurationR\x0ereconnectDelay\"@\n" +
+	"\x0freconnect_delay\x18\x02 \x01(\v2\x19.google.protobuf.DurationR\x0ereconnectDelay\"p\n" +
 	"\x0fFileReadRequest\x12\x12\n" +
 	"\x04path\x18\x01 \x01(\tR\x04path\x12\x19\n" +
-	"\bmax_size\x18\x02 \x01(\x03R\amaxSize\"\x9c\x01\n" +
+	"\bmax_size\x18\x02 \x01(\x03R\amaxSize\x12\x16\n" +
+	"\x06offset\x18\x03 \x01(\x03R\x06offset\x12\x16\n" +
+	"\x06length\x18\x04 \x01(\x03R\x06length\"\x9c\x01\n" +
 	"\x10FileReadResponse\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x01 \x01(\tR\trequestId\x12\x18\n" +
@@ -2346,13 +2380,15 @@ var file_pkg_proto_gateway_proto_goTypes = []any{
 	(*FileUploadTask)(nil),        // 24: gameap.FileUploadTask
 	(*EnrollRequest)(nil),         // 25: gameap.EnrollRequest
 	(*EnrollResponse)(nil),        // 26: gameap.EnrollResponse
-	(*DaemonTask)(nil),            // 27: gameap.DaemonTask
-	(*Server)(nil),                // 28: gameap.Server
-	(DaemonTaskStatus)(0),         // 29: gameap.DaemonTaskStatus
-	(*timestamppb.Timestamp)(nil), // 30: google.protobuf.Timestamp
-	(*Game)(nil),                  // 31: gameap.Game
-	(*GameMod)(nil),               // 32: gameap.GameMod
-	(*durationpb.Duration)(nil),   // 33: google.protobuf.Duration
+	(*FileOperationResponse)(nil), // 27: gameap.FileOperationResponse
+	(*DaemonTask)(nil),            // 28: gameap.DaemonTask
+	(*Server)(nil),                // 29: gameap.Server
+	(*FileOperationRequest)(nil),  // 30: gameap.FileOperationRequest
+	(DaemonTaskStatus)(0),         // 31: gameap.DaemonTaskStatus
+	(*timestamppb.Timestamp)(nil), // 32: google.protobuf.Timestamp
+	(*Game)(nil),                  // 33: gameap.Game
+	(*GameMod)(nil),               // 34: gameap.GameMod
+	(*durationpb.Duration)(nil),   // 35: google.protobuf.Duration
 }
 var file_pkg_proto_gateway_proto_depIdxs = []int32{
 	2,  // 0: gameap.DaemonMessage.register:type_name -> gameap.RegisterRequest
@@ -2365,44 +2401,46 @@ var file_pkg_proto_gateway_proto_depIdxs = []int32{
 	18, // 7: gameap.DaemonMessage.file_read_response:type_name -> gameap.FileReadResponse
 	20, // 8: gameap.DaemonMessage.file_write_response:type_name -> gameap.FileWriteResponse
 	22, // 9: gameap.DaemonMessage.file_list_response:type_name -> gameap.FileListResponse
-	4,  // 10: gameap.GatewayMessage.register_ack:type_name -> gameap.RegisterAck
-	16, // 11: gameap.GatewayMessage.shutdown:type_name -> gameap.ShutdownNotification
-	27, // 12: gameap.GatewayMessage.task:type_name -> gameap.DaemonTask
-	9,  // 13: gameap.GatewayMessage.task_cancel:type_name -> gameap.TaskCancel
-	10, // 14: gameap.GatewayMessage.command:type_name -> gameap.CommandRequest
-	28, // 15: gameap.GatewayMessage.server_config:type_name -> gameap.Server
-	15, // 16: gameap.GatewayMessage.server_config_batch:type_name -> gameap.ServerConfigBatch
-	17, // 17: gameap.GatewayMessage.file_read:type_name -> gameap.FileReadRequest
-	19, // 18: gameap.GatewayMessage.file_write:type_name -> gameap.FileWriteRequest
-	21, // 19: gameap.GatewayMessage.file_list:type_name -> gameap.FileListRequest
-	24, // 20: gameap.GatewayMessage.file_upload_task:type_name -> gameap.FileUploadTask
-	3,  // 21: gameap.RegisterRequest.in_flight_tasks:type_name -> gameap.InFlightTask
-	29, // 22: gameap.InFlightTask.status:type_name -> gameap.DaemonTaskStatus
-	30, // 23: gameap.InFlightTask.started_at:type_name -> google.protobuf.Timestamp
-	28, // 24: gameap.RegisterAck.servers:type_name -> gameap.Server
-	27, // 25: gameap.RegisterAck.pending_tasks:type_name -> gameap.DaemonTask
-	31, // 26: gameap.RegisterAck.games:type_name -> gameap.Game
-	32, // 27: gameap.RegisterAck.game_mods:type_name -> gameap.GameMod
-	33, // 28: gameap.RegisterAck.heartbeat_interval:type_name -> google.protobuf.Duration
-	30, // 29: gameap.Heartbeat.timestamp:type_name -> google.protobuf.Timestamp
-	6,  // 30: gameap.Heartbeat.system_stats:type_name -> gameap.SystemStats
-	29, // 31: gameap.TaskStatusUpdate.status:type_name -> gameap.DaemonTaskStatus
-	33, // 32: gameap.CommandRequest.timeout:type_name -> google.protobuf.Duration
-	30, // 33: gameap.ServerStatus.last_check:type_name -> google.protobuf.Timestamp
-	13, // 34: gameap.ServerStatusBatch.statuses:type_name -> gameap.ServerStatus
-	28, // 35: gameap.ServerConfigBatch.servers:type_name -> gameap.Server
-	33, // 36: gameap.ShutdownNotification.reconnect_delay:type_name -> google.protobuf.Duration
-	23, // 37: gameap.FileListResponse.files:type_name -> gameap.FileInfo
-	30, // 38: gameap.FileInfo.modified_at:type_name -> google.protobuf.Timestamp
-	0,  // 39: gameap.DaemonGateway.Connect:input_type -> gameap.DaemonMessage
-	25, // 40: gameap.DaemonGateway.Enroll:input_type -> gameap.EnrollRequest
-	1,  // 41: gameap.DaemonGateway.Connect:output_type -> gameap.GatewayMessage
-	26, // 42: gameap.DaemonGateway.Enroll:output_type -> gameap.EnrollResponse
-	41, // [41:43] is the sub-list for method output_type
-	39, // [39:41] is the sub-list for method input_type
-	39, // [39:39] is the sub-list for extension type_name
-	39, // [39:39] is the sub-list for extension extendee
-	0,  // [0:39] is the sub-list for field type_name
+	27, // 10: gameap.DaemonMessage.file_operation_response:type_name -> gameap.FileOperationResponse
+	4,  // 11: gameap.GatewayMessage.register_ack:type_name -> gameap.RegisterAck
+	16, // 12: gameap.GatewayMessage.shutdown:type_name -> gameap.ShutdownNotification
+	28, // 13: gameap.GatewayMessage.task:type_name -> gameap.DaemonTask
+	9,  // 14: gameap.GatewayMessage.task_cancel:type_name -> gameap.TaskCancel
+	10, // 15: gameap.GatewayMessage.command:type_name -> gameap.CommandRequest
+	29, // 16: gameap.GatewayMessage.server_config:type_name -> gameap.Server
+	15, // 17: gameap.GatewayMessage.server_config_batch:type_name -> gameap.ServerConfigBatch
+	17, // 18: gameap.GatewayMessage.file_read:type_name -> gameap.FileReadRequest
+	19, // 19: gameap.GatewayMessage.file_write:type_name -> gameap.FileWriteRequest
+	21, // 20: gameap.GatewayMessage.file_list:type_name -> gameap.FileListRequest
+	24, // 21: gameap.GatewayMessage.file_upload_task:type_name -> gameap.FileUploadTask
+	30, // 22: gameap.GatewayMessage.file_operation:type_name -> gameap.FileOperationRequest
+	3,  // 23: gameap.RegisterRequest.in_flight_tasks:type_name -> gameap.InFlightTask
+	31, // 24: gameap.InFlightTask.status:type_name -> gameap.DaemonTaskStatus
+	32, // 25: gameap.InFlightTask.started_at:type_name -> google.protobuf.Timestamp
+	29, // 26: gameap.RegisterAck.servers:type_name -> gameap.Server
+	28, // 27: gameap.RegisterAck.pending_tasks:type_name -> gameap.DaemonTask
+	33, // 28: gameap.RegisterAck.games:type_name -> gameap.Game
+	34, // 29: gameap.RegisterAck.game_mods:type_name -> gameap.GameMod
+	35, // 30: gameap.RegisterAck.heartbeat_interval:type_name -> google.protobuf.Duration
+	32, // 31: gameap.Heartbeat.timestamp:type_name -> google.protobuf.Timestamp
+	6,  // 32: gameap.Heartbeat.system_stats:type_name -> gameap.SystemStats
+	31, // 33: gameap.TaskStatusUpdate.status:type_name -> gameap.DaemonTaskStatus
+	35, // 34: gameap.CommandRequest.timeout:type_name -> google.protobuf.Duration
+	32, // 35: gameap.ServerStatus.last_check:type_name -> google.protobuf.Timestamp
+	13, // 36: gameap.ServerStatusBatch.statuses:type_name -> gameap.ServerStatus
+	29, // 37: gameap.ServerConfigBatch.servers:type_name -> gameap.Server
+	35, // 38: gameap.ShutdownNotification.reconnect_delay:type_name -> google.protobuf.Duration
+	23, // 39: gameap.FileListResponse.files:type_name -> gameap.FileInfo
+	32, // 40: gameap.FileInfo.modified_at:type_name -> google.protobuf.Timestamp
+	0,  // 41: gameap.DaemonGateway.Connect:input_type -> gameap.DaemonMessage
+	25, // 42: gameap.DaemonGateway.Enroll:input_type -> gameap.EnrollRequest
+	1,  // 43: gameap.DaemonGateway.Connect:output_type -> gameap.GatewayMessage
+	26, // 44: gameap.DaemonGateway.Enroll:output_type -> gameap.EnrollResponse
+	43, // [43:45] is the sub-list for method output_type
+	41, // [41:43] is the sub-list for method input_type
+	41, // [41:41] is the sub-list for extension type_name
+	41, // [41:41] is the sub-list for extension extendee
+	0,  // [0:41] is the sub-list for field type_name
 }
 
 func init() { file_pkg_proto_gateway_proto_init() }
@@ -2414,6 +2452,7 @@ func file_pkg_proto_gateway_proto_init() {
 	file_pkg_proto_server_proto_init()
 	file_pkg_proto_game_proto_init()
 	file_pkg_proto_gamemod_proto_init()
+	file_pkg_proto_filetransfer_proto_init()
 	file_pkg_proto_gateway_proto_msgTypes[0].OneofWrappers = []any{
 		(*DaemonMessage_Register)(nil),
 		(*DaemonMessage_Heartbeat)(nil),
@@ -2425,6 +2464,7 @@ func file_pkg_proto_gateway_proto_init() {
 		(*DaemonMessage_FileReadResponse)(nil),
 		(*DaemonMessage_FileWriteResponse)(nil),
 		(*DaemonMessage_FileListResponse)(nil),
+		(*DaemonMessage_FileOperationResponse)(nil),
 	}
 	file_pkg_proto_gateway_proto_msgTypes[1].OneofWrappers = []any{
 		(*GatewayMessage_RegisterAck)(nil),
@@ -2438,6 +2478,7 @@ func file_pkg_proto_gateway_proto_init() {
 		(*GatewayMessage_FileWrite)(nil),
 		(*GatewayMessage_FileList)(nil),
 		(*GatewayMessage_FileUploadTask)(nil),
+		(*GatewayMessage_FileOperation)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{

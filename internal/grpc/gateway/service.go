@@ -2,6 +2,8 @@ package gateway
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"io"
 	"log/slog"
 	"time"
@@ -317,6 +319,10 @@ func (s *Service) processMessage(ctx context.Context, sess *session.Session, msg
 		sess.ResolvePendingRequest(payload.FileListResponse.RequestId, msg)
 		return nil
 
+	case *proto.DaemonMessage_FileOperationResponse:
+		sess.ResolvePendingRequest(payload.FileOperationResponse.RequestId, msg)
+		return nil
+
 	default:
 		s.logger.Warn("unknown message type received",
 			"node_id", sess.NodeID,
@@ -327,7 +333,13 @@ func (s *Service) processMessage(ctx context.Context, sess *session.Session, msg
 	return nil
 }
 
-func (s *Service) RequestFileRead(ctx context.Context, nodeID uint64, path string, maxSize int64) (*proto.FileReadResponse, error) {
+func (s *Service) RequestFileRead(
+	ctx context.Context,
+	nodeID uint64,
+	path string,
+	offset int64,
+	length int64,
+) (*proto.FileReadResponse, error) {
 	sess, ok := s.registry.GetSession(nodeID)
 	if !ok {
 		return nil, errors.New("node not connected")
@@ -341,8 +353,9 @@ func (s *Service) RequestFileRead(ctx context.Context, nodeID uint64, path strin
 		RequestId: requestID,
 		Payload: &proto.GatewayMessage_FileRead{
 			FileRead: &proto.FileReadRequest{
-				Path:    path,
-				MaxSize: maxSize,
+				Path:   path,
+				Offset: offset,
+				Length: length,
 			},
 		},
 	}); err != nil {
@@ -444,6 +457,45 @@ func (s *Service) RequestFileList(ctx context.Context, nodeID uint64, path strin
 	}
 }
 
+func (s *Service) RequestFileOperation(
+	ctx context.Context,
+	nodeID uint64,
+	req *proto.FileOperationRequest,
+) (*proto.FileOperationResponse, error) {
+	sess, ok := s.registry.GetSession(nodeID)
+	if !ok {
+		return nil, errors.New("node not connected")
+	}
+
+	requestID := generateRequestID()
+	respCh := sess.RegisterPendingRequest(requestID)
+	defer sess.CancelPendingRequest(requestID)
+
+	if err := sess.Send(&proto.GatewayMessage{
+		RequestId: requestID,
+		Payload: &proto.GatewayMessage_FileOperation{
+			FileOperation: req,
+		},
+	}); err != nil {
+		return nil, errors.Wrap(err, "send file operation request")
+	}
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case resp := <-respCh:
+		if resp == nil {
+			return nil, errors.New("request cancelled")
+		}
+		opResp := resp.GetFileOperationResponse()
+		if opResp == nil {
+			return nil, errors.New("unexpected response type")
+		}
+
+		return opResp, nil
+	}
+}
+
 func (s *Service) Enroll(ctx context.Context, req *proto.EnrollRequest) (*proto.EnrollResponse, error) {
 	if s.enrollmentSvc == nil {
 		return nil, status.Error(codes.Unavailable, "enrollment is not enabled")
@@ -494,11 +546,9 @@ func generateRequestID() string {
 }
 
 func randomString(n int) string {
-	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	b := make([]byte, n)
-	for i := range b {
-		b[i] = letters[time.Now().UnixNano()%int64(len(letters))]
-		time.Sleep(time.Nanosecond)
+	if _, err := rand.Read(b); err != nil {
+		panic(err)
 	}
-	return string(b)
+	return hex.EncodeToString(b)[:n]
 }
