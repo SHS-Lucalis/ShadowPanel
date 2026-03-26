@@ -24,7 +24,7 @@ type FileGateway interface {
 	) error
 	RequestFileDownloadTask(
 		ctx context.Context, nodeID uint64, transferID, srcPath string,
-	) (*proto.FileReadResponse, error)
+	) error
 }
 
 type ConnectionChecker interface {

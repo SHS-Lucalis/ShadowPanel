@@ -442,15 +442,10 @@ func (d *fileDispatcher) execDownloadTask(
 	ctx context.Context,
 	payload messages.DaemonFileRequestPayload,
 ) messages.DaemonFileResponsePayload {
-	resp, err := d.gateway.RequestFileDownloadTask(
+	if err := d.gateway.RequestFileDownloadTask(
 		ctx, payload.NodeID, payload.TransferID, payload.StoragePath,
-	)
-	if err != nil {
+	); err != nil {
 		return messages.DaemonFileResponsePayload{Error: err.Error()}
-	}
-
-	if !resp.Success {
-		return messages.DaemonFileResponsePayload{Error: resp.Error}
 	}
 
 	return messages.DaemonFileResponsePayload{

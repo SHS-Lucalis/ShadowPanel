@@ -653,10 +653,10 @@ func (s *Service) RequestFileDownloadTask(
 	ctx context.Context,
 	nodeID uint64,
 	transferID, srcPath string,
-) (*proto.FileReadResponse, error) {
+) error {
 	sess, ok := s.registry.GetSession(nodeID)
 	if !ok {
-		return nil, errors.New("node not connected")
+		return errors.New("node not connected")
 	}
 
 	requestID := generateRequestID()
@@ -672,25 +672,25 @@ func (s *Service) RequestFileDownloadTask(
 			},
 		},
 	}); err != nil {
-		return nil, errors.Wrap(err, "send file download task")
+		return errors.Wrap(err, "send file download task")
 	}
 
 	select {
 	case <-ctx.Done():
-		return nil, ctx.Err()
+		return ctx.Err()
 	case resp := <-respCh:
 		if resp == nil {
-			return nil, errors.New("request cancelled")
+			return errors.New("request cancelled")
 		}
-		fileResp := resp.GetFileReadResponse()
+		fileResp := resp.GetFileWriteResponse()
 		if fileResp == nil {
-			return nil, errors.New("unexpected response type")
+			return errors.New("unexpected response type")
 		}
 		if !fileResp.Success {
-			return nil, errors.New(fileResp.Error)
+			return errors.New(fileResp.Error)
 		}
 
-		return fileResp, nil
+		return nil
 	}
 }
 

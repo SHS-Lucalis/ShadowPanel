@@ -171,7 +171,9 @@ type Container struct {
 	multiplexedServer   *MultiplexedServer
 
 	// Shutdown
-	shotdownFuncs []func() error
+	cancel            context.CancelFunc
+	shotdownFuncs     []func() error
+	lateShutdownFuncs []func() error
 }
 
 func NewContainer(config *config.Config) *Container {
@@ -180,15 +182,38 @@ func NewContainer(config *config.Config) *Container {
 	}
 }
 
-func (c *Container) SetContext(ctx context.Context) {
+func (c *Container) SetContext(ctx context.Context, cancel context.CancelFunc) {
 	c.context = ctx
+	c.cancel = cancel
 }
 
 func (c *Container) Shutdown() error {
+	if c.sessionRegistry != nil {
+		c.sessionRegistry.BroadcastShutdown(
+			context.Background(),
+			"server shutting down",
+			30*time.Second,
+		)
+		time.Sleep(time.Second)
+	}
+
+	if c.cancel != nil {
+		c.cancel()
+	}
+
 	for _, fn := range c.shotdownFuncs {
 		if err := fn(); err != nil {
 			slog.Error(
 				"failed to execute shutdown function",
+				slog.String("error", err.Error()),
+			)
+		}
+	}
+
+	for _, fn := range c.lateShutdownFuncs {
+		if err := fn(); err != nil {
+			slog.Error(
+				"failed to execute late shutdown function",
 				slog.String("error", err.Error()),
 			)
 		}
@@ -199,6 +224,10 @@ func (c *Container) Shutdown() error {
 
 func (c *Container) appendShutdownFunc(fn func() error) {
 	c.shotdownFuncs = append(c.shotdownFuncs, fn)
+}
+
+func (c *Container) appendLateShutdownFunc(fn func() error) {
+	c.lateShutdownFuncs = append(c.lateShutdownFuncs, fn)
 }
 
 func (c *Container) Config() *config.Config {
@@ -214,7 +243,7 @@ func (c *Container) DB() *sql.DB {
 
 		c.db = db
 
-		c.appendShutdownFunc(func() error {
+		c.appendLateShutdownFunc(func() error {
 			return c.db.Close()
 		})
 	}
@@ -898,7 +927,7 @@ func (c *Container) createCache() cache.Cache {
 			panic(errors.WithMessage(err, "failed to create Redis cache"))
 		}
 
-		c.appendShutdownFunc(func() error {
+		c.appendLateShutdownFunc(func() error {
 			if rc, ok := c.cache.(*cache.Redis); ok {
 				return rc.Close()
 			}
@@ -971,7 +1000,7 @@ func (c *Container) createBasePubSub() pubsub.PubSub {
 			panic(errors.WithMessage(err, "failed to create Redis pub-sub"))
 		}
 
-		c.appendShutdownFunc(func() error {
+		c.appendLateShutdownFunc(func() error {
 			return ps.Close()
 		})
 
@@ -986,7 +1015,7 @@ func (c *Container) createBasePubSub() pubsub.PubSub {
 			panic(errors.WithMessage(err, "failed to create PostgreSQL pub-sub"))
 		}
 
-		c.appendShutdownFunc(func() error {
+		c.appendLateShutdownFunc(func() error {
 			return ps.Close()
 		})
 
@@ -1571,7 +1600,17 @@ func (c *Container) GRPCServer() *grpc.Server {
 		)
 
 		c.appendShutdownFunc(func() error {
-			c.grpcServer.GracefulStop()
+			done := make(chan struct{})
+			go func() {
+				c.grpcServer.GracefulStop()
+				close(done)
+			}()
+			select {
+			case <-done:
+			case <-time.After(10 * time.Second):
+				slog.Warn("gRPC server force stop due to timeout")
+				c.grpcServer.Stop()
+			}
 
 			return nil
 		})

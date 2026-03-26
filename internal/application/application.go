@@ -65,14 +65,12 @@ func Run(runParams RunParams) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	container := NewContainer(cfg)
-	container.SetContext(ctx)
+	container.SetContext(ctx, cancel)
 
 	go func() {
 		oscall := <-c
 
 		slog.Info("Got signal: " + oscall.String())
-
-		cancel()
 
 		err = container.Shutdown()
 		if err != nil {
@@ -188,11 +186,6 @@ func runWithGRPC(ctx context.Context, cfg *config.Config, container *Container) 
 		if err := grpcServer.Serve(lis); err != nil {
 			slog.ErrorContext(ctx, "gRPC server error", slog.String("error", err.Error()))
 		}
-	}()
-
-	go func() {
-		<-ctx.Done()
-		grpcServer.GracefulStop()
 	}()
 
 	if cfg.TLSEnabled() {

@@ -1,7 +1,6 @@
 package daemon
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -21,7 +20,7 @@ const (
 	smallFileThreshold     = 1 * 1024 * 1024 // 1MB
 	chunkSize              = 64 * 1024       // 64KB
 	transferPrefix         = "transfers/"
-	capabilityFileTransfer = "filetransfer"
+	capabilityFileTransfer = "file_transfer"
 )
 
 type daemonNotConnectedError struct{}
@@ -173,13 +172,8 @@ func (s *FileService) downloadStreamLocal(ctx context.Context, nodeID uint64, pa
 
 	transferID := generateTransferID()
 
-	resp, err := s.gateway.RequestFileDownloadTask(ctx, nodeID, transferID, path)
-	if err != nil {
+	if err := s.gateway.RequestFileDownloadTask(ctx, nodeID, transferID, path); err != nil {
 		return nil, errors.WithMessage(err, "gateway download task")
-	}
-
-	if len(resp.Content) > 0 {
-		return io.NopCloser(bytes.NewReader(resp.Content)), nil
 	}
 
 	storagePath := transferPrefix + transferID + "/data"
