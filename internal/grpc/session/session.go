@@ -2,6 +2,7 @@ package session
 
 import (
 	"context"
+	"slices"
 	"sync"
 	"time"
 
@@ -92,6 +93,10 @@ func (s *Session) ResolvePendingRequest(requestID string, msg *proto.DaemonMessa
 	}
 
 	return ok
+}
+
+func (s *Session) HasCapability(capability string) bool {
+	return slices.Contains(s.Capabilities, capability)
 }
 
 func (s *Session) CancelPendingRequest(requestID string) {

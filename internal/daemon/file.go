@@ -1,11 +1,13 @@
 package daemon
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"io"
 	"log/slog"
+	"math"
 	"os"
 	"strings"
 
@@ -16,9 +18,10 @@ import (
 )
 
 const (
-	smallFileThreshold = 1 * 1024 * 1024 // 1MB
-	chunkSize          = 64 * 1024       // 64KB
-	transferPrefix     = "transfers/"
+	smallFileThreshold     = 1 * 1024 * 1024 // 1MB
+	chunkSize              = 64 * 1024       // 64KB
+	transferPrefix         = "transfers/"
+	capabilityFileTransfer = "filetransfer"
 )
 
 type daemonNotConnectedError struct{}
@@ -164,6 +167,38 @@ func (s *FileService) DownloadStream(
 }
 
 func (s *FileService) downloadStreamLocal(ctx context.Context, nodeID uint64, path string) (io.ReadCloser, error) {
+	if !s.registry.HasCapability(nodeID, capabilityFileTransfer) {
+		return s.downloadStreamLocalChunked(ctx, nodeID, path)
+	}
+
+	transferID := generateTransferID()
+
+	resp, err := s.gateway.RequestFileDownloadTask(ctx, nodeID, transferID, path)
+	if err != nil {
+		return nil, errors.WithMessage(err, "gateway download task")
+	}
+
+	if len(resp.Content) > 0 {
+		return io.NopCloser(bytes.NewReader(resp.Content)), nil
+	}
+
+	storagePath := transferPrefix + transferID + "/data"
+
+	reader, err := s.storage.ReadStream(ctx, storagePath)
+	if err != nil {
+		return nil, errors.WithMessage(err, "reading transferred file from storage")
+	}
+
+	return &cleanupReadCloser{
+		ReadCloser:  reader,
+		storagePath: storagePath,
+		storage:     s.storage,
+	}, nil
+}
+
+func (s *FileService) downloadStreamLocalChunked(
+	ctx context.Context, nodeID uint64, path string,
+) (io.ReadCloser, error) {
 	pr, pw := io.Pipe()
 
 	go func() {
@@ -293,12 +328,12 @@ func (s *FileService) UploadStream(
 	}
 
 	checksum := hex.EncodeToString(hasher.Sum(nil))
-	_ = checksum
 
-	if local {
-		if err := s.dispatcher.DispatchUploadTask(ctx, nodeID, transferID, relPath); err != nil {
-			_ = s.storage.Delete(context.Background(), storagePath)
+	if local && s.registry.HasCapability(nodeID, capabilityFileTransfer) {
+		err := s.gateway.RequestFileUploadTask(ctx, nodeID, transferID, relPath, checksum, safeUint64ToInt64(size))
+		_ = s.storage.Delete(context.Background(), storagePath)
 
+		if err != nil {
 			return errors.WithMessage(err, "upload task")
 		}
 
@@ -532,6 +567,14 @@ func protoFileStatToDetails(s *proto.FileStat) *FileDetails {
 		Perm:             s.Mode,
 		Type:             protoFileTypeToFileType(s.Type),
 	}
+}
+
+func safeUint64ToInt64(v uint64) int64 {
+	if v > uint64(math.MaxInt64) {
+		return math.MaxInt64
+	}
+
+	return int64(v)
 }
 
 func stripWorkPath(workPath, fullPath string) string {

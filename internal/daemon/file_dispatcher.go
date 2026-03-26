@@ -14,7 +14,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-const fileDispatchTimeout = 30 * time.Second
+const (
+	fileDispatchTimeout = 30 * time.Second
+	fileTransferTimeout = 10 * time.Minute
+)
 
 type fileDispatcher struct {
 	ps         pubsub.PubSub
@@ -70,6 +73,7 @@ func (d *fileDispatcher) dispatchAndWait(
 	ctx context.Context,
 	nodeID uint64,
 	payload messages.DaemonFileRequestPayload,
+	timeout time.Duration,
 ) (*messages.DaemonFileResponsePayload, error) {
 	respCh := make(chan *messages.DaemonFileResponsePayload, 1)
 
@@ -96,7 +100,7 @@ func (d *fileDispatcher) dispatchAndWait(
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
-	case <-time.After(fileDispatchTimeout):
+	case <-time.After(timeout):
 		return nil, errors.New("file operation dispatch timed out")
 	case resp := <-respCh:
 		if resp == nil {
@@ -129,7 +133,7 @@ func (d *fileDispatcher) DispatchFileList(
 		InstanceID: d.instanceID,
 		Operation:  "file_list",
 		Data:       reqData,
-	})
+	}, fileDispatchTimeout)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +165,7 @@ func (d *fileDispatcher) DispatchFileRead(
 		InstanceID: d.instanceID,
 		Operation:  "file_read",
 		Data:       reqData,
-	})
+	}, fileDispatchTimeout)
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +206,7 @@ func (d *fileDispatcher) DispatchFileWrite(
 		InstanceID: d.instanceID,
 		Operation:  "file_write",
 		Data:       reqData,
-	})
+	}, fileDispatchTimeout)
 
 	return err
 }
@@ -221,7 +225,7 @@ func (d *fileDispatcher) DispatchFileOperation(
 		InstanceID: d.instanceID,
 		Operation:  "file_operation",
 		Data:       reqData,
-	})
+	}, fileDispatchTimeout)
 	if err != nil {
 		return nil, err
 	}
@@ -244,7 +248,7 @@ func (d *fileDispatcher) DispatchUploadTask(
 		Operation:   "upload_task",
 		TransferID:  transferID,
 		StoragePath: destPath,
-	})
+	}, fileTransferTimeout)
 
 	return err
 }
@@ -259,7 +263,7 @@ func (d *fileDispatcher) DispatchDownloadTask(
 		Operation:   "download_task",
 		TransferID:  transferID,
 		StoragePath: srcPath,
-	})
+	}, fileTransferTimeout)
 
 	return err
 }
@@ -282,7 +286,12 @@ func (d *fileDispatcher) handleFileRequest(_ context.Context, msg *pubsub.Messag
 }
 
 func (d *fileDispatcher) executeAndRespond(payload messages.DaemonFileRequestPayload) {
-	ctx, cancel := context.WithTimeout(context.Background(), fileDispatchTimeout)
+	timeout := fileDispatchTimeout
+	if payload.Operation == "upload_task" || payload.Operation == "download_task" {
+		timeout = fileTransferTimeout
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	resp := d.executeFileRequest(ctx, payload)
@@ -417,25 +426,36 @@ func (d *fileDispatcher) execUploadTask(
 	ctx context.Context,
 	payload messages.DaemonFileRequestPayload,
 ) messages.DaemonFileResponsePayload {
-	return d.sendUploadTaskViaGateway(ctx, payload)
-}
-
-func (d *fileDispatcher) sendUploadTaskViaGateway(
-	ctx context.Context,
-	payload messages.DaemonFileRequestPayload,
-) messages.DaemonFileResponsePayload {
-	if err := d.gateway.RequestFileWrite(ctx, payload.NodeID, payload.StoragePath, nil, 0, false); err != nil {
+	err := d.gateway.RequestFileUploadTask(
+		ctx, payload.NodeID, payload.TransferID, payload.StoragePath, "", 0,
+	)
+	if err != nil {
 		return messages.DaemonFileResponsePayload{Error: err.Error()}
 	}
+
+	_ = d.storage.Delete(context.Background(), transferPrefix+payload.TransferID+"/data")
 
 	return messages.DaemonFileResponsePayload{}
 }
 
 func (d *fileDispatcher) execDownloadTask(
-	_ context.Context,
-	_ messages.DaemonFileRequestPayload,
+	ctx context.Context,
+	payload messages.DaemonFileRequestPayload,
 ) messages.DaemonFileResponsePayload {
-	return messages.DaemonFileResponsePayload{}
+	resp, err := d.gateway.RequestFileDownloadTask(
+		ctx, payload.NodeID, payload.TransferID, payload.StoragePath,
+	)
+	if err != nil {
+		return messages.DaemonFileResponsePayload{Error: err.Error()}
+	}
+
+	if !resp.Success {
+		return messages.DaemonFileResponsePayload{Error: resp.Error}
+	}
+
+	return messages.DaemonFileResponsePayload{
+		StoragePath: transferPrefix + payload.TransferID + "/data",
+	}
 }
 
 func (d *fileDispatcher) handleFileResponse(_ context.Context, msg *pubsub.Message) error {

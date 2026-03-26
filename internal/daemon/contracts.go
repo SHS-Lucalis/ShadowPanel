@@ -19,11 +19,18 @@ type FileGateway interface {
 	RequestFileOperation(
 		ctx context.Context, nodeID uint64, req *proto.FileOperationRequest,
 	) (*proto.FileOperationResponse, error)
+	RequestFileUploadTask(
+		ctx context.Context, nodeID uint64, transferID, destPath, checksum string, totalSize int64,
+	) error
+	RequestFileDownloadTask(
+		ctx context.Context, nodeID uint64, transferID, srcPath string,
+	) (*proto.FileReadResponse, error)
 }
 
 type ConnectionChecker interface {
 	IsConnected(nodeID uint64) bool
 	IsConnectedAnywhere(nodeID uint64) bool
+	HasCapability(nodeID uint64, capability string) bool
 }
 
 type FileDispatcher interface {

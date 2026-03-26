@@ -163,6 +163,18 @@ func (r *Registry) IsConnectedAnywhere(nodeID uint64) bool {
 	return ok
 }
 
+func (r *Registry) HasCapability(nodeID uint64, capability string) bool {
+	r.mu.RLock()
+	session, ok := r.localSessions[nodeID]
+	r.mu.RUnlock()
+
+	if !ok {
+		return false
+	}
+
+	return session.HasCapability(capability)
+}
+
 func (r *Registry) handleSessionEvent(_ context.Context, msg *pubsub.Message) error {
 	switch msg.Type {
 	case messages.TypeDaemonConnected:

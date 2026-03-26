@@ -601,6 +601,99 @@ func (s *Service) RequestStatus(
 	}
 }
 
+func (s *Service) RequestFileUploadTask(
+	ctx context.Context,
+	nodeID uint64,
+	transferID, destPath, checksum string,
+	totalSize int64,
+) error {
+	sess, ok := s.registry.GetSession(nodeID)
+	if !ok {
+		return errors.New("node not connected")
+	}
+
+	requestID := generateRequestID()
+	respCh := sess.RegisterPendingRequest(requestID)
+	defer sess.CancelPendingRequest(requestID)
+
+	if err := sess.Send(&proto.GatewayMessage{
+		RequestId: requestID,
+		Payload: &proto.GatewayMessage_FileUploadTask{
+			FileUploadTask: &proto.FileUploadTask{
+				TransferId:     transferID,
+				Path:           destPath,
+				ChecksumSha256: checksum,
+				TotalSize:      totalSize,
+			},
+		},
+	}); err != nil {
+		return errors.Wrap(err, "send file upload task")
+	}
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case resp := <-respCh:
+		if resp == nil {
+			return errors.New("request cancelled")
+		}
+		fileResp := resp.GetFileWriteResponse()
+		if fileResp == nil {
+			return errors.New("unexpected response type")
+		}
+		if !fileResp.Success {
+			return errors.New(fileResp.Error)
+		}
+
+		return nil
+	}
+}
+
+func (s *Service) RequestFileDownloadTask(
+	ctx context.Context,
+	nodeID uint64,
+	transferID, srcPath string,
+) (*proto.FileReadResponse, error) {
+	sess, ok := s.registry.GetSession(nodeID)
+	if !ok {
+		return nil, errors.New("node not connected")
+	}
+
+	requestID := generateRequestID()
+	respCh := sess.RegisterPendingRequest(requestID)
+	defer sess.CancelPendingRequest(requestID)
+
+	if err := sess.Send(&proto.GatewayMessage{
+		RequestId: requestID,
+		Payload: &proto.GatewayMessage_FileDownloadTask{
+			FileDownloadTask: &proto.FileDownloadTask{
+				TransferId: transferID,
+				Path:       srcPath,
+			},
+		},
+	}); err != nil {
+		return nil, errors.Wrap(err, "send file download task")
+	}
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case resp := <-respCh:
+		if resp == nil {
+			return nil, errors.New("request cancelled")
+		}
+		fileResp := resp.GetFileReadResponse()
+		if fileResp == nil {
+			return nil, errors.New("unexpected response type")
+		}
+		if !fileResp.Success {
+			return nil, errors.New(fileResp.Error)
+		}
+
+		return fileResp, nil
+	}
+}
+
 func (s *Service) Enroll(ctx context.Context, req *proto.EnrollRequest) (*proto.EnrollResponse, error) {
 	if s.enrollmentSvc == nil {
 		return nil, status.Error(codes.Unavailable, "enrollment is not enabled")
