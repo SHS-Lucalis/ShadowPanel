@@ -29,6 +29,9 @@ message DaemonMessage {
 
     CommandOutput command_output = 30;
     CommandResult command_result = 31;
+    AttachStarted attach_started = 32;
+    AttachOutput attach_output = 33;
+    AttachClosed attach_closed = 34;
 
     ServerStatusBatch server_statuses = 50;
 
@@ -52,6 +55,9 @@ message GatewayMessage {
     TaskCancel task_cancel = 21;
 
     CommandRequest command = 30;
+    AttachRequest attach_request = 34;
+    AttachInput attach_input = 35;
+    AttachDetach attach_detach = 36;
 
     Server server_config = 50;
     ServerConfigBatch server_config_batch = 51;
@@ -235,6 +241,37 @@ message EnrollResponse {
   string root_certificate = 5;
   string server_certificate = 6;
   string server_private_key = 7;
+}
+
+message AttachRequest {
+  string session_id = 1;
+  uint64 server_id = 2;
+}
+
+message AttachStarted {
+  string session_id = 1;
+  uint64 server_id = 2;
+}
+
+message AttachInput {
+  string session_id = 1;
+  bytes data = 2;
+}
+
+message AttachOutput {
+  string session_id = 1;
+  bytes data = 2;
+}
+
+message AttachDetach {
+  string session_id = 1;
+  string reason = 2;
+}
+
+message AttachClosed {
+  string session_id = 1;
+  string reason = 2;
+  int32 exit_code = 3;
 }
 
 message StatusRequest {}

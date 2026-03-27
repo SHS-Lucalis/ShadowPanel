@@ -121,6 +121,7 @@ func (c *InmemoryContainer) TaskDispatcher() *taskdispatcher.Dispatcher       { 
 func (c *InmemoryContainer) WSHub() *ws.Hub                                   { return ws.NewHub(nil) }
 func (c *InmemoryContainer) SessionRegistry() *session.Registry               { return nil }
 func (c *InmemoryContainer) CommandHandler() *grpchandlers.CommandHandler     { return nil }
+func (c *InmemoryContainer) AttachHandler() *grpchandlers.AttachHandler       { return nil }
 func (c *InmemoryContainer) EnrollmentService() *enrollment.Service {
 	keyManager := enrollment.NewSetupKeyManager(c.cacheService, "")
 

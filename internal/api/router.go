@@ -126,6 +126,7 @@ import (
 	"github.com/gameap/gameap/internal/api/users/postusers"
 	"github.com/gameap/gameap/internal/api/users/putserverperms"
 	"github.com/gameap/gameap/internal/api/users/putuser"
+	wsattach "github.com/gameap/gameap/internal/api/ws/attach"
 	wsconsole "github.com/gameap/gameap/internal/api/ws/console"
 	wstaskstatus "github.com/gameap/gameap/internal/api/ws/taskstatus"
 	"github.com/gameap/gameap/internal/cache"
@@ -200,6 +201,7 @@ type container interface {
 	WSHub() *ws.Hub
 	SessionRegistry() *session.Registry
 	CommandHandler() *grpchandlers.CommandHandler
+	AttachHandler() *grpchandlers.AttachHandler
 }
 
 func CreateRouter(c container) *http.ServeMux {
@@ -1592,6 +1594,20 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 				c.CommandHandler(),
 				c.DaemonCommands(),
 				c.DaemonFiles(),
+				c.Responder(),
+			),
+		},
+		{
+			Method: http.MethodGet,
+			Path:   "/api/ws/servers/{server}/attach",
+			Handler: wsattach.NewHandler(
+				c.ServerRepository(),
+				c.NodeRepository(),
+				c.RBAC(),
+				c.WSHub(),
+				wsOriginPatterns(c.Config()),
+				c.SessionRegistry(),
+				c.AttachHandler(),
 				c.Responder(),
 			),
 		},

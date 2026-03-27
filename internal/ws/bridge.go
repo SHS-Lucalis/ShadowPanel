@@ -32,6 +32,7 @@ func (b *Bridge) Start(ctx context.Context) error {
 	patterns := []string{
 		channels.RealtimeTaskAll,
 		channels.RealtimeConsoleAll,
+		channels.RealtimeAttachAll,
 	}
 
 	for _, pattern := range patterns {

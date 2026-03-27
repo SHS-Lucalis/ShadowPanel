@@ -36,6 +36,11 @@ const (
 
 	TypeDaemonStatusRequest  = "daemon.status.request"
 	TypeDaemonStatusResponse = "daemon.status.response"
+
+	TypeAttachStarted = "attach.started"
+	TypeAttachOutput  = "attach.output"
+	TypeAttachClosed  = "attach.closed"
+	TypeDaemonAttach  = "daemon.attach"
 )
 
 type CacheInvalidatePayload struct {
@@ -169,6 +174,28 @@ type DaemonStatusResponsePayload struct {
 	RequestID string `json:"request_id"`
 	Error     string `json:"error,omitempty"`
 	Data      []byte `json:"data,omitempty"`
+}
+
+type AttachStartedPayload struct {
+	SessionID string `json:"session_id"`
+	ServerID  uint64 `json:"server_id"`
+}
+
+type AttachOutputPayload struct {
+	SessionID string `json:"session_id"`
+	Data      []byte `json:"data"`
+}
+
+type AttachClosedPayload struct {
+	SessionID string `json:"session_id"`
+	Reason    string `json:"reason"`
+	ExitCode  int32  `json:"exit_code"`
+}
+
+type DaemonAttachDispatchPayload struct {
+	NodeID    uint64 `json:"node_id"`
+	RequestID string `json:"request_id"`
+	Data      []byte `json:"data"`
 }
 
 type DaemonServerConfigPayload struct {

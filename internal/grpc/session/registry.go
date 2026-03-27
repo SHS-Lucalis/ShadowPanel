@@ -53,6 +53,11 @@ func (r *Registry) Start(ctx context.Context) error {
 		return errors.Wrap(err, "subscribe to session events")
 	}
 
+	err = r.pubsub.Subscribe(ctx, channels.DaemonAttachDispatchAll, r.handleAttachDispatch)
+	if err != nil {
+		return errors.Wrap(err, "subscribe to attach dispatch")
+	}
+
 	r.logger.Info("session registry started", "instance_id", r.instanceID)
 
 	return nil
@@ -380,6 +385,108 @@ func (r *Registry) BroadcastShutdown(ctx context.Context, reason string, reconne
 		},
 	}
 	r.BroadcastToAll(ctx, msg)
+}
+
+func (r *Registry) SendAttachRequest(ctx context.Context, nodeID uint64, req *proto.AttachRequest) error {
+	msg := &proto.GatewayMessage{
+		Payload: &proto.GatewayMessage_AttachRequest{
+			AttachRequest: req,
+		},
+	}
+
+	return r.sendOrDispatchAttach(ctx, nodeID, msg)
+}
+
+func (r *Registry) SendAttachInput(ctx context.Context, nodeID uint64, input *proto.AttachInput) error {
+	msg := &proto.GatewayMessage{
+		Payload: &proto.GatewayMessage_AttachInput{
+			AttachInput: input,
+		},
+	}
+
+	return r.sendOrDispatchAttach(ctx, nodeID, msg)
+}
+
+func (r *Registry) SendAttachDetach(ctx context.Context, nodeID uint64, detach *proto.AttachDetach) error {
+	msg := &proto.GatewayMessage{
+		Payload: &proto.GatewayMessage_AttachDetach{
+			AttachDetach: detach,
+		},
+	}
+
+	return r.sendOrDispatchAttach(ctx, nodeID, msg)
+}
+
+func (r *Registry) sendOrDispatchAttach(
+	ctx context.Context, nodeID uint64, msg *proto.GatewayMessage,
+) error {
+	r.mu.RLock()
+	session, isLocal := r.localSessions[nodeID]
+	r.mu.RUnlock()
+
+	if isLocal {
+		return session.Stream.Send(msg)
+	}
+
+	return r.dispatchAttachViaPubSub(ctx, nodeID, msg)
+}
+
+func (r *Registry) dispatchAttachViaPubSub(
+	ctx context.Context, nodeID uint64, gatewayMsg *proto.GatewayMessage,
+) error {
+	data, err := gatewayMsg.MarshalVT()
+	if err != nil {
+		return errors.Wrap(err, "marshal attach gateway message")
+	}
+
+	channel := channels.BuildDaemonAttachDispatchChannel(nodeID)
+	msg, err := messages.NewMessage(channel, messages.TypeDaemonAttach, messages.DaemonAttachDispatchPayload{
+		NodeID: nodeID,
+		Data:   data,
+	})
+	if err != nil {
+		return errors.Wrap(err, "create attach dispatch message")
+	}
+
+	return r.pubsub.Publish(ctx, channel, msg)
+}
+
+func (r *Registry) handleAttachDispatch(_ context.Context, msg *pubsub.Message) error {
+	payload, err := messages.ParsePayload[messages.DaemonAttachDispatchPayload](msg)
+	if err != nil {
+		r.logger.Warn("failed to parse attach dispatch payload", "error", err)
+
+		return nil
+	}
+
+	r.mu.RLock()
+	session, ok := r.localSessions[payload.NodeID]
+	r.mu.RUnlock()
+
+	if !ok {
+		return nil
+	}
+
+	var gatewayMsg proto.GatewayMessage
+	if err := gatewayMsg.UnmarshalVT(payload.Data); err != nil {
+		r.logger.Warn("failed to unmarshal attach gateway message",
+			"node_id", payload.NodeID,
+			"error", err,
+		)
+
+		return nil
+	}
+
+	if err := session.Stream.Send(&gatewayMsg); err != nil {
+		r.logger.Warn("failed to send attach message to session",
+			"node_id", payload.NodeID,
+			"error", err,
+		)
+
+		return errors.Wrap(err, "send attach message to session")
+	}
+
+	return nil
 }
 
 func (r *Registry) ConnectedNodeIDs() []uint64 {

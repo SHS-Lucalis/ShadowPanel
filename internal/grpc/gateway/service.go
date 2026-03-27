@@ -39,6 +39,7 @@ type Service struct {
 	taskHandler    TaskHandler
 	commandHandler CommandHandler
 	serverHandler  ServerStatusHandler
+	attachHandler  AttachHandler
 	enrollmentSvc  *enrollment.Service
 }
 
@@ -61,6 +62,12 @@ type ServerStatusHandler interface {
 	HandleServerStatuses(ctx context.Context, nodeID uint64, statuses *proto.ServerStatusBatch) error
 }
 
+type AttachHandler interface {
+	HandleAttachStarted(ctx context.Context, nodeID uint64, started *proto.AttachStarted) error
+	HandleAttachOutput(ctx context.Context, nodeID uint64, output *proto.AttachOutput) error
+	HandleAttachClosed(ctx context.Context, nodeID uint64, closed *proto.AttachClosed) error
+}
+
 type Config struct {
 	HeartbeatInterval int32
 }
@@ -76,6 +83,7 @@ func NewService(
 	taskHandler TaskHandler,
 	commandHandler CommandHandler,
 	serverHandler ServerStatusHandler,
+	attachHandler AttachHandler,
 	enrollmentSvc *enrollment.Service,
 	logger *slog.Logger,
 ) *Service {
@@ -94,6 +102,7 @@ func NewService(
 		taskHandler:    taskHandler,
 		commandHandler: commandHandler,
 		serverHandler:  serverHandler,
+		attachHandler:  attachHandler,
 		enrollmentSvc:  enrollmentSvc,
 		logger:         logger,
 	}
@@ -341,6 +350,21 @@ func (s *Service) processMessage(ctx context.Context, sess *session.Session, msg
 		sess.ResolvePendingRequest(payload.StatusResponse.RequestId, msg)
 
 		return nil
+
+	case *proto.DaemonMessage_AttachStarted:
+		if s.attachHandler != nil {
+			return s.attachHandler.HandleAttachStarted(ctx, sess.NodeID, payload.AttachStarted)
+		}
+
+	case *proto.DaemonMessage_AttachOutput:
+		if s.attachHandler != nil {
+			return s.attachHandler.HandleAttachOutput(ctx, sess.NodeID, payload.AttachOutput)
+		}
+
+	case *proto.DaemonMessage_AttachClosed:
+		if s.attachHandler != nil {
+			return s.attachHandler.HandleAttachClosed(ctx, sess.NodeID, payload.AttachClosed)
+		}
 
 	default:
 		s.logger.Warn("unknown message type received",

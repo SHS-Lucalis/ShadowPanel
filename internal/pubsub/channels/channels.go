@@ -53,6 +53,13 @@ const (
 	DaemonCommandResponse   = DaemonPrefix + "command:response:"
 	DaemonCommandRequestAll = DaemonPrefix + "command:request:*"
 
+	RealtimeAttachStarted   = RealtimePrefix + "attach:started:"
+	RealtimeAttachOutput    = RealtimePrefix + "attach:output:"
+	RealtimeAttachClosed    = RealtimePrefix + "attach:closed:"
+	RealtimeAttachAll       = RealtimePrefix + "attach:*"
+	DaemonAttachDispatch    = DaemonPrefix + "attach:dispatch:"
+	DaemonAttachDispatchAll = DaemonPrefix + "attach:dispatch:*"
+
 	DaemonStatusRequest    = DaemonPrefix + "status:request:"
 	DaemonStatusResponse   = DaemonPrefix + "status:response:"
 	DaemonStatusRequestAll = DaemonPrefix + "status:request:*"
@@ -120,4 +127,20 @@ func BuildDaemonStatusRequestChannel(nodeID uint64) string {
 
 func BuildDaemonStatusResponseChannel(instanceID string) string {
 	return DaemonStatusResponse + instanceID
+}
+
+func BuildRealtimeAttachStartedChannel(sessionID string) string {
+	return RealtimeAttachStarted + sessionID
+}
+
+func BuildRealtimeAttachOutputChannel(sessionID string) string {
+	return RealtimeAttachOutput + sessionID
+}
+
+func BuildRealtimeAttachClosedChannel(sessionID string) string {
+	return RealtimeAttachClosed + sessionID
+}
+
+func BuildDaemonAttachDispatchChannel(nodeID uint64) string {
+	return DaemonAttachDispatch + strconv.FormatUint(nodeID, 10)
 }
