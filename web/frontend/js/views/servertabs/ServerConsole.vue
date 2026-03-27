@@ -11,6 +11,9 @@
           <div v-if="!serverActive" class="bg-red-500 text-white dark:bg-red-800 dark:text-stone-200 font-bold rounded px-4 py-2 mt-6 mb-3">
             {{ trans('servers.offline_console_msg') }}
           </div>
+          <div v-if="closeReason" class="bg-orange-600 text-white dark:bg-orange-800 dark:text-stone-200 font-bold rounded px-4 py-2 mt-2 mb-3">
+            {{ closeReason }}
+          </div>
           <div ref="consoleRef" class="break-all whitespace-pre-wrap mt-4 flex h-[60vh] overflow-y-scroll overscroll-contain">
             {{ output }}
           </div>
@@ -47,7 +50,7 @@ import { replace } from 'lodash-es';
 import {
   NDivider,
 } from "naive-ui"
-import { useConsoleWebSocket } from '@/composables/useConsoleWebSocket'
+import { useAttachWebSocket } from '@/composables/useAttachWebSocket'
 
 const props = defineProps({
   serverId: Number,
@@ -61,7 +64,7 @@ const inputRef = ref();
 const inputText = ref('');
 const autoScroll = ref(true);
 
-const { output: rawOutput, sendCommand: wsSendCommand } = useConsoleWebSocket(props.serverId)
+const { output: rawOutput, sendInput, closeReason } = useAttachWebSocket(props.serverId)
 
 const output = computed(() => {
   if (!rawOutput.value) return ''
@@ -81,7 +84,7 @@ watch(output, () => {
 function sendCommand() {
   const command = inputText.value.trim()
   if (!command) return
-  wsSendCommand(command)
+  sendInput(command + '\n')
   inputText.value = ''
   nextTick(() => {
     if (inputRef.value) {
