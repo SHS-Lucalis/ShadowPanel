@@ -709,3 +709,103 @@ func (s *ServerRepositorySuite) TestServerRepositorySearch() {
 		assert.Empty(t, results)
 	})
 }
+
+func (s *ServerRepositorySuite) TestServerRepositoryUpdateServerStatuses() {
+	ctx := context.Background()
+
+	setupRepo := func(t *testing.T) {
+		t.Helper()
+
+		servers := []*domain.Server{
+			{
+				ID: 100, UUID: uuid.New(), UUIDShort: "st1", Enabled: true,
+				Installed: domain.ServerInstalledStatusInstalled, Name: "Status Test 1",
+				GameID: "cs", DSID: 5, GameModID: 1, ServerIP: "10.0.0.1",
+				ServerPort: 27015, Dir: "/srv/st1", ProcessActive: false,
+			},
+			{
+				ID: 101, UUID: uuid.New(), UUIDShort: "st2", Enabled: true,
+				Installed: domain.ServerInstalledStatusInstalled, Name: "Status Test 2",
+				GameID: "cs", DSID: 5, GameModID: 1, ServerIP: "10.0.0.2",
+				ServerPort: 27016, Dir: "/srv/st2", ProcessActive: true,
+			},
+			{
+				ID: 102, UUID: uuid.New(), UUIDShort: "st3", Enabled: true,
+				Installed: domain.ServerInstalledStatusInstalled, Name: "Status Test 3",
+				GameID: "cs", DSID: 6, GameModID: 1, ServerIP: "10.0.0.3",
+				ServerPort: 27017, Dir: "/srv/st3", ProcessActive: false,
+			},
+		}
+
+		for _, srv := range servers {
+			require.NoError(t, s.repo.Save(ctx, srv))
+		}
+	}
+
+	s.T().Run("update_single_server_status", func(t *testing.T) {
+		setupRepo(t)
+
+		now := time.Now()
+		err := s.repo.UpdateServerStatuses(ctx, 5, []repositories.ServerStatusUpdate{
+			{ID: 100, ProcessActive: true, LastProcessCheck: now},
+		})
+		require.NoError(t, err)
+
+		servers, err := s.repo.Find(ctx, &filters.FindServer{IDs: []uint{100}}, nil, nil)
+		require.NoError(t, err)
+		require.Len(t, servers, 1)
+		assert.True(t, servers[0].ProcessActive)
+		assert.NotNil(t, servers[0].LastProcessCheck)
+		assert.NotNil(t, servers[0].UpdatedAt)
+	})
+
+	s.T().Run("update_multiple_server_statuses", func(t *testing.T) {
+		setupRepo(t)
+
+		now := time.Now()
+		err := s.repo.UpdateServerStatuses(ctx, 5, []repositories.ServerStatusUpdate{
+			{ID: 100, ProcessActive: true, LastProcessCheck: now},
+			{ID: 101, ProcessActive: false, LastProcessCheck: now},
+		})
+		require.NoError(t, err)
+
+		servers, err := s.repo.Find(ctx, &filters.FindServer{IDs: []uint{100, 101}}, nil, nil)
+		require.NoError(t, err)
+		require.Len(t, servers, 2)
+
+		for _, srv := range servers {
+			if srv.ID == 100 {
+				assert.True(t, srv.ProcessActive)
+			} else {
+				assert.False(t, srv.ProcessActive)
+			}
+		}
+	})
+
+	s.T().Run("wrong_node_id_no_change", func(t *testing.T) {
+		setupRepo(t)
+
+		now := time.Now()
+		err := s.repo.UpdateServerStatuses(ctx, 5, []repositories.ServerStatusUpdate{
+			{ID: 102, ProcessActive: true, LastProcessCheck: now},
+		})
+		require.NoError(t, err)
+
+		servers, err := s.repo.Find(ctx, &filters.FindServer{IDs: []uint{102}}, nil, nil)
+		require.NoError(t, err)
+		require.Len(t, servers, 1)
+		assert.False(t, servers[0].ProcessActive)
+	})
+
+	s.T().Run("nonexistent_server_no_error", func(t *testing.T) {
+		err := s.repo.UpdateServerStatuses(ctx, 5, []repositories.ServerStatusUpdate{
+			{ID: 9999, ProcessActive: true, LastProcessCheck: time.Now()},
+		})
+		require.NoError(t, err)
+	})
+
+	s.T().Run("empty_statuses_no_error", func(t *testing.T) {
+		err := s.repo.UpdateServerStatuses(ctx, 5, []repositories.ServerStatusUpdate{})
+		require.NoError(t, err)
+	})
+}

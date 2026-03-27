@@ -66,6 +66,12 @@ type UserRepository interface {
 	Delete(ctx context.Context, id uint) error
 }
 
+type ServerStatusUpdate struct {
+	ID               uint
+	ProcessActive    bool
+	LastProcessCheck time.Time
+}
+
 type ServerRepository interface {
 	FindAll(
 		ctx context.Context,
@@ -88,6 +94,8 @@ type ServerRepository interface {
 	Save(ctx context.Context, server *domain.Server) error
 
 	SaveBulk(ctx context.Context, servers []*domain.Server) error
+
+	UpdateServerStatuses(ctx context.Context, nodeID uint, statuses []ServerStatusUpdate) error
 
 	Delete(ctx context.Context, id uint) error
 

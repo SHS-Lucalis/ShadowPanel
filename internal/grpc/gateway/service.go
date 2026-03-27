@@ -251,6 +251,14 @@ func (s *Service) buildRegisterAck(ctx context.Context, reg *proto.RegisterReque
 		protoGameMods = append(protoGameMods, domainGameModToProto(&gm))
 	}
 
+	s.logger.Debug("register ack prepared",
+		"node_id", reg.NodeId,
+		"servers", len(protoServers),
+		"tasks", len(pendingTasks),
+		"games", len(protoGames),
+		"game_mods", len(protoGameMods),
+	)
+
 	return &proto.RegisterAck{
 		Success:           true,
 		Servers:           protoServers,
@@ -323,8 +331,15 @@ func (s *Service) processMessage(ctx context.Context, sess *session.Session, msg
 
 	case *proto.DaemonMessage_ServerStatuses:
 		if s.serverHandler != nil {
+			s.logger.Info("received server status batch",
+				"node_id", sess.NodeID,
+				"count", len(payload.ServerStatuses.GetStatuses()),
+			)
+
 			return s.serverHandler.HandleServerStatuses(ctx, sess.NodeID, payload.ServerStatuses)
 		}
+
+		s.logger.Warn("received server statuses but handler is nil", "node_id", sess.NodeID)
 
 	case *proto.DaemonMessage_FileReadResponse:
 		sess.ResolvePendingRequest(payload.FileReadResponse.RequestId, msg)

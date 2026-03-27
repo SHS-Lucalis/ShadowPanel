@@ -5,8 +5,6 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/gameap/gameap/internal/domain"
-	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/pkg/proto"
 	"github.com/pkg/errors"
@@ -37,52 +35,24 @@ func (h *ServerStatusHandler) HandleServerStatuses(
 		return nil
 	}
 
-	serverIDs := make([]uint, 0, len(batch.Statuses))
-	for _, status := range batch.Statuses {
-		serverIDs = append(serverIDs, uint(status.ServerId))
-	}
-
-	servers, err := h.serverRepo.Find(ctx, &filters.FindServer{
-		IDs:   serverIDs,
-		DSIDs: []uint{uint(nodeID)},
-	}, nil, nil)
-	if err != nil {
-		return errors.Wrap(err, "find servers for status update")
-	}
-
-	serverMap := make(map[uint]int)
-	for i, srv := range servers {
-		serverMap[srv.ID] = i
-	}
-
 	now := time.Now()
-	for _, status := range batch.Statuses {
-		idx, ok := serverMap[uint(status.ServerId)]
-		if !ok {
-			h.logger.Warn("server not found for status update",
-				"server_id", status.ServerId,
-				"node_id", nodeID,
-			)
+	statuses := make([]repositories.ServerStatusUpdate, 0, len(batch.Statuses))
 
-			continue
-		}
+	for _, s := range batch.Statuses {
+		statuses = append(statuses, repositories.ServerStatusUpdate{
+			ID:               uint(s.ServerId),
+			ProcessActive:    s.IsRunning,
+			LastProcessCheck: now,
+		})
 
-		servers[idx].ProcessActive = status.IsRunning
-		servers[idx].LastProcessCheck = &now
-
-		h.logger.Debug("server status updated",
-			"server_id", status.ServerId,
-			"is_running", status.IsRunning,
+		h.logger.Debug("server status received",
+			"server_id", s.ServerId,
+			"is_running", s.IsRunning,
 		)
 	}
 
-	updatedServers := make([]*domain.Server, 0, len(servers))
-	for i := range servers {
-		updatedServers = append(updatedServers, &servers[i])
-	}
-
-	if err := h.serverRepo.SaveBulk(ctx, updatedServers); err != nil {
-		return errors.Wrap(err, "save server statuses")
+	if err := h.serverRepo.UpdateServerStatuses(ctx, uint(nodeID), statuses); err != nil {
+		return errors.Wrap(err, "update server statuses")
 	}
 
 	h.logger.Debug("processed server status batch",

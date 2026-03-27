@@ -12,6 +12,7 @@ import (
 
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
+	"github.com/gameap/gameap/internal/repositories"
 	"github.com/google/uuid"
 )
 
@@ -366,6 +367,33 @@ func (r *ServerRepository) SaveBulk(_ context.Context, servers []*domain.Server)
 
 		// Add to indexes
 		r.addToIndexes(r.servers[server.ID])
+	}
+
+	return nil
+}
+
+func (r *ServerRepository) UpdateServerStatuses(
+	_ context.Context, nodeID uint, statuses []repositories.ServerStatusUpdate,
+) error {
+	if len(statuses) == 0 {
+		return nil
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	now := new(time.Now())
+
+	for _, s := range statuses {
+		server, exists := r.servers[s.ID]
+		if !exists || server.DSID != nodeID {
+			continue
+		}
+
+		lpc := s.LastProcessCheck
+		server.ProcessActive = s.ProcessActive
+		server.LastProcessCheck = &lpc
+		server.UpdatedAt = now
 	}
 
 	return nil

@@ -8,6 +8,7 @@ import (
 
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
+	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/internal/repositories/base"
 
 	sq "github.com/Masterminds/squirrel"
@@ -313,6 +314,37 @@ func (r *ServerRepository) SaveBulk(ctx context.Context, servers []*domain.Serve
 	_, err = r.db.ExecContext(ctx, query, args...)
 	if err != nil {
 		return errors.WithMessage(err, "failed to execute query")
+	}
+
+	return nil
+}
+
+func (r *ServerRepository) UpdateServerStatuses(
+	ctx context.Context, nodeID uint, statuses []repositories.ServerStatusUpdate,
+) error {
+	if len(statuses) == 0 {
+		return nil
+	}
+
+	now := time.Now()
+
+	for _, s := range statuses {
+		query, args, err := sq.Update(base.ServersTable).
+			Set("process_active", s.ProcessActive).
+			Set("last_process_check", s.LastProcessCheck).
+			Set("updated_at", now).
+			Where(sq.Eq{"id": s.ID}).
+			Where(sq.Eq{"ds_id": nodeID}).
+			PlaceholderFormat(sq.Question).
+			ToSql()
+		if err != nil {
+			return errors.WithMessage(err, "failed to build status update query")
+		}
+
+		_, err = r.db.ExecContext(ctx, query, args...)
+		if err != nil {
+			return errors.WithMessage(err, "failed to execute status update query")
+		}
 	}
 
 	return nil
