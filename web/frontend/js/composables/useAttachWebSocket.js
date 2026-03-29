@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import axios from '@/config/axios'
 import { useWebSocket } from './useWebSocket'
 
 function encodeBase64(text) {
@@ -34,7 +35,16 @@ export function useAttachWebSocket(serverId) {
     })
 
     if (serverId) {
-        ws.connect(`/api/ws/servers/${serverId}/attach`)
+        axios.get(`/api/servers/${serverId}/console`)
+            .then((response) => {
+                if (response.data?.console) {
+                    output.value = response.data.console
+                }
+            })
+            .catch(() => {})
+            .finally(() => {
+                ws.connect(`/api/ws/servers/${serverId}/attach`)
+            })
     }
 
     function sendInput(text) {
