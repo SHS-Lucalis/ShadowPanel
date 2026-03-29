@@ -114,7 +114,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:            1,
-					UUID:          uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:           uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:     "short1",
 					Enabled:       true,
 					Installed:     1,
@@ -194,7 +194,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:            1,
-					UUID:          uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:           uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:     "short1",
 					Enabled:       true,
 					Installed:     1,
@@ -283,7 +283,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:            1,
-					UUID:          uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:           uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:     "short1",
 					Enabled:       true,
 					Installed:     1,
@@ -418,7 +418,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:        1,
-					UUID:      uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:       uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort: "short1",
 					Enabled:   true,
 					Installed: 1,
@@ -475,7 +475,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:        1,
-					UUID:      uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:       uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort: "short1",
 					Enabled:   true,
 					Installed: 1,
@@ -557,7 +557,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:        1,
-					UUID:      uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:       uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort: "short1",
 					Enabled:   true,
 					Installed: 1,
@@ -625,7 +625,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				now := time.Now()
 				server := &domain.Server{
 					ID:        1,
-					UUID:      uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:       uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort: "short1",
 					Enabled:   true,
 					Installed: 1,
@@ -695,7 +695,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:        1,
-					UUID:      uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:       uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort: "short1",
 					Enabled:   true,
 					Installed: 1,

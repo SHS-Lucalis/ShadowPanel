@@ -85,7 +85,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				startCmd := testStartCommand
 				server := &domain.Server{
 					ID:           1,
-					UUID:         uuid.New(),
+					UID:          uuid.New(),
 					UUIDShort:    "short1",
 					Enabled:      true,
 					Installed:    1,
@@ -125,7 +125,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				now := time.Now()
 				server := &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "short1",
 					Enabled:    true,
 					Installed:  1,
@@ -165,7 +165,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				startCmd := testStartCommand
 				server := &domain.Server{
 					ID:           1,
-					UUID:         uuid.New(),
+					UID:          uuid.New(),
 					UUIDShort:    "short1",
 					Enabled:      true,
 					Installed:    1,
@@ -205,7 +205,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				now := time.Now()
 				server := &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "short1",
 					Enabled:    true,
 					Installed:  1,
@@ -244,7 +244,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				now := time.Now()
 				server := &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "short1",
 					Enabled:    true,
 					Installed:  1,
@@ -283,7 +283,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				now := time.Now()
 				server := &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "short1",
 					Enabled:    true,
 					Installed:  1,
@@ -399,7 +399,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				startCmd := testStartCommand
 				server := &domain.Server{
 					ID:           2,
-					UUID:         uuid.New(),
+					UID:          uuid.New(),
 					UUIDShort:    "short2",
 					Enabled:      true,
 					Installed:    1,
@@ -438,7 +438,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				startCmd := testStartCommand
 				server := &domain.Server{
 					ID:           2,
-					UUID:         uuid.New(),
+					UID:          uuid.New(),
 					UUIDShort:    "short2",
 					Enabled:      true,
 					Installed:    1,
@@ -485,7 +485,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				startCmd := testStartCommand
 				server := &domain.Server{
 					ID:           1,
-					UUID:         uuid.New(),
+					UID:          uuid.New(),
 					UUIDShort:    "short1",
 					Enabled:      true,
 					Installed:    1,
@@ -525,7 +525,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				startCmd := testStartCommand
 				server := &domain.Server{
 					ID:           1,
-					UUID:         uuid.New(),
+					UID:          uuid.New(),
 					UUIDShort:    "short1",
 					Enabled:      true,
 					Installed:    1,
@@ -565,7 +565,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				now := time.Now()
 				server := &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "short1",
 					Enabled:    true,
 					Installed:  1,
@@ -603,7 +603,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				now := time.Now()
 				server := &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "short1",
 					Enabled:    true,
 					Installed:  1,
@@ -642,7 +642,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				now := time.Now()
 				server := &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "short1",
 					Enabled:    true,
 					Installed:  1,
@@ -681,7 +681,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				now := time.Now()
 				server := &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "short1",
 					Enabled:    true,
 					Installed:  1,
@@ -908,7 +908,7 @@ func TestHandler_FindUserServer(t *testing.T) {
 				now := time.Now()
 				server := &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "short1",
 					Enabled:    true,
 					Installed:  1,
@@ -934,7 +934,7 @@ func TestHandler_FindUserServer(t *testing.T) {
 				now := time.Now()
 				server := &domain.Server{
 					ID:         2,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "short2",
 					Enabled:    true,
 					Installed:  1,
@@ -961,7 +961,7 @@ func TestHandler_FindUserServer(t *testing.T) {
 				now := time.Now()
 				server := &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "short1",
 					Enabled:    true,
 					Installed:  1,
@@ -1086,7 +1086,7 @@ func TestHandler_DaemonTaskCreation(t *testing.T) {
 			startCmd := testStartCommand
 			server := &domain.Server{
 				ID:           1,
-				UUID:         uuid.New(),
+				UID:          uuid.New(),
 				UUIDShort:    "short1",
 				Enabled:      true,
 				Installed:    1,

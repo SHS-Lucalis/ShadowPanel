@@ -70,7 +70,7 @@ func createTestServer(t *testing.T, serverRepo *inmemory.ServerRepository, serve
 	now := time.Now()
 	server := &domain.Server{
 		ID:         serverID,
-		UUID:       uuid.New(),
+		UID:        uuid.New(),
 		UUIDShort:  "short1",
 		Enabled:    true,
 		Installed:  1,

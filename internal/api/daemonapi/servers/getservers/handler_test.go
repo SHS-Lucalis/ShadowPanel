@@ -74,7 +74,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				serverUUID := uuid.New()
 				server := &domain.Server{
 					ID:            1,
-					UUID:          serverUUID,
+					UID:           serverUUID,
 					UUIDShort:     serverUUID.String()[:8],
 					Enabled:       true,
 					Installed:     1,
@@ -155,7 +155,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 					serverUUID := uuid.New()
 					server := &domain.Server{
 						ID:            uint(i),
-						UUID:          serverUUID,
+						UID:           serverUUID,
 						UUIDShort:     serverUUID.String()[:8],
 						Enabled:       true,
 						Installed:     1,
@@ -328,7 +328,7 @@ func TestHandler_ResponseStructure(t *testing.T) {
 	rcon := "test_rcon"
 	server := &domain.Server{
 		ID:            1,
-		UUID:          serverUUID,
+		UID:           serverUUID,
 		UUIDShort:     serverUUID.String()[:8],
 		Enabled:       true,
 		Installed:     1,
@@ -483,7 +483,7 @@ func TestHandler_WindowsOS(t *testing.T) {
 	serverUUID := uuid.New()
 	server := &domain.Server{
 		ID:            1,
-		UUID:          serverUUID,
+		UID:           serverUUID,
 		UUIDShort:     serverUUID.String()[:8],
 		Enabled:       true,
 		Installed:     1,

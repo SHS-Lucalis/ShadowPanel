@@ -150,7 +150,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:            1,
-					UUID:          uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:           uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:     "short1",
 					Enabled:       true,
 					Installed:     1,
@@ -215,7 +215,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:            1,
-					UUID:          uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:           uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:     "short1",
 					Enabled:       true,
 					Installed:     1,
@@ -279,7 +279,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:            1,
-					UUID:          uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:           uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:     "short1",
 					Enabled:       true,
 					Installed:     1,
@@ -343,7 +343,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:            1,
-					UUID:          uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:           uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:     "short1",
 					Enabled:       true,
 					Installed:     1,
@@ -393,7 +393,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:            1,
-					UUID:          uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:           uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:     "short1",
 					Enabled:       true,
 					Installed:     1,
@@ -443,7 +443,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:            1,
-					UUID:          uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:           uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:     "short1",
 					Enabled:       true,
 					Installed:     1,
@@ -551,7 +551,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:            1,
-					UUID:          uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:           uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:     "short1",
 					Enabled:       true,
 					Installed:     1,
@@ -604,7 +604,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:            1,
-					UUID:          uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:           uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:     "short1",
 					Enabled:       true,
 					Installed:     1,
@@ -654,7 +654,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:            2,
-					UUID:          uuid.MustParse("22222222-2222-2222-2222-222222222222"),
+					UID:           uuid.MustParse("22222222-2222-2222-2222-222222222222"),
 					UUIDShort:     "short2",
 					Enabled:       true,
 					Installed:     1,
@@ -723,7 +723,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:            1,
-					UUID:          uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:           uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:     "short1",
 					Enabled:       true,
 					Installed:     1,
@@ -780,7 +780,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:            1,
-					UUID:          uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:           uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:     "short1",
 					Enabled:       true,
 					Installed:     1,
@@ -832,7 +832,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:            1,
-					UUID:          uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:           uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:     "short1",
 					Enabled:       true,
 					Installed:     1,

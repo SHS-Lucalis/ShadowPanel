@@ -75,7 +75,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server1 := &domain.Server{
 					ID:         1,
-					UUID:       uuid.MustParse("9fe8c1a1-41a0-4a16-9f86-553fe3f1f3f6"),
+					UID:        uuid.MustParse("9fe8c1a1-41a0-4a16-9f86-553fe3f1f3f6"),
 					UUIDShort:  "9fe8c1a1",
 					Enabled:    true,
 					Installed:  1,
@@ -159,7 +159,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server1 := &domain.Server{
 					ID:         1,
-					UUID:       uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:        uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:  "11111111",
 					Enabled:    true,
 					Installed:  1,
@@ -175,7 +175,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				}
 				server2 := &domain.Server{
 					ID:         2,
-					UUID:       uuid.MustParse("22222222-2222-2222-2222-222222222222"),
+					UID:        uuid.MustParse("22222222-2222-2222-2222-222222222222"),
 					UUIDShort:  "22222222",
 					Enabled:    true,
 					Installed:  1,
@@ -286,7 +286,7 @@ func TestHandler_ServersResponseFields(t *testing.T) {
 	rconPort := 25566
 	server := &domain.Server{
 		ID:         1,
-		UUID:       uuid.MustParse("9fe8c1a1-41a0-4a16-9f86-553fe3f1f3f6"),
+		UID:        uuid.MustParse("9fe8c1a1-41a0-4a16-9f86-553fe3f1f3f6"),
 		UUIDShort:  "9fe8c1a1",
 		Enabled:    true,
 		Installed:  1,
@@ -378,8 +378,7 @@ func TestNewServersResponseFromServers(t *testing.T) {
 	servers := []domain.Server{
 		{
 			ID:         1,
-			UUID:       uuid.MustParse("44444444-4444-4444-4444-444444444444"),
-			UUIDShort:  "44444444",
+			UID:        uuid.MustParse("44444444-4444-4444-4444-444444444444"),
 			Enabled:    true,
 			Name:       "Server 1",
 			GameID:     "cs",
@@ -389,8 +388,7 @@ func TestNewServersResponseFromServers(t *testing.T) {
 		},
 		{
 			ID:         2,
-			UUID:       uuid.MustParse("55555555-5555-5555-5555-555555555555"),
-			UUIDShort:  "55555555",
+			UID:        uuid.MustParse("55555555-5555-5555-5555-555555555555"),
 			Enabled:    false,
 			Name:       "Server 2",
 			GameID:     "cs",
@@ -398,6 +396,10 @@ func TestNewServersResponseFromServers(t *testing.T) {
 			ServerPort: 27016,
 			CreatedAt:  &now,
 		},
+	}
+
+	for i := range servers {
+		servers[i].Hydrate()
 	}
 
 	response := newServersResponseFromServers(servers, games, gameMods)
@@ -448,8 +450,7 @@ func TestNewServerResponseFromServer(t *testing.T) {
 
 	server := &domain.Server{
 		ID:         1,
-		UUID:       uuid.MustParse("66666666-6666-6666-6666-666666666666"),
-		UUIDShort:  "66666666",
+		UID:        uuid.MustParse("66666666-6666-6666-6666-666666666666"),
 		Enabled:    true,
 		Installed:  1,
 		Blocked:    false,
@@ -463,6 +464,7 @@ func TestNewServerResponseFromServer(t *testing.T) {
 		CreatedAt:  &now,
 		UpdatedAt:  &now,
 	}
+	server.Hydrate()
 
 	response := newServerResponseFromServer(server, gameMap, gameModMap)
 
@@ -497,7 +499,7 @@ func TestServerResponseWithMissingGameAndGameMod(t *testing.T) {
 
 	server := &domain.Server{
 		ID:         1,
-		UUID:       uuid.MustParse("77777777-7777-7777-7777-777777777777"),
+		UID:        uuid.MustParse("77777777-7777-7777-7777-777777777777"),
 		UUIDShort:  "77777777",
 		Enabled:    true,
 		Installed:  1,

@@ -45,7 +45,7 @@ var defaultSetupRepos = func(
 
 	server := &domain.Server{
 		ID:         1,
-		UUID:       uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+		UID:        uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 		UUIDShort:  "short1",
 		Name:       "Test Server",
 		GameID:     "cs",
@@ -308,7 +308,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:         1,
-					UUID:       uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:        uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:  "short1",
 					Name:       "Test Server",
 					GameID:     "cs",
@@ -358,7 +358,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:         1,
-					UUID:       uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:        uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:  "short1",
 					Name:       "Test Server",
 					GameID:     "cs",
@@ -429,7 +429,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:         1,
-					UUID:       uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:        uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:  "short1",
 					Name:       "Test Server",
 					GameID:     "cs",
@@ -480,7 +480,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:         1,
-					UUID:       uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:        uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:  "short1",
 					Name:       "Test Server",
 					GameID:     "cs",
@@ -552,7 +552,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:         1,
-					UUID:       uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:        uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:  "short1",
 					Name:       "Test Server",
 					GameID:     "cs",
@@ -642,7 +642,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:         1,
-					UUID:       uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:        uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:  "short1",
 					Name:       "Test Server",
 					GameID:     "cs",

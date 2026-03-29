@@ -111,7 +111,7 @@ func (s *serverInput) SettingsToMap() map[string]any {
 }
 
 func (s *serverInput) ToDomain() *domain.Server {
-	u := idgen.XIDToUUID(xid.New())
+	uid := idgen.XIDToUUID(xid.New())
 
 	var queryPort *int
 	if s.QueryPort != nil {
@@ -126,8 +126,7 @@ func (s *serverInput) ToDomain() *domain.Server {
 	}
 
 	server := &domain.Server{
-		UUID:         u,
-		UUIDShort:    u.String()[0:8],
+		UID:          uid,
 		Enabled:      true,
 		Installed:    domain.ServerInstalledStatusNotInstalled,
 		Blocked:      false,

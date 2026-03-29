@@ -56,7 +56,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server1 := &domain.Server{
 					ID:         1,
-					UUID:       uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:        uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:  "short1",
 					Enabled:    true,
 					Name:       "Server 1",
@@ -74,7 +74,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server2 := &domain.Server{
 					ID:         2,
-					UUID:       uuid.MustParse("22222222-2222-2222-2222-222222222222"),
+					UID:        uuid.MustParse("22222222-2222-2222-2222-222222222222"),
 					UUIDShort:  "short2",
 					Enabled:    true,
 					Name:       "Server 2",
@@ -91,7 +91,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server3 := &domain.Server{
 					ID:         3,
-					UUID:       uuid.MustParse("33333333-3333-3333-3333-333333333333"),
+					UID:        uuid.MustParse("33333333-3333-3333-3333-333333333333"),
 					UUIDShort:  "short3",
 					Enabled:    true,
 					Name:       "Server 3",
@@ -132,7 +132,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:         1,
-					UUID:       uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:        uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:  "short1",
 					Enabled:    true,
 					Name:       "Server 1",
@@ -193,7 +193,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:         1,
-					UUID:       uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:        uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:  "short1",
 					Enabled:    true,
 					Name:       "Server 1",
@@ -271,7 +271,7 @@ func TestHandler_CollectBusyPorts(t *testing.T) {
 	servers := []domain.Server{
 		{
 			ID:         1,
-			UUID:       uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+			UID:        uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 			DSID:       1,
 			ServerIP:   "192.168.1.1",
 			ServerPort: 27015,
@@ -281,7 +281,7 @@ func TestHandler_CollectBusyPorts(t *testing.T) {
 		},
 		{
 			ID:         2,
-			UUID:       uuid.MustParse("22222222-2222-2222-2222-222222222222"),
+			UID:        uuid.MustParse("22222222-2222-2222-2222-222222222222"),
 			DSID:       1,
 			ServerIP:   "192.168.1.1",
 			ServerPort: 27018,
@@ -290,7 +290,7 @@ func TestHandler_CollectBusyPorts(t *testing.T) {
 		},
 		{
 			ID:         3,
-			UUID:       uuid.MustParse("33333333-3333-3333-3333-333333333333"),
+			UID:        uuid.MustParse("33333333-3333-3333-3333-333333333333"),
 			DSID:       1,
 			ServerIP:   "192.168.1.2",
 			ServerPort: 27015,

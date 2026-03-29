@@ -129,7 +129,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "test",
 					Enabled:    true,
 					Installed:  1,

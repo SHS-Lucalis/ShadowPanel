@@ -54,7 +54,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				serverUUID1 := uuid.New()
 				server1 := &domain.Server{
 					ID:            1,
-					UUID:          serverUUID1,
+					UID:           serverUUID1,
 					UUIDShort:     serverUUID1.String()[:8],
 					Enabled:       true,
 					Installed:     0,
@@ -75,7 +75,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				serverUUID2 := uuid.New()
 				server2 := &domain.Server{
 					ID:            2,
-					UUID:          serverUUID2,
+					UID:           serverUUID2,
 					UUIDShort:     serverUUID2.String()[:8],
 					Enabled:       true,
 					Installed:     0,
@@ -157,7 +157,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				serverUUID1 := uuid.New()
 				server1 := &domain.Server{
 					ID:            1,
-					UUID:          serverUUID1,
+					UID:           serverUUID1,
 					UUIDShort:     serverUUID1.String()[:8],
 					Enabled:       true,
 					Installed:     0,
@@ -224,7 +224,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				serverUUID1 := uuid.New()
 				server1 := &domain.Server{
 					ID:            1,
-					UUID:          serverUUID1,
+					UID:           serverUUID1,
 					UUIDShort:     serverUUID1.String()[:8],
 					Enabled:       true,
 					Installed:     1,
@@ -291,7 +291,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				oldCheckTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 				server1 := &domain.Server{
 					ID:               1,
-					UUID:             serverUUID1,
+					UID:              serverUUID1,
 					UUIDShort:        serverUUID1.String()[:8],
 					Enabled:          true,
 					Installed:        1,
@@ -391,7 +391,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				serverUUID1 := uuid.New()
 				server1 := &domain.Server{
 					ID:            1,
-					UUID:          serverUUID1,
+					UID:           serverUUID1,
 					UUIDShort:     serverUUID1.String()[:8],
 					Enabled:       true,
 					Installed:     0,
@@ -412,7 +412,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				serverUUID2 := uuid.New()
 				server2 := &domain.Server{
 					ID:            2,
-					UUID:          serverUUID2,
+					UID:           serverUUID2,
 					UUIDShort:     serverUUID2.String()[:8],
 					Enabled:       true,
 					Installed:     0,
@@ -485,7 +485,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				serverUUID1 := uuid.New()
 				server1 := &domain.Server{
 					ID:            1,
-					UUID:          serverUUID1,
+					UID:           serverUUID1,
 					UUIDShort:     serverUUID1.String()[:8],
 					Enabled:       true,
 					Installed:     0,
@@ -786,7 +786,7 @@ func TestHandler_ResponseStructure(t *testing.T) {
 	serverUUID := uuid.New()
 	server := &domain.Server{
 		ID:            1,
-		UUID:          serverUUID,
+		UID:           serverUUID,
 		UUIDShort:     serverUUID.String()[:8],
 		Enabled:       true,
 		Installed:     0,

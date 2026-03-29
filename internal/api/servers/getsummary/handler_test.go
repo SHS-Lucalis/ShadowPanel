@@ -62,7 +62,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server1 := &domain.Server{
 					ID:               1,
-					UUID:             uuid.New(),
+					UID:              uuid.New(),
 					Name:             "Server 1",
 					GameID:           "cs",
 					ServerIP:         "127.0.0.1",
@@ -72,7 +72,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				}
 				server2 := &domain.Server{
 					ID:               2,
-					UUID:             uuid.New(),
+					UID:              uuid.New(),
 					Name:             "Server 2",
 					GameID:           "cs",
 					ServerIP:         "127.0.0.1",
@@ -82,7 +82,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				}
 				server3 := &domain.Server{
 					ID:               3,
-					UUID:             uuid.New(),
+					UID:              uuid.New(),
 					Name:             "Server 3",
 					GameID:           "cs",
 					ServerIP:         "127.0.0.1",
@@ -117,7 +117,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server1 := &domain.Server{
 					ID:               1,
-					UUID:             uuid.New(),
+					UID:              uuid.New(),
 					Name:             "User Server 1",
 					GameID:           "cs",
 					ServerIP:         "127.0.0.1",
@@ -127,7 +127,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				}
 				server2 := &domain.Server{
 					ID:               2,
-					UUID:             uuid.New(),
+					UID:              uuid.New(),
 					Name:             "User Server 2",
 					GameID:           "cs",
 					ServerIP:         "127.0.0.1",
@@ -137,7 +137,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				}
 				server3 := &domain.Server{
 					ID:               3,
-					UUID:             uuid.New(),
+					UID:              uuid.New(),
 					Name:             "Other User Server",
 					GameID:           "cs",
 					ServerIP:         "127.0.0.1",
@@ -198,7 +198,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server1 := &domain.Server{
 					ID:               1,
-					UUID:             uuid.New(),
+					UID:              uuid.New(),
 					Name:             "Server 1",
 					GameID:           "cs",
 					ServerIP:         "127.0.0.1",
@@ -208,7 +208,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				}
 				server2 := &domain.Server{
 					ID:               2,
-					UUID:             uuid.New(),
+					UID:              uuid.New(),
 					Name:             "Server 2",
 					GameID:           "cs",
 					ServerIP:         "127.0.0.1",
@@ -245,7 +245,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server1 := &domain.Server{
 					ID:               1,
-					UUID:             uuid.New(),
+					UID:              uuid.New(),
 					Name:             "Server 1",
 					GameID:           "cs",
 					ServerIP:         "127.0.0.1",
@@ -255,7 +255,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				}
 				server2 := &domain.Server{
 					ID:               2,
-					UUID:             uuid.New(),
+					UID:              uuid.New(),
 					Name:             "Server 2",
 					GameID:           "cs",
 					ServerIP:         "127.0.0.1",

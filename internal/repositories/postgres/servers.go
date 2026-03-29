@@ -141,8 +141,7 @@ func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) erro
 	if server.ID == 0 {
 		builder = builder.
 			Columns(
-				"uuid",
-				"uuid_short",
+				"uid",
 				"enabled",
 				"installed",
 				"blocked",
@@ -174,8 +173,7 @@ func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) erro
 				"deleted_at",
 			).
 			Values(
-				server.UUID,
-				server.UUIDShort,
+				server.UID,
 				server.Enabled,
 				server.Installed,
 				server.Blocked,
@@ -212,8 +210,7 @@ func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) erro
 			Columns(base.ServerFields...).
 			Values(
 				server.ID,
-				server.UUID,
-				server.UUIDShort,
+				server.UID,
 				server.Enabled,
 				server.Installed,
 				server.Blocked,
@@ -245,8 +242,7 @@ func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) erro
 				server.DeletedAt,
 			).
 			Suffix("ON CONFLICT(id) DO UPDATE SET " +
-				"uuid=excluded.uuid," +
-				"uuid_short=excluded.uuid_short," +
+				"uid=excluded.uid," +
 				"enabled=excluded.enabled," +
 				"installed=excluded.installed," +
 				"blocked=excluded.blocked," +
@@ -330,8 +326,7 @@ func (r *ServerRepository) SaveBulk(ctx context.Context, servers []*domain.Serve
 func (r *ServerRepository) bulkInsertNewServers(ctx context.Context, servers []*domain.Server) error {
 	builder := sq.Insert(base.ServersTable).
 		Columns(
-			"uuid",
-			"uuid_short",
+			"uid",
 			"enabled",
 			"installed",
 			"blocked",
@@ -365,8 +360,7 @@ func (r *ServerRepository) bulkInsertNewServers(ctx context.Context, servers []*
 
 	for _, server := range servers {
 		builder = builder.Values(
-			server.UUID,
-			server.UUIDShort,
+			server.UID,
 			server.Enabled,
 			server.Installed,
 			server.Blocked,
@@ -419,8 +413,7 @@ func (r *ServerRepository) bulkUpsertExistingServers(ctx context.Context, server
 	for _, server := range servers {
 		builder = builder.Values(
 			server.ID,
-			server.UUID,
-			server.UUIDShort,
+			server.UID,
 			server.Enabled,
 			server.Installed,
 			server.Blocked,
@@ -455,8 +448,7 @@ func (r *ServerRepository) bulkUpsertExistingServers(ctx context.Context, server
 
 	query, args, err := builder.
 		Suffix("ON CONFLICT(id) DO UPDATE SET " +
-			"uuid=excluded.uuid," +
-			"uuid_short=excluded.uuid_short," +
+			"uid=excluded.uid," +
 			"enabled=excluded.enabled," +
 			"installed=excluded.installed," +
 			"blocked=excluded.blocked," +
@@ -703,8 +695,7 @@ func (r *ServerRepository) scan(row base.Scanner) (*domain.Server, error) {
 
 	err := row.Scan(
 		&server.ID,
-		&server.UUID,
-		&server.UUIDShort,
+		&server.UID,
 		&server.Enabled,
 		&server.Installed,
 		&server.Blocked,
@@ -739,6 +730,8 @@ func (r *ServerRepository) scan(row base.Scanner) (*domain.Server, error) {
 		return nil, errors.WithMessage(err, "failed to scan row")
 	}
 
+	server.Hydrate()
+
 	return &server, nil
 }
 
@@ -754,7 +747,7 @@ func (r *ServerRepository) filterToSq(filter *filters.FindServer) sq.Sqlizer {
 	}
 
 	if len(filter.UUIDs) > 0 {
-		and = append(and, sq.Eq{"uuid": filter.UUIDs})
+		and = append(and, sq.Eq{"uid": filter.UUIDs})
 	}
 
 	if len(filter.UserIDs) > 0 {

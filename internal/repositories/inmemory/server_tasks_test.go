@@ -33,14 +33,14 @@ func TestServerTaskRepository_FilterByNodeIDs(t *testing.T) {
 	ctx := context.Background()
 
 	server1 := &domain.Server{
-		UUID:      uuid.New(),
+		UID:       uuid.New(),
 		UUIDShort: "test1",
 		Name:      "Server 1",
 		DSID:      1,
 		GameID:    "game1",
 	}
 	server2 := &domain.Server{
-		UUID:      uuid.New(),
+		UID:       uuid.New(),
 		UUIDShort: "test2",
 		Name:      "Server 2",
 		DSID:      1,
@@ -48,7 +48,7 @@ func TestServerTaskRepository_FilterByNodeIDs(t *testing.T) {
 	}
 
 	server3 := &domain.Server{
-		UUID:      uuid.New(),
+		UID:       uuid.New(),
 		UUIDShort: "test3",
 		Name:      "Server 3",
 		DSID:      2,

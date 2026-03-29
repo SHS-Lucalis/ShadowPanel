@@ -61,7 +61,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:         1,
-					UUID:       u,
+					UID:        u,
 					UUIDShort:  u.String()[0:8],
 					Enabled:    true,
 					Installed:  1,
@@ -105,7 +105,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:         1,
-					UUID:       u,
+					UID:        u,
 					UUIDShort:  u.String()[0:8],
 					Enabled:    true,
 					Installed:  1,
@@ -222,7 +222,7 @@ func TestHandler_ServerActuallyDeleted(t *testing.T) {
 
 	server := &domain.Server{
 		ID:         1,
-		UUID:       u,
+		UID:        u,
 		UUIDShort:  u.String()[0:8],
 		Enabled:    true,
 		Installed:  1,
@@ -299,7 +299,7 @@ func TestHandler_DeleteFiles(t *testing.T) {
 		u := uuid.New()
 		server := &domain.Server{
 			ID:         1,
-			UUID:       u,
+			UID:        u,
 			UUIDShort:  u.String()[0:8],
 			Enabled:    true,
 			Installed:  1,
@@ -352,7 +352,7 @@ func TestHandler_DeleteFiles(t *testing.T) {
 		u := uuid.New()
 		server := &domain.Server{
 			ID:            1,
-			UUID:          u,
+			UID:           u,
 			UUIDShort:     u.String()[0:8],
 			Enabled:       true,
 			Installed:     1,
@@ -413,7 +413,7 @@ func TestHandler_DeleteFiles(t *testing.T) {
 		u := uuid.New()
 		server := &domain.Server{
 			ID:               1,
-			UUID:             u,
+			UID:              u,
 			UUIDShort:        u.String()[0:8],
 			Enabled:          true,
 			Installed:        1,
@@ -485,7 +485,7 @@ func TestHandler_DeleteFiles(t *testing.T) {
 		u := uuid.New()
 		server := &domain.Server{
 			ID:               1,
-			UUID:             u,
+			UID:              u,
 			UUIDShort:        u.String()[0:8],
 			Enabled:          true,
 			Installed:        1,
@@ -543,7 +543,7 @@ func TestHandler_DeleteFiles(t *testing.T) {
 		u := uuid.New()
 		server := &domain.Server{
 			ID:            1,
-			UUID:          u,
+			UID:           u,
 			UUIDShort:     u.String()[0:8],
 			Enabled:       true,
 			Installed:     1,
@@ -610,7 +610,7 @@ func TestHandler_DeleteFiles(t *testing.T) {
 		u := uuid.New()
 		server := &domain.Server{
 			ID:               1,
-			UUID:             u,
+			UID:              u,
 			UUIDShort:        u.String()[0:8],
 			Enabled:          true,
 			Installed:        1,
@@ -666,7 +666,7 @@ func TestHandler_DeleteFiles(t *testing.T) {
 		u := uuid.New()
 		server := &domain.Server{
 			ID:            1,
-			UUID:          u,
+			UID:           u,
 			UUIDShort:     u.String()[0:8],
 			Enabled:       true,
 			Installed:     1,
@@ -731,7 +731,7 @@ func TestHandler_DeleteFiles(t *testing.T) {
 		u := uuid.New()
 		server := &domain.Server{
 			ID:               1,
-			UUID:             u,
+			UID:              u,
 			UUIDShort:        u.String()[0:8],
 			Enabled:          true,
 			Installed:        1,

@@ -56,7 +56,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				serverUUID := uuid.New()
 				server := &domain.Server{
 					ID:            1,
-					UUID:          serverUUID,
+					UID:           serverUUID,
 					UUIDShort:     serverUUID.String()[:8],
 					Enabled:       true,
 					Installed:     0,
@@ -120,7 +120,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				serverUUID := uuid.New()
 				server := &domain.Server{
 					ID:            1,
-					UUID:          serverUUID,
+					UID:           serverUUID,
 					UUIDShort:     serverUUID.String()[:8],
 					Enabled:       true,
 					Installed:     0,
@@ -181,7 +181,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				serverUUID := uuid.New()
 				server := &domain.Server{
 					ID:            1,
-					UUID:          serverUUID,
+					UID:           serverUUID,
 					UUIDShort:     serverUUID.String()[:8],
 					Enabled:       true,
 					Installed:     1,
@@ -242,7 +242,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				oldCheckTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 				server := &domain.Server{
 					ID:               1,
-					UUID:             serverUUID,
+					UID:              serverUUID,
 					UUIDShort:        serverUUID.String()[:8],
 					Enabled:          true,
 					Installed:        1,
@@ -306,7 +306,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				checkTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 				server := &domain.Server{
 					ID:               1,
-					UUID:             serverUUID,
+					UID:              serverUUID,
 					UUIDShort:        serverUUID.String()[:8],
 					Enabled:          true,
 					Installed:        50,
@@ -402,7 +402,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				serverUUID := uuid.New()
 				server := &domain.Server{
 					ID:            1,
-					UUID:          serverUUID,
+					UID:           serverUUID,
 					UUIDShort:     serverUUID.String()[:8],
 					Enabled:       true,
 					Installed:     0,
@@ -615,7 +615,7 @@ func TestHandler_ResponseStructure(t *testing.T) {
 	serverUUID := uuid.New()
 	server := &domain.Server{
 		ID:            1,
-		UUID:          serverUUID,
+		UID:           serverUUID,
 		UUIDShort:     serverUUID.String()[:8],
 		Enabled:       true,
 		Installed:     0,

@@ -139,8 +139,7 @@ func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) erro
 		Columns(base.ServerFields...).
 		Values(
 			server.ID,
-			server.UUID,
-			server.UUIDShort,
+			server.UID,
 			server.Enabled,
 			server.Installed,
 			server.Blocked,
@@ -172,8 +171,7 @@ func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) erro
 			server.DeletedAt,
 		).
 		Suffix("ON DUPLICATE KEY UPDATE " +
-			"uuid=VALUES(uuid)," +
-			"uuid_short=VALUES(uuid_short)," +
+			"uid=VALUES(uid)," +
 			"enabled=VALUES(enabled)," +
 			"installed=VALUES(installed)," +
 			"blocked=VALUES(blocked)," +
@@ -239,8 +237,7 @@ func (r *ServerRepository) SaveBulk(ctx context.Context, servers []*domain.Serve
 	for _, server := range servers {
 		builder = builder.Values(
 			server.ID,
-			server.UUID,
-			server.UUIDShort,
+			server.UID,
 			server.Enabled,
 			server.Installed,
 			server.Blocked,
@@ -275,8 +272,7 @@ func (r *ServerRepository) SaveBulk(ctx context.Context, servers []*domain.Serve
 
 	query, args, err := builder.
 		Suffix("ON DUPLICATE KEY UPDATE " +
-			"uuid=VALUES(uuid)," +
-			"uuid_short=VALUES(uuid_short)," +
+			"uid=VALUES(uid)," +
 			"enabled=VALUES(enabled)," +
 			"installed=VALUES(installed)," +
 			"blocked=VALUES(blocked)," +
@@ -528,8 +524,7 @@ func (r *ServerRepository) scan(row base.Scanner) (*domain.Server, error) {
 
 	err := row.Scan(
 		&server.ID,
-		&server.UUID,
-		&server.UUIDShort,
+		&server.UID,
 		&server.Enabled,
 		&server.Installed,
 		&server.Blocked,
@@ -564,6 +559,8 @@ func (r *ServerRepository) scan(row base.Scanner) (*domain.Server, error) {
 		return nil, errors.WithMessage(err, "failed to scan row")
 	}
 
+	server.Hydrate()
+
 	return &server, nil
 }
 
@@ -579,7 +576,7 @@ func (r *ServerRepository) filterToSq(filter *filters.FindServer) sq.Sqlizer {
 	}
 
 	if len(filter.UUIDs) > 0 {
-		and = append(and, sq.Eq{"uuid": filter.UUIDs})
+		and = append(and, sq.Eq{"uid": filter.UUIDs})
 	}
 
 	if len(filter.UserIDs) > 0 {

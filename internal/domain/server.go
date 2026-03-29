@@ -5,7 +5,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gameap/gameap/pkg/idgen"
 	"github.com/google/uuid"
+	"github.com/rs/xid"
 )
 
 type ServerInstalledStatus int
@@ -29,8 +31,9 @@ func (s ServerInstalledStatus) Valid() bool {
 
 type Server struct {
 	ID               uint                  `db:"id"`
-	UUID             uuid.UUID             `db:"uuid"`
-	UUIDShort        string                `db:"uuid_short"`
+	UID              uuid.UUID             `db:"uid"`
+	UUID             uuid.UUID             `db:"-"`
+	UUIDShort        string                `db:"-"`
 	Enabled          bool                  `db:"enabled"`
 	Installed        ServerInstalledStatus `db:"installed"`
 	Blocked          bool                  `db:"blocked"`
@@ -70,6 +73,15 @@ func (s *Server) IsOnline() bool {
 	}
 
 	return s.ProcessActive && s.LastProcessCheck.UTC().After(time.Now().UTC().Add(-timeExpireProcessCheck))
+}
+
+func (s *Server) Hydrate() {
+	s.UUID = s.UID
+	s.UUIDShort = s.UID.String()[:8]
+}
+
+func (s *Server) XID() xid.ID {
+	return idgen.UUIDToXID(s.UID)
 }
 
 // ReplaceServerShortcodes replaces shortcode placeholders in a command string with server-specific values.

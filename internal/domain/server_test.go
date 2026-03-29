@@ -16,8 +16,7 @@ func TestServer_ReplaceServerShortcodes(t *testing.T) {
 
 	server := &Server{
 		ID:         42,
-		UUID:       testUUID,
-		UUIDShort:  "550e8400",
+		UID:        testUUID,
 		ServerIP:   "192.168.1.100",
 		ServerPort: 27015,
 		QueryPort:  &queryPort,
@@ -26,6 +25,7 @@ func TestServer_ReplaceServerShortcodes(t *testing.T) {
 		GameID:     "cs2",
 		Dir:        "/var/games/server1",
 	}
+	server.Hydrate()
 
 	node := &Node{
 		WorkPath: "/var/gameap",
@@ -166,8 +166,7 @@ func TestServer_ReplaceServerShortcodes_WithNilOptionalFields(t *testing.T) {
 
 	server := &Server{
 		ID:         1,
-		UUID:       testUUID,
-		UUIDShort:  "550e8400",
+		UID:        testUUID,
 		ServerIP:   "10.0.0.1",
 		ServerPort: 25565,
 		QueryPort:  nil,
@@ -176,6 +175,7 @@ func TestServer_ReplaceServerShortcodes_WithNilOptionalFields(t *testing.T) {
 		GameID:     "minecraft",
 		Dir:        "/minecraft",
 	}
+	server.Hydrate()
 
 	node := &Node{
 		WorkPath: "/gameap",
@@ -222,14 +222,14 @@ func TestServer_ReplaceServerShortcodes_MultipleReplacements(t *testing.T) {
 
 	server := &Server{
 		ID:         100,
-		UUID:       testUUID,
-		UUIDShort:  "123e4567",
+		UID:        testUUID,
 		ServerIP:   "example.com",
 		ServerPort: 7777,
 		QueryPort:  &queryPort,
 		GameID:     "game1",
 		Dir:        "/games/server",
 	}
+	server.Hydrate()
 
 	node := &Node{
 		WorkPath: "/srv/gameap",
@@ -334,8 +334,7 @@ func TestServer_Fields(t *testing.T) {
 	restartCmd := "./restart.sh"
 	server := Server{
 		ID:               42,
-		UUID:             testUUID,
-		UUIDShort:        "550e8400",
+		UID:              testUUID,
 		Enabled:          true,
 		Installed:        ServerInstalledStatusInstalled,
 		Blocked:          false,
@@ -365,6 +364,7 @@ func TestServer_Fields(t *testing.T) {
 		UpdatedAt:        &now,
 		DeletedAt:        nil,
 	}
+	server.Hydrate()
 
 	assert.Equal(t, uint(42), server.ID)
 	assert.Equal(t, testUUID, server.UUID)

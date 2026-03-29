@@ -66,7 +66,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server1 := &domain.Server{
 					ID:            1,
-					UUID:          uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:           uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:     "short1",
 					Enabled:       true,
 					Installed:     1,
@@ -84,7 +84,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				}
 				server2 := &domain.Server{
 					ID:            2,
-					UUID:          uuid.MustParse("22222222-2222-2222-2222-222222222222"),
+					UID:           uuid.MustParse("22222222-2222-2222-2222-222222222222"),
 					UUIDShort:     "short2",
 					Enabled:       true,
 					Installed:     1,
@@ -102,7 +102,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				}
 				server3 := &domain.Server{
 					ID:            3,
-					UUID:          uuid.MustParse("33333333-3333-3333-3333-333333333333"),
+					UID:           uuid.MustParse("33333333-3333-3333-3333-333333333333"),
 					UUIDShort:     "short3",
 					Enabled:       true,
 					Installed:     1,
@@ -149,7 +149,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server1 := &domain.Server{
 					ID:         1,
-					UUID:       uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:        uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:  "short1",
 					Name:       "Server1",
 					GameID:     "cs",
@@ -164,7 +164,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server2 := &domain.Server{
 					ID:         2,
-					UUID:       uuid.MustParse("22222222-2222-2222-2222-222222222222"),
+					UID:        uuid.MustParse("22222222-2222-2222-2222-222222222222"),
 					UUIDShort:  "22222222",
 					Name:       "Server2",
 					GameID:     "cs",
@@ -210,7 +210,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server1 := &domain.Server{
 					ID:         1,
-					UUID:       uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:        uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:  "short1",
 					Name:       "Server1",
 					GameID:     "cs",
@@ -224,7 +224,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				}
 				server2 := &domain.Server{
 					ID:         2,
-					UUID:       uuid.MustParse("22222222-2222-2222-2222-222222222222"),
+					UID:        uuid.MustParse("22222222-2222-2222-2222-222222222222"),
 					UUIDShort:  "short2",
 					Name:       "Server2",
 					GameID:     "cs16",
@@ -267,7 +267,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				for i := 1; i <= 15; i++ {
 					server := &domain.Server{
 						ID:         uint(i),
-						UUID:       uuid.New(),
+						UID:        uuid.New(),
 						UUIDShort:  uuid.New().String()[0:8],
 						Name:       "Server" + string(rune(i)),
 						GameID:     "cs",
@@ -309,7 +309,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				for i := 1; i <= 15; i++ {
 					server := &domain.Server{
 						ID:         uint(i),
-						UUID:       uuid.New(),
+						UID:        uuid.New(),
 						UUIDShort:  uuid.New().String()[0:8],
 						Name:       "Server" + string(rune(i)),
 						GameID:     "cs",
@@ -351,7 +351,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				for i := 1; i <= 15; i++ {
 					server := &domain.Server{
 						ID:         uint(i),
-						UUID:       uuid.New(),
+						UID:        uuid.New(),
 						UUIDShort:  uuid.New().String()[0:8],
 						Name:       "Server" + string(rune(i)),
 						GameID:     "cs",
@@ -399,7 +399,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server1 := &domain.Server{
 					ID:         1,
-					UUID:       uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:        uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:  "short1",
 					Name:       "TestServer",
 					GameID:     "cs",
@@ -510,7 +510,7 @@ func TestHandler_SearchResponseFields(t *testing.T) {
 	now := time.Now()
 	server := &domain.Server{
 		ID:         1,
-		UUID:       uuid.MustParse("33333333-3333-3333-3333-333333333333"),
+		UID:        uuid.MustParse("33333333-3333-3333-3333-333333333333"),
 		UUIDShort:  "shorttest",
 		Enabled:    true,
 		Installed:  1,

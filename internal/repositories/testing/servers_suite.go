@@ -39,7 +39,7 @@ func (s *ServerRepositorySuite) TestServerRepositorySave() {
 
 	s.T().Run("insert_new_server", func(t *testing.T) {
 		server := &domain.Server{
-			UUID:       uuid.New(),
+			UID:        uuid.New(),
 			UUIDShort:  "test1",
 			Enabled:    true,
 			Installed:  domain.ServerInstalledStatusInstalled,
@@ -59,7 +59,7 @@ func (s *ServerRepositorySuite) TestServerRepositorySave() {
 
 	s.T().Run("update_existing_server", func(t *testing.T) {
 		server := &domain.Server{
-			UUID:       uuid.New(),
+			UID:        uuid.New(),
 			UUIDShort:  "test2",
 			Enabled:    true,
 			Installed:  domain.ServerInstalledStatusNotInstalled,
@@ -93,7 +93,7 @@ func (s *ServerRepositorySuite) TestServerRepositoryDelete() {
 
 	s.T().Run("delete_server", func(t *testing.T) {
 		server := &domain.Server{
-			UUID:       uuid.New(),
+			UID:        uuid.New(),
 			UUIDShort:  "deltest",
 			Name:       "Delete Test Server",
 			GameID:     "csgo",
@@ -118,7 +118,7 @@ func (s *ServerRepositorySuite) TestServerRepositorySoftDelete() {
 
 	s.T().Run("soft_delete_server", func(t *testing.T) {
 		server := &domain.Server{
-			UUID:       uuid.New(),
+			UID:        uuid.New(),
 			UUIDShort:  "softdel",
 			Name:       "Soft Delete Test Server",
 			GameID:     "csgo",
@@ -153,9 +153,9 @@ func (s *ServerRepositorySuite) TestServerRepositoryMultipleSaves() {
 	ctx := context.Background()
 
 	servers := []domain.Server{
-		{UUID: uuid.New(), UUIDShort: "srv1", Name: "Server 1", GameID: "csgo", DSID: 1, ServerIP: "127.0.0.1", ServerPort: 27015},
-		{UUID: uuid.New(), UUIDShort: "srv2", Name: "Server 2", GameID: "css", DSID: 1, ServerIP: "127.0.0.1", ServerPort: 27016},
-		{UUID: uuid.New(), UUIDShort: "srv3", Name: "Server 3", GameID: "tf2", DSID: 1, ServerIP: "127.0.0.1", ServerPort: 27017},
+		{UID: uuid.New(), UUIDShort: "srv1", Name: "Server 1", GameID: "csgo", DSID: 1, ServerIP: "127.0.0.1", ServerPort: 27015},
+		{UID: uuid.New(), UUIDShort: "srv2", Name: "Server 2", GameID: "css", DSID: 1, ServerIP: "127.0.0.1", ServerPort: 27016},
+		{UID: uuid.New(), UUIDShort: "srv3", Name: "Server 3", GameID: "tf2", DSID: 1, ServerIP: "127.0.0.1", ServerPort: 27017},
 	}
 
 	for i := range servers {
@@ -170,7 +170,7 @@ func (s *ServerRepositorySuite) TestServerRepositoryDeletedAtHandling() {
 
 	s.T().Run("create_deleted_server", func(t *testing.T) {
 		deletedServer := &domain.Server{
-			UUID:       uuid.New(),
+			UID:        uuid.New(),
 			UUIDShort:  "deleted",
 			Name:       "Deleted Server",
 			GameID:     "csgo",
@@ -189,7 +189,7 @@ func (s *ServerRepositorySuite) TestServerRepositoryFindAll() {
 	ctx := context.Background()
 
 	server1 := &domain.Server{
-		UUID:       uuid.New(),
+		UID:        uuid.New(),
 		UUIDShort:  "findall1",
 		Name:       "FindAll Server 1",
 		GameID:     "csgo",
@@ -199,7 +199,7 @@ func (s *ServerRepositorySuite) TestServerRepositoryFindAll() {
 		Dir:        "/servers/findall1",
 	}
 	server2 := &domain.Server{
-		UUID:       uuid.New(),
+		UID:        uuid.New(),
 		UUIDShort:  "findall2",
 		Name:       "FindAll Server 2",
 		GameID:     "minecraft",
@@ -209,7 +209,7 @@ func (s *ServerRepositorySuite) TestServerRepositoryFindAll() {
 		Dir:        "/servers/findall2",
 	}
 	deletedServer := &domain.Server{
-		UUID:       uuid.New(),
+		UID:        uuid.New(),
 		UUIDShort:  "findall3",
 		Name:       "Deleted Server",
 		GameID:     "tf2",
@@ -264,7 +264,7 @@ func (s *ServerRepositorySuite) TestServerRepositoryFind() {
 	uuid2 := uuid.New()
 
 	server1 := &domain.Server{
-		UUID:       uuid1,
+		UID:        uuid1,
 		UUIDShort:  "find001",
 		Enabled:    true,
 		Installed:  domain.ServerInstalledStatusInstalled,
@@ -278,7 +278,7 @@ func (s *ServerRepositorySuite) TestServerRepositoryFind() {
 		Dir:        "/servers/find1",
 	}
 	server2 := &domain.Server{
-		UUID:       uuid2,
+		UID:        uuid2,
 		UUIDShort:  "find002",
 		Enabled:    false,
 		Installed:  domain.ServerInstalledStatusNotInstalled,
@@ -382,7 +382,7 @@ func (s *ServerRepositorySuite) TestServerRepositoryFindUserServers() {
 	user2ID := uint(2000)
 
 	server1 := &domain.Server{
-		UUID:       uuid.New(),
+		UID:        uuid.New(),
 		UUIDShort:  "usersrv1",
 		Name:       "User Server 1",
 		GameID:     "csgo",
@@ -392,7 +392,7 @@ func (s *ServerRepositorySuite) TestServerRepositoryFindUserServers() {
 		Dir:        "/servers/usersrv1",
 	}
 	server2 := &domain.Server{
-		UUID:       uuid.New(),
+		UID:        uuid.New(),
 		UUIDShort:  "usersrv2",
 		Name:       "User Server 2",
 		GameID:     "minecraft",
@@ -402,7 +402,7 @@ func (s *ServerRepositorySuite) TestServerRepositoryFindUserServers() {
 		Dir:        "/servers/usersrv2",
 	}
 	server3 := &domain.Server{
-		UUID:       uuid.New(),
+		UID:        uuid.New(),
 		UUIDShort:  "usersrv3",
 		Name:       "User Server 3",
 		GameID:     "tf2",
@@ -467,7 +467,7 @@ func (s *ServerRepositorySuite) TestServerRepositorySaveBulk() {
 	s.T().Run("save_multiple_servers", func(t *testing.T) {
 		servers := []*domain.Server{
 			{
-				UUID:       uuid.New(),
+				UID:        uuid.New(),
 				UUIDShort:  "bulk001",
 				Name:       "Bulk Server 1",
 				GameID:     "csgo",
@@ -477,7 +477,7 @@ func (s *ServerRepositorySuite) TestServerRepositorySaveBulk() {
 				Dir:        "/servers/bulk1",
 			},
 			{
-				UUID:       uuid.New(),
+				UID:        uuid.New(),
 				UUIDShort:  "bulk002",
 				Name:       "Bulk Server 2",
 				GameID:     "minecraft",
@@ -487,7 +487,7 @@ func (s *ServerRepositorySuite) TestServerRepositorySaveBulk() {
 				Dir:        "/servers/bulk2",
 			},
 			{
-				UUID:       uuid.New(),
+				UID:        uuid.New(),
 				UUIDShort:  "bulk003",
 				Name:       "Bulk Server 3",
 				GameID:     "tf2",
@@ -516,7 +516,7 @@ func (s *ServerRepositorySuite) TestServerRepositorySaveBulk() {
 
 	s.T().Run("save_bulk_with_update", func(t *testing.T) {
 		server := &domain.Server{
-			UUID:       uuid.New(),
+			UID:        uuid.New(),
 			UUIDShort:  "bulkupd",
 			Name:       "Bulk Update Server",
 			GameID:     "csgo",
@@ -547,7 +547,7 @@ func (s *ServerRepositorySuite) TestServerRepositorySetUserServers() {
 	userID := uint(3000)
 
 	server1 := &domain.Server{
-		UUID:       uuid.New(),
+		UID:        uuid.New(),
 		UUIDShort:  "setuser1",
 		Name:       "SetUser Server 1",
 		GameID:     "csgo",
@@ -557,7 +557,7 @@ func (s *ServerRepositorySuite) TestServerRepositorySetUserServers() {
 		Dir:        "/servers/setuser1",
 	}
 	server2 := &domain.Server{
-		UUID:       uuid.New(),
+		UID:        uuid.New(),
 		UUIDShort:  "setuser2",
 		Name:       "SetUser Server 2",
 		GameID:     "minecraft",
@@ -567,7 +567,7 @@ func (s *ServerRepositorySuite) TestServerRepositorySetUserServers() {
 		Dir:        "/servers/setuser2",
 	}
 	server3 := &domain.Server{
-		UUID:       uuid.New(),
+		UID:        uuid.New(),
 		UUIDShort:  "setuser3",
 		Name:       "SetUser Server 3",
 		GameID:     "tf2",
@@ -618,7 +618,7 @@ func (s *ServerRepositorySuite) TestServerRepositoryExists() {
 	ctx := context.Background()
 
 	server := &domain.Server{
-		UUID:       uuid.New(),
+		UID:        uuid.New(),
 		UUIDShort:  "exists1",
 		Name:       "Exists Server",
 		GameID:     "csgo",
@@ -662,7 +662,7 @@ func (s *ServerRepositorySuite) TestServerRepositorySearch() {
 	ctx := context.Background()
 
 	server1 := &domain.Server{
-		UUID:       uuid.New(),
+		UID:        uuid.New(),
 		UUIDShort:  "search1",
 		Name:       "CS:GO Production Server",
 		GameID:     "csgo",
@@ -672,7 +672,7 @@ func (s *ServerRepositorySuite) TestServerRepositorySearch() {
 		Dir:        "/servers/search1",
 	}
 	server2 := &domain.Server{
-		UUID:       uuid.New(),
+		UID:        uuid.New(),
 		UUIDShort:  "search2",
 		Name:       "Minecraft Creative Server",
 		GameID:     "minecraft",
@@ -718,19 +718,19 @@ func (s *ServerRepositorySuite) TestServerRepositoryUpdateServerStatuses() {
 
 		servers := []*domain.Server{
 			{
-				ID: 100, UUID: uuid.New(), UUIDShort: "st1", Enabled: true,
+				ID: 100, UID: uuid.New(), UUIDShort: "st1", Enabled: true,
 				Installed: domain.ServerInstalledStatusInstalled, Name: "Status Test 1",
 				GameID: "cs", DSID: 5, GameModID: 1, ServerIP: "10.0.0.1",
 				ServerPort: 27015, Dir: "/srv/st1", ProcessActive: false,
 			},
 			{
-				ID: 101, UUID: uuid.New(), UUIDShort: "st2", Enabled: true,
+				ID: 101, UID: uuid.New(), UUIDShort: "st2", Enabled: true,
 				Installed: domain.ServerInstalledStatusInstalled, Name: "Status Test 2",
 				GameID: "cs", DSID: 5, GameModID: 1, ServerIP: "10.0.0.2",
 				ServerPort: 27016, Dir: "/srv/st2", ProcessActive: true,
 			},
 			{
-				ID: 102, UUID: uuid.New(), UUIDShort: "st3", Enabled: true,
+				ID: 102, UID: uuid.New(), UUIDShort: "st3", Enabled: true,
 				Installed: domain.ServerInstalledStatusInstalled, Name: "Status Test 3",
 				GameID: "cs", DSID: 6, GameModID: 1, ServerIP: "10.0.0.3",
 				ServerPort: 27017, Dir: "/srv/st3", ProcessActive: false,

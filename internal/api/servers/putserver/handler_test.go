@@ -48,7 +48,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			setupRepo: func(repo *inmemory.ServerRepository) {
 				err := repo.Save(context.Background(), &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "12345678",
 					Name:       "Test Server",
 					GameID:     "cstrike",
@@ -105,7 +105,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			setupRepo: func(repo *inmemory.ServerRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "12345678",
 					Name:       "Test Server",
 					GameID:     "cstrike",
@@ -138,7 +138,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			setupRepo: func(repo *inmemory.ServerRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "12345678",
 					Name:       "Test Server",
 					GameID:     "cstrike",
@@ -172,7 +172,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			setupRepo: func(repo *inmemory.ServerRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "12345678",
 					Name:       "Test Server",
 					GameID:     "cstrike",
@@ -206,7 +206,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			setupRepo: func(repo *inmemory.ServerRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "12345678",
 					Name:       "Test Server",
 					GameID:     "cstrike",
@@ -241,7 +241,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			setupRepo: func(repo *inmemory.ServerRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "12345678",
 					Name:       "Test Server",
 					GameID:     "cstrike",
@@ -276,7 +276,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			setupRepo: func(repo *inmemory.ServerRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "12345678",
 					Name:       "Test Server",
 					GameID:     "cstrike",
@@ -311,7 +311,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			setupRepo: func(repo *inmemory.ServerRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "12345678",
 					Name:       "Test Server",
 					GameID:     "cstrike",
@@ -345,7 +345,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			setupRepo: func(repo *inmemory.ServerRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "12345678",
 					Name:       "Test Server",
 					GameID:     "cstrike",
@@ -379,7 +379,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			setupRepo: func(repo *inmemory.ServerRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "12345678",
 					Name:       "Test Server",
 					GameID:     "cstrike",
@@ -413,7 +413,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			setupRepo: func(repo *inmemory.ServerRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "12345678",
 					Name:       "Test Server",
 					GameID:     "cstrike",
@@ -447,7 +447,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			setupRepo: func(repo *inmemory.ServerRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "12345678",
 					Name:       "Test Server",
 					GameID:     "cstrike",
@@ -481,7 +481,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			setupRepo: func(repo *inmemory.ServerRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "12345678",
 					Name:       "Test Server",
 					GameID:     "cstrike",
@@ -515,7 +515,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			setupRepo: func(repo *inmemory.ServerRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "12345678",
 					Name:       "Test Server",
 					GameID:     "cstrike",
@@ -542,7 +542,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			setupRepo: func(repo *inmemory.ServerRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "12345678",
 					Name:       "Test Server",
 					GameID:     "cstrike",
@@ -583,7 +583,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			setupRepo: func(repo *inmemory.ServerRepository) {
 				err := repo.Save(context.Background(), &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "12345678",
 					Name:       "Test Server",
 					GameID:     "cstrike",
@@ -619,7 +619,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			setupRepo: func(repo *inmemory.ServerRepository) {
 				err := repo.Save(context.Background(), &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "12345678",
 					Name:       "Test Server",
 					GameID:     "cstrike",
@@ -655,7 +655,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			setupRepo: func(repo *inmemory.ServerRepository) {
 				err := repo.Save(context.Background(), &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "12345678",
 					Name:       "Test Server",
 					GameID:     "cstrike",
@@ -692,7 +692,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			setupRepo: func(repo *inmemory.ServerRepository) {
 				err := repo.Save(context.Background(), &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "12345678",
 					Name:       "Test Server",
 					GameID:     "cstrike",
@@ -730,7 +730,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			setupRepo: func(repo *inmemory.ServerRepository) {
 				err := repo.Save(context.Background(), &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "12345678",
 					Name:       "Test Server",
 					GameID:     "cstrike",
@@ -767,7 +767,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			setupRepo: func(repo *inmemory.ServerRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "12345678",
 					Name:       "Test Server",
 					GameID:     "cstrike",
@@ -802,7 +802,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			setupRepo: func(repo *inmemory.ServerRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
-					UUID:       uuid.New(),
+					UID:        uuid.New(),
 					UUIDShort:  "12345678",
 					Name:       "Test Server",
 					GameID:     "cstrike",
@@ -872,7 +872,7 @@ func TestHandler_ServerUpdatePersistence(t *testing.T) {
 
 	originalServer := &domain.Server{
 		ID:         1,
-		UUID:       uuid.New(),
+		UID:        uuid.New(),
 		UUIDShort:  "12345678",
 		Enabled:    true,
 		Installed:  0,
@@ -953,7 +953,7 @@ func TestHandler_ServerUpdatePersistence_WithVarsAndLimits(t *testing.T) {
 
 	originalServer := &domain.Server{
 		ID:         1,
-		UUID:       uuid.New(),
+		UID:        uuid.New(),
 		UUIDShort:  "12345678",
 		Enabled:    true,
 		Installed:  0,

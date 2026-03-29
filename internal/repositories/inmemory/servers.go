@@ -272,8 +272,7 @@ func (r *ServerRepository) Save(_ context.Context, server *domain.Server) error 
 	// Save server
 	r.servers[server.ID] = &domain.Server{
 		ID:               server.ID,
-		UUID:             server.UUID,
-		UUIDShort:        server.UUIDShort,
+		UID:              server.UID,
 		Enabled:          server.Enabled,
 		Installed:        server.Installed,
 		Blocked:          server.Blocked,
@@ -304,6 +303,7 @@ func (r *ServerRepository) Save(_ context.Context, server *domain.Server) error 
 		UpdatedAt:        server.UpdatedAt,
 		DeletedAt:        server.DeletedAt,
 	}
+	r.servers[server.ID].Hydrate()
 
 	// Add to indexes
 	r.addToIndexes(r.servers[server.ID])
@@ -332,8 +332,7 @@ func (r *ServerRepository) SaveBulk(_ context.Context, servers []*domain.Server)
 		// Save server
 		r.servers[server.ID] = &domain.Server{
 			ID:               server.ID,
-			UUID:             server.UUID,
-			UUIDShort:        server.UUIDShort,
+			UID:              server.UID,
 			Enabled:          server.Enabled,
 			Installed:        server.Installed,
 			Blocked:          server.Blocked,
@@ -364,6 +363,7 @@ func (r *ServerRepository) SaveBulk(_ context.Context, servers []*domain.Server)
 			UpdatedAt:        server.UpdatedAt,
 			DeletedAt:        server.DeletedAt,
 		}
+		r.servers[server.ID].Hydrate()
 
 		// Add to indexes
 		r.addToIndexes(r.servers[server.ID])
@@ -435,10 +435,10 @@ func (r *ServerRepository) SoftDelete(_ context.Context, id uint) error {
 
 func (r *ServerRepository) addToIndexes(server *domain.Server) {
 	// UUID index
-	if r.uuidIndex[server.UUID] == nil {
-		r.uuidIndex[server.UUID] = make(map[uint]struct{})
+	if r.uuidIndex[server.UID] == nil {
+		r.uuidIndex[server.UID] = make(map[uint]struct{})
 	}
-	r.uuidIndex[server.UUID][server.ID] = struct{}{}
+	r.uuidIndex[server.UID][server.ID] = struct{}{}
 
 	// GameID index
 	if r.gameIDIndex[server.GameID] == nil {
@@ -479,10 +479,10 @@ func (r *ServerRepository) addToIndexes(server *domain.Server) {
 
 func (r *ServerRepository) removeFromIndexes(server *domain.Server) {
 	// UUID index
-	if serverSet, exists := r.uuidIndex[server.UUID]; exists {
+	if serverSet, exists := r.uuidIndex[server.UID]; exists {
 		delete(serverSet, server.ID)
 		if len(serverSet) == 0 {
-			delete(r.uuidIndex, server.UUID)
+			delete(r.uuidIndex, server.UID)
 		}
 	}
 
@@ -885,9 +885,11 @@ func (r *ServerRepository) compareServers(a, b *domain.Server, field string) int
 	case "id":
 		return cmp.Compare(a.ID, b.ID)
 	case "uuid":
-		return strings.Compare(a.UUID.String(), b.UUID.String())
+		return strings.Compare(a.UID.String(), b.UID.String())
 	case "uuid_short":
 		return strings.Compare(a.UUIDShort, b.UUIDShort)
+	case "uid":
+		return strings.Compare(a.UID.String(), b.UID.String())
 	case "enabled":
 		if !a.Enabled && b.Enabled {
 			return -1

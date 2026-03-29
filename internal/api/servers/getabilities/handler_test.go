@@ -55,7 +55,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				// Create test servers
 				server1 := &domain.Server{
 					ID:            1,
-					UUID:          uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:           uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:     "short1",
 					Enabled:       true,
 					Installed:     1,
@@ -73,7 +73,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				}
 				server2 := &domain.Server{
 					ID:            2,
-					UUID:          uuid.MustParse("22222222-2222-2222-2222-222222222222"),
+					UID:           uuid.MustParse("22222222-2222-2222-2222-222222222222"),
 					UUIDShort:     "short2",
 					Enabled:       true,
 					Installed:     1,
@@ -139,7 +139,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				// Create test server
 				server := &domain.Server{
 					ID:            1,
-					UUID:          uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:           uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:     "short1",
 					Enabled:       true,
 					Installed:     1,
@@ -296,7 +296,7 @@ func TestHandler_AdminUserHasAllAbilities(t *testing.T) {
 	// Create test server
 	server := &domain.Server{
 		ID:            1,
-		UUID:          uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+		UID:           uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 		UUIDShort:     "short1",
 		Enabled:       true,
 		Installed:     1,
@@ -375,7 +375,7 @@ func TestHandler_RegularUserAbilities(t *testing.T) {
 	// Create test server
 	server := &domain.Server{
 		ID:            1,
-		UUID:          uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+		UID:           uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 		UUIDShort:     "short1",
 		Enabled:       true,
 		Installed:     1,

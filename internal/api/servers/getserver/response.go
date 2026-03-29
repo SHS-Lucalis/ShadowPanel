@@ -151,6 +151,7 @@ func newAdminServerResponseFromServer(
 ) adminServerResponse {
 	return adminServerResponse{
 		ID:               s.ID,
+		UID:              s.XID().String(),
 		UUID:             s.UUID.String(),
 		UUIDShort:        s.UUIDShort,
 		Enabled:          s.Enabled,

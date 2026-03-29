@@ -30,7 +30,7 @@ func TestServerRepository_DeletedAtFiltering(t *testing.T) {
 
 	server1 := &domain.Server{
 		ID:         1,
-		UUID:       uuid.New(),
+		UID:        uuid.New(),
 		UUIDShort:  "server1",
 		Name:       "Active Server",
 		GameID:     "cs",
@@ -43,7 +43,7 @@ func TestServerRepository_DeletedAtFiltering(t *testing.T) {
 
 	server2 := &domain.Server{
 		ID:         2,
-		UUID:       uuid.New(),
+		UID:        uuid.New(),
 		UUIDShort:  "server2",
 		Name:       "Deleted Server",
 		GameID:     "cs",

@@ -5,6 +5,10 @@ properties:
     type: integer
     description: Server ID
     example: 1
+  uid:
+    type: string
+    description: Server XID (unique time-sortable identifier)
+    example: "cv7kp4q0k8jg00a1b2c3"
   uuid:
     type: string
     format: uuid

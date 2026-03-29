@@ -60,7 +60,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:            1,
-					UUID:          uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UID:           uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 					UUIDShort:     "short1",
 					Enabled:       true,
 					Installed:     1,
@@ -150,7 +150,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:            2,
-					UUID:          uuid.MustParse("22222222-2222-2222-2222-222222222222"),
+					UID:           uuid.MustParse("22222222-2222-2222-2222-222222222222"),
 					UUIDShort:     "short2",
 					Enabled:       true,
 					Installed:     1,
@@ -193,7 +193,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				server := &domain.Server{
 					ID:            2,
-					UUID:          uuid.MustParse("22222222-2222-2222-2222-222222222222"),
+					UID:           uuid.MustParse("22222222-2222-2222-2222-222222222222"),
 					UUIDShort:     "short2",
 					Enabled:       true,
 					Installed:     1,
@@ -328,8 +328,7 @@ func TestHandler_ServerResponseFields(t *testing.T) {
 
 	server := &domain.Server{
 		ID:               1,
-		UUID:             uuid.MustParse("33333333-3333-3333-3333-333333333333"),
-		UUIDShort:        "shorttest",
+		UID:              uuid.MustParse("33333333-3333-3333-3333-333333333333"),
 		Enabled:          true,
 		Installed:        1,
 		Blocked:          false,
@@ -383,7 +382,7 @@ func TestHandler_ServerResponseFields(t *testing.T) {
 
 	assert.Equal(t, uint(1), serverResp.ID)
 	assert.Equal(t, "33333333-3333-3333-3333-333333333333", serverResp.UUID)
-	assert.Equal(t, "shorttest", serverResp.UUIDShort)
+	assert.Equal(t, "33333333", serverResp.UUIDShort)
 	assert.True(t, serverResp.Enabled)
 	assert.Equal(t, 1, serverResp.Installed)
 	assert.False(t, serverResp.Blocked)
@@ -449,8 +448,7 @@ func TestNewServerResponseFromServer(t *testing.T) {
 	queryPort := 27016
 	server := &domain.Server{
 		ID:            1,
-		UUID:          uuid.MustParse("44444444-4444-4444-4444-444444444444"),
-		UUIDShort:     "test-short",
+		UID:           uuid.MustParse("44444444-4444-4444-4444-444444444444"),
 		Enabled:       true,
 		Installed:     1,
 		Blocked:       false,
@@ -467,11 +465,13 @@ func TestNewServerResponseFromServer(t *testing.T) {
 		UpdatedAt:     &now,
 	}
 
+	server.Hydrate()
+
 	response := newAdminServerResponseFromServer(server, nil, nil, nil)
 
 	assert.Equal(t, uint(1), response.ID)
 	assert.Equal(t, "44444444-4444-4444-4444-444444444444", response.UUID)
-	assert.Equal(t, "test-short", response.UUIDShort)
+	assert.Equal(t, "44444444", response.UUIDShort)
 	assert.True(t, response.Enabled)
 	assert.Equal(t, 1, response.Installed)
 	assert.False(t, response.Blocked)

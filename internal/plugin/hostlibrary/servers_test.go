@@ -293,8 +293,7 @@ func TestConvertServerToProto(t *testing.T) {
 	serverUUID := uuid.New()
 	server := &domain.Server{
 		ID:            42,
-		UUID:          serverUUID,
-		UUIDShort:     "abcd1234",
+		UID:           serverUUID,
 		Enabled:       true,
 		Installed:     domain.ServerInstalledStatusInstalled,
 		Blocked:       false,
@@ -311,12 +310,13 @@ func TestConvertServerToProto(t *testing.T) {
 		StartCommand:  new("./start.sh"),
 		ProcessActive: true,
 	}
+	server.Hydrate()
 
 	result := convertServerToProto(server)
 
 	assert.Equal(t, uint64(42), result.Id)
 	assert.Equal(t, serverUUID.String(), result.Uuid)
-	assert.Equal(t, "abcd1234", result.UuidShort)
+	assert.Equal(t, serverUUID.String()[:8], result.UuidShort)
 	assert.True(t, result.Enabled)
 	assert.Equal(t, proto.ServerInstalledStatus(domain.ServerInstalledStatusInstalled), result.Installed)
 	assert.False(t, result.Blocked)

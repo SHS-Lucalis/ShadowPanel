@@ -148,8 +148,7 @@ func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) erro
 		Columns(base.ServerFields...).
 		Values(
 			lo.EmptyableToPtr(server.ID),
-			server.UUID,
-			server.UUIDShort,
+			server.UID,
 			server.Enabled,
 			server.Installed,
 			server.Blocked,
@@ -181,8 +180,7 @@ func (r *ServerRepository) Save(ctx context.Context, server *domain.Server) erro
 			formatTime(server.DeletedAt),
 		).
 		Suffix("ON CONFLICT(id) DO UPDATE SET " +
-			"uuid=excluded.uuid," +
-			"uuid_short=excluded.uuid_short," +
+			"uid=excluded.uid," +
 			"enabled=excluded.enabled," +
 			"installed=excluded.installed," +
 			"blocked=excluded.blocked," +
@@ -249,8 +247,7 @@ func (r *ServerRepository) SaveBulk(ctx context.Context, servers []*domain.Serve
 	for _, server := range servers {
 		builder = builder.Values(
 			lo.EmptyableToPtr(server.ID),
-			server.UUID,
-			server.UUIDShort,
+			server.UID,
 			server.Enabled,
 			server.Installed,
 			server.Blocked,
@@ -285,8 +282,7 @@ func (r *ServerRepository) SaveBulk(ctx context.Context, servers []*domain.Serve
 
 	query, args, err := builder.
 		Suffix("ON CONFLICT(id) DO UPDATE SET " +
-			"uuid=excluded.uuid," +
-			"uuid_short=excluded.uuid_short," +
+			"uid=excluded.uid," +
 			"enabled=excluded.enabled," +
 			"installed=excluded.installed," +
 			"blocked=excluded.blocked," +
@@ -527,8 +523,7 @@ func (r *ServerRepository) scan(row base.Scanner) (*domain.Server, error) {
 
 	err := row.Scan(
 		&server.ID,
-		&server.UUID,
-		&server.UUIDShort,
+		&server.UID,
 		&server.Enabled,
 		&server.Installed,
 		&server.Blocked,
@@ -603,6 +598,8 @@ func (r *ServerRepository) scan(row base.Scanner) (*domain.Server, error) {
 		server.DeletedAt = &deletedAt
 	}
 
+	server.Hydrate()
+
 	return &server, nil
 }
 
@@ -618,7 +615,7 @@ func (r *ServerRepository) filterToSq(filter *filters.FindServer) sq.Sqlizer {
 	}
 
 	if len(filter.UUIDs) > 0 {
-		and = append(and, sq.Eq{"uuid": filter.UUIDs})
+		and = append(and, sq.Eq{"uid": filter.UUIDs})
 	}
 
 	if len(filter.UserIDs) > 0 {
