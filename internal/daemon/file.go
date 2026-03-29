@@ -1,17 +1,21 @@
 package daemon
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"io"
 	"log/slog"
 	"math"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/files"
+	"github.com/gameap/gameap/internal/transfers"
 	"github.com/gameap/gameap/pkg/proto"
 	"github.com/pkg/errors"
 )
@@ -21,6 +25,7 @@ const (
 	chunkSize              = 64 * 1024       // 64KB
 	transferPrefix         = "transfers/"
 	capabilityFileTransfer = "file_transfer"
+	s3PollInterval         = 200 * time.Millisecond
 )
 
 type daemonNotConnectedError struct{}
@@ -31,11 +36,12 @@ func (e *daemonNotConnectedError) HTTPStatus() int { return 502 }
 var ErrDaemonNotConnected error = &daemonNotConnectedError{}
 
 type FileService struct {
-	gateway    FileGateway
-	registry   ConnectionChecker
-	dispatcher FileDispatcher
-	storage    files.StreamFileManager
-	logger     *slog.Logger
+	gateway     FileGateway
+	registry    ConnectionChecker
+	dispatcher  FileDispatcher
+	storage     files.StreamFileManager
+	transferReg *transfers.Registry
+	logger      *slog.Logger
 }
 
 func NewFileService(
@@ -43,6 +49,7 @@ func NewFileService(
 	registry ConnectionChecker,
 	dispatcher FileDispatcher,
 	storage files.StreamFileManager,
+	transferReg *transfers.Registry,
 	logger *slog.Logger,
 ) *FileService {
 	if logger == nil {
@@ -50,11 +57,12 @@ func NewFileService(
 	}
 
 	return &FileService{
-		gateway:    gateway,
-		registry:   registry,
-		dispatcher: dispatcher,
-		storage:    storage,
-		logger:     logger,
+		gateway:     gateway,
+		registry:    registry,
+		dispatcher:  dispatcher,
+		storage:     storage,
+		transferReg: transferReg,
+		logger:      logger,
 	}
 }
 
@@ -171,22 +179,76 @@ func (s *FileService) downloadStreamLocal(ctx context.Context, nodeID uint64, pa
 	}
 
 	transferID := generateTransferID()
+	state := s.transferReg.Register(transferID)
 
-	if err := s.gateway.RequestFileDownloadTask(ctx, nodeID, transferID, path); err != nil {
+	go func() {
+		if err := s.gateway.RequestFileDownloadTask(ctx, nodeID, transferID, path); err != nil {
+			state.SetError(errors.WithMessage(err, "daemon file download task"))
+		}
+	}()
+
+	available, err := state.WaitForPart(ctx, 0)
+	if err != nil {
+		s.transferReg.Unregister(transferID)
+
 		return nil, errors.WithMessage(err, "gateway download task")
 	}
+	if !available {
+		s.transferReg.Unregister(transferID)
 
-	storagePath := transferPrefix + transferID + "/data"
-
-	reader, err := s.storage.ReadStream(ctx, storagePath)
-	if err != nil {
-		return nil, errors.WithMessage(err, "reading transferred file from storage")
+		return io.NopCloser(bytes.NewReader(nil)), nil
 	}
 
-	return &cleanupReadCloser{
-		ReadCloser:  reader,
-		storagePath: storagePath,
+	pr, pw := io.Pipe()
+
+	go func() {
+		defer pw.Close()
+
+		for partNum := 0; ; partNum++ {
+			avail, waitErr := state.WaitForPart(ctx, partNum)
+			if waitErr != nil {
+				pw.CloseWithError(waitErr)
+
+				return
+			}
+			if !avail {
+				return
+			}
+
+			partPath := transfers.TransferPartPath(transferID, partNum)
+
+			reader, readErr := s.storage.ReadStream(ctx, partPath)
+			if readErr != nil {
+				s.logger.Error("failed to read transfer part",
+					"transfer_id", transferID, "part", partNum, "error", readErr)
+				pw.CloseWithError(errors.Wrapf(readErr, "read part %d", partNum))
+
+				return
+			}
+
+			if _, copyErr := io.Copy(pw, reader); copyErr != nil {
+				_ = reader.Close()
+				s.logger.Error("failed to stream part to pipe",
+					"transfer_id", transferID, "part", partNum, "error", copyErr)
+				pw.CloseWithError(errors.Wrapf(copyErr, "stream part %d", partNum))
+
+				return
+			}
+			_ = reader.Close()
+
+			if delErr := s.storage.Delete(ctx, partPath); delErr != nil {
+				s.logger.Warn("failed to delete consumed part",
+					"transfer_id", transferID, "part", partNum, "error", delErr)
+			}
+		}
+	}()
+
+	return &chunkedCleanupReadCloser{
+		ReadCloser:  pr,
+		transferID:  transferID,
 		storage:     s.storage,
+		transferReg: s.transferReg,
+		logger:      s.logger,
 	}, nil
 }
 
@@ -244,22 +306,127 @@ func (s *FileService) downloadStreamLocalChunked(
 func (s *FileService) downloadStreamRemote(ctx context.Context, nodeID uint64, path string) (io.ReadCloser, error) {
 	transferID := generateTransferID()
 
-	if err := s.dispatcher.DispatchDownloadTask(ctx, nodeID, transferID, path); err != nil {
-		return nil, errors.WithMessage(err, "dispatched download task")
-	}
+	errCh := make(chan error, 1)
+	go func() {
+		if err := s.dispatcher.DispatchDownloadTask(ctx, nodeID, transferID, path); err != nil {
+			errCh <- errors.WithMessage(err, "dispatched download task")
+		}
+	}()
 
-	storagePath := transferPrefix + transferID + "/data"
-
-	reader, err := s.storage.ReadStream(ctx, storagePath)
+	available, err := s.waitForPartS3(ctx, transferID, 0, errCh)
 	if err != nil {
-		return nil, errors.WithMessage(err, "reading transferred file from storage")
+		return nil, errors.WithMessage(err, "remote download task")
+	}
+	if !available {
+		return io.NopCloser(bytes.NewReader(nil)), nil
 	}
 
-	return &cleanupReadCloser{
-		ReadCloser:  reader,
-		storagePath: storagePath,
-		storage:     s.storage,
+	pr, pw := io.Pipe()
+
+	go func() {
+		defer pw.Close()
+
+		for partNum := 0; ; partNum++ {
+			avail, waitErr := s.waitForPartS3(ctx, transferID, partNum, errCh)
+			if waitErr != nil {
+				pw.CloseWithError(waitErr)
+
+				return
+			}
+			if !avail {
+				return
+			}
+
+			partPath := transfers.TransferPartPath(transferID, partNum)
+
+			reader, readErr := s.storage.ReadStream(ctx, partPath)
+			if readErr != nil {
+				s.logger.Error("failed to read remote transfer part",
+					"transfer_id", transferID, "part", partNum, "error", readErr)
+				pw.CloseWithError(errors.Wrapf(readErr, "read part %d", partNum))
+
+				return
+			}
+
+			if _, copyErr := io.Copy(pw, reader); copyErr != nil {
+				_ = reader.Close()
+				s.logger.Error("failed to stream remote part to pipe",
+					"transfer_id", transferID, "part", partNum, "error", copyErr)
+				pw.CloseWithError(errors.Wrapf(copyErr, "stream part %d", partNum))
+
+				return
+			}
+			_ = reader.Close()
+
+			if delErr := s.storage.Delete(ctx, partPath); delErr != nil {
+				s.logger.Warn("failed to delete consumed remote part",
+					"transfer_id", transferID, "part", partNum, "error", delErr)
+			}
+		}
+	}()
+
+	return &remoteCleanupReadCloser{
+		ReadCloser: pr,
+		transferID: transferID,
+		storage:    s.storage,
+		logger:     s.logger,
 	}, nil
+}
+
+func (s *FileService) waitForPartS3(
+	ctx context.Context,
+	transferID string,
+	partNum int,
+	errCh <-chan error,
+) (bool, error) {
+	partPath := transfers.TransferPartPath(transferID, partNum)
+	donePath := transfers.TransferDonePath(transferID)
+
+	for {
+		select {
+		case err := <-errCh:
+			return false, err
+		default:
+		}
+
+		if s.storage.Exists(ctx, partPath) {
+			return true, nil
+		}
+
+		if s.storage.Exists(ctx, donePath) {
+			doneInfo, err := s.readSentinel(ctx, donePath)
+			if err != nil {
+				return false, errors.WithMessage(err, "reading transfer sentinel")
+			}
+			if !doneInfo.Success {
+				return false, errors.Errorf("transfer failed on remote: %s", doneInfo.Error)
+			}
+
+			return false, nil
+		}
+
+		select {
+		case <-time.After(s3PollInterval):
+		case <-ctx.Done():
+			return false, ctx.Err()
+		case err := <-errCh:
+			return false, err
+		}
+	}
+}
+
+func (s *FileService) readSentinel(ctx context.Context, path string) (*transfers.DoneInfo, error) {
+	data, err := s.storage.Read(ctx, path)
+	if err != nil {
+		return nil, errors.Wrap(err, "read sentinel file")
+	}
+
+	var info transfers.DoneInfo
+	if err := json.Unmarshal(data, &info); err != nil {
+		return nil, errors.Wrap(err, "parse sentinel JSON")
+	}
+
+	return &info, nil
 }
 
 func (s *FileService) Upload(
@@ -312,7 +479,7 @@ func (s *FileService) UploadStream(
 	}
 
 	transferID := generateTransferID()
-	storagePath := transferPrefix + transferID + "/data"
+	storagePath := transfers.TransferDataPath(transferID)
 
 	hasher := sha256.New()
 	teeReader := io.TeeReader(r, hasher)
@@ -477,16 +644,44 @@ func (s *FileService) doFileOperation(
 	return nil
 }
 
-type cleanupReadCloser struct {
+type chunkedCleanupReadCloser struct {
 	io.ReadCloser
 
-	storagePath string
+	transferID  string
 	storage     files.StreamFileManager
+	transferReg *transfers.Registry
+	logger      *slog.Logger
 }
 
-func (c *cleanupReadCloser) Close() error {
+func (c *chunkedCleanupReadCloser) Close() error {
 	err := c.ReadCloser.Close()
-	_ = c.storage.Delete(context.Background(), c.storagePath)
+	c.transferReg.Unregister(c.transferID)
+
+	prefix := transfers.TransferPrefix(c.transferID)
+	if cleanErr := c.storage.DeleteByPrefix(context.Background(), prefix); cleanErr != nil {
+		c.logger.Warn("failed to cleanup transfer",
+			"transfer_id", c.transferID, "error", cleanErr)
+	}
+
+	return err
+}
+
+type remoteCleanupReadCloser struct {
+	io.ReadCloser
+
+	transferID string
+	storage    files.StreamFileManager
+	logger     *slog.Logger
+}
+
+func (c *remoteCleanupReadCloser) Close() error {
+	err := c.ReadCloser.Close()
+
+	prefix := transfers.TransferPrefix(c.transferID)
+	if cleanErr := c.storage.DeleteByPrefix(context.Background(), prefix); cleanErr != nil {
+		c.logger.Warn("failed to cleanup remote transfer",
+			"transfer_id", c.transferID, "error", cleanErr)
+	}
 
 	return err
 }

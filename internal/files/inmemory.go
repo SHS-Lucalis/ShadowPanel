@@ -123,4 +123,17 @@ func (fm *InMemoryFileManager) WriteStream(_ context.Context, path string, data 
 	return nil
 }
 
+func (fm *InMemoryFileManager) DeleteByPrefix(_ context.Context, prefix string) error {
+	fm.mu.Lock()
+	defer fm.mu.Unlock()
+
+	for path := range fm.files {
+		if strings.HasPrefix(path, prefix) {
+			delete(fm.files, path)
+		}
+	}
+
+	return nil
+}
+
 var _ StreamFileManager = (*InMemoryFileManager)(nil)

@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gameap/gameap/internal/api/base"
 	serversbase "github.com/gameap/gameap/internal/api/servers/base"
@@ -176,6 +177,11 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	filename := filepath.Base(path)
 	contentType := getContentType(filename)
+
+	rc := http.NewResponseController(rw)
+	if deadlineErr := rc.SetWriteDeadline(time.Time{}); deadlineErr != nil {
+		slog.WarnContext(ctx, "failed to disable write deadline", slog.String("error", deadlineErr.Error()))
+	}
 
 	rw.Header().Set("Content-Type", contentType)
 	rw.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")

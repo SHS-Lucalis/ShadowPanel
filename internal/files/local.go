@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pkg/errors"
 )
@@ -164,6 +165,81 @@ func (fm *LocalFileManager) WriteStream(ctx context.Context, path string, data i
 	}
 
 	return file.Close()
+}
+
+func (fm *LocalFileManager) DeleteByPrefix(_ context.Context, prefix string) error {
+	dirFile, err := fm.root.Open(filepath.Dir(prefix))
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+
+		return errors.Wrap(err, "opening prefix directory")
+	}
+
+	entries, readErr := dirFile.ReadDir(-1)
+	_ = dirFile.Close()
+
+	if readErr != nil {
+		return errors.Wrap(readErr, "reading prefix directory")
+	}
+
+	base := filepath.Base(prefix)
+	dir := filepath.Dir(prefix)
+
+	for _, entry := range entries {
+		name := entry.Name()
+		fullPath := filepath.Join(dir, name)
+
+		if !strings.HasPrefix(name, base) && name != base {
+			continue
+		}
+
+		if entry.IsDir() {
+			if err := fm.removeDirRecursive(fullPath); err != nil {
+				return errors.Wrapf(err, "removing directory %s", fullPath)
+			}
+		} else {
+			if err := fm.root.Remove(fullPath); err != nil && !os.IsNotExist(err) {
+				return errors.Wrapf(err, "removing file %s", fullPath)
+			}
+		}
+	}
+
+	return nil
+}
+
+func (fm *LocalFileManager) removeDirRecursive(path string) error {
+	dirFile, err := fm.root.Open(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+
+		return err
+	}
+
+	entries, readErr := dirFile.ReadDir(-1)
+	_ = dirFile.Close()
+
+	if readErr != nil {
+		return readErr
+	}
+
+	for _, entry := range entries {
+		childPath := filepath.Join(path, entry.Name())
+		if entry.IsDir() {
+			if err := fm.removeDirRecursive(childPath); err != nil {
+				return err
+			}
+		} else {
+			if err := fm.root.Remove(childPath); err != nil && !os.IsNotExist(err) {
+				return err
+			}
+		}
+	}
+
+	return fm.root.Remove(path)
 }
 
 var _ StreamFileManager = (*LocalFileManager)(nil)

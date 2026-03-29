@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 
 	"github.com/gameap/gameap/internal/api/base"
@@ -182,6 +183,11 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	contentType := fileInfo.Mime
 	if contentType == "" {
 		contentType = getContentTypeFromExtension(filename)
+	}
+
+	rc := http.NewResponseController(rw)
+	if deadlineErr := rc.SetWriteDeadline(time.Time{}); deadlineErr != nil {
+		slog.WarnContext(ctx, "failed to disable write deadline", slog.String("error", deadlineErr.Error()))
 	}
 
 	rw.Header().Set("Content-Type", contentType)

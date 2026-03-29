@@ -142,4 +142,23 @@ func (fm *S3FileManager) WriteStream(ctx context.Context, path string, data io.R
 	return nil
 }
 
+func (fm *S3FileManager) DeleteByPrefix(ctx context.Context, prefix string) error {
+	objectCh := fm.client.ListObjects(ctx, fm.bucket, minio.ListObjectsOptions{
+		Prefix:    prefix,
+		Recursive: true,
+	})
+
+	for object := range objectCh {
+		if object.Err != nil {
+			return errors.Wrap(object.Err, "listing objects for prefix deletion")
+		}
+
+		if err := fm.client.RemoveObject(ctx, fm.bucket, object.Key, minio.RemoveObjectOptions{}); err != nil {
+			return errors.Wrapf(err, "removing object %s", object.Key)
+		}
+	}
+
+	return nil
+}
+
 var _ StreamFileManager = (*S3FileManager)(nil)

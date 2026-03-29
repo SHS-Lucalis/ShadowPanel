@@ -52,6 +52,7 @@ import (
 	"github.com/gameap/gameap/internal/services/pluginstore"
 	"github.com/gameap/gameap/internal/services/servercontrol"
 	"github.com/gameap/gameap/internal/services/taskdispatcher"
+	"github.com/gameap/gameap/internal/transfers"
 	"github.com/gameap/gameap/internal/ws"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
@@ -166,6 +167,7 @@ type Container struct {
 	sessionRegistry     *session.Registry
 	gatewayService      *gateway.Service
 	fileTransferService *filetransfer.Service
+	transferRegistry    *transfers.Registry
 	taskHandler         *handlers.TaskHandler
 	commandHandler      *handlers.CommandHandler
 	serverStatusHandler *handlers.ServerStatusHandler
@@ -1260,6 +1262,7 @@ func (c *Container) DaemonFiles() *daemon.FileService {
 			c.SessionRegistry(),
 			c.FileDispatcher(),
 			c.StreamFileManager(),
+			c.TransferRegistry(),
 			slog.Default(),
 		)
 	}
@@ -1591,11 +1594,20 @@ func (c *Container) FileTransferService() *filetransfer.Service {
 		c.fileTransferService = filetransfer.NewService(
 			c.StreamFileManager(),
 			c.PubSub(),
+			c.TransferRegistry(),
 			slog.Default(),
 		)
 	}
 
 	return c.fileTransferService
+}
+
+func (c *Container) TransferRegistry() *transfers.Registry {
+	if c.transferRegistry == nil {
+		c.transferRegistry = transfers.NewRegistry()
+	}
+
+	return c.transferRegistry
 }
 
 func (c *Container) grpcTLSConfig() *tls.Config {

@@ -19,4 +19,5 @@ type StreamFileManager interface {
 	ReadStream(ctx context.Context, path string) (io.ReadCloser, error)
 	ReadStreamAt(ctx context.Context, path string, offset int64) (io.ReadCloser, error)
 	WriteStream(ctx context.Context, path string, data io.Reader) error
+	DeleteByPrefix(ctx context.Context, prefix string) error
 }

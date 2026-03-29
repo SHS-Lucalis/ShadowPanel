@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"strings"
@@ -14,6 +16,7 @@ import (
 	"github.com/gameap/gameap/internal/pubsub"
 	"github.com/gameap/gameap/internal/pubsub/channels"
 	"github.com/gameap/gameap/internal/pubsub/messages"
+	"github.com/gameap/gameap/internal/transfers"
 	"github.com/gameap/gameap/pkg/proto"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
@@ -21,19 +24,21 @@ import (
 )
 
 const (
-	defaultChunkSize    = 64 * 1024
-	maxFileSize         = 10 * 1024 * 1024 * 1024
-	chunkReceiveTimeout = 60 * time.Second
-	transferMaxAge      = 24 * time.Hour
-	transferPrefix      = "transfers/"
+	defaultChunkSize     = 64 * 1024
+	chunkReceiveTimeout  = 60 * time.Second
+	transferMaxAge       = 24 * time.Hour
+	transferPrefix       = "transfers/"
+	sentinelWriteRetries = 3
+	sentinelRetryDelay   = 500 * time.Millisecond
 )
 
 type Service struct {
 	proto.UnimplementedFileTransferServiceServer
 
-	storage files.StreamFileManager
-	pub     pubsub.Publisher
-	logger  *slog.Logger
+	storage     files.StreamFileManager
+	pub         pubsub.Publisher
+	transferReg *transfers.Registry
+	logger      *slog.Logger
 
 	mu              sync.RWMutex
 	activeTransfers map[string]*activeTransfer
@@ -48,7 +53,12 @@ type activeTransfer struct {
 	Cancel     context.CancelFunc
 }
 
-func NewService(storage files.StreamFileManager, pub pubsub.Publisher, logger *slog.Logger) *Service {
+func NewService(
+	storage files.StreamFileManager,
+	pub pubsub.Publisher,
+	transferReg *transfers.Registry,
+	logger *slog.Logger,
+) *Service {
 	if logger == nil {
 		logger = slog.Default()
 	}
@@ -56,13 +66,10 @@ func NewService(storage files.StreamFileManager, pub pubsub.Publisher, logger *s
 	return &Service{
 		storage:         storage,
 		pub:             pub,
+		transferReg:     transferReg,
 		logger:          logger,
 		activeTransfers: make(map[string]*activeTransfer),
 	}
-}
-
-func transferDataPath(transferID string) string {
-	return transferPrefix + transferID + "/data"
 }
 
 func (s *Service) UploadFile(stream proto.FileTransferService_UploadFileServer) error {
@@ -78,10 +85,6 @@ func (s *Service) UploadFile(stream proto.FileTransferService_UploadFileServer) 
 		return status.Error(codes.InvalidArgument, "first chunk must contain metadata")
 	}
 
-	if metadata.TotalSize > maxFileSize {
-		return status.Error(codes.InvalidArgument, "file too large")
-	}
-
 	transferCtx, cancel := context.WithCancel(ctx)
 	s.registerTransfer(metadata.TransferId, metadata.Path, metadata.TotalSize, cancel)
 	defer func() {
@@ -89,25 +92,48 @@ func (s *Service) UploadFile(stream proto.FileTransferService_UploadFileServer) 
 		cancel()
 	}()
 
-	totalWritten, checksum, err := s.receiveAndStore(transferCtx, stream, metadata, firstChunk.Data)
+	totalWritten, checksum, partsWritten, err := s.receiveAndStore(transferCtx, stream, metadata, firstChunk.Data)
 	if err != nil {
-		_ = s.storage.Delete(context.Background(), transferDataPath(metadata.TransferId))
+		s.logger.Error("file upload failed",
+			"transfer_id", metadata.TransferId,
+			"parts_written", partsWritten,
+			"bytes_written", totalWritten,
+			"error", err,
+		)
+		s.writeSentinel(metadata.TransferId, partsWritten, "", err.Error())
+		if state, ok := s.transferReg.Get(metadata.TransferId); ok {
+			state.SetError(err)
+		}
 		s.publishTransferComplete(metadata.TransferId, false, "", err.Error())
 
 		return err
 	}
 
 	if metadata.ChecksumSha256 != "" && checksum != metadata.ChecksumSha256 {
-		_ = s.storage.Delete(context.Background(), transferDataPath(metadata.TransferId))
-		s.publishTransferComplete(metadata.TransferId, false, checksum, "checksum mismatch")
+		errMsg := fmt.Sprintf("checksum mismatch: expected %s, got %s", metadata.ChecksumSha256, checksum)
+		s.logger.Error("file upload checksum mismatch",
+			"transfer_id", metadata.TransferId,
+			"expected", metadata.ChecksumSha256,
+			"actual", checksum,
+		)
+		s.writeSentinel(metadata.TransferId, partsWritten, checksum, errMsg)
+		if state, ok := s.transferReg.Get(metadata.TransferId); ok {
+			state.SetError(errors.New(errMsg))
+		}
+		s.publishTransferComplete(metadata.TransferId, false, checksum, errMsg)
 
-		return status.Error(codes.DataLoss, "checksum mismatch")
+		return status.Error(codes.DataLoss, errMsg)
 	}
 
+	s.writeSentinel(metadata.TransferId, partsWritten, checksum, "")
+	if state, ok := s.transferReg.Get(metadata.TransferId); ok {
+		state.Complete()
+	}
 	s.publishTransferComplete(metadata.TransferId, true, checksum, "")
 
 	s.logger.Info("file upload completed",
 		"transfer_id", metadata.TransferId,
+		"parts_written", partsWritten,
 		"bytes_written", totalWritten,
 		"checksum", checksum,
 	)
@@ -124,38 +150,47 @@ func (s *Service) receiveAndStore(
 	stream proto.FileTransferService_UploadFileServer,
 	metadata *proto.UploadMetadata,
 	firstChunkData []byte,
-) (int64, string, error) {
-	pr, pw := io.Pipe()
+) (int64, string, int, error) {
 	hasher := sha256.New()
-	writer := io.MultiWriter(pw, hasher)
+	buf := make([]byte, 0, transfers.MaxPartSize+defaultChunkSize)
 
-	var storeErr error
-	var storeWg sync.WaitGroup
+	var (
+		totalWritten    int64
+		partNum         int
+		currentPartSize = transfers.PartSizeForNum(0)
+	)
 
-	storeWg.Go(func() {
-		storagePath := transferDataPath(metadata.TransferId)
-		storeErr = s.storage.WriteStream(ctx, storagePath, pr)
-	})
+	flushPart := func(data []byte) error {
+		hasher.Write(data)
+		partPath := transfers.TransferPartPath(metadata.TransferId, partNum)
 
-	var totalWritten int64
-
-	writeData := func(data []byte) error {
-		n, err := writer.Write(data)
-		if err != nil {
-			return status.Error(codes.Internal, "failed to write data")
+		if err := s.storage.Write(ctx, partPath, data); err != nil {
+			return errors.Wrapf(err, "write part %d to storage", partNum)
 		}
-		totalWritten += int64(n)
+
+		if state, ok := s.transferReg.Get(metadata.TransferId); ok {
+			state.AddPart()
+		} else {
+			s.logger.Warn("transfer state not found in registry",
+				"transfer_id", metadata.TransferId, "part", partNum)
+		}
+
+		totalWritten += int64(len(data))
 		s.updateTransferProgress(metadata.TransferId, metadata.Offset+totalWritten)
+		partNum++
 
 		return nil
 	}
 
 	if len(firstChunkData) > 0 {
-		if err := writeData(firstChunkData); err != nil {
-			pw.CloseWithError(err)
-			storeWg.Wait()
+		buf = append(buf, firstChunkData...)
 
-			return totalWritten, "", err
+		for len(buf) >= currentPartSize {
+			if err := flushPart(buf[:currentPartSize]); err != nil {
+				return totalWritten, "", partNum, err
+			}
+			buf = append(buf[:0], buf[currentPartSize:]...)
+			currentPartSize = transfers.PartSizeForNum(partNum)
 		}
 	}
 
@@ -169,15 +204,12 @@ func (s *Service) receiveAndStore(
 		var res recvResult
 		select {
 		case <-ctx.Done():
-			pw.CloseWithError(ctx.Err())
-			storeWg.Wait()
-
-			return totalWritten, "", status.Error(codes.Canceled, "transfer canceled")
+			return totalWritten, "", partNum,
+				status.Errorf(codes.Canceled, "transfer canceled (transfer %s, written %d)", metadata.TransferId, totalWritten)
 		case <-time.After(chunkReceiveTimeout):
-			pw.CloseWithError(errors.New("chunk receive timeout"))
-			storeWg.Wait()
-
-			return totalWritten, "", status.Error(codes.DeadlineExceeded, "chunk receive timeout")
+			return totalWritten, "", partNum,
+				status.Errorf(codes.DeadlineExceeded, "chunk receive timeout after %s (transfer %s, written %d)",
+					chunkReceiveTimeout, metadata.TransferId, totalWritten)
 		case res = <-ch:
 		}
 
@@ -185,32 +217,32 @@ func (s *Service) receiveAndStore(
 			break
 		}
 		if res.err != nil {
-			pw.CloseWithError(res.err)
-			storeWg.Wait()
-
-			return totalWritten, "", status.Error(codes.Internal, "failed to receive chunk")
+			return totalWritten, "", partNum,
+				status.Errorf(codes.Internal, "receive chunk: %s", res.err)
 		}
 
 		if len(res.chunk.Data) == 0 {
 			continue
 		}
 
-		if err := writeData(res.chunk.Data); err != nil {
-			pw.CloseWithError(err)
-			storeWg.Wait()
+		buf = append(buf, res.chunk.Data...)
 
-			return totalWritten, "", err
+		for len(buf) >= currentPartSize {
+			if err := flushPart(buf[:currentPartSize]); err != nil {
+				return totalWritten, "", partNum, err
+			}
+			buf = append(buf[:0], buf[currentPartSize:]...)
+			currentPartSize = transfers.PartSizeForNum(partNum)
 		}
 	}
 
-	_ = pw.Close()
-	storeWg.Wait()
-
-	if storeErr != nil {
-		return totalWritten, "", status.Error(codes.Internal, "failed to store file")
+	if len(buf) > 0 {
+		if err := flushPart(buf); err != nil {
+			return totalWritten, "", partNum, err
+		}
 	}
 
-	return totalWritten, hex.EncodeToString(hasher.Sum(nil)), nil
+	return totalWritten, hex.EncodeToString(hasher.Sum(nil)), partNum, nil
 }
 
 type recvResult struct {
@@ -222,7 +254,7 @@ func (s *Service) DownloadFile(
 	req *proto.DownloadRequest,
 	stream proto.FileTransferService_DownloadFileServer,
 ) error {
-	storagePath := transferDataPath(req.Path)
+	storagePath := transfers.TransferDataPath(req.Path)
 
 	if !s.storage.Exists(stream.Context(), storagePath) {
 		return status.Error(codes.NotFound, "transfer file not found")
@@ -285,6 +317,42 @@ func (s *Service) DownloadFile(
 	}
 
 	return nil
+}
+
+func (s *Service) writeSentinel(transferID string, totalParts int, checksum, errMsg string) {
+	info := transfers.DoneInfo{
+		Success:    errMsg == "",
+		Checksum:   checksum,
+		TotalParts: totalParts,
+		Error:      errMsg,
+	}
+
+	data, marshalErr := json.Marshal(info)
+	if marshalErr != nil {
+		s.logger.Error("failed to marshal sentinel", "transfer_id", transferID, "error", marshalErr)
+
+		return
+	}
+
+	donePath := transfers.TransferDonePath(transferID)
+
+	for attempt := range sentinelWriteRetries {
+		if err := s.storage.Write(context.Background(), donePath, data); err != nil {
+			s.logger.Error("failed to write sentinel file",
+				"transfer_id", transferID, "attempt", attempt+1, "error", err)
+
+			if attempt < sentinelWriteRetries-1 {
+				time.Sleep(sentinelRetryDelay)
+			}
+
+			continue
+		}
+
+		return
+	}
+
+	s.logger.Error("sentinel write failed after retries",
+		"transfer_id", transferID, "retries", sentinelWriteRetries)
 }
 
 func (s *Service) publishTransferComplete(transferID string, success bool, checksum, errMsg string) {
@@ -398,7 +466,7 @@ func (s *Service) cleanupStaleTransfers(ctx context.Context) error {
 		return errors.Wrap(err, "list transfers for cleanup")
 	}
 
-	var cleaned int
+	seen := make(map[string]bool)
 
 	for _, entry := range entries {
 		select {
@@ -407,21 +475,20 @@ func (s *Service) cleanupStaleTransfers(ctx context.Context) error {
 		default:
 		}
 
-		if !strings.HasSuffix(entry, "/data") {
+		transferID := strings.SplitN(entry, "/", 2)[0]
+		if transferID == "" || seen[transferID] {
 			continue
 		}
+		seen[transferID] = true
 
-		path := transferPrefix + entry
-		if !s.storage.Exists(ctx, path) {
-			continue
+		prefix := transferPrefix + transferID + "/"
+		if err := s.storage.DeleteByPrefix(ctx, prefix); err != nil {
+			s.logger.Warn("failed to cleanup transfer", "transfer_id", transferID, "error", err)
 		}
-
-		_ = s.storage.Delete(ctx, path)
-		cleaned++
 	}
 
-	if cleaned > 0 {
-		s.logger.Info("cleaned up stale transfers", "count", cleaned)
+	if len(seen) > 0 {
+		s.logger.Info("cleaned up stale transfers", "count", len(seen))
 	}
 
 	return nil
