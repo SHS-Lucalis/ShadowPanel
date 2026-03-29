@@ -10,6 +10,7 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
+	"github.com/gameap/gameap/pkg/base62"
 	pkgstrings "github.com/gameap/gameap/pkg/strings"
 	"github.com/pkg/errors"
 )
@@ -162,7 +163,7 @@ func (h *Handler) prepareServer(
 	}
 
 	if server.Dir == "" {
-		server.Dir = "servers/" + server.UUID.String()
+		server.Dir = "servers/" + base62.EncodeToString(server.UUID[:])
 	}
 
 	if input.Install != nil && *input.Install {

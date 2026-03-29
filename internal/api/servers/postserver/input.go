@@ -1,13 +1,12 @@
 package postserver
 
 import (
-	"log/slog"
-
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/flexible"
+	"github.com/gameap/gameap/pkg/idgen"
 	"github.com/gameap/gameap/pkg/validation"
-	"github.com/google/uuid"
+	"github.com/rs/xid"
 )
 
 const (
@@ -112,15 +111,7 @@ func (s *serverInput) SettingsToMap() map[string]any {
 }
 
 func (s *serverInput) ToDomain() *domain.Server {
-	u, err := uuid.NewV7()
-	if err != nil {
-		slog.Error(
-			"Unable to generate server UUID",
-			slog.String("error", err.Error()),
-		)
-
-		u = uuid.New()
-	}
+	u := idgen.XIDToUUID(xid.New())
 
 	var queryPort *int
 	if s.QueryPort != nil {

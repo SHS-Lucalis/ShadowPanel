@@ -23,6 +23,7 @@ type adminGameResponse struct {
 
 type adminServerResponse struct {
 	ID               uint               `json:"id"`
+	UID              string             `json:"uid"`
 	UUID             string             `json:"uuid"`
 	UUIDShort        string             `json:"uuid_short"`
 	Enabled          bool               `json:"enabled"`
