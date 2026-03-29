@@ -10,6 +10,7 @@ import (
 	"github.com/gameap/gameap/internal/pubsub"
 	"github.com/gameap/gameap/internal/pubsub/channels"
 	"github.com/gameap/gameap/internal/pubsub/messages"
+	"github.com/gameap/gameap/pkg/idgen"
 	"github.com/gameap/gameap/pkg/proto"
 	"github.com/pkg/errors"
 )
@@ -129,7 +130,7 @@ func (d *fileDispatcher) DispatchFileList(
 
 	resp, err := d.dispatchAndWait(ctx, nodeID, messages.DaemonFileRequestPayload{
 		NodeID:     nodeID,
-		RequestID:  generateRequestID(),
+		RequestID:  idgen.New(),
 		InstanceID: d.instanceID,
 		Operation:  "file_list",
 		Data:       reqData,
@@ -161,7 +162,7 @@ func (d *fileDispatcher) DispatchFileRead(
 
 	resp, err := d.dispatchAndWait(ctx, nodeID, messages.DaemonFileRequestPayload{
 		NodeID:     nodeID,
-		RequestID:  generateRequestID(),
+		RequestID:  idgen.New(),
 		InstanceID: d.instanceID,
 		Operation:  "file_read",
 		Data:       reqData,
@@ -202,7 +203,7 @@ func (d *fileDispatcher) DispatchFileWrite(
 
 	_, err = d.dispatchAndWait(ctx, nodeID, messages.DaemonFileRequestPayload{
 		NodeID:     nodeID,
-		RequestID:  generateRequestID(),
+		RequestID:  idgen.New(),
 		InstanceID: d.instanceID,
 		Operation:  "file_write",
 		Data:       reqData,
@@ -221,7 +222,7 @@ func (d *fileDispatcher) DispatchFileOperation(
 
 	resp, err := d.dispatchAndWait(ctx, nodeID, messages.DaemonFileRequestPayload{
 		NodeID:     nodeID,
-		RequestID:  generateRequestID(),
+		RequestID:  idgen.New(),
 		InstanceID: d.instanceID,
 		Operation:  "file_operation",
 		Data:       reqData,
@@ -243,7 +244,7 @@ func (d *fileDispatcher) DispatchUploadTask(
 ) error {
 	_, err := d.dispatchAndWait(ctx, nodeID, messages.DaemonFileRequestPayload{
 		NodeID:      nodeID,
-		RequestID:   generateRequestID(),
+		RequestID:   idgen.New(),
 		InstanceID:  d.instanceID,
 		Operation:   "upload_task",
 		TransferID:  transferID,
@@ -258,7 +259,7 @@ func (d *fileDispatcher) DispatchDownloadTask(
 ) error {
 	_, err := d.dispatchAndWait(ctx, nodeID, messages.DaemonFileRequestPayload{
 		NodeID:      nodeID,
-		RequestID:   generateRequestID(),
+		RequestID:   idgen.New(),
 		InstanceID:  d.instanceID,
 		Operation:   "download_task",
 		TransferID:  transferID,
@@ -473,8 +474,4 @@ func (d *fileDispatcher) handleFileResponse(_ context.Context, msg *pubsub.Messa
 	}
 
 	return nil
-}
-
-func generateRequestID() string {
-	return time.Now().Format("20060102150405.000000000")
 }

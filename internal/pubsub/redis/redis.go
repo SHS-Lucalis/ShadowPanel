@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gameap/gameap/internal/pubsub"
-	"github.com/google/uuid"
+	"github.com/gameap/gameap/pkg/idgen"
 	"github.com/pkg/errors"
 	goredis "github.com/redis/go-redis/v9"
 )
@@ -50,7 +50,7 @@ func New(cfg Config) (*Redis, error) {
 
 	instanceID := cfg.InstanceID
 	if instanceID == "" {
-		instanceID = uuid.New().String()
+		instanceID = idgen.New()
 	}
 
 	return &Redis{
@@ -63,7 +63,7 @@ func New(cfg Config) (*Redis, error) {
 
 func NewFromClient(client *goredis.Client, instanceID string) *Redis {
 	if instanceID == "" {
-		instanceID = uuid.New().String()
+		instanceID = idgen.New()
 	}
 
 	return &Redis{

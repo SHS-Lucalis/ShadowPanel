@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/gameap/gameap/internal/pubsub"
-	"github.com/google/uuid"
+	"github.com/gameap/gameap/pkg/idgen"
 )
 
 const (
@@ -228,7 +228,7 @@ func NewMessage(channel, msgType string, payload any) (*pubsub.Message, error) {
 	}
 
 	return &pubsub.Message{
-		ID:        uuid.New().String(),
+		ID:        idgen.New(),
 		Channel:   channel,
 		Type:      msgType,
 		Payload:   data,

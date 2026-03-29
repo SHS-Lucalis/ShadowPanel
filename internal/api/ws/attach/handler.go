@@ -18,8 +18,8 @@ import (
 	"github.com/gameap/gameap/internal/ws"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
+	"github.com/gameap/gameap/pkg/idgen"
 	"github.com/gameap/gameap/pkg/proto"
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
@@ -127,7 +127,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessionID := uuid.New().String()
+	sessionID := idgen.New()
 	canSend := h.canSendCommands(ctx, sess.User, server)
 
 	h.runAttachSession(ctx, conn, server, node, sessionID, sess.User, canSend)

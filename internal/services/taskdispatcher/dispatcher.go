@@ -3,7 +3,6 @@ package taskdispatcher
 import (
 	"context"
 	"log/slog"
-	"time"
 
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
@@ -13,6 +12,7 @@ import (
 	"github.com/gameap/gameap/internal/pubsub/channels"
 	"github.com/gameap/gameap/internal/pubsub/messages"
 	"github.com/gameap/gameap/internal/repositories"
+	"github.com/gameap/gameap/pkg/idgen"
 	"github.com/gameap/gameap/pkg/proto"
 	"github.com/pkg/errors"
 )
@@ -49,7 +49,7 @@ func (d *Dispatcher) Dispatch(ctx context.Context, task *domain.DaemonTask) erro
 
 	protoTask := gateway.DomainDaemonTaskToProto(task)
 	msg := &proto.GatewayMessage{
-		RequestId: generateRequestID(task.ID),
+		RequestId: idgen.New(),
 		Payload: &proto.GatewayMessage_Task{
 			Task: protoTask,
 		},
@@ -98,7 +98,7 @@ func (d *Dispatcher) FlushPending(ctx context.Context, nodeID uint64) error {
 		task := &tasks[i]
 		protoTask := gateway.DomainDaemonTaskToProto(task)
 		msg := &proto.GatewayMessage{
-			RequestId: generateRequestID(task.ID),
+			RequestId: idgen.New(),
 			Payload: &proto.GatewayMessage_Task{
 				Task: protoTask,
 			},
@@ -222,7 +222,7 @@ func (d *Dispatcher) CancelTask(ctx context.Context, taskID uint64, reason strin
 	nodeID := uint64(task.DedicatedServerID)
 
 	msg := &proto.GatewayMessage{
-		RequestId: generateRequestID(task.ID),
+		RequestId: idgen.New(),
 		Payload: &proto.GatewayMessage_TaskCancel{
 			TaskCancel: &proto.TaskCancel{
 				TaskId: taskID,
@@ -294,23 +294,4 @@ func (d *Dispatcher) publishTaskOutput(ctx context.Context, taskID uint64, chunk
 	if err := d.publisher.Publish(ctx, channel, msg); err != nil {
 		d.logger.Warn("failed to publish task output", "task_id", taskID, "error", err)
 	}
-}
-
-func generateRequestID(taskID uint) string {
-	return time.Now().Format("20060102150405") + "-task-" + uintToString(taskID)
-}
-
-func uintToString(n uint) string {
-	if n == 0 {
-		return "0"
-	}
-	var buf [20]byte
-	i := len(buf)
-	for n > 0 {
-		i--
-		buf[i] = byte('0' + n%10)
-		n /= 10
-	}
-
-	return string(buf[i:])
 }

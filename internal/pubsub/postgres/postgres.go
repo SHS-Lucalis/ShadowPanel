@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gameap/gameap/internal/pubsub"
-	"github.com/google/uuid"
+	"github.com/gameap/gameap/pkg/idgen"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -61,7 +61,7 @@ func New(cfg Config) (*Postgres, error) {
 
 	instanceID := cfg.InstanceID
 	if instanceID == "" {
-		instanceID = uuid.New().String()
+		instanceID = idgen.New()
 	}
 
 	reconnectInterval := cfg.ReconnectInterval

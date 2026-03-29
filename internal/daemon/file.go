@@ -16,6 +16,7 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/files"
 	"github.com/gameap/gameap/internal/transfers"
+	"github.com/gameap/gameap/pkg/idgen"
 	"github.com/gameap/gameap/pkg/proto"
 	"github.com/pkg/errors"
 )
@@ -178,7 +179,7 @@ func (s *FileService) downloadStreamLocal(ctx context.Context, nodeID uint64, pa
 		return s.downloadStreamLocalChunked(ctx, nodeID, path)
 	}
 
-	transferID := generateTransferID()
+	transferID := idgen.New()
 	state := s.transferReg.Register(transferID)
 
 	go func() {
@@ -304,7 +305,7 @@ func (s *FileService) downloadStreamLocalChunked(
 }
 
 func (s *FileService) downloadStreamRemote(ctx context.Context, nodeID uint64, path string) (io.ReadCloser, error) {
-	transferID := generateTransferID()
+	transferID := idgen.New()
 
 	errCh := make(chan error, 1)
 	go func() {
@@ -478,7 +479,7 @@ func (s *FileService) UploadStream(
 		return s.gateway.RequestFileWrite(ctx, nodeID, relPath, content, mode, true)
 	}
 
-	transferID := generateTransferID()
+	transferID := idgen.New()
 	storagePath := transfers.TransferDataPath(transferID)
 
 	hasher := sha256.New()
@@ -775,8 +776,4 @@ func stripWorkPath(workPath, fullPath string) string {
 	}
 
 	return rel
-}
-
-func generateTransferID() string {
-	return generateRequestID()
 }

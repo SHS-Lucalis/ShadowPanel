@@ -9,6 +9,7 @@ import (
 	"github.com/gameap/gameap/internal/pubsub"
 	"github.com/gameap/gameap/internal/pubsub/channels"
 	"github.com/gameap/gameap/internal/pubsub/messages"
+	"github.com/gameap/gameap/pkg/idgen"
 	"github.com/gameap/gameap/pkg/proto"
 	"github.com/pkg/errors"
 )
@@ -72,7 +73,7 @@ func (d *commandDispatcher) DispatchCommand(
 
 	resp, err := d.dispatchAndWait(ctx, nodeID, messages.DaemonCommandRequestPayload{
 		NodeID:     nodeID,
-		RequestID:  generateRequestID(),
+		RequestID:  idgen.New(),
 		InstanceID: d.instanceID,
 		Data:       reqData,
 	})

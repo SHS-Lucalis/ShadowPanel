@@ -7,8 +7,8 @@ import (
 
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/ws"
+	"github.com/gameap/gameap/pkg/idgen"
 	"github.com/gameap/gameap/pkg/proto"
-	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
@@ -55,7 +55,7 @@ func (h *Handler) newGRPCMessageHandler(
 			return
 		}
 
-		commandID := uuid.New().String()
+		commandID := idgen.New()
 		h.commandHandler.TrackCommandServer(commandID, uint64(server.ID))
 		trackedCommands = append(trackedCommands, commandID)
 

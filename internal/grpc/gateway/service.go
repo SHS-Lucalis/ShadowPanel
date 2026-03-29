@@ -2,8 +2,6 @@ package gateway
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"io"
 	"log/slog"
 	"time"
@@ -12,6 +10,7 @@ import (
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/grpc/session"
 	"github.com/gameap/gameap/internal/repositories"
+	"github.com/gameap/gameap/pkg/idgen"
 	"github.com/gameap/gameap/pkg/proto"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
@@ -408,7 +407,7 @@ func (s *Service) RequestFileRead(
 		return nil, errors.New("node not connected")
 	}
 
-	requestID := generateRequestID()
+	requestID := idgen.New()
 	respCh := sess.RegisterPendingRequest(requestID)
 	defer sess.CancelPendingRequest(requestID)
 
@@ -449,7 +448,7 @@ func (s *Service) RequestFileWrite(
 		return errors.New("node not connected")
 	}
 
-	requestID := generateRequestID()
+	requestID := idgen.New()
 	respCh := sess.RegisterPendingRequest(requestID)
 	defer sess.CancelPendingRequest(requestID)
 
@@ -494,7 +493,7 @@ func (s *Service) RequestFileList(
 		return nil, errors.New("node not connected")
 	}
 
-	requestID := generateRequestID()
+	requestID := idgen.New()
 	respCh := sess.RegisterPendingRequest(requestID)
 	defer sess.CancelPendingRequest(requestID)
 
@@ -537,7 +536,7 @@ func (s *Service) RequestFileOperation(
 		return nil, errors.New("node not connected")
 	}
 
-	requestID := generateRequestID()
+	requestID := idgen.New()
 	respCh := sess.RegisterPendingRequest(requestID)
 	defer sess.CancelPendingRequest(requestID)
 
@@ -578,7 +577,7 @@ func (s *Service) RequestCommand(
 		return nil, errors.New("node not connected")
 	}
 
-	requestID := generateRequestID()
+	requestID := idgen.New()
 	respCh := sess.RegisterPendingRequest(requestID)
 	defer sess.CancelPendingRequest(requestID)
 
@@ -616,7 +615,7 @@ func (s *Service) RequestStatus(
 		return nil, errors.New("node not connected")
 	}
 
-	requestID := generateRequestID()
+	requestID := idgen.New()
 	respCh := sess.RegisterPendingRequest(requestID)
 	defer sess.CancelPendingRequest(requestID)
 
@@ -656,7 +655,7 @@ func (s *Service) RequestConsoleLog(
 		return nil, errors.New("node not connected")
 	}
 
-	requestID := generateRequestID()
+	requestID := idgen.New()
 	respCh := sess.RegisterPendingRequest(requestID)
 	defer sess.CancelPendingRequest(requestID)
 
@@ -699,7 +698,7 @@ func (s *Service) RequestFileUploadTask(
 		return errors.New("node not connected")
 	}
 
-	requestID := generateRequestID()
+	requestID := idgen.New()
 	respCh := sess.RegisterPendingRequest(requestID)
 	defer sess.CancelPendingRequest(requestID)
 
@@ -746,7 +745,7 @@ func (s *Service) RequestFileDownloadTask(
 		return errors.New("node not connected")
 	}
 
-	requestID := generateRequestID()
+	requestID := idgen.New()
 	respCh := sess.RegisterPendingRequest(requestID)
 	defer sess.CancelPendingRequest(requestID)
 
@@ -824,17 +823,4 @@ func (s *Service) Enroll(ctx context.Context, req *proto.EnrollRequest) (*proto.
 		ServerCertificate: result.ServerCertificate,
 		ServerPrivateKey:  result.ServerPrivateKey,
 	}, nil
-}
-
-func generateRequestID() string {
-	return time.Now().Format("20060102150405") + "-" + randomString(8)
-}
-
-func randomString(n int) string {
-	b := make([]byte, n)
-	if _, err := rand.Read(b); err != nil {
-		panic(err)
-	}
-
-	return hex.EncodeToString(b)[:n]
 }

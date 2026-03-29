@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/gameap/gameap/internal/pubsub"
-	"github.com/google/uuid"
+	"github.com/gameap/gameap/pkg/idgen"
 	"github.com/pkg/errors"
 )
 
@@ -50,7 +50,7 @@ func (h *Handler) RecordFailure(
 	attempts int,
 ) error {
 	failedMsg := &FailedMessage{
-		ID:           uuid.New().String(),
+		ID:           idgen.New(),
 		OriginalMsg:  msg,
 		Channel:      channel,
 		Error:        err.Error(),

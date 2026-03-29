@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gameap/gameap/internal/domain"
+	"github.com/gameap/gameap/pkg/idgen"
 	"github.com/gameap/gameap/pkg/proto"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -99,7 +100,7 @@ func (s *CommandService) executeViaDispatcher(
 
 func (s *CommandService) buildCommandRequest(command string, o CommandOption) *proto.CommandRequest {
 	return &proto.CommandRequest{
-		CommandId: generateRequestID(),
+		CommandId: idgen.New(),
 		Command:   command,
 		WorkDir:   o.WorkDir,
 		Timeout:   durationpb.New(defaultCommandTimeout),

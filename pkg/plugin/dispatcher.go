@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/gameap/gameap/internal/domain"
+	"github.com/gameap/gameap/pkg/idgen"
 	"github.com/gameap/gameap/pkg/plugin/proto"
 	domainproto "github.com/gameap/gameap/pkg/proto"
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
@@ -151,7 +151,7 @@ func (d *Dispatcher) DispatchServerEvent(
 		Type:      eventType,
 		Timestamp: time.Now().Unix(),
 		Context: &proto.PluginContext{
-			RequestId: uuid.New().String(),
+			RequestId: idgen.New(),
 		},
 		Payload: &proto.Event_ServerEvent{
 			ServerEvent: &proto.ServerEventPayload{
@@ -189,7 +189,7 @@ func (d *Dispatcher) DispatchTaskEvent(
 		Type:      eventType,
 		Timestamp: time.Now().Unix(),
 		Context: &proto.PluginContext{
-			RequestId: uuid.New().String(),
+			RequestId: idgen.New(),
 		},
 		Payload: &proto.Event_TaskEvent{
 			TaskEvent: payload,
