@@ -366,6 +366,11 @@ func (s *Service) processMessage(ctx context.Context, sess *session.Session, msg
 
 		return nil
 
+	case *proto.DaemonMessage_ConsoleLogResponse:
+		sess.ResolvePendingRequest(payload.ConsoleLogResponse.RequestId, msg)
+
+		return nil
+
 	case *proto.DaemonMessage_AttachStarted:
 		if s.attachHandler != nil {
 			return s.attachHandler.HandleAttachStarted(ctx, sess.NodeID, payload.AttachStarted)
@@ -637,6 +642,49 @@ func (s *Service) RequestStatus(
 		}
 
 		return statusResp, nil
+	}
+}
+
+func (s *Service) RequestConsoleLog(
+	ctx context.Context,
+	nodeID uint64,
+	serverID uint64,
+	maxBytes int64,
+) (*proto.ConsoleLogResponse, error) {
+	sess, ok := s.registry.GetSession(nodeID)
+	if !ok {
+		return nil, errors.New("node not connected")
+	}
+
+	requestID := generateRequestID()
+	respCh := sess.RegisterPendingRequest(requestID)
+	defer sess.CancelPendingRequest(requestID)
+
+	if err := sess.Send(&proto.GatewayMessage{
+		RequestId: requestID,
+		Payload: &proto.GatewayMessage_ConsoleLogRequest{
+			ConsoleLogRequest: &proto.ConsoleLogRequest{
+				ServerId: serverID,
+				MaxBytes: maxBytes,
+			},
+		},
+	}); err != nil {
+		return nil, errors.Wrap(err, "send console log request")
+	}
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case resp := <-respCh:
+		if resp == nil {
+			return nil, errors.New("request cancelled")
+		}
+		consoleResp := resp.GetConsoleLogResponse()
+		if consoleResp == nil {
+			return nil, errors.New("unexpected response type")
+		}
+
+		return consoleResp, nil
 	}
 }
 

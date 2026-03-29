@@ -67,6 +67,12 @@ type StatusGateway interface {
 	RequestStatus(ctx context.Context, nodeID uint64) (*proto.StatusResponse, error)
 }
 
+type ConsoleLogGateway interface {
+	RequestConsoleLog(
+		ctx context.Context, nodeID uint64, serverID uint64, maxBytes int64,
+	) (*proto.ConsoleLogResponse, error)
+}
+
 type CommandDispatcher interface {
 	Start(ctx context.Context) error
 	DispatchCommand(
@@ -77,4 +83,11 @@ type CommandDispatcher interface {
 type StatusDispatcher interface {
 	Start(ctx context.Context) error
 	DispatchStatus(ctx context.Context, nodeID uint64) (*proto.StatusResponse, error)
+}
+
+type ConsoleLogDispatcher interface {
+	Start(ctx context.Context) error
+	DispatchConsoleLog(
+		ctx context.Context, nodeID uint64, serverID uint64, maxBytes int64,
+	) (*proto.ConsoleLogResponse, error)
 }

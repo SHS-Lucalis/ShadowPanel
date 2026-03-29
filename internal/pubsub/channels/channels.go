@@ -60,6 +60,10 @@ const (
 	DaemonAttachDispatch    = DaemonPrefix + "attach:dispatch:"
 	DaemonAttachDispatchAll = DaemonPrefix + "attach:dispatch:*"
 
+	DaemonConsoleLogRequest    = DaemonPrefix + "consolelog:request:"
+	DaemonConsoleLogResponse   = DaemonPrefix + "consolelog:response:"
+	DaemonConsoleLogRequestAll = DaemonPrefix + "consolelog:request:*"
+
 	DaemonStatusRequest    = DaemonPrefix + "status:request:"
 	DaemonStatusResponse   = DaemonPrefix + "status:response:"
 	DaemonStatusRequestAll = DaemonPrefix + "status:request:*"
@@ -143,4 +147,12 @@ func BuildRealtimeAttachClosedChannel(sessionID string) string {
 
 func BuildDaemonAttachDispatchChannel(nodeID uint64) string {
 	return DaemonAttachDispatch + strconv.FormatUint(nodeID, 10)
+}
+
+func BuildDaemonConsoleLogRequestChannel(nodeID uint64) string {
+	return DaemonConsoleLogRequest + strconv.FormatUint(nodeID, 10)
+}
+
+func BuildDaemonConsoleLogResponseChannel(instanceID string) string {
+	return DaemonConsoleLogResponse + instanceID
 }

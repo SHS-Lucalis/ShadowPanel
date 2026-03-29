@@ -37,6 +37,9 @@ const (
 	TypeDaemonStatusRequest  = "daemon.status.request"
 	TypeDaemonStatusResponse = "daemon.status.response"
 
+	TypeDaemonConsoleLogRequest  = "daemon.consolelog.request"
+	TypeDaemonConsoleLogResponse = "daemon.consolelog.response"
+
 	TypeAttachStarted = "attach.started"
 	TypeAttachOutput  = "attach.output"
 	TypeAttachClosed  = "attach.closed"
@@ -196,6 +199,20 @@ type DaemonAttachDispatchPayload struct {
 	NodeID    uint64 `json:"node_id"`
 	RequestID string `json:"request_id"`
 	Data      []byte `json:"data"`
+}
+
+type DaemonConsoleLogRequestPayload struct {
+	NodeID     uint64 `json:"node_id"`
+	RequestID  string `json:"request_id"`
+	InstanceID string `json:"instance_id"`
+	ServerID   uint64 `json:"server_id"`
+	MaxBytes   int64  `json:"max_bytes"`
+}
+
+type DaemonConsoleLogResponsePayload struct {
+	RequestID string `json:"request_id"`
+	Error     string `json:"error,omitempty"`
+	Data      []byte `json:"data,omitempty"`
 }
 
 type DaemonServerConfigPayload struct {

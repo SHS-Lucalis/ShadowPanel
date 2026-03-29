@@ -107,6 +107,7 @@ func (c *InmemoryContainer) GlobalAPIService() *services.GlobalAPIService { retu
 func (c *InmemoryContainer) DaemonStatus() *daemon.StatusService          { return c.daemonStatusService }
 func (c *InmemoryContainer) DaemonFiles() *daemon.FileService             { return c.daemonFilesService }
 func (c *InmemoryContainer) DaemonCommands() *daemon.CommandService       { return c.daemonCommandsService }
+func (c *InmemoryContainer) ConsoleLogService() *daemon.ConsoleLogService { return nil }
 func (c *InmemoryContainer) PluginManager() *plugin.Manager               { return nil }
 func (c *InmemoryContainer) PluginRepository() repositories.PluginRepository {
 	return inmemory.NewPluginRepository()

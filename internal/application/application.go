@@ -172,6 +172,10 @@ func runWithGRPC(ctx context.Context, cfg *config.Config, container *Container) 
 		slog.ErrorContext(ctx, "Failed to start status dispatcher", slog.String("error", err.Error()))
 	}
 
+	if err := container.ConsoleLogDispatcher().Start(ctx); err != nil {
+		slog.ErrorContext(ctx, "Failed to start console log dispatcher", slog.String("error", err.Error()))
+	}
+
 	grpcServer := container.GRPCServer()
 	grpcAddr := fmt.Sprintf("%s:%d", cfg.HTTPHost, cfg.GRPC.Port)
 

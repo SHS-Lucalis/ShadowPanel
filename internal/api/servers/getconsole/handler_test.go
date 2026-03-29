@@ -749,7 +749,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			responder := api.NewResponder()
 			mockFS := tt.setupMockFS()
 			mockDaemon := tt.setupMockDaemon()
-			handler := NewHandler(serverRepo, nodeRepo, rbacService, mockDaemon, mockFS, responder)
+			handler := NewHandler(serverRepo, nodeRepo, rbacService, mockDaemon, mockFS, nil, responder)
 
 			if tt.setupRepo != nil {
 				tt.setupRepo(serverRepo, nodeRepo, rbacRepo)
@@ -800,7 +800,7 @@ func TestHandler_NewHandler(t *testing.T) {
 	mockDaemon := &mockDaemonCommands{}
 	responder := api.NewResponder()
 
-	handler := NewHandler(serverRepo, nodeRepo, rbacService, mockDaemon, mockFS, responder)
+	handler := NewHandler(serverRepo, nodeRepo, rbacService, mockDaemon, mockFS, nil, responder)
 
 	require.NotNil(t, handler)
 	assert.NotNil(t, handler.serverFinder)

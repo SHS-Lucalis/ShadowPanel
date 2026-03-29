@@ -37,6 +37,7 @@ type DaemonMessage struct {
 	//	*DaemonMessage_AttachStarted
 	//	*DaemonMessage_AttachOutput
 	//	*DaemonMessage_AttachClosed
+	//	*DaemonMessage_ConsoleLogResponse
 	//	*DaemonMessage_ServerStatuses
 	//	*DaemonMessage_FileReadResponse
 	//	*DaemonMessage_FileWriteResponse
@@ -173,6 +174,15 @@ func (x *DaemonMessage) GetAttachClosed() *AttachClosed {
 	return nil
 }
 
+func (x *DaemonMessage) GetConsoleLogResponse() *ConsoleLogResponse {
+	if x != nil {
+		if x, ok := x.Payload.(*DaemonMessage_ConsoleLogResponse); ok {
+			return x.ConsoleLogResponse
+		}
+	}
+	return nil
+}
+
 func (x *DaemonMessage) GetServerStatuses() *ServerStatusBatch {
 	if x != nil {
 		if x, ok := x.Payload.(*DaemonMessage_ServerStatuses); ok {
@@ -267,6 +277,10 @@ type DaemonMessage_AttachClosed struct {
 	AttachClosed *AttachClosed `protobuf:"bytes,34,opt,name=attach_closed,json=attachClosed,proto3,oneof"`
 }
 
+type DaemonMessage_ConsoleLogResponse struct {
+	ConsoleLogResponse *ConsoleLogResponse `protobuf:"bytes,35,opt,name=console_log_response,json=consoleLogResponse,proto3,oneof"`
+}
+
 type DaemonMessage_ServerStatuses struct {
 	ServerStatuses *ServerStatusBatch `protobuf:"bytes,50,opt,name=server_statuses,json=serverStatuses,proto3,oneof"`
 }
@@ -309,6 +323,8 @@ func (*DaemonMessage_AttachOutput) isDaemonMessage_Payload() {}
 
 func (*DaemonMessage_AttachClosed) isDaemonMessage_Payload() {}
 
+func (*DaemonMessage_ConsoleLogResponse) isDaemonMessage_Payload() {}
+
 func (*DaemonMessage_ServerStatuses) isDaemonMessage_Payload() {}
 
 func (*DaemonMessage_FileReadResponse) isDaemonMessage_Payload() {}
@@ -334,6 +350,7 @@ type GatewayMessage struct {
 	//	*GatewayMessage_AttachRequest
 	//	*GatewayMessage_AttachInput
 	//	*GatewayMessage_AttachDetach
+	//	*GatewayMessage_ConsoleLogRequest
 	//	*GatewayMessage_ServerConfig
 	//	*GatewayMessage_ServerConfigBatch
 	//	*GatewayMessage_FileRead
@@ -464,6 +481,15 @@ func (x *GatewayMessage) GetAttachDetach() *AttachDetach {
 	return nil
 }
 
+func (x *GatewayMessage) GetConsoleLogRequest() *ConsoleLogRequest {
+	if x != nil {
+		if x, ok := x.Payload.(*GatewayMessage_ConsoleLogRequest); ok {
+			return x.ConsoleLogRequest
+		}
+	}
+	return nil
+}
+
 func (x *GatewayMessage) GetServerConfig() *Server {
 	if x != nil {
 		if x, ok := x.Payload.(*GatewayMessage_ServerConfig); ok {
@@ -581,6 +607,10 @@ type GatewayMessage_AttachDetach struct {
 	AttachDetach *AttachDetach `protobuf:"bytes,36,opt,name=attach_detach,json=attachDetach,proto3,oneof"`
 }
 
+type GatewayMessage_ConsoleLogRequest struct {
+	ConsoleLogRequest *ConsoleLogRequest `protobuf:"bytes,37,opt,name=console_log_request,json=consoleLogRequest,proto3,oneof"`
+}
+
 type GatewayMessage_ServerConfig struct {
 	ServerConfig *Server `protobuf:"bytes,50,opt,name=server_config,json=serverConfig,proto3,oneof"`
 }
@@ -632,6 +662,8 @@ func (*GatewayMessage_AttachRequest) isGatewayMessage_Payload() {}
 func (*GatewayMessage_AttachInput) isGatewayMessage_Payload() {}
 
 func (*GatewayMessage_AttachDetach) isGatewayMessage_Payload() {}
+
+func (*GatewayMessage_ConsoleLogRequest) isGatewayMessage_Payload() {}
 
 func (*GatewayMessage_ServerConfig) isGatewayMessage_Payload() {}
 
@@ -2631,6 +2663,126 @@ func (x *AttachClosed) GetExitCode() int32 {
 	return 0
 }
 
+type ConsoleLogRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ServerId      uint64                 `protobuf:"varint,1,opt,name=server_id,json=serverId,proto3" json:"server_id,omitempty"`
+	MaxBytes      int64                  `protobuf:"varint,2,opt,name=max_bytes,json=maxBytes,proto3" json:"max_bytes,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ConsoleLogRequest) Reset() {
+	*x = ConsoleLogRequest{}
+	mi := &file_pkg_proto_gateway_proto_msgTypes[33]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConsoleLogRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConsoleLogRequest) ProtoMessage() {}
+
+func (x *ConsoleLogRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_gateway_proto_msgTypes[33]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConsoleLogRequest.ProtoReflect.Descriptor instead.
+func (*ConsoleLogRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_gateway_proto_rawDescGZIP(), []int{33}
+}
+
+func (x *ConsoleLogRequest) GetServerId() uint64 {
+	if x != nil {
+		return x.ServerId
+	}
+	return 0
+}
+
+func (x *ConsoleLogRequest) GetMaxBytes() int64 {
+	if x != nil {
+		return x.MaxBytes
+	}
+	return 0
+}
+
+type ConsoleLogResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RequestId     string                 `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	Success       bool                   `protobuf:"varint,2,opt,name=success,proto3" json:"success,omitempty"`
+	Data          []byte                 `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
+	Error         string                 `protobuf:"bytes,4,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ConsoleLogResponse) Reset() {
+	*x = ConsoleLogResponse{}
+	mi := &file_pkg_proto_gateway_proto_msgTypes[34]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConsoleLogResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConsoleLogResponse) ProtoMessage() {}
+
+func (x *ConsoleLogResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_gateway_proto_msgTypes[34]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConsoleLogResponse.ProtoReflect.Descriptor instead.
+func (*ConsoleLogResponse) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_gateway_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *ConsoleLogResponse) GetRequestId() string {
+	if x != nil {
+		return x.RequestId
+	}
+	return ""
+}
+
+func (x *ConsoleLogResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *ConsoleLogResponse) GetData() []byte {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
+func (x *ConsoleLogResponse) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
 type StatusRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -2639,7 +2791,7 @@ type StatusRequest struct {
 
 func (x *StatusRequest) Reset() {
 	*x = StatusRequest{}
-	mi := &file_pkg_proto_gateway_proto_msgTypes[33]
+	mi := &file_pkg_proto_gateway_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2651,7 +2803,7 @@ func (x *StatusRequest) String() string {
 func (*StatusRequest) ProtoMessage() {}
 
 func (x *StatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_proto_gateway_proto_msgTypes[33]
+	mi := &file_pkg_proto_gateway_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2664,7 +2816,7 @@ func (x *StatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StatusRequest.ProtoReflect.Descriptor instead.
 func (*StatusRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_proto_gateway_proto_rawDescGZIP(), []int{33}
+	return file_pkg_proto_gateway_proto_rawDescGZIP(), []int{35}
 }
 
 type StatusResponse struct {
@@ -2684,7 +2836,7 @@ type StatusResponse struct {
 
 func (x *StatusResponse) Reset() {
 	*x = StatusResponse{}
-	mi := &file_pkg_proto_gateway_proto_msgTypes[34]
+	mi := &file_pkg_proto_gateway_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2696,7 +2848,7 @@ func (x *StatusResponse) String() string {
 func (*StatusResponse) ProtoMessage() {}
 
 func (x *StatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_proto_gateway_proto_msgTypes[34]
+	mi := &file_pkg_proto_gateway_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2709,7 +2861,7 @@ func (x *StatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StatusResponse.ProtoReflect.Descriptor instead.
 func (*StatusResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_proto_gateway_proto_rawDescGZIP(), []int{34}
+	return file_pkg_proto_gateway_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *StatusResponse) GetRequestId() string {
@@ -2779,7 +2931,7 @@ var File_pkg_proto_gateway_proto protoreflect.FileDescriptor
 
 const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"\n" +
-	"\x17pkg/proto/gateway.proto\x12\x06gameap\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x1apkg/proto/daemontask.proto\x1a\x16pkg/proto/server.proto\x1a\x14pkg/proto/game.proto\x1a\x17pkg/proto/gamemod.proto\x1a\x1cpkg/proto/filetransfer.proto\"\x94\b\n" +
+	"\x17pkg/proto/gateway.proto\x12\x06gameap\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x1apkg/proto/daemontask.proto\x1a\x16pkg/proto/server.proto\x1a\x14pkg/proto/game.proto\x1a\x17pkg/proto/gamemod.proto\x1a\x1cpkg/proto/filetransfer.proto\"\xe4\b\n" +
 	"\rDaemonMessage\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x01 \x01(\tR\trequestId\x125\n" +
@@ -2794,14 +2946,15 @@ const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"\x0ecommand_result\x18\x1f \x01(\v2\x15.gameap.CommandResultH\x00R\rcommandResult\x12>\n" +
 	"\x0eattach_started\x18  \x01(\v2\x15.gameap.AttachStartedH\x00R\rattachStarted\x12;\n" +
 	"\rattach_output\x18! \x01(\v2\x14.gameap.AttachOutputH\x00R\fattachOutput\x12;\n" +
-	"\rattach_closed\x18\" \x01(\v2\x14.gameap.AttachClosedH\x00R\fattachClosed\x12D\n" +
+	"\rattach_closed\x18\" \x01(\v2\x14.gameap.AttachClosedH\x00R\fattachClosed\x12N\n" +
+	"\x14console_log_response\x18# \x01(\v2\x1a.gameap.ConsoleLogResponseH\x00R\x12consoleLogResponse\x12D\n" +
 	"\x0fserver_statuses\x182 \x01(\v2\x19.gameap.ServerStatusBatchH\x00R\x0eserverStatuses\x12H\n" +
 	"\x12file_read_response\x18< \x01(\v2\x18.gameap.FileReadResponseH\x00R\x10fileReadResponse\x12K\n" +
 	"\x13file_write_response\x18= \x01(\v2\x19.gameap.FileWriteResponseH\x00R\x11fileWriteResponse\x12H\n" +
 	"\x12file_list_response\x18> \x01(\v2\x18.gameap.FileListResponseH\x00R\x10fileListResponse\x12W\n" +
 	"\x17file_operation_response\x18? \x01(\v2\x1d.gameap.FileOperationResponseH\x00R\x15fileOperationResponse\x12A\n" +
 	"\x0fstatus_response\x18F \x01(\v2\x16.gameap.StatusResponseH\x00R\x0estatusResponseB\t\n" +
-	"\apayload\"\xc0\b\n" +
+	"\apayload\"\x8d\t\n" +
 	"\x0eGatewayMessage\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x01 \x01(\tR\trequestId\x128\n" +
@@ -2814,7 +2967,8 @@ const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"\acommand\x18\x1e \x01(\v2\x16.gameap.CommandRequestH\x00R\acommand\x12>\n" +
 	"\x0eattach_request\x18\" \x01(\v2\x15.gameap.AttachRequestH\x00R\rattachRequest\x128\n" +
 	"\fattach_input\x18# \x01(\v2\x13.gameap.AttachInputH\x00R\vattachInput\x12;\n" +
-	"\rattach_detach\x18$ \x01(\v2\x14.gameap.AttachDetachH\x00R\fattachDetach\x125\n" +
+	"\rattach_detach\x18$ \x01(\v2\x14.gameap.AttachDetachH\x00R\fattachDetach\x12K\n" +
+	"\x13console_log_request\x18% \x01(\v2\x19.gameap.ConsoleLogRequestH\x00R\x11consoleLogRequest\x125\n" +
 	"\rserver_config\x182 \x01(\v2\x0e.gameap.ServerH\x00R\fserverConfig\x12K\n" +
 	"\x13server_config_batch\x183 \x01(\v2\x19.gameap.ServerConfigBatchH\x00R\x11serverConfigBatch\x126\n" +
 	"\tfile_read\x18< \x01(\v2\x17.gameap.FileReadRequestH\x00R\bfileRead\x129\n" +
@@ -2987,7 +3141,16 @@ const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x16\n" +
 	"\x06reason\x18\x02 \x01(\tR\x06reason\x12\x1b\n" +
-	"\texit_code\x18\x03 \x01(\x05R\bexitCode\"\x0f\n" +
+	"\texit_code\x18\x03 \x01(\x05R\bexitCode\"M\n" +
+	"\x11ConsoleLogRequest\x12\x1b\n" +
+	"\tserver_id\x18\x01 \x01(\x04R\bserverId\x12\x1b\n" +
+	"\tmax_bytes\x18\x02 \x01(\x03R\bmaxBytes\"w\n" +
+	"\x12ConsoleLogResponse\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x01 \x01(\tR\trequestId\x12\x18\n" +
+	"\asuccess\x18\x02 \x01(\bR\asuccess\x12\x12\n" +
+	"\x04data\x18\x03 \x01(\fR\x04data\x12\x14\n" +
+	"\x05error\x18\x04 \x01(\tR\x05error\"\x0f\n" +
 	"\rStatusRequest\"\xb0\x02\n" +
 	"\x0eStatusResponse\x12\x1d\n" +
 	"\n" +
@@ -3017,7 +3180,7 @@ func file_pkg_proto_gateway_proto_rawDescGZIP() []byte {
 	return file_pkg_proto_gateway_proto_rawDescData
 }
 
-var file_pkg_proto_gateway_proto_msgTypes = make([]protoimpl.MessageInfo, 35)
+var file_pkg_proto_gateway_proto_msgTypes = make([]protoimpl.MessageInfo, 37)
 var file_pkg_proto_gateway_proto_goTypes = []any{
 	(*DaemonMessage)(nil),         // 0: gameap.DaemonMessage
 	(*GatewayMessage)(nil),        // 1: gameap.GatewayMessage
@@ -3052,18 +3215,20 @@ var file_pkg_proto_gateway_proto_goTypes = []any{
 	(*AttachOutput)(nil),          // 30: gameap.AttachOutput
 	(*AttachDetach)(nil),          // 31: gameap.AttachDetach
 	(*AttachClosed)(nil),          // 32: gameap.AttachClosed
-	(*StatusRequest)(nil),         // 33: gameap.StatusRequest
-	(*StatusResponse)(nil),        // 34: gameap.StatusResponse
-	(*FileOperationResponse)(nil), // 35: gameap.FileOperationResponse
-	(*DaemonTask)(nil),            // 36: gameap.DaemonTask
-	(*Server)(nil),                // 37: gameap.Server
-	(*FileOperationRequest)(nil),  // 38: gameap.FileOperationRequest
-	(DaemonTaskStatus)(0),         // 39: gameap.DaemonTaskStatus
-	(*timestamppb.Timestamp)(nil), // 40: google.protobuf.Timestamp
-	(*Game)(nil),                  // 41: gameap.Game
-	(*GameMod)(nil),               // 42: gameap.GameMod
-	(*durationpb.Duration)(nil),   // 43: google.protobuf.Duration
-	(*FileStat)(nil),              // 44: gameap.FileStat
+	(*ConsoleLogRequest)(nil),     // 33: gameap.ConsoleLogRequest
+	(*ConsoleLogResponse)(nil),    // 34: gameap.ConsoleLogResponse
+	(*StatusRequest)(nil),         // 35: gameap.StatusRequest
+	(*StatusResponse)(nil),        // 36: gameap.StatusResponse
+	(*FileOperationResponse)(nil), // 37: gameap.FileOperationResponse
+	(*DaemonTask)(nil),            // 38: gameap.DaemonTask
+	(*Server)(nil),                // 39: gameap.Server
+	(*FileOperationRequest)(nil),  // 40: gameap.FileOperationRequest
+	(DaemonTaskStatus)(0),         // 41: gameap.DaemonTaskStatus
+	(*timestamppb.Timestamp)(nil), // 42: google.protobuf.Timestamp
+	(*Game)(nil),                  // 43: gameap.Game
+	(*GameMod)(nil),               // 44: gameap.GameMod
+	(*durationpb.Duration)(nil),   // 45: google.protobuf.Duration
+	(*FileStat)(nil),              // 46: gameap.FileStat
 }
 var file_pkg_proto_gateway_proto_depIdxs = []int32{
 	2,  // 0: gameap.DaemonMessage.register:type_name -> gameap.RegisterRequest
@@ -3075,55 +3240,57 @@ var file_pkg_proto_gateway_proto_depIdxs = []int32{
 	28, // 6: gameap.DaemonMessage.attach_started:type_name -> gameap.AttachStarted
 	30, // 7: gameap.DaemonMessage.attach_output:type_name -> gameap.AttachOutput
 	32, // 8: gameap.DaemonMessage.attach_closed:type_name -> gameap.AttachClosed
-	14, // 9: gameap.DaemonMessage.server_statuses:type_name -> gameap.ServerStatusBatch
-	18, // 10: gameap.DaemonMessage.file_read_response:type_name -> gameap.FileReadResponse
-	20, // 11: gameap.DaemonMessage.file_write_response:type_name -> gameap.FileWriteResponse
-	22, // 12: gameap.DaemonMessage.file_list_response:type_name -> gameap.FileListResponse
-	35, // 13: gameap.DaemonMessage.file_operation_response:type_name -> gameap.FileOperationResponse
-	34, // 14: gameap.DaemonMessage.status_response:type_name -> gameap.StatusResponse
-	4,  // 15: gameap.GatewayMessage.register_ack:type_name -> gameap.RegisterAck
-	16, // 16: gameap.GatewayMessage.shutdown:type_name -> gameap.ShutdownNotification
-	36, // 17: gameap.GatewayMessage.task:type_name -> gameap.DaemonTask
-	9,  // 18: gameap.GatewayMessage.task_cancel:type_name -> gameap.TaskCancel
-	10, // 19: gameap.GatewayMessage.command:type_name -> gameap.CommandRequest
-	27, // 20: gameap.GatewayMessage.attach_request:type_name -> gameap.AttachRequest
-	29, // 21: gameap.GatewayMessage.attach_input:type_name -> gameap.AttachInput
-	31, // 22: gameap.GatewayMessage.attach_detach:type_name -> gameap.AttachDetach
-	37, // 23: gameap.GatewayMessage.server_config:type_name -> gameap.Server
-	15, // 24: gameap.GatewayMessage.server_config_batch:type_name -> gameap.ServerConfigBatch
-	17, // 25: gameap.GatewayMessage.file_read:type_name -> gameap.FileReadRequest
-	19, // 26: gameap.GatewayMessage.file_write:type_name -> gameap.FileWriteRequest
-	21, // 27: gameap.GatewayMessage.file_list:type_name -> gameap.FileListRequest
-	23, // 28: gameap.GatewayMessage.file_upload_task:type_name -> gameap.FileUploadTask
-	38, // 29: gameap.GatewayMessage.file_operation:type_name -> gameap.FileOperationRequest
-	24, // 30: gameap.GatewayMessage.file_download_task:type_name -> gameap.FileDownloadTask
-	33, // 31: gameap.GatewayMessage.status_request:type_name -> gameap.StatusRequest
-	3,  // 32: gameap.RegisterRequest.in_flight_tasks:type_name -> gameap.InFlightTask
-	39, // 33: gameap.InFlightTask.status:type_name -> gameap.DaemonTaskStatus
-	40, // 34: gameap.InFlightTask.started_at:type_name -> google.protobuf.Timestamp
-	37, // 35: gameap.RegisterAck.servers:type_name -> gameap.Server
-	36, // 36: gameap.RegisterAck.pending_tasks:type_name -> gameap.DaemonTask
-	41, // 37: gameap.RegisterAck.games:type_name -> gameap.Game
-	42, // 38: gameap.RegisterAck.game_mods:type_name -> gameap.GameMod
-	43, // 39: gameap.RegisterAck.heartbeat_interval:type_name -> google.protobuf.Duration
-	40, // 40: gameap.Heartbeat.timestamp:type_name -> google.protobuf.Timestamp
-	6,  // 41: gameap.Heartbeat.system_stats:type_name -> gameap.SystemStats
-	39, // 42: gameap.TaskStatusUpdate.status:type_name -> gameap.DaemonTaskStatus
-	43, // 43: gameap.CommandRequest.timeout:type_name -> google.protobuf.Duration
-	40, // 44: gameap.ServerStatus.last_check:type_name -> google.protobuf.Timestamp
-	13, // 45: gameap.ServerStatusBatch.statuses:type_name -> gameap.ServerStatus
-	37, // 46: gameap.ServerConfigBatch.servers:type_name -> gameap.Server
-	43, // 47: gameap.ShutdownNotification.reconnect_delay:type_name -> google.protobuf.Duration
-	44, // 48: gameap.FileListResponse.files:type_name -> gameap.FileStat
-	0,  // 49: gameap.DaemonGateway.Connect:input_type -> gameap.DaemonMessage
-	25, // 50: gameap.DaemonGateway.Enroll:input_type -> gameap.EnrollRequest
-	1,  // 51: gameap.DaemonGateway.Connect:output_type -> gameap.GatewayMessage
-	26, // 52: gameap.DaemonGateway.Enroll:output_type -> gameap.EnrollResponse
-	51, // [51:53] is the sub-list for method output_type
-	49, // [49:51] is the sub-list for method input_type
-	49, // [49:49] is the sub-list for extension type_name
-	49, // [49:49] is the sub-list for extension extendee
-	0,  // [0:49] is the sub-list for field type_name
+	34, // 9: gameap.DaemonMessage.console_log_response:type_name -> gameap.ConsoleLogResponse
+	14, // 10: gameap.DaemonMessage.server_statuses:type_name -> gameap.ServerStatusBatch
+	18, // 11: gameap.DaemonMessage.file_read_response:type_name -> gameap.FileReadResponse
+	20, // 12: gameap.DaemonMessage.file_write_response:type_name -> gameap.FileWriteResponse
+	22, // 13: gameap.DaemonMessage.file_list_response:type_name -> gameap.FileListResponse
+	37, // 14: gameap.DaemonMessage.file_operation_response:type_name -> gameap.FileOperationResponse
+	36, // 15: gameap.DaemonMessage.status_response:type_name -> gameap.StatusResponse
+	4,  // 16: gameap.GatewayMessage.register_ack:type_name -> gameap.RegisterAck
+	16, // 17: gameap.GatewayMessage.shutdown:type_name -> gameap.ShutdownNotification
+	38, // 18: gameap.GatewayMessage.task:type_name -> gameap.DaemonTask
+	9,  // 19: gameap.GatewayMessage.task_cancel:type_name -> gameap.TaskCancel
+	10, // 20: gameap.GatewayMessage.command:type_name -> gameap.CommandRequest
+	27, // 21: gameap.GatewayMessage.attach_request:type_name -> gameap.AttachRequest
+	29, // 22: gameap.GatewayMessage.attach_input:type_name -> gameap.AttachInput
+	31, // 23: gameap.GatewayMessage.attach_detach:type_name -> gameap.AttachDetach
+	33, // 24: gameap.GatewayMessage.console_log_request:type_name -> gameap.ConsoleLogRequest
+	39, // 25: gameap.GatewayMessage.server_config:type_name -> gameap.Server
+	15, // 26: gameap.GatewayMessage.server_config_batch:type_name -> gameap.ServerConfigBatch
+	17, // 27: gameap.GatewayMessage.file_read:type_name -> gameap.FileReadRequest
+	19, // 28: gameap.GatewayMessage.file_write:type_name -> gameap.FileWriteRequest
+	21, // 29: gameap.GatewayMessage.file_list:type_name -> gameap.FileListRequest
+	23, // 30: gameap.GatewayMessage.file_upload_task:type_name -> gameap.FileUploadTask
+	40, // 31: gameap.GatewayMessage.file_operation:type_name -> gameap.FileOperationRequest
+	24, // 32: gameap.GatewayMessage.file_download_task:type_name -> gameap.FileDownloadTask
+	35, // 33: gameap.GatewayMessage.status_request:type_name -> gameap.StatusRequest
+	3,  // 34: gameap.RegisterRequest.in_flight_tasks:type_name -> gameap.InFlightTask
+	41, // 35: gameap.InFlightTask.status:type_name -> gameap.DaemonTaskStatus
+	42, // 36: gameap.InFlightTask.started_at:type_name -> google.protobuf.Timestamp
+	39, // 37: gameap.RegisterAck.servers:type_name -> gameap.Server
+	38, // 38: gameap.RegisterAck.pending_tasks:type_name -> gameap.DaemonTask
+	43, // 39: gameap.RegisterAck.games:type_name -> gameap.Game
+	44, // 40: gameap.RegisterAck.game_mods:type_name -> gameap.GameMod
+	45, // 41: gameap.RegisterAck.heartbeat_interval:type_name -> google.protobuf.Duration
+	42, // 42: gameap.Heartbeat.timestamp:type_name -> google.protobuf.Timestamp
+	6,  // 43: gameap.Heartbeat.system_stats:type_name -> gameap.SystemStats
+	41, // 44: gameap.TaskStatusUpdate.status:type_name -> gameap.DaemonTaskStatus
+	45, // 45: gameap.CommandRequest.timeout:type_name -> google.protobuf.Duration
+	42, // 46: gameap.ServerStatus.last_check:type_name -> google.protobuf.Timestamp
+	13, // 47: gameap.ServerStatusBatch.statuses:type_name -> gameap.ServerStatus
+	39, // 48: gameap.ServerConfigBatch.servers:type_name -> gameap.Server
+	45, // 49: gameap.ShutdownNotification.reconnect_delay:type_name -> google.protobuf.Duration
+	46, // 50: gameap.FileListResponse.files:type_name -> gameap.FileStat
+	0,  // 51: gameap.DaemonGateway.Connect:input_type -> gameap.DaemonMessage
+	25, // 52: gameap.DaemonGateway.Enroll:input_type -> gameap.EnrollRequest
+	1,  // 53: gameap.DaemonGateway.Connect:output_type -> gameap.GatewayMessage
+	26, // 54: gameap.DaemonGateway.Enroll:output_type -> gameap.EnrollResponse
+	53, // [53:55] is the sub-list for method output_type
+	51, // [51:53] is the sub-list for method input_type
+	51, // [51:51] is the sub-list for extension type_name
+	51, // [51:51] is the sub-list for extension extendee
+	0,  // [0:51] is the sub-list for field type_name
 }
 
 func init() { file_pkg_proto_gateway_proto_init() }
@@ -3146,6 +3313,7 @@ func file_pkg_proto_gateway_proto_init() {
 		(*DaemonMessage_AttachStarted)(nil),
 		(*DaemonMessage_AttachOutput)(nil),
 		(*DaemonMessage_AttachClosed)(nil),
+		(*DaemonMessage_ConsoleLogResponse)(nil),
 		(*DaemonMessage_ServerStatuses)(nil),
 		(*DaemonMessage_FileReadResponse)(nil),
 		(*DaemonMessage_FileWriteResponse)(nil),
@@ -3162,6 +3330,7 @@ func file_pkg_proto_gateway_proto_init() {
 		(*GatewayMessage_AttachRequest)(nil),
 		(*GatewayMessage_AttachInput)(nil),
 		(*GatewayMessage_AttachDetach)(nil),
+		(*GatewayMessage_ConsoleLogRequest)(nil),
 		(*GatewayMessage_ServerConfig)(nil),
 		(*GatewayMessage_ServerConfigBatch)(nil),
 		(*GatewayMessage_FileRead)(nil),
@@ -3178,7 +3347,7 @@ func file_pkg_proto_gateway_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_proto_gateway_proto_rawDesc), len(file_pkg_proto_gateway_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   35,
+			NumMessages:   37,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

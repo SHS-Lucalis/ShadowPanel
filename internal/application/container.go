@@ -132,14 +132,16 @@ type Container struct {
 	enrollmentService *enrollment.Service
 
 	// Daemon Services
-	daemonStatus       *daemon.StatusService
-	daemonStatusLegacy *daemon.StatusBINNService
-	daemonFiles        *daemon.FileService
-	fileDispatcher     daemon.FileDispatcher
-	commandDispatcher  daemon.CommandDispatcher
-	statusDispatcher   daemon.StatusDispatcher
-	daemonCommands     *daemon.CommandService
-	daemonCommandsLeg  *daemon.CommandBINNService
+	daemonStatus         *daemon.StatusService
+	daemonStatusLegacy   *daemon.StatusBINNService
+	daemonFiles          *daemon.FileService
+	fileDispatcher       daemon.FileDispatcher
+	commandDispatcher    daemon.CommandDispatcher
+	statusDispatcher     daemon.StatusDispatcher
+	consoleLogDispatcher daemon.ConsoleLogDispatcher
+	daemonCommands       *daemon.CommandService
+	daemonCommandsLeg    *daemon.CommandBINNService
+	daemonConsoleLog     *daemon.ConsoleLogService
 
 	// Plugins
 	pluginManager    *pkgplugin.Manager
@@ -1346,6 +1348,38 @@ func (c *Container) StatusDispatcher() daemon.StatusDispatcher {
 	}
 
 	return c.statusDispatcher
+}
+
+func (c *Container) ConsoleLogDispatcher() daemon.ConsoleLogDispatcher {
+	if c.consoleLogDispatcher == nil {
+		instanceID := c.config.PubSub.InstanceID
+		if instanceID == "" {
+			instanceID = defaultInstanceID
+		}
+
+		c.consoleLogDispatcher = daemon.NewConsoleLogDispatcher(
+			c.PubSub(),
+			c.GatewayService(),
+			c.SessionRegistry(),
+			instanceID,
+			slog.Default(),
+		)
+	}
+
+	return c.consoleLogDispatcher
+}
+
+func (c *Container) ConsoleLogService() *daemon.ConsoleLogService {
+	if c.daemonConsoleLog == nil {
+		c.daemonConsoleLog = daemon.NewConsoleLogService(
+			c.GatewayService(),
+			c.SessionRegistry(),
+			c.ConsoleLogDispatcher(),
+			slog.Default(),
+		)
+	}
+
+	return c.daemonConsoleLog
 }
 
 func (c *Container) PluginManager() *pkgplugin.Manager {

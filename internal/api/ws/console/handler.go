@@ -42,18 +42,23 @@ type fileService interface {
 	Upload(ctx context.Context, node *domain.Node, filePath string, content []byte, perms os.FileMode) error
 }
 
+type consoleLogService interface {
+	GetConsoleLog(ctx context.Context, nodeID uint64, serverID uint64, maxBytes int64) (string, error)
+}
+
 type Handler struct {
-	serverFinder   *serversbase.ServerFinder
-	abilityChecker *serversbase.AbilityChecker
-	nodeRepo       repositories.NodeRepository
-	hub            *ws.Hub
-	originPatterns []string
-	registry       *session.Registry
-	commandHandler *handlers.CommandHandler
-	daemonCommands daemonCommands
-	fileService    fileService
-	responder      base.Responder
-	logger         *slog.Logger
+	serverFinder      *serversbase.ServerFinder
+	abilityChecker    *serversbase.AbilityChecker
+	nodeRepo          repositories.NodeRepository
+	hub               *ws.Hub
+	originPatterns    []string
+	registry          *session.Registry
+	commandHandler    *handlers.CommandHandler
+	daemonCommands    daemonCommands
+	fileService       fileService
+	consoleLogService consoleLogService
+	responder         base.Responder
+	logger            *slog.Logger
 }
 
 func NewHandler(
@@ -66,20 +71,22 @@ func NewHandler(
 	commandHandler *handlers.CommandHandler,
 	daemonCommands daemonCommands,
 	fileService fileService,
+	cls consoleLogService,
 	responder base.Responder,
 ) *Handler {
 	return &Handler{
-		serverFinder:   serversbase.NewServerFinder(serverRepo, rbac),
-		abilityChecker: serversbase.NewAbilityChecker(rbac),
-		nodeRepo:       nodeRepo,
-		hub:            hub,
-		originPatterns: originPatterns,
-		registry:       registry,
-		commandHandler: commandHandler,
-		daemonCommands: daemonCommands,
-		fileService:    fileService,
-		responder:      responder,
-		logger:         slog.Default(),
+		serverFinder:      serversbase.NewServerFinder(serverRepo, rbac),
+		abilityChecker:    serversbase.NewAbilityChecker(rbac),
+		nodeRepo:          nodeRepo,
+		hub:               hub,
+		originPatterns:    originPatterns,
+		registry:          registry,
+		commandHandler:    commandHandler,
+		daemonCommands:    daemonCommands,
+		fileService:       fileService,
+		consoleLogService: cls,
+		responder:         responder,
+		logger:            slog.Default(),
 	}
 }
 
@@ -209,6 +216,17 @@ func (h *Handler) sendConsoleHistory(ctx context.Context, client *ws.Client, ser
 }
 
 func (h *Handler) getConsoleLog(ctx context.Context, server *domain.Server, node *domain.Node) (string, error) {
+	if h.consoleLogService != nil {
+		output, err := h.consoleLogService.GetConsoleLog(ctx, uint64(node.ID), uint64(server.ID), 0)
+		if err == nil {
+			return output, nil
+		}
+
+		h.logger.Debug("console log service unavailable, falling back",
+			"server_id", server.ID, "error", err,
+		)
+	}
+
 	if node.ScriptGetConsole != nil && *node.ScriptGetConsole != "" {
 		cmd := server.ReplaceServerShortcodes(node, *node.ScriptGetConsole, nil)
 

@@ -191,6 +191,7 @@ type container interface {
 	DaemonStatus() *daemon.StatusService
 	DaemonFiles() *daemon.FileService
 	DaemonCommands() *daemon.CommandService
+	ConsoleLogService() *daemon.ConsoleLogService
 	PluginManager() *plugin.Manager
 	PluginRepository() repositories.PluginRepository
 	PluginLoader() *internalplugin.Loader
@@ -609,6 +610,7 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 				c.RBAC(),
 				c.DaemonCommands(),
 				c.DaemonFiles(),
+				c.ConsoleLogService(),
 				c.Responder(),
 			),
 			CheckPATAbilities: []domain.PATAbility{
@@ -1594,6 +1596,7 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 				c.CommandHandler(),
 				c.DaemonCommands(),
 				c.DaemonFiles(),
+				c.ConsoleLogService(),
 				c.Responder(),
 			),
 		},

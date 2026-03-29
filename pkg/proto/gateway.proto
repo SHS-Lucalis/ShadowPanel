@@ -32,6 +32,7 @@ message DaemonMessage {
     AttachStarted attach_started = 32;
     AttachOutput attach_output = 33;
     AttachClosed attach_closed = 34;
+    ConsoleLogResponse console_log_response = 35;
 
     ServerStatusBatch server_statuses = 50;
 
@@ -58,6 +59,7 @@ message GatewayMessage {
     AttachRequest attach_request = 34;
     AttachInput attach_input = 35;
     AttachDetach attach_detach = 36;
+    ConsoleLogRequest console_log_request = 37;
 
     Server server_config = 50;
     ServerConfigBatch server_config_batch = 51;
@@ -272,6 +274,18 @@ message AttachClosed {
   string session_id = 1;
   string reason = 2;
   int32 exit_code = 3;
+}
+
+message ConsoleLogRequest {
+  uint64 server_id = 1;
+  int64 max_bytes = 2;
+}
+
+message ConsoleLogResponse {
+  string request_id = 1;
+  bool success = 2;
+  bytes data = 3;
+  string error = 4;
 }
 
 message StatusRequest {}

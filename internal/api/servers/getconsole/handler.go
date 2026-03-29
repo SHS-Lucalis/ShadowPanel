@@ -2,6 +2,7 @@ package getconsole
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -33,13 +34,19 @@ type fileService interface {
 	Download(ctx context.Context, node *domain.Node, filePath string) ([]byte, error)
 }
 
+type consoleLogService interface {
+	GetConsoleLog(ctx context.Context, nodeID uint64, serverID uint64, maxBytes int64) (string, error)
+}
+
 type Handler struct {
-	serverFinder   *serversbase.ServerFinder
-	abilityChecker *serversbase.AbilityChecker
-	nodeRepo       repositories.NodeRepository
-	daemonCommands daemonCommands
-	fileService    fileService
-	responder      base.Responder
+	serverFinder      *serversbase.ServerFinder
+	abilityChecker    *serversbase.AbilityChecker
+	nodeRepo          repositories.NodeRepository
+	daemonCommands    daemonCommands
+	fileService       fileService
+	consoleLogService consoleLogService
+	responder         base.Responder
+	logger            *slog.Logger
 }
 
 func NewHandler(
@@ -48,15 +55,18 @@ func NewHandler(
 	rbac base.RBAC,
 	daemonCommands daemonCommands,
 	fs fileService,
+	cls consoleLogService,
 	responder base.Responder,
 ) *Handler {
 	return &Handler{
-		serverFinder:   serversbase.NewServerFinder(serverRepo, rbac),
-		abilityChecker: serversbase.NewAbilityChecker(rbac),
-		nodeRepo:       nodeRepo,
-		daemonCommands: daemonCommands,
-		fileService:    fs,
-		responder:      responder,
+		serverFinder:      serversbase.NewServerFinder(serverRepo, rbac),
+		abilityChecker:    serversbase.NewAbilityChecker(rbac),
+		nodeRepo:          nodeRepo,
+		daemonCommands:    daemonCommands,
+		fileService:       fs,
+		consoleLogService: cls,
+		responder:         responder,
+		logger:            slog.Default(),
 	}
 }
 
@@ -128,6 +138,17 @@ func (h *Handler) getConsoleLog(ctx context.Context, server *domain.Server) (str
 	}
 
 	node := &nodes[0]
+
+	if h.consoleLogService != nil {
+		output, err := h.consoleLogService.GetConsoleLog(ctx, uint64(node.ID), uint64(server.ID), consoleMaxSymbols)
+		if err == nil {
+			return sanitizeUTF8(output), nil
+		}
+
+		h.logger.Debug("console log service unavailable, falling back",
+			"server_id", server.ID, "error", err,
+		)
+	}
 
 	if node.ScriptGetConsole != nil && *node.ScriptGetConsole != "" {
 		cmd := server.ReplaceServerShortcodes(node, *node.ScriptGetConsole, nil)
