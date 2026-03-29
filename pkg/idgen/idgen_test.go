@@ -1,8 +1,10 @@
 package idgen
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/gameap/gameap/pkg/base62"
 	"github.com/google/uuid"
 	"github.com/rs/xid"
 	"github.com/stretchr/testify/assert"
@@ -70,4 +72,18 @@ func TestXIDToUUID_distinct(t *testing.T) {
 	u2 := XIDToUUID(id2)
 
 	assert.NotEqual(t, u1, u2, "different XIDs must produce different UUIDs")
+}
+
+func TestXID(t *testing.T) {
+	id := xid.New()
+
+	fmt.Println("Generated XID:", id.String())
+	fmt.Println("Generated XID (base62):", base62.EncodeToString(id.Bytes()))
+	fmt.Println("Generated UUID:", XIDToUUID(id).String())
+
+	u1 := XIDToUUID(id)
+	fmt.Println("Generated UUID (base62):", base62.EncodeToString(u1[:]))
+
+	u := uuid.New()
+	fmt.Println("Generated UUID (base62):", base62.EncodeToString(u[:]))
 }
