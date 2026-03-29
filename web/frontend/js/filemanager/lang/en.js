@@ -58,6 +58,10 @@ const en = {
         selectedSize: 'Files size:',
         size: 'Files size:',
     },
+    progress: {
+        downloading: 'Downloading',
+        uploading: 'Uploading',
+    },
     manager: {
         table: {
             date: 'Date',

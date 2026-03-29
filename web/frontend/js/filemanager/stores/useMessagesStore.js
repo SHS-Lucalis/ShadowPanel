@@ -7,6 +7,7 @@ export const useMessagesStore = defineStore('fm-messages', () => {
         message: null,
     })
     const actionProgress = ref(0)
+    const progressLabel = ref('')
     const loadingCount = ref(0)
     const errors = ref([])
 
@@ -24,12 +25,16 @@ export const useMessagesStore = defineStore('fm-messages', () => {
         actionResult.value.message = null
     }
 
-    function setProgress(progress) {
+    function setProgress(progress, label) {
         actionProgress.value = progress
+        if (label !== undefined) {
+            progressLabel.value = label
+        }
     }
 
     function clearProgress() {
         actionProgress.value = 0
+        progressLabel.value = ''
     }
 
     function addLoading() {
@@ -56,6 +61,7 @@ export const useMessagesStore = defineStore('fm-messages', () => {
         // State
         actionResult,
         actionProgress,
+        progressLabel,
         loadingCount,
         errors,
         // Getters

@@ -6,6 +6,7 @@
             <modal-block />
             <manager class="relative flex-grow max-w-full flex-1 h-full" manager="left" />
         </div>
+        <progress-block />
         <info-block />
     </div>
 </template>
@@ -24,6 +25,7 @@ import NavbarBlock from './components/blocks/NavbarBlock.vue'
 import Manager from './components/manager/Manager.vue'
 import ModalBlock from './components/modals/ModalBlock.vue'
 import InfoBlock from './components/blocks/InfoBlock.vue'
+import ProgressBlock from './components/blocks/ProgressBlock.vue'
 import ContextMenu from './components/blocks/ContextMenu.vue'
 
 const props = defineProps({

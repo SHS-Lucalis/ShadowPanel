@@ -40,7 +40,6 @@ import { useModalStore } from '../../stores/useModalStore.js'
 import { useTranslate } from '../../composables/useTranslate.js'
 import { useFileEditors, isFileTooLarge } from '../../composables/useFileEditors.js'
 import { usePluginsStore } from '../../../store/plugins'
-import HTTP from '../../http/get.js'
 
 const fm = useFileManagerStore()
 const pluginsStore = usePluginsStore()
@@ -208,15 +207,10 @@ function selectAction() {
 }
 
 function downloadAction() {
-    const tempLink = document.createElement('a')
-    tempLink.style.display = 'none'
-    tempLink.setAttribute('download', selectedItems.value[0].basename)
-
-    HTTP.download(selectedDisk.value, selectedItems.value[0].path).then((response) => {
-        tempLink.href = window.URL.createObjectURL(new Blob([response.data]))
-        document.body.appendChild(tempLink)
-        tempLink.click()
-        document.body.removeChild(tempLink)
+    fm.download({
+        disk: selectedDisk.value,
+        path: selectedItems.value[0].path,
+        filename: selectedItems.value[0].basename,
     })
 }
 

@@ -11,21 +11,7 @@
                 {{ `${lang.info.size} ${filesSize}` }}
             </span>
         </div>
-        <div class="col-4">
-            <!-- Progress Bar -->
-            <div class="progress" v-show="progressBar">
-                <div
-                    class="progress-bar progress-bar-striped bg-info"
-                    role="progressbar"
-                    v-bind:aria-valuenow="progressBar"
-                    aria-valuemin="0"
-                    aria-valuemax="100"
-                    v-bind:style="{ width: progressBar + '%' }"
-                >
-                    {{ progressBar }}%
-                </div>
-            </div>
-        </div>
+        <div class="col-4"></div>
         <div class="col-auto text-right text-xs">
             <div class="spinner-border spinner-border-sm text-info" role="status" v-show="loadingSpinner">
                 <span class="visually-hidden">Loading...</span>
@@ -64,7 +50,6 @@ const { lang } = useTranslate()
 const { bytesToHuman } = useHelper()
 
 const activeManager = computed(() => fm.activeManager)
-const progressBar = computed(() => messages.actionProgress)
 const hasErrors = computed(() => !!messages.errors.length)
 const filesCount = computed(() => fm.getFilesCount(activeManager.value))
 const directoriesCount = computed(() => fm.getDirectoriesCount(activeManager.value))
@@ -87,10 +72,6 @@ function showModal(modalName) {
     @apply border-t dark:border-stone-700 hidden sm:flex;
     flex: 0 0 auto;
     padding-top: 0.2rem;
-
-    .progress {
-        margin-top: 0.3rem;
-    }
 
     .text-right > span {
         padding-left: 0.5rem;

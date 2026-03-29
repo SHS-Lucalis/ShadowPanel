@@ -114,10 +114,11 @@ export default {
      * @param path
      * @return {*}
      */
-    download(disk, path) {
+    download(disk, path, config) {
         return HTTP.get('download', {
             responseType: 'arraybuffer',
             params: { disk, path },
+            ...config,
         });
     },
 };

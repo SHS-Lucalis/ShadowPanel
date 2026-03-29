@@ -527,6 +527,36 @@ export const useFileManagerStore = defineStore('fm', () => {
         }
     }
 
+    async function download({ disk, path, filename }) {
+        const messages = useMessagesStore()
+
+        messages.setProgress(0, filename)
+
+        const config = {
+            onDownloadProgress(progressEvent) {
+                if (progressEvent.total) {
+                    const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+                    messages.setProgress(progress)
+                }
+            },
+        }
+
+        try {
+            const response = await GET.download(disk, path, config)
+            messages.clearProgress()
+
+            const tempLink = document.createElement('a')
+            tempLink.style.display = 'none'
+            tempLink.setAttribute('download', filename)
+            tempLink.href = window.URL.createObjectURL(new Blob([response.data]))
+            document.body.appendChild(tempLink)
+            tempLink.click()
+            document.body.removeChild(tempLink)
+        } catch {
+            messages.clearProgress()
+        }
+    }
+
     async function deleteItems(items) {
         const response = await POST.delete({
             disk: selectedDisk.value,
@@ -730,6 +760,7 @@ export const useFileManagerStore = defineStore('fm', () => {
         updateFile: updateFileAction,
         createDirectory,
         upload,
+        download,
         delete: deleteItems,
         paste,
         rename,

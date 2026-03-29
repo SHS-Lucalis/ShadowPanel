@@ -58,6 +58,10 @@ const ru = {
         selectedSize: 'Размер:',
         size: 'Размер файлов:',
     },
+    progress: {
+        downloading: 'Скачивание',
+        uploading: 'Загрузка',
+    },
     manager: {
         table: {
             date: 'Дата',

@@ -11,9 +11,6 @@
           <div v-if="!serverActive" class="bg-red-500 text-white dark:bg-red-800 dark:text-stone-200 font-bold rounded px-4 py-2 mt-6 mb-3">
             {{ trans('servers.offline_console_msg') }}
           </div>
-          <div v-if="closeReason" class="bg-orange-600 text-white dark:bg-orange-800 dark:text-stone-200 font-bold rounded px-4 py-2 mt-2 mb-3">
-            {{ closeReason }}
-          </div>
           <div ref="consoleRef" class="break-all whitespace-pre-wrap mt-4 flex h-[60vh] overflow-y-scroll overscroll-contain">
             {{ output }}
           </div>
