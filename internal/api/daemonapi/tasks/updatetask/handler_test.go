@@ -509,6 +509,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 			handler := NewHandler(
 				taskRepo,
+				nil,
 				responder,
 			)
 
@@ -561,6 +562,7 @@ func TestHandler_ResponseStructure(t *testing.T) {
 
 	handler := NewHandler(
 		taskRepo,
+		nil,
 		responder,
 	)
 
@@ -628,6 +630,7 @@ func TestHandler_NewHandler(t *testing.T) {
 
 	handler := NewHandler(
 		taskRepo,
+		nil,
 		responder,
 	)
 

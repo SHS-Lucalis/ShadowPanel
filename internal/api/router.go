@@ -140,6 +140,7 @@ import (
 	"github.com/gameap/gameap/internal/grpc/session"
 	"github.com/gameap/gameap/internal/i18n"
 	internalplugin "github.com/gameap/gameap/internal/plugin"
+	"github.com/gameap/gameap/internal/pubsub"
 	"github.com/gameap/gameap/internal/rbac"
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/internal/repositories/base"
@@ -203,6 +204,7 @@ type container interface {
 	SessionRegistry() *session.Registry
 	CommandHandler() *grpchandlers.CommandHandler
 	AttachHandler() *grpchandlers.AttachHandler
+	PubSub() pubsub.PubSub
 }
 
 func CreateRouter(c container) *http.ServeMux {
@@ -1611,6 +1613,8 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 				wsOriginPatterns(c.Config()),
 				c.SessionRegistry(),
 				c.AttachHandler(),
+				c.DaemonCommands(),
+				c.DaemonFiles(),
 				c.Responder(),
 			),
 		},
@@ -1851,6 +1855,7 @@ func gdaemonAPIRoutes(c container, router *mux.Router) *mux.Router {
 			Path:   "/gdaemon_api/tasks/{gdaemon_task}",
 			Handler: daemonapiupdatetask.NewHandler(
 				c.DaemonTaskRepository(),
+				c.PubSub(),
 				c.Responder(),
 			),
 			Middlewares: []mux.MiddlewareFunc{
@@ -1862,6 +1867,7 @@ func gdaemonAPIRoutes(c container, router *mux.Router) *mux.Router {
 			Path:   "/gdaemon_api/tasks/{gdaemon_task}/output",
 			Handler: daemonapiappendoutput.NewHandler(
 				c.DaemonTaskRepository(),
+				c.PubSub(),
 				c.Responder(),
 			),
 			Middlewares: []mux.MiddlewareFunc{
