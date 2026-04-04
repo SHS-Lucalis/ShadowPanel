@@ -134,6 +134,11 @@ func Run(runParams RunParams) {
 	if cfg.GRPC.Enabled {
 		runWithGRPC(ctx, cfg, container)
 	} else {
+		slog.WarnContext(ctx, "Running in legacy HTTP-only mode. "+
+			"To enable gRPC bidirectional streaming, set the following environment variables: "+
+			"GRPC_ENABLED=true, GRPC_PORT (default: 31718), GRPC_TLS_ENABLED (default: true). "+
+			"See documentation for details: https://docs.gameap.com/grpc_setup.html",
+		)
 		runHTTPOnly(ctx, cfg, container)
 	}
 }
