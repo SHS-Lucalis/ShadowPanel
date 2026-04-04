@@ -34,7 +34,7 @@ export const useFileManagerStore = defineStore('fm', () => {
         directories: [],
         files: [],
     })
-    const disks = ref([])
+    const disks = ref({})
     const fileCallback = ref(null)
     const fullScreen = ref(false)
 
@@ -179,7 +179,7 @@ export const useFileManagerStore = defineStore('fm', () => {
         getManager(managerName).files.push(newFile)
     }
 
-    function updateFile(managerName, file) {
+    function setFile(managerName, file) {
         const manager = getManager(managerName)
         const itemIndex = manager.files.findIndex((el) => el.basename === file.basename)
         if (itemIndex !== -1) {
@@ -206,7 +206,7 @@ export const useFileManagerStore = defineStore('fm', () => {
     function addToHistory(managerName, path) {
         const manager = getManager(managerName)
         if (manager.historyPointer < manager.history.length - 1) {
-            manager.history.splice(manager.historyPointer + 1, Number.MAX_VALUE)
+            manager.history.splice(manager.historyPointer + 1)
         }
         manager.history.push(path)
         manager.historyPointer += 1
@@ -329,7 +329,7 @@ export const useFileManagerStore = defineStore('fm', () => {
         }
     }
 
-    async function refreshDirectory(managerName) {
+    async function refreshDirectory(managerName, retried = false) {
         const manager = getManager(managerName)
 
         const response = await GET.content(manager.selectedDisk, manager.selectedDirectory)
@@ -343,27 +343,23 @@ export const useFileManagerStore = defineStore('fm', () => {
 
         if (response.data.result.status === 'success') {
             setManagerContent(managerName, response.data)
-        } else if (response.data.result.status === 'danger') {
+        } else if (response.data.result.status === 'danger' && !retried) {
             setManagerDirectory(managerName, null)
-            refreshDirectory(managerName)
+            refreshDirectory(managerName, true)
         }
     }
 
-    function historyBack(managerName) {
+    async function historyBack(managerName) {
         const manager = getManager(managerName)
-        selectDirectory(managerName, {
-            path: manager.history[manager.historyPointer - 1],
-            history: false,
-        })
+        const path = manager.history[manager.historyPointer - 1]
+        await selectDirectory(managerName, { path, history: false })
         pointerBack(managerName)
     }
 
-    function historyForward(managerName) {
+    async function historyForward(managerName) {
         const manager = getManager(managerName)
-        selectDirectory(managerName, {
-            path: manager.history[manager.historyPointer + 1],
-            history: false,
-        })
+        const path = manager.history[manager.historyPointer + 1]
+        await selectDirectory(managerName, { path, history: false })
         pointerForward(managerName)
     }
 
@@ -522,8 +518,9 @@ export const useFileManagerStore = defineStore('fm', () => {
                 refreshManagers()
             }
             return response
-        } catch {
+        } catch (error) {
             messages.clearProgress()
+            throw error
         }
     }
 
@@ -588,7 +585,15 @@ export const useFileManagerStore = defineStore('fm', () => {
     }
 
     async function refreshManagers() {
-        return refreshDirectory('left')
+        const promises = [refreshDirectory('left')]
+        if (right.selectedDisk) {
+            promises.push(refreshDirectory('right'))
+        }
+        return Promise.all(promises)
+    }
+
+    async function refreshAll() {
+        return refreshManagers()
     }
 
     function repeatSort(managerName) {
@@ -604,7 +609,7 @@ export const useFileManagerStore = defineStore('fm', () => {
             if (commitName === 'addNewFile') {
                 addNewFile(activeManager.value, response.data[type])
             } else if (commitName === 'updateFile') {
-                updateFile(activeManager.value, response.data[type])
+                setFile(activeManager.value, response.data[type])
             } else if (commitName === 'addNewDirectory') {
                 addNewDirectory(activeManager.value, response.data[type])
             }
@@ -625,6 +630,14 @@ export const useFileManagerStore = defineStore('fm', () => {
         resetSortSettings('left')
         resetHistory('left')
 
+        // right manager
+        setManagerDisk('right', null)
+        setManagerDirectory('right', null)
+        setManagerContent('right', { directories: [], files: [] })
+        clearSelection('right')
+        resetSortSettings('right')
+        resetHistory('right')
+
         // modals
         modal.clearModal()
 
@@ -642,19 +655,15 @@ export const useFileManagerStore = defineStore('fm', () => {
             directories: [],
             files: [],
         }
-        disks.value = []
+        disks.value = {}
         fileCallback.value = null
         fullScreen.value = false
     }
 
     function openPDF({ disk, path }) {
-        const win = window.open()
-
         GET.getFileArrayBuffer(disk, path).then((response) => {
             const blob = new Blob([response.data], { type: 'application/pdf' })
-            win.document.write(
-                `<iframe src="${URL.createObjectURL(blob)}" allowfullscreen height="100%" width="100%"></iframe>`
-            )
+            window.open(URL.createObjectURL(blob))
         })
     }
 
@@ -667,9 +676,11 @@ export const useFileManagerStore = defineStore('fm', () => {
         fullScreen,
         // Manager states
         left,
+        right,
         getManager,
         // Root getters
         diskList,
+        inactiveManager,
         selectedDisk,
         selectedDirectory,
         selectedItems,
@@ -702,7 +713,7 @@ export const useFileManagerStore = defineStore('fm', () => {
         changeSelected,
         clearSelection,
         addNewFile,
-        updateFile,
+        setFile,
         addNewDirectory,
         setSort,
         resetSortSettings,
@@ -736,6 +747,7 @@ export const useFileManagerStore = defineStore('fm', () => {
         url,
         toClipboard,
         refreshManagers,
+        refreshAll,
         repeatSort,
         updateContent,
         resetState,

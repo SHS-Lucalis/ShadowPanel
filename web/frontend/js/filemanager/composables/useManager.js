@@ -22,7 +22,6 @@ export function useManager(managerName) {
 
     const selectedDisk = computed(() => manager.value.selectedDisk)
     const selectedDirectory = computed(() => manager.value.selectedDirectory)
-    const viewType = computed(() => manager.value.viewType)
     const sort = computed(() => manager.value.sort)
     const selected = computed(() => manager.value.selected)
     const history = computed(() => manager.value.history)
@@ -82,10 +81,6 @@ export function useManager(managerName) {
 
     function historyForward() {
         fm.historyForward(getManagerName())
-    }
-
-    function setView(type) {
-        fm.setManagerView(getManagerName(), type)
     }
 
     function sortBy(field, direction) {
@@ -173,7 +168,6 @@ export function useManager(managerName) {
         isActive,
         selectedDisk,
         selectedDirectory,
-        viewType,
         sort,
         selected,
         history,
@@ -202,7 +196,6 @@ export function useManager(managerName) {
         levelUp,
         historyBack,
         historyForward,
-        setView,
         sortBy,
         addSelection,
         removeSelection,
