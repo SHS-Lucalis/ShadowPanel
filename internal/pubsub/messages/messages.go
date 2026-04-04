@@ -44,6 +44,9 @@ const (
 	TypeAttachOutput  = "attach.output"
 	TypeAttachClosed  = "attach.closed"
 	TypeDaemonAttach  = "daemon.attach"
+
+	TypeDaemonHTTPProxyRequest  = "daemon.httpproxy.request"
+	TypeDaemonHTTPProxyResponse = "daemon.httpproxy.response"
 )
 
 type CacheInvalidatePayload struct {
@@ -219,6 +222,20 @@ type DaemonServerConfigPayload struct {
 	NodeID     uint64 `json:"node_id"`
 	RequestID  string `json:"request_id"`
 	ConfigData []byte `json:"config_data"`
+}
+
+type DaemonHTTPProxyRequestPayload struct {
+	NodeID     uint64 `json:"node_id"`
+	RequestID  string `json:"request_id"`
+	InstanceID string `json:"instance_id"`
+	Data       []byte `json:"data,omitempty"`
+}
+
+type DaemonHTTPProxyResponsePayload struct {
+	RequestID   string `json:"request_id"`
+	Error       string `json:"error,omitempty"`
+	Data        []byte `json:"data,omitempty"`
+	StoragePath string `json:"storage_path,omitempty"`
 }
 
 func NewMessage(channel, msgType string, payload any) (*pubsub.Message, error) {

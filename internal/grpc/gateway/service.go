@@ -370,6 +370,11 @@ func (s *Service) processMessage(ctx context.Context, sess *session.Session, msg
 
 		return nil
 
+	case *proto.DaemonMessage_HttpProxyResponse:
+		sess.ResolvePendingRequest(payload.HttpProxyResponse.RequestId, msg)
+
+		return nil
+
 	case *proto.DaemonMessage_AttachStarted:
 		if s.attachHandler != nil {
 			return s.attachHandler.HandleAttachStarted(ctx, sess.NodeID, payload.AttachStarted)
@@ -684,6 +689,49 @@ func (s *Service) RequestConsoleLog(
 		}
 
 		return consoleResp, nil
+	}
+}
+
+func (s *Service) RequestHTTPProxy(
+	ctx context.Context,
+	nodeID uint64,
+	req *proto.HTTPProxyRequest,
+) (*proto.HTTPProxyResponse, error) {
+	sess, ok := s.registry.GetSession(nodeID)
+	if !ok {
+		return nil, errors.New("node not connected")
+	}
+
+	if !sess.HasCapability("http_proxy") {
+		return nil, errors.New("node does not support http_proxy")
+	}
+
+	requestID := idgen.New()
+	respCh := sess.RegisterPendingRequest(requestID)
+	defer sess.CancelPendingRequest(requestID)
+
+	if err := sess.Send(&proto.GatewayMessage{
+		RequestId: requestID,
+		Payload: &proto.GatewayMessage_HttpProxy{
+			HttpProxy: req,
+		},
+	}); err != nil {
+		return nil, errors.Wrap(err, "send http proxy request")
+	}
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case resp := <-respCh:
+		if resp == nil {
+			return nil, errors.New("request cancelled")
+		}
+		proxyResp := resp.GetHttpProxyResponse()
+		if proxyResp == nil {
+			return nil, errors.New("unexpected response type")
+		}
+
+		return proxyResp, nil
 	}
 }
 

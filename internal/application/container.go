@@ -140,9 +140,11 @@ type Container struct {
 	commandDispatcher    daemon.CommandDispatcher
 	statusDispatcher     daemon.StatusDispatcher
 	consoleLogDispatcher daemon.ConsoleLogDispatcher
+	httpProxyDispatcher  daemon.HTTPProxyDispatcher
 	daemonCommands       *daemon.CommandService
 	daemonCommandsLeg    *daemon.CommandBINNService
 	daemonConsoleLog     *daemon.ConsoleLogService
+	daemonHTTPProxy      *daemon.HTTPProxyService
 
 	// Plugins
 	pluginManager    *pkgplugin.Manager
@@ -1383,6 +1385,39 @@ func (c *Container) ConsoleLogService() *daemon.ConsoleLogService {
 	}
 
 	return c.daemonConsoleLog
+}
+
+func (c *Container) HTTPProxyDispatcher() daemon.HTTPProxyDispatcher {
+	if c.httpProxyDispatcher == nil {
+		instanceID := c.config.PubSub.InstanceID
+		if instanceID == "" {
+			instanceID = defaultInstanceID
+		}
+
+		c.httpProxyDispatcher = daemon.NewHTTPProxyDispatcher(
+			c.PubSub(),
+			c.GatewayService(),
+			c.SessionRegistry(),
+			c.StreamFileManager(),
+			instanceID,
+			slog.Default(),
+		)
+	}
+
+	return c.httpProxyDispatcher
+}
+
+func (c *Container) HTTPProxyService() *daemon.HTTPProxyService {
+	if c.daemonHTTPProxy == nil {
+		c.daemonHTTPProxy = daemon.NewHTTPProxyService(
+			c.GatewayService(),
+			c.SessionRegistry(),
+			c.HTTPProxyDispatcher(),
+			slog.Default(),
+		)
+	}
+
+	return c.daemonHTTPProxy
 }
 
 func (c *Container) PluginManager() *pkgplugin.Manager {

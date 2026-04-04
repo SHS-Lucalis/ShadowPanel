@@ -91,3 +91,16 @@ type ConsoleLogDispatcher interface {
 		ctx context.Context, nodeID uint64, serverID uint64, maxBytes int64,
 	) (*proto.ConsoleLogResponse, error)
 }
+
+type HTTPProxyGateway interface {
+	RequestHTTPProxy(
+		ctx context.Context, nodeID uint64, req *proto.HTTPProxyRequest,
+	) (*proto.HTTPProxyResponse, error)
+}
+
+type HTTPProxyDispatcher interface {
+	Start(ctx context.Context) error
+	DispatchHTTPProxy(
+		ctx context.Context, nodeID uint64, req *proto.HTTPProxyRequest,
+	) (*proto.HTTPProxyResponse, error)
+}

@@ -42,6 +42,8 @@ message DaemonMessage {
     FileOperationResponse file_operation_response = 63;
 
     StatusResponse status_response = 70;
+
+    HTTPProxyResponse http_proxy_response = 80;
   }
 }
 
@@ -72,6 +74,8 @@ message GatewayMessage {
     FileDownloadTask file_download_task = 65;
 
     StatusRequest status_request = 70;
+
+    HTTPProxyRequest http_proxy = 80;
   }
 }
 
@@ -300,4 +304,27 @@ message StatusResponse {
   int32 waiting_tasks = 7;
   int32 online_servers = 8;
   string error = 9;
+}
+
+message HeaderEntry {
+  string name = 1;
+  string value = 2;
+}
+
+message HTTPProxyRequest {
+  string url = 1;
+  string method = 2;
+  repeated HeaderEntry headers = 3;
+  bytes body = 4;
+  google.protobuf.Duration timeout = 5;
+  bool follow_redirects = 6;
+}
+
+message HTTPProxyResponse {
+  string request_id = 1;
+  bool success = 2;
+  int32 status_code = 3;
+  repeated HeaderEntry headers = 4;
+  bytes body = 5;
+  string error = 6;
 }
