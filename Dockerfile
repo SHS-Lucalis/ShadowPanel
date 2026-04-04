@@ -3,8 +3,10 @@ FROM node:24-alpine AS uibuilder
 
 WORKDIR /app
 
+ARG TARGETARCH
+
 COPY web/frontend/package*.json ./web/frontend/
-RUN --mount=type=cache,target=/root/.npm \
+RUN --mount=type=cache,target=/root/.npm,id=npm-${TARGETARCH} \
     cd /app/web/frontend && npm ci
 
 COPY web ./web
