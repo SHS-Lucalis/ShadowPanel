@@ -313,11 +313,12 @@ message HeaderEntry {
 
 message HTTPProxyRequest {
   string url = 1;
-  string method = 2;
-  repeated HeaderEntry headers = 3;
-  bytes body = 4;
-  google.protobuf.Duration timeout = 5;
-  bool follow_redirects = 6;
+  string unix_socket = 2;
+  string method = 3;
+  repeated HeaderEntry headers = 4;
+  bytes body = 5;
+  google.protobuf.Duration timeout = 6;
+  bool follow_redirects = 7;
 }
 
 message HTTPProxyResponse {

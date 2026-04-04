@@ -3012,7 +3012,7 @@ func (m *HTTPProxyRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 			dAtA[i] = 0
 		}
 		i--
-		dAtA[i] = 0x30
+		dAtA[i] = 0x38
 	}
 	if m.Timeout != nil {
 		size, err := (*durationpb.Duration)(m.Timeout).MarshalToSizedBufferVT(dAtA[:i])
@@ -3022,14 +3022,14 @@ func (m *HTTPProxyRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x2a
+		dAtA[i] = 0x32
 	}
 	if len(m.Body) > 0 {
 		i -= len(m.Body)
 		copy(dAtA[i:], m.Body)
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.Body)))
 		i--
-		dAtA[i] = 0x22
+		dAtA[i] = 0x2a
 	}
 	if len(m.Headers) > 0 {
 		for iNdEx := len(m.Headers) - 1; iNdEx >= 0; iNdEx-- {
@@ -3040,13 +3040,20 @@ func (m *HTTPProxyRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 			i -= size
 			i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 			i--
-			dAtA[i] = 0x1a
+			dAtA[i] = 0x22
 		}
 	}
 	if len(m.Method) > 0 {
 		i -= len(m.Method)
 		copy(dAtA[i:], m.Method)
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.Method)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.UnixSocket) > 0 {
+		i -= len(m.UnixSocket)
+		copy(dAtA[i:], m.UnixSocket)
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.UnixSocket)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -4450,6 +4457,10 @@ func (m *HTTPProxyRequest) SizeVT() (n int) {
 	var l int
 	_ = l
 	l = len(m.Url)
+	if l > 0 {
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	l = len(m.UnixSocket)
 	if l > 0 {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
@@ -11521,6 +11532,38 @@ func (m *HTTPProxyRequest) UnmarshalVT(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UnixSocket", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.UnixSocket = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Method", wireType)
 			}
 			var stringLen uint64
@@ -11551,7 +11594,7 @@ func (m *HTTPProxyRequest) UnmarshalVT(dAtA []byte) error {
 			}
 			m.Method = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 3:
+		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Headers", wireType)
 			}
@@ -11585,7 +11628,7 @@ func (m *HTTPProxyRequest) UnmarshalVT(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 4:
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Body", wireType)
 			}
@@ -11619,7 +11662,7 @@ func (m *HTTPProxyRequest) UnmarshalVT(dAtA []byte) error {
 				m.Body = []byte{}
 			}
 			iNdEx = postIndex
-		case 5:
+		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Timeout", wireType)
 			}
@@ -11655,7 +11698,7 @@ func (m *HTTPProxyRequest) UnmarshalVT(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 6:
+		case 7:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field FollowRedirects", wireType)
 			}

@@ -3014,11 +3014,12 @@ func (x *HeaderEntry) GetValue() string {
 type HTTPProxyRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	Url             string                 `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
-	Method          string                 `protobuf:"bytes,2,opt,name=method,proto3" json:"method,omitempty"`
-	Headers         []*HeaderEntry         `protobuf:"bytes,3,rep,name=headers,proto3" json:"headers,omitempty"`
-	Body            []byte                 `protobuf:"bytes,4,opt,name=body,proto3" json:"body,omitempty"`
-	Timeout         *durationpb.Duration   `protobuf:"bytes,5,opt,name=timeout,proto3" json:"timeout,omitempty"`
-	FollowRedirects bool                   `protobuf:"varint,6,opt,name=follow_redirects,json=followRedirects,proto3" json:"follow_redirects,omitempty"`
+	UnixSocket      string                 `protobuf:"bytes,2,opt,name=unix_socket,json=unixSocket,proto3" json:"unix_socket,omitempty"`
+	Method          string                 `protobuf:"bytes,3,opt,name=method,proto3" json:"method,omitempty"`
+	Headers         []*HeaderEntry         `protobuf:"bytes,4,rep,name=headers,proto3" json:"headers,omitempty"`
+	Body            []byte                 `protobuf:"bytes,5,opt,name=body,proto3" json:"body,omitempty"`
+	Timeout         *durationpb.Duration   `protobuf:"bytes,6,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	FollowRedirects bool                   `protobuf:"varint,7,opt,name=follow_redirects,json=followRedirects,proto3" json:"follow_redirects,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -3056,6 +3057,13 @@ func (*HTTPProxyRequest) Descriptor() ([]byte, []int) {
 func (x *HTTPProxyRequest) GetUrl() string {
 	if x != nil {
 		return x.Url
+	}
+	return ""
+}
+
+func (x *HTTPProxyRequest) GetUnixSocket() string {
+	if x != nil {
+		return x.UnixSocket
 	}
 	return ""
 }
@@ -3421,14 +3429,16 @@ const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"\x05error\x18\t \x01(\tR\x05error\"7\n" +
 	"\vHeaderEntry\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value\"\xdf\x01\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value\"\x80\x02\n" +
 	"\x10HTTPProxyRequest\x12\x10\n" +
-	"\x03url\x18\x01 \x01(\tR\x03url\x12\x16\n" +
-	"\x06method\x18\x02 \x01(\tR\x06method\x12-\n" +
-	"\aheaders\x18\x03 \x03(\v2\x13.gameap.HeaderEntryR\aheaders\x12\x12\n" +
-	"\x04body\x18\x04 \x01(\fR\x04body\x123\n" +
-	"\atimeout\x18\x05 \x01(\v2\x19.google.protobuf.DurationR\atimeout\x12)\n" +
-	"\x10follow_redirects\x18\x06 \x01(\bR\x0ffollowRedirects\"\xc6\x01\n" +
+	"\x03url\x18\x01 \x01(\tR\x03url\x12\x1f\n" +
+	"\vunix_socket\x18\x02 \x01(\tR\n" +
+	"unixSocket\x12\x16\n" +
+	"\x06method\x18\x03 \x01(\tR\x06method\x12-\n" +
+	"\aheaders\x18\x04 \x03(\v2\x13.gameap.HeaderEntryR\aheaders\x12\x12\n" +
+	"\x04body\x18\x05 \x01(\fR\x04body\x123\n" +
+	"\atimeout\x18\x06 \x01(\v2\x19.google.protobuf.DurationR\atimeout\x12)\n" +
+	"\x10follow_redirects\x18\a \x01(\bR\x0ffollowRedirects\"\xc6\x01\n" +
 	"\x11HTTPProxyResponse\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x01 \x01(\tR\trequestId\x12\x18\n" +
