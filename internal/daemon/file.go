@@ -42,6 +42,7 @@ type FileService struct {
 	dispatcher  FileDispatcher
 	storage     files.StreamFileManager
 	transferReg *transfers.Registry
+	legacy      *FileBINNService
 	logger      *slog.Logger
 }
 
@@ -51,6 +52,7 @@ func NewFileService(
 	dispatcher FileDispatcher,
 	storage files.StreamFileManager,
 	transferReg *transfers.Registry,
+	legacy *FileBINNService,
 	logger *slog.Logger,
 ) *FileService {
 	if logger == nil {
@@ -63,6 +65,7 @@ func NewFileService(
 		dispatcher:  dispatcher,
 		storage:     storage,
 		transferReg: transferReg,
+		legacy:      legacy,
 		logger:      logger,
 	}
 }
@@ -89,6 +92,10 @@ func (s *FileService) ReadDir(
 
 	local, err := s.resolveRoute(nodeID)
 	if err != nil {
+		if s.legacy != nil {
+			return s.legacy.ReadDir(ctx, node, directory)
+		}
+
 		return nil, err
 	}
 
@@ -120,6 +127,10 @@ func (s *FileService) Download(ctx context.Context, node *domain.Node, filePath 
 
 	local, err := s.resolveRoute(nodeID)
 	if err != nil {
+		if s.legacy != nil {
+			return s.legacy.Download(ctx, node, filePath)
+		}
+
 		return nil, err
 	}
 
@@ -164,6 +175,10 @@ func (s *FileService) DownloadStream(
 
 	local, err := s.resolveRoute(nodeID)
 	if err != nil {
+		if s.legacy != nil {
+			return s.legacy.DownloadStream(ctx, node, filePath)
+		}
+
 		return nil, err
 	}
 
@@ -443,6 +458,10 @@ func (s *FileService) Upload(
 
 	local, err := s.resolveRoute(nodeID)
 	if err != nil {
+		if s.legacy != nil {
+			return s.legacy.Upload(ctx, node, filePath, content, perms)
+		}
+
 		return err
 	}
 
@@ -467,6 +486,10 @@ func (s *FileService) UploadStream(
 
 	local, err := s.resolveRoute(nodeID)
 	if err != nil {
+		if s.legacy != nil {
+			return s.legacy.UploadStream(ctx, node, filePath, r, size, perms)
+		}
+
 		return err
 	}
 
@@ -512,6 +535,11 @@ func (s *FileService) UploadStream(
 }
 
 func (s *FileService) MkDir(ctx context.Context, node *domain.Node, directory string) error {
+	nodeID := uint64(node.ID)
+	if s.legacy != nil && !s.registry.IsConnected(nodeID) && !s.registry.IsConnectedAnywhere(nodeID) {
+		return s.legacy.MkDir(ctx, node, directory)
+	}
+
 	return s.doFileOperation(ctx, node, &proto.FileOperationRequest{
 		Operation: proto.FileOperationType_FILE_OPERATION_TYPE_MKDIR,
 		Parameters: &proto.FileOperationRequest_MkdirParams{
@@ -524,6 +552,11 @@ func (s *FileService) MkDir(ctx context.Context, node *domain.Node, directory st
 }
 
 func (s *FileService) Copy(ctx context.Context, node *domain.Node, source, destination string) error {
+	nodeID := uint64(node.ID)
+	if s.legacy != nil && !s.registry.IsConnected(nodeID) && !s.registry.IsConnectedAnywhere(nodeID) {
+		return s.legacy.Copy(ctx, node, source, destination)
+	}
+
 	return s.doFileOperation(ctx, node, &proto.FileOperationRequest{
 		Operation: proto.FileOperationType_FILE_OPERATION_TYPE_COPY,
 		Parameters: &proto.FileOperationRequest_CopyParams{
@@ -537,6 +570,11 @@ func (s *FileService) Copy(ctx context.Context, node *domain.Node, source, desti
 }
 
 func (s *FileService) Move(ctx context.Context, node *domain.Node, source, destination string) error {
+	nodeID := uint64(node.ID)
+	if s.legacy != nil && !s.registry.IsConnected(nodeID) && !s.registry.IsConnectedAnywhere(nodeID) {
+		return s.legacy.Move(ctx, node, source, destination)
+	}
+
 	return s.doFileOperation(ctx, node, &proto.FileOperationRequest{
 		Operation: proto.FileOperationType_FILE_OPERATION_TYPE_MOVE,
 		Parameters: &proto.FileOperationRequest_MoveParams{
@@ -549,6 +587,11 @@ func (s *FileService) Move(ctx context.Context, node *domain.Node, source, desti
 }
 
 func (s *FileService) Remove(ctx context.Context, node *domain.Node, path string, recursive bool) error {
+	nodeID := uint64(node.ID)
+	if s.legacy != nil && !s.registry.IsConnected(nodeID) && !s.registry.IsConnectedAnywhere(nodeID) {
+		return s.legacy.Remove(ctx, node, path, recursive)
+	}
+
 	return s.doFileOperation(ctx, node, &proto.FileOperationRequest{
 		Operation: proto.FileOperationType_FILE_OPERATION_TYPE_DELETE,
 		Parameters: &proto.FileOperationRequest_DeleteParams{
@@ -570,6 +613,10 @@ func (s *FileService) GetFileInfo(
 
 	local, err := s.resolveRoute(nodeID)
 	if err != nil {
+		if s.legacy != nil {
+			return s.legacy.GetFileInfo(ctx, node, path)
+		}
+
 		return nil, err
 	}
 
@@ -605,6 +652,11 @@ func (s *FileService) GetFileInfo(
 }
 
 func (s *FileService) Chmod(ctx context.Context, node *domain.Node, path string, perm uint32) error {
+	nodeID := uint64(node.ID)
+	if s.legacy != nil && !s.registry.IsConnected(nodeID) && !s.registry.IsConnectedAnywhere(nodeID) {
+		return s.legacy.Chmod(ctx, node, path, perm)
+	}
+
 	return s.doFileOperation(ctx, node, &proto.FileOperationRequest{
 		Operation: proto.FileOperationType_FILE_OPERATION_TYPE_CHMOD,
 		Parameters: &proto.FileOperationRequest_ChmodParams{

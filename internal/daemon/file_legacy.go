@@ -23,7 +23,6 @@ const (
 	filesRetryDelay = 10 * time.Millisecond
 )
 
-// Deprecated: Use FileService instead. FileBINNService uses the legacy BinAPI protocol.
 type FileBINNService struct {
 	configMaker *configMaker
 
@@ -31,7 +30,6 @@ type FileBINNService struct {
 	pools map[uint]*Pool
 }
 
-// Deprecated: Use NewFileService instead.
 func NewFileBINNService(
 	certRepo repositories.ClientCertificateRepository,
 	fileManager files.FileManager,

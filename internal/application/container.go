@@ -136,6 +136,7 @@ type Container struct {
 	daemonStatus         *daemon.StatusService
 	daemonStatusLegacy   *daemon.StatusBINNService
 	daemonFiles          *daemon.FileService
+	daemonFilesLeg       *daemon.FileBINNService
 	fileDispatcher       daemon.FileDispatcher
 	commandDispatcher    daemon.CommandDispatcher
 	statusDispatcher     daemon.StatusDispatcher
@@ -1265,11 +1266,23 @@ func (c *Container) DaemonFiles() *daemon.FileService {
 			c.FileDispatcher(),
 			c.StreamFileManager(),
 			c.TransferRegistry(),
+			c.DaemonFilesLegacy(),
 			slog.Default(),
 		)
 	}
 
 	return c.daemonFiles
+}
+
+func (c *Container) DaemonFilesLegacy() *daemon.FileBINNService {
+	if c.daemonFilesLeg == nil {
+		c.daemonFilesLeg = daemon.NewFileBINNService(
+			c.ClientCertificateRepository(),
+			c.FileManager(),
+		)
+	}
+
+	return c.daemonFilesLeg
 }
 
 func (c *Container) FileDispatcher() daemon.FileDispatcher {
