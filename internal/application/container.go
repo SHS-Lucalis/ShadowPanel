@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"database/sql"
 	"log/slog"
+	"net"
 	"net/http"
 	"path"
 	"strconv"
@@ -425,7 +426,7 @@ func (c *Container) createHTTPServer() *http.Server {
 	}
 
 	return &http.Server{
-		Addr:         c.config.HTTPHost + ":" + strconv.Itoa(int(c.config.HTTPPort)),
+		Addr:         net.JoinHostPort(c.config.HTTPBindIP, strconv.Itoa(int(c.config.HTTPPort))),
 		Handler:      handler,
 		WriteTimeout: httpServerWriteTimeout,
 		ReadTimeout:  httpServerReadTimeout,
@@ -455,7 +456,7 @@ func (c *Container) createHTTPSServer() *http.Server {
 	handler := c.Router()
 
 	return &http.Server{
-		Addr:         c.config.HTTPHost + ":" + strconv.Itoa(int(c.config.HTTPSPort)),
+		Addr:         net.JoinHostPort(c.config.HTTPBindIP, strconv.Itoa(int(c.config.HTTPSPort))),
 		Handler:      handler,
 		WriteTimeout: httpServerWriteTimeout,
 		ReadTimeout:  httpServerReadTimeout,
@@ -1810,8 +1811,8 @@ func (c *Container) buildMultiplexerTLSConfig() (*tls.Config, error) {
 
 func (c *Container) getMultiplexerAddress() string {
 	if c.config.TLSEnabled() {
-		return c.config.HTTPHost + ":" + strconv.Itoa(int(c.config.HTTPSPort))
+		return net.JoinHostPort(c.config.HTTPBindIP, strconv.Itoa(int(c.config.HTTPSPort)))
 	}
 
-	return c.config.HTTPHost + ":" + strconv.Itoa(int(c.config.HTTPPort))
+	return net.JoinHostPort(c.config.HTTPBindIP, strconv.Itoa(int(c.config.HTTPPort)))
 }

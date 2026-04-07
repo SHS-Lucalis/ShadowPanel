@@ -3,17 +3,19 @@ package application
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
 
+	"strconv"
+
 	"github.com/gameap/gameap/internal/application/defaults"
 	"github.com/gameap/gameap/internal/config"
 	"github.com/gameap/gameap/internal/pubsub/integration"
 	"github.com/gameap/gameap/migrations"
+	"github.com/gameap/gameap/pkg/netutil"
 	"github.com/pkg/errors"
 )
 
@@ -63,6 +65,10 @@ func Run(runParams RunParams) {
 	signal.Notify(c, os.Interrupt)
 
 	ctx, cancel := context.WithCancel(context.Background())
+
+	if cfg.HTTPBindIP == "" {
+		cfg.HTTPBindIP = netutil.ResolveBindAddress(ctx, cfg.HTTPHost)
+	}
 
 	container := NewContainer(cfg)
 	container.SetContext(ctx, cancel)
@@ -144,7 +150,9 @@ func Run(runParams RunParams) {
 }
 
 func runHTTPOnly(ctx context.Context, cfg *config.Config, container *Container) {
-	slog.InfoContext(ctx, fmt.Sprintf("Starting HTTP server on %s:%d", cfg.HTTPHost, cfg.HTTPPort))
+	slog.InfoContext(ctx, "Starting HTTP server",
+		slog.String("address", net.JoinHostPort(cfg.HTTPBindIP, strconv.Itoa(int(cfg.HTTPPort)))),
+	)
 
 	if cfg.TLSEnabled() {
 		startHTTPSServer(ctx, cfg, container)
@@ -186,7 +194,7 @@ func runWithGRPC(ctx context.Context, cfg *config.Config, container *Container) 
 	}
 
 	grpcServer := container.GRPCServer()
-	grpcAddr := fmt.Sprintf("%s:%d", cfg.HTTPHost, cfg.GRPC.Port)
+	grpcAddr := net.JoinHostPort(cfg.HTTPBindIP, strconv.Itoa(int(cfg.GRPC.Port)))
 
 	lis, err := new(net.ListenConfig).Listen(ctx, "tcp", grpcAddr)
 	if err != nil {
@@ -206,7 +214,9 @@ func runWithGRPC(ctx context.Context, cfg *config.Config, container *Container) 
 	}
 
 	server := container.HTTPServer()
-	slog.InfoContext(ctx, fmt.Sprintf("Starting HTTP server on %s:%d", cfg.HTTPHost, cfg.HTTPPort))
+	slog.InfoContext(ctx, "Starting HTTP server",
+		slog.String("address", net.JoinHostPort(cfg.HTTPBindIP, strconv.Itoa(int(cfg.HTTPPort)))),
+	)
 
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		slog.Error(err.Error())
@@ -231,7 +241,9 @@ func startHTTPSServer(ctx context.Context, cfg *config.Config, container *Contai
 	}
 
 	go func() {
-		slog.InfoContext(ctx, fmt.Sprintf("Starting HTTPS server on %s:%d", cfg.HTTPHost, cfg.HTTPSPort))
+		slog.InfoContext(ctx, "Starting HTTPS server",
+			slog.String("address", net.JoinHostPort(cfg.HTTPBindIP, strconv.Itoa(int(cfg.HTTPSPort)))),
+		)
 
 		err := httpsServer.ListenAndServeTLS("", "")
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {

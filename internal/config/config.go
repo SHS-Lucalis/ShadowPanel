@@ -11,9 +11,10 @@ import (
 )
 
 type Config struct {
-	HTTPHost  string `env:"HTTP_HOST" envDefault:"0.0.0.0"`
-	HTTPPort  uint16 `env:"HTTP_PORT" envDefault:"8025"`
-	HTTPSPort uint16 `env:"HTTPS_PORT" envDefault:"443"`
+	HTTPHost   string `env:"HTTP_HOST" envDefault:"0.0.0.0"`
+	HTTPBindIP string `env:"HTTP_BIND_IP" envDefault:""`
+	HTTPPort   uint16 `env:"HTTP_PORT" envDefault:"8025"`
+	HTTPSPort  uint16 `env:"HTTPS_PORT" envDefault:"443"`
 
 	TLS struct {
 		CertFile   string `env:"TLS_CERT_FILE" envDefault:""`
