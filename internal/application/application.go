@@ -3,15 +3,17 @@ package application
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 
 	"github.com/gameap/gameap/internal/application/defaults"
 	"github.com/gameap/gameap/internal/config"
 	"github.com/gameap/gameap/migrations"
+	"github.com/gameap/gameap/pkg/netutil"
 	"github.com/pkg/errors"
 )
 
@@ -61,6 +63,10 @@ func Run(runParams RunParams) {
 	signal.Notify(c, os.Interrupt)
 
 	ctx, cancel := context.WithCancel(context.Background())
+
+	if cfg.HTTPBindIP == "" {
+		cfg.HTTPBindIP = netutil.ResolveBindAddress(ctx, cfg.HTTPHost)
+	}
 
 	container := NewContainer(cfg)
 	container.SetContext(ctx)
@@ -115,7 +121,9 @@ func Run(runParams RunParams) {
 		slog.String("build_date", defaults.BuildDate),
 	)
 
-	slog.InfoContext(ctx, fmt.Sprintf("Starting HTTP server on %s:%d", cfg.HTTPHost, cfg.HTTPPort))
+	slog.InfoContext(ctx, "Starting HTTP server",
+		slog.String("address", net.JoinHostPort(cfg.HTTPBindIP, strconv.Itoa(int(cfg.HTTPPort)))),
+	)
 
 	if cfg.TLSEnabled() {
 		startHTTPSServer(ctx, cfg, container)
@@ -164,7 +172,9 @@ func startHTTPSServer(ctx context.Context, cfg *config.Config, container *Contai
 	}
 
 	go func() {
-		slog.InfoContext(ctx, fmt.Sprintf("Starting HTTPS server on %s:%d", cfg.HTTPHost, cfg.HTTPSPort))
+		slog.InfoContext(ctx, "Starting HTTPS server",
+			slog.String("address", net.JoinHostPort(cfg.HTTPBindIP, strconv.Itoa(int(cfg.HTTPSPort)))),
+		)
 
 		err := httpsServer.ListenAndServeTLS("", "")
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
