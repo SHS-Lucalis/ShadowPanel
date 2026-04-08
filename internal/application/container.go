@@ -1157,6 +1157,26 @@ func (c *Container) EnrollmentService() *enrollment.Service {
 	return c.enrollmentService
 }
 
+func (c *Container) EnrollmentServiceOrNil() *enrollment.Service {
+	if !c.config.GRPC.Enabled {
+		return nil
+	}
+
+	return c.EnrollmentService()
+}
+
+func (c *Container) GRPCPort() uint16 {
+	return c.config.GRPC.Port
+}
+
+func (c *Container) GRPCExternalHost() string {
+	return c.config.GRPC.ExternalHost
+}
+
+func (c *Container) GRPCExternalPort() uint16 {
+	return c.config.GRPC.ExternalPort
+}
+
 func (c *Container) GlobalAPIService() *services.GlobalAPIService {
 	if c.globalAPIService == nil {
 		c.globalAPIService = c.createGlobalAPIService()

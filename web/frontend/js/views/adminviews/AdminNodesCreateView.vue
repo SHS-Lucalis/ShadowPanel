@@ -1,44 +1,14 @@
 <template>
   <GBreadcrumbs :items="breadcrumbs"></GBreadcrumbs>
 
-  <UpdateNodeForm
-      :loading="loading"
-      v-model="nodeCreateModel"
-      v-on:send="onCreate"
-      :client-certificate-options="certificateOptions"
-  >
-    <template #button>
-      <GFixedBottomBar>
-        <GButton class="mt-2" color="green" v-on:click="onCreate">
-          <GIcon name="add-square" class="mr-0.5" />
-          <span class="inline">{{ trans('main.create') }}</span>
-        </GButton>
-      </GFixedBottomBar>
-    </template>
-  </UpdateNodeForm>
-
   <CreateNodeModal/>
 </template>
 
 <script setup>
-import { GBreadcrumbs, GIcon } from "@gameap/ui"
-import {computed, ref, onMounted} from "vue"
+import { GBreadcrumbs } from "@gameap/ui"
+import {computed} from "vue"
 import {trans} from "@/i18n/i18n"
-import {useClientCertificatesStore} from "@/store/clientCertificates";
-import {errorNotification, notification} from "@/parts/dialogs"
-import {useRouter} from "vue-router"
-import {storeToRefs} from "pinia"
-import { snakeCase } from "lodash-es"
-import UpdateNodeForm from "./forms/UpdateNodeForm.vue";
-import GButton from "../../components/GButton.vue";
-import {useNodeListStore} from "@/store/nodeList";
 import CreateNodeModal from "@/components/blocks/CreateNodeModal.vue";
-import GFixedBottomBar from "@/components/GFixedBottomBar.vue";
-
-const router = useRouter()
-
-const nodeListStore = useNodeListStore()
-const clientCertificatesStore = useClientCertificatesStore()
 
 const breadcrumbs = computed(() => {
   return [
@@ -47,54 +17,4 @@ const breadcrumbs = computed(() => {
     {text: trans('dedicated_servers.create')},
   ]
 })
-
-onMounted(() => {
-  clientCertificatesStore.fetchClientCertificates().catch((error) => {
-    errorNotification(error)
-  })
-})
-
-const { certificates } = storeToRefs(clientCertificatesStore)
-
-const loading = computed(() => {
-  return clientCertificatesStore.loading.value;
-})
-
-const certificateOptions = computed(() => {
-  return certificates.value.map((certificate) => {
-    return {
-      label: certificate.fingerprint,
-      value: certificate.id,
-    };
-  })
-})
-
-const nodeCreateModel = ref({
-  name: '',
-  description: '',
-  location: '',
-})
-
-const onCreate = async () => {
-  if (nodeCreateModel.value.serverCertificateFile) {
-    nodeCreateModel.value.gdaemonServerCert = await nodeCreateModel.value.serverCertificateFile.text()
-  } else {
-    nodeCreateModel.value.gdaemonServerCert = ''
-  }
-
-  const fields = Object.fromEntries(
-      Object.entries(nodeCreateModel.value).map(([k, v]) => [snakeCase(k), v])
-  );
-
-  nodeListStore.createNode(fields).then(() => {
-    notification({
-      content: trans('dedicated_servers.create_success_msg'),
-      type: "success",
-    }, () => {
-      router.push({name: 'admin.nodes.index'})
-    })
-  }).catch((error) => {
-    errorNotification(error)
-  })
-}
 </script>

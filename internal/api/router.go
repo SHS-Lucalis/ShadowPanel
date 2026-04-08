@@ -60,6 +60,7 @@ import (
 	"github.com/gameap/gameap/internal/api/gethealth"
 	"github.com/gameap/gameap/internal/api/middlewares"
 	"github.com/gameap/gameap/internal/api/nodes/deletenode"
+	"github.com/gameap/gameap/internal/api/nodes/enrollsetup"
 	"github.com/gameap/gameap/internal/api/nodes/getbusyports"
 	"github.com/gameap/gameap/internal/api/nodes/getcertificateszip"
 	"github.com/gameap/gameap/internal/api/nodes/getdaemonstatus"
@@ -69,7 +70,6 @@ import (
 	"github.com/gameap/gameap/internal/api/nodes/getnodes"
 	nodesgetsummary "github.com/gameap/gameap/internal/api/nodes/getsummary"
 	"github.com/gameap/gameap/internal/api/nodes/nodesetup"
-	"github.com/gameap/gameap/internal/api/nodes/postnode"
 	"github.com/gameap/gameap/internal/api/nodes/putnode"
 	"github.com/gameap/gameap/internal/api/nodes/setupkey"
 	"github.com/gameap/gameap/internal/api/plugins/getfrontendplugins"
@@ -200,6 +200,10 @@ type container interface {
 	PluginsDir() string
 	TaskDispatcher() *taskdispatcher.Dispatcher
 	EnrollmentService() *enrollment.Service
+	EnrollmentServiceOrNil() *enrollment.Service
+	GRPCPort() uint16
+	GRPCExternalHost() string
+	GRPCExternalPort() uint16
 	WSHub() *ws.Hub
 	SessionRegistry() *session.Registry
 	CommandHandler() *grpchandlers.CommandHandler
@@ -1057,6 +1061,10 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 				c.Cache(),
 				c.Responder(),
 				"",
+				c.EnrollmentServiceOrNil(),
+				c.GRPCPort(),
+				c.GRPCExternalHost(),
+				c.GRPCExternalPort(),
 			),
 			AdminOnly: true,
 		},
@@ -1068,6 +1076,10 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 				c.Cache(),
 				c.Responder(),
 				"",
+				c.EnrollmentServiceOrNil(),
+				c.GRPCPort(),
+				c.GRPCExternalHost(),
+				c.GRPCExternalPort(),
 			),
 			AdminOnly: true,
 		},
@@ -1094,16 +1106,6 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 			Path:   "/api/dedicated_servers",
 			Handler: getnodes.NewHandler(
 				c.NodeRepository(),
-				c.Responder(),
-			),
-			AdminOnly: true,
-		},
-		{
-			Method: http.MethodPost,
-			Path:   "/api/dedicated_servers",
-			Handler: postnode.NewHandler(
-				c.NodeRepository(),
-				c.FileManager(),
 				c.Responder(),
 			),
 			AdminOnly: true,
@@ -1737,6 +1739,18 @@ func gdaemonSetupRoutes(c container, router *mux.Router) *mux.Router {
 				c.ClientCertificateRepository(),
 				c.CertificatesService(),
 				c.Responder(),
+			),
+		},
+		{
+			Method: http.MethodGet,
+			Path:   "/nodes/setup/{key}",
+			Handler: enrollsetup.NewHandler(
+				c.EnrollmentServiceOrNil(),
+				c.Responder(),
+				"",
+				c.GRPCExternalHost(),
+				c.GRPCPort(),
+				c.GRPCExternalPort(),
 			),
 		},
 	}

@@ -138,6 +138,8 @@ type Config struct {
 		FileTransferBasePath string `env:"GRPC_FILE_TRANSFER_BASE_PATH" envDefault:""`
 		RequireMTLS          bool   `env:"GRPC_REQUIRE_MTLS" envDefault:"false"`
 		EnableReflection     bool   `env:"GRPC_ENABLE_REFLECTION" envDefault:"false"`
+		ExternalHost         string `env:"GRPC_EXTERNAL_HOST" envDefault:""`
+		ExternalPort         uint16 `env:"GRPC_EXTERNAL_PORT" envDefault:"0"`
 	}
 
 	DaemonSetupKey string `env:"DAEMON_SETUP_KEY" envDefault:""`

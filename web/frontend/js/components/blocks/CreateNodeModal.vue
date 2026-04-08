@@ -21,44 +21,64 @@
           </template>
 
           <div class="md:w-full pr-4 pl-4 m-6">
-            <p>{{ trans('dedicated_servers.autosetup_gameapctl_hint') }}</p>
+            <template v-if="grpcEnabled">
+              <p>{{ trans('dedicated_servers.autosetup_run_command') }}</p>
 
-            <ul class="list-disc">
-              <li class="copyable-item">
-                {{ trans('dedicated_servers.autosetup_host') }}: <code>{{ host }}</code>
-                <button class="copy-btn" @click="copyToClipboard('host', host)" :title="trans('main.copy')">
+              <div class="curl-container">
+                <code class="curl-link">{{ linuxCmd }}</code>
+                <button class="copy-btn" @click="copyToClipboard('curl', linuxCmd)" :title="trans('main.copy')">
                   <Transition name="icon-fade" mode="out-in">
-                    <GIcon v-if="copiedKey === 'host'" name="check" class="copied-icon" key="check" />
+                    <GIcon v-if="copiedKey === 'curl'" name="check" class="copied-icon" key="check" />
                     <GIcon v-else name="copy" key="copy" />
                   </Transition>
                 </button>
-              </li>
-              <li class="copyable-item">
-                {{ trans('dedicated_servers.autosetup_token') }}: <code>{{ token }}</code>
-                <button class="copy-btn" @click="copyToClipboard('token', token)" :title="trans('main.copy')">
+              </div>
+
+              <p class="text-center">
+                <small>{{ trans('dedicated_servers.autosetup_expire_msg') }}</small>
+              </p>
+            </template>
+
+            <template v-else>
+              <p>{{ trans('dedicated_servers.autosetup_gameapctl_hint') }}</p>
+
+              <ul class="list-disc">
+                <li class="copyable-item">
+                  {{ trans('dedicated_servers.autosetup_host') }}: <code>{{ host }}</code>
+                  <button class="copy-btn" @click="copyToClipboard('host', host)" :title="trans('main.copy')">
+                    <Transition name="icon-fade" mode="out-in">
+                      <GIcon v-if="copiedKey === 'host'" name="check" class="copied-icon" key="check" />
+                      <GIcon v-else name="copy" key="copy" />
+                    </Transition>
+                  </button>
+                </li>
+                <li class="copyable-item">
+                  {{ trans('dedicated_servers.autosetup_token') }}: <code>{{ token }}</code>
+                  <button class="copy-btn" @click="copyToClipboard('token', token)" :title="trans('main.copy')">
+                    <Transition name="icon-fade" mode="out-in">
+                      <GIcon v-if="copiedKey === 'token'" name="check" class="copied-icon" key="check" />
+                      <GIcon v-else name="copy" key="copy" />
+                    </Transition>
+                  </button>
+                </li>
+              </ul>
+
+              <p>{{ trans('dedicated_servers.autosetup_run_command') }}</p>
+
+              <div class="curl-container">
+                <code class="curl-link">curl {{ linkWithConfig }} | bash --</code>
+                <button class="copy-btn" @click="copyToClipboard('curl-legacy', curlCommand)" :title="trans('main.copy')">
                   <Transition name="icon-fade" mode="out-in">
-                    <GIcon v-if="copiedKey === 'token'" name="check" class="copied-icon" key="check" />
+                    <GIcon v-if="copiedKey === 'curl-legacy'" name="check" class="copied-icon" key="check" />
                     <GIcon v-else name="copy" key="copy" />
                   </Transition>
                 </button>
-              </li>
-            </ul>
+              </div>
 
-            <p>{{ trans('dedicated_servers.autosetup_run_command') }}</p>
-
-            <div class="curl-container">
-              <code class="curl-link">curl {{ linkWithConfig }} | bash --</code>
-              <button class="copy-btn" @click="copyToClipboard('curl', curlCommand)" :title="trans('main.copy')">
-                <Transition name="icon-fade" mode="out-in">
-                  <GIcon v-if="copiedKey === 'curl'" name="check" class="copied-icon" key="check" />
-                  <GIcon v-else name="copy" key="copy" />
-                </Transition>
-              </button>
-            </div>
-
-            <p class="text-center">
-              <small>{{ trans('dedicated_servers.autosetup_expire_msg') }}</small>
-            </p>
+              <p class="text-center">
+                <small>{{ trans('dedicated_servers.autosetup_expire_msg') }}</small>
+              </p>
+            </template>
           </div>
 
           <n-collapse>
@@ -76,47 +96,76 @@
           </template>
 
           <div class="md:w-full pr-4 pl-4 m-6">
-            <p>{{ trans('dedicated_servers.autosetup_windows_only') }}</p>
+            <template v-if="grpcEnabled">
+              <ol class="list-decimal">
+                <li>
+                  {{ trans('dedicated_servers.autosetup_go_to') }}
+                  <a target="_blank" href="https://github.com/gameap/gameapctl/releases">
+                    {{ trans('dedicated_servers.autosetup_releases_page') }}
+                  </a>
+                </li>
+                <li>{{ trans('dedicated_servers.autosetup_download_archive') }}</li>
+                <li>{{ trans('dedicated_servers.autosetup_run_gameapctl') }}</li>
+              </ol>
 
-            <ol class="list-decimal">
-              <li>
-                {{ trans('dedicated_servers.autosetup_go_to') }}
-                <a target="_blank" href="https://github.com/gameap/gameapctl/releases">
-                  {{ trans('dedicated_servers.autosetup_releases_page') }}
-                </a>
-              </li>
-              <li>{{ trans('dedicated_servers.autosetup_download_archive') }}</li>
-              <li>{{ trans('dedicated_servers.autosetup_run_gameapctl') }}</li>
-              <li>{{ trans('dedicated_servers.autosetup_click_install') }}</li>
-              <li>
-                {{ trans('dedicated_servers.autosetup_fill_fields') }}
-                <ul class="list-disc ml-4">
-                  <li class="copyable-item">
-                    {{ trans('dedicated_servers.autosetup_host') }}: <code>{{ host }}</code>
-                    <button class="copy-btn" @click="copyToClipboard('host-win', host)" :title="trans('main.copy')">
-                      <Transition name="icon-fade" mode="out-in">
-                        <GIcon v-if="copiedKey === 'host-win'" name="check" class="copied-icon" key="check" />
-                        <GIcon v-else name="copy" key="copy" />
-                      </Transition>
-                    </button>
-                  </li>
-                  <li class="copyable-item">
-                    {{ trans('dedicated_servers.autosetup_token') }}: <code>{{ token }}</code>
-                    <button class="copy-btn" @click="copyToClipboard('token-win', token)" :title="trans('main.copy')">
-                      <Transition name="icon-fade" mode="out-in">
-                        <GIcon v-if="copiedKey === 'token-win'" name="check" class="copied-icon" key="check" />
-                        <GIcon v-else name="copy" key="copy" />
-                      </Transition>
-                    </button>
-                  </li>
-                </ul>
-              </li>
-              <li>{{ trans('dedicated_servers.autosetup_push_install') }}</li>
-            </ol>
+              <div class="curl-container">
+                <code class="curl-link">{{ windowsCmd }}</code>
+                <button class="copy-btn" @click="copyToClipboard('win-cmd', windowsCmd)" :title="trans('main.copy')">
+                  <Transition name="icon-fade" mode="out-in">
+                    <GIcon v-if="copiedKey === 'win-cmd'" name="check" class="copied-icon" key="check" />
+                    <GIcon v-else name="copy" key="copy" />
+                  </Transition>
+                </button>
+              </div>
 
-            <p class="text-center">
-              <small>{{ trans('dedicated_servers.autosetup_expire_token_msg') }}</small>
-            </p>
+              <p class="text-center">
+                <small>{{ trans('dedicated_servers.autosetup_expire_token_msg') }}</small>
+              </p>
+            </template>
+
+            <template v-else>
+              <p>{{ trans('dedicated_servers.autosetup_windows_only') }}</p>
+
+              <ol class="list-decimal">
+                <li>
+                  {{ trans('dedicated_servers.autosetup_go_to') }}
+                  <a target="_blank" href="https://github.com/gameap/gameapctl/releases">
+                    {{ trans('dedicated_servers.autosetup_releases_page') }}
+                  </a>
+                </li>
+                <li>{{ trans('dedicated_servers.autosetup_download_archive') }}</li>
+                <li>{{ trans('dedicated_servers.autosetup_run_gameapctl') }}</li>
+                <li>{{ trans('dedicated_servers.autosetup_click_install') }}</li>
+                <li>
+                  {{ trans('dedicated_servers.autosetup_fill_fields') }}
+                  <ul class="list-disc ml-4">
+                    <li class="copyable-item">
+                      {{ trans('dedicated_servers.autosetup_host') }}: <code>{{ host }}</code>
+                      <button class="copy-btn" @click="copyToClipboard('host-win', host)" :title="trans('main.copy')">
+                        <Transition name="icon-fade" mode="out-in">
+                          <GIcon v-if="copiedKey === 'host-win'" name="check" class="copied-icon" key="check" />
+                          <GIcon v-else name="copy" key="copy" />
+                        </Transition>
+                      </button>
+                    </li>
+                    <li class="copyable-item">
+                      {{ trans('dedicated_servers.autosetup_token') }}: <code>{{ token }}</code>
+                      <button class="copy-btn" @click="copyToClipboard('token-win', token)" :title="trans('main.copy')">
+                        <Transition name="icon-fade" mode="out-in">
+                          <GIcon v-if="copiedKey === 'token-win'" name="check" class="copied-icon" key="check" />
+                          <GIcon v-else name="copy" key="copy" />
+                        </Transition>
+                      </button>
+                    </li>
+                  </ul>
+                </li>
+                <li>{{ trans('dedicated_servers.autosetup_push_install') }}</li>
+              </ol>
+
+              <p class="text-center">
+                <small>{{ trans('dedicated_servers.autosetup_expire_token_msg') }}</small>
+              </p>
+            </template>
           </div>
         </n-tab-pane>
       </n-tabs>
@@ -136,12 +185,31 @@ const nodeListStore = useNodeListStore()
 
 const { autoSetupData } = storeToRefs(nodeListStore)
 
+const grpcEnabled = computed(() => {
+  return autoSetupData.value.grpc_enabled
+})
+
 const host = computed(() => {
   return autoSetupData.value.host
 })
 
 const token = computed(() => {
   return autoSetupData.value.token
+})
+
+const linuxCmd = computed(() => {
+  const cmd = autoSetupData.value.linux_cmd || ''
+  if (!daemonConfigProcessManager.value || daemonConfigProcessManager.value === 'auto') {
+    return cmd
+  }
+  const setupLink = autoSetupData.value.setup_link || ''
+  const configValue = `process_manager.name=${daemonConfigProcessManager.value}`
+  const separator = setupLink.includes('?') ? '&' : '?'
+  return `curl -sLf ${setupLink}${separator}config=${encodeURIComponent(configValue)} | bash`
+})
+
+const windowsCmd = computed(() => {
+  return autoSetupData.value.windows_cmd || ''
 })
 
 const showModal = ref(false);

@@ -1,0 +1,194 @@
+package enrollsetup
+
+import (
+	"context"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/gameap/gameap/internal/cache"
+	"github.com/gameap/gameap/internal/enrollment"
+	"github.com/gameap/gameap/pkg/api"
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func setupKeyManager(t *testing.T, setupKey string) *enrollment.SetupKeyManager {
+	t.Helper()
+
+	cacheInstance := cache.NewInMemory()
+	m := enrollment.NewSetupKeyManager(cacheInstance, "")
+
+	if setupKey != "" {
+		err := m.Set(context.Background(), setupKey)
+		require.NoError(t, err)
+	}
+
+	return m
+}
+
+func TestHandler_ServeHTTP(t *testing.T) {
+	tests := []struct {
+		name           string
+		key            string
+		setupKey       string
+		grpcExtHost    string
+		grpcPort       uint16
+		grpcExtPort    uint16
+		panelHost      string
+		requestHost    string
+		config         string
+		expectedStatus int
+		wantError      string
+		validateResp   func(*testing.T, string)
+	}{
+		{
+			name:           "successful_setup_returns_script",
+			key:            "AbCdEfGh1234567890AbCdEfGh123456",
+			setupKey:       "AbCdEfGh1234567890AbCdEfGh123456",
+			grpcPort:       31718,
+			panelHost:      "panel.example.com",
+			expectedStatus: http.StatusOK,
+			validateResp: func(t *testing.T, resp string) {
+				t.Helper()
+
+				assert.Contains(t, resp, "#!/bin/bash")
+				assert.Contains(t, resp, "set -e")
+				assert.Contains(t, resp, "trap cleanup EXIT")
+				assert.Contains(t, resp, "CONNECT_URL=\"grpc://panel.example.com:31718/AbCdEfGh1234567890AbCdEfGh123456\"")
+				assert.Contains(t, resp, "curl -sLf")
+				assert.Contains(t, resp, "gameapctl")
+				assert.Contains(t, resp, "--connect=\"$CONNECT_URL\"")
+			},
+		},
+		{
+			name:           "uses_external_host_and_port",
+			key:            "AbCdEfGh1234567890AbCdEfGh123456",
+			setupKey:       "AbCdEfGh1234567890AbCdEfGh123456",
+			grpcExtHost:    "external.example.com",
+			grpcPort:       31718,
+			grpcExtPort:    9090,
+			panelHost:      "panel.example.com",
+			expectedStatus: http.StatusOK,
+			validateResp: func(t *testing.T, resp string) {
+				t.Helper()
+
+				assert.Contains(t, resp, "grpc://external.example.com:9090/")
+			},
+		},
+		{
+			name:           "with_config_parameter",
+			key:            "AbCdEfGh1234567890AbCdEfGh123456",
+			setupKey:       "AbCdEfGh1234567890AbCdEfGh123456",
+			grpcPort:       31718,
+			panelHost:      "panel.example.com",
+			config:         "process_manager.name=systemd",
+			expectedStatus: http.StatusOK,
+			validateResp: func(t *testing.T, resp string) {
+				t.Helper()
+
+				assert.Contains(t, resp, "--config=\"process_manager.name=systemd\"")
+			},
+		},
+		{
+			name:           "invalid_key_returns_forbidden",
+			key:            "wrong-key",
+			setupKey:       "AbCdEfGh1234567890AbCdEfGh123456",
+			grpcPort:       31718,
+			panelHost:      "panel.example.com",
+			expectedStatus: http.StatusForbidden,
+			wantError:      "invalid setup key",
+		},
+		{
+			name:           "no_setup_key_configured_returns_forbidden",
+			key:            "some-key",
+			setupKey:       "",
+			grpcPort:       31718,
+			panelHost:      "panel.example.com",
+			expectedStatus: http.StatusForbidden,
+			wantError:      "invalid setup key",
+		},
+		{
+			name:           "detects_host_from_request",
+			key:            "AbCdEfGh1234567890AbCdEfGh123456",
+			setupKey:       "AbCdEfGh1234567890AbCdEfGh123456",
+			grpcPort:       31718,
+			panelHost:      "",
+			requestHost:    "detected.example.com:8080",
+			expectedStatus: http.StatusOK,
+			validateResp: func(t *testing.T, resp string) {
+				t.Helper()
+
+				assert.Contains(t, resp, "grpc://detected.example.com:31718/")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			keyManager := setupKeyManager(t, tt.setupKey)
+			cacheInstance := cache.NewInMemory()
+
+			if tt.setupKey != "" {
+				err := cacheInstance.Set(context.Background(), enrollment.SetupKeyCacheKey, tt.setupKey)
+				require.NoError(t, err)
+			}
+
+			enrollSvc := enrollment.NewService(
+				keyManager,
+				nil, nil, nil,
+			)
+
+			responder := api.NewResponder()
+			handler := NewHandler(
+				enrollSvc,
+				responder,
+				tt.panelHost,
+				tt.grpcExtHost,
+				tt.grpcPort,
+				tt.grpcExtPort,
+			)
+
+			path := "/nodes/setup/" + tt.key
+			if tt.config != "" {
+				path += "?config=" + tt.config
+			}
+
+			req := httptest.NewRequest(http.MethodGet, path, nil)
+			if tt.requestHost != "" {
+				req.Host = tt.requestHost
+			}
+
+			req = mux.SetURLVars(req, map[string]string{"key": tt.key})
+
+			w := httptest.NewRecorder()
+			handler.ServeHTTP(w, req)
+
+			assert.Equal(t, tt.expectedStatus, w.Code)
+
+			body := w.Body.String()
+
+			if tt.wantError != "" {
+				assert.Contains(t, body, tt.wantError)
+			}
+
+			if tt.validateResp != nil {
+				tt.validateResp(t, body)
+			}
+		})
+	}
+}
+
+func TestHandler_GRPCDisabled(t *testing.T) {
+	responder := api.NewResponder()
+	handler := NewHandler(nil, responder, "", "", 0, 0)
+
+	req := httptest.NewRequest(http.MethodGet, "/nodes/setup/somekey", nil)
+	req = mux.SetURLVars(req, map[string]string{"key": "somekey"})
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusServiceUnavailable, w.Code)
+}

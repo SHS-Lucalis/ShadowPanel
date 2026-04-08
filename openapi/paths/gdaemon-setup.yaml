@@ -2,8 +2,11 @@
   get:
     tags:
       - DaemonSetup
-    summary: Get daemon setup script
-    description: Returns bash script for daemon installation with environment variables
+    summary: Get daemon setup script (legacy)
+    description: |
+      Legacy endpoint. Returns bash script for daemon installation.
+      Used when gRPC is disabled (GRPC_ENABLED=false).
+      For gRPC-enabled setups, use /nodes/setup/{key} instead.
     operationId: getDaemonSetup
     security: []
     parameters:
@@ -27,10 +30,60 @@
               example: |
                 export CREATE_TOKEN=abc123;
                 export PANEL_HOST=http://panel.example.com;
-                export CONFIG=cHJvY2Vzc19tYW5hZ2VyLm5hbWU9cG9kbWFu;
                 curl -sL https://raw.githubusercontent.com/gameap/auto-install-scripts/master/install-gdaemon.sh | bash --
       '401':
         description: Invalid token
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/nodes/setup/{key}:
+  get:
+    tags:
+      - DaemonSetup
+    summary: Get enrollment setup script
+    description: |
+      Returns bash script that downloads gameapctl and runs enrollment via gRPC.
+      Requires gRPC to be enabled (GRPC_ENABLED=true).
+      The key is a setup key obtained from GET /api/nodes/setup.
+    operationId: getEnrollmentSetup
+    security: []
+    parameters:
+      - name: key
+        in: path
+        required: true
+        description: Setup key (32-character string)
+        schema:
+          type: string
+      - name: config
+        in: query
+        required: false
+        description: |
+          Optional configuration string passed to gameapctl.
+          Example: process_manager.name=systemd
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Bash script that downloads and runs gameapctl with enrollment
+        content:
+          text/plain:
+            schema:
+              type: string
+              example: |
+                #!/bin/bash
+                set -e
+                CONNECT_URL="grpc://panel.example.com:31718/AbCdEfGh1234567890AbCdEfGh123456"
+                # ... downloads gameapctl and runs enrollment
+      '403':
+        description: Invalid or expired setup key
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '503':
+        description: gRPC is disabled
         content:
           application/json:
             schema:

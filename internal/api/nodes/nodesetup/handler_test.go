@@ -138,7 +138,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cacheInstance := cache.NewInMemory()
 			responder := api.NewResponder()
-			handler := NewHandler(cacheInstance, responder, tt.panelHost)
+			handler := NewHandler(cacheInstance, responder, tt.panelHost, nil, 0, "", 0)
 
 			if tt.setupCache != nil {
 				tt.setupCache(cacheInstance)
@@ -182,7 +182,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 func TestHandler_SetupTokenNotFromEnv(t *testing.T) {
 	cacheInstance := cache.NewInMemory()
 	responder := api.NewResponder()
-	handler := NewHandler(cacheInstance, responder, "https://panel.example.com")
+	handler := NewHandler(cacheInstance, responder, "https://panel.example.com", nil, 0, "", 0)
 
 	session := &auth.Session{
 		Login: "admin",
@@ -248,7 +248,7 @@ func TestHandler_HostDetection(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cacheInstance := cache.NewInMemory()
 			responder := api.NewResponder()
-			handler := NewHandler(cacheInstance, responder, tt.panelHost)
+			handler := NewHandler(cacheInstance, responder, tt.panelHost, nil, 0, "", 0)
 
 			session := &auth.Session{
 				Login: "admin",
@@ -280,13 +280,14 @@ func TestHandler_HostDetection(t *testing.T) {
 	}
 }
 
-func TestNewSetupResponse(t *testing.T) {
+func TestNewLegacySetupResponse(t *testing.T) {
 	token := "test-token"
 	host := "https://example.com"
 
-	resp := newSetupResponse(token, host)
+	resp := newLegacySetupResponse(token, host)
 
 	assert.Equal(t, "test-token", resp.Token)
 	assert.Equal(t, "https://example.com", resp.Host)
 	assert.Equal(t, "https://example.com/gdaemon/setup/test-token", resp.Link)
+	assert.False(t, resp.GRPCEnabled)
 }

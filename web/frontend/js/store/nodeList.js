@@ -10,6 +10,11 @@ export const useNodeListStore = defineStore("nodeList",{
             link: '',
             token: '',
             host: '',
+            grpc_enabled: false,
+            connect_url: '',
+            linux_cmd: '',
+            windows_cmd: '',
+            setup_link: '',
         },
 
         apiProcesses: 0,
@@ -34,16 +39,6 @@ export const useNodeListStore = defineStore("nodeList",{
             try {
                 const response = await axios.get('/api/nodes/summary')
                 this.summary = response.data;
-            } catch (error) {
-                throw error
-            } finally {
-                this.apiProcesses--
-            }
-        },
-        async createNode(node) {
-            this.apiProcesses++
-            try {
-                await axios.post('/api/nodes', node)
             } catch (error) {
                 throw error
             } finally {

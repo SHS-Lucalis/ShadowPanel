@@ -3,6 +3,7 @@ package enrollment
 import (
 	"context"
 	"crypto/subtle"
+	"time"
 
 	"github.com/gameap/gameap/internal/cache"
 	"github.com/gameap/gameap/pkg/strings"
@@ -12,6 +13,7 @@ import (
 const (
 	SetupKeyCacheKey = "daemon:setup_key"
 	setupKeyLength   = 32
+	setupKeyTTL      = 1 * time.Hour
 )
 
 var (
@@ -68,8 +70,8 @@ func (m *SetupKeyManager) Get(ctx context.Context) (string, error) {
 	return "", ErrSetupKeyNotConfigured
 }
 
-func (m *SetupKeyManager) Set(ctx context.Context, key string) error {
-	return m.cache.Set(ctx, SetupKeyCacheKey, key)
+func (m *SetupKeyManager) Set(ctx context.Context, key string, opts ...cache.Option) error {
+	return m.cache.Set(ctx, SetupKeyCacheKey, key, opts...)
 }
 
 func (m *SetupKeyManager) Generate(ctx context.Context) (string, error) {
@@ -78,7 +80,7 @@ func (m *SetupKeyManager) Generate(ctx context.Context) (string, error) {
 		return "", errors.WithMessage(err, "failed to generate setup key")
 	}
 
-	if err := m.Set(ctx, key); err != nil {
+	if err := m.Set(ctx, key, cache.WithExpiration(setupKeyTTL)); err != nil {
 		return "", errors.WithMessage(err, "failed to store setup key")
 	}
 

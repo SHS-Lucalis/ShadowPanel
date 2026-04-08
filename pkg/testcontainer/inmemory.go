@@ -136,6 +136,11 @@ func (c *InmemoryContainer) EnrollmentService() *enrollment.Service {
 	)
 }
 
+func (c *InmemoryContainer) EnrollmentServiceOrNil() *enrollment.Service { return nil }
+func (c *InmemoryContainer) GRPCPort() uint16                            { return 31718 }
+func (c *InmemoryContainer) GRPCExternalHost() string                    { return "" }
+func (c *InmemoryContainer) GRPCExternalPort() uint16                    { return 0 }
+
 func LoadInmemoryContainer() (*InmemoryContainer, error) {
 	c := buildInmemoryTestContainer()
 

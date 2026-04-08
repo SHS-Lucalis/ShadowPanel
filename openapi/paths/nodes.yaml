@@ -74,44 +74,6 @@
             schema:
               $ref: '../schemas/ErrorResponse.yaml'
 
-  post:
-    tags:
-      - Nodes
-    summary: Create node
-    description: Creates a new node (Admin only)
-    operationId: createNode
-    requestBody:
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: '../schemas/requests/CreateNodeRequest.yaml'
-    responses:
-      '200':
-        description: Node created
-        content:
-          application/json:
-            schema:
-              $ref: '../schemas/Node.yaml'
-      '401':
-        description: Unauthorized
-        content:
-          application/json:
-            schema:
-              $ref: '../schemas/ErrorResponse.yaml'
-      '403':
-        description: Forbidden
-        content:
-          application/json:
-            schema:
-              $ref: '../schemas/ErrorResponse.yaml'
-      '422':
-        description: Validation error
-        content:
-          application/json:
-            schema:
-              $ref: '../schemas/ErrorResponse.yaml'
-
 /api/nodes/summary:
   get:
     tags:
@@ -170,23 +132,44 @@
   get:
     tags:
       - Nodes
-    summary: Get daemon setup script
-    description: Returns daemon setup script/instructions (Admin only)
+    summary: Get node setup data
+    description: |
+      Returns setup data for adding a new node (Admin only).
+      When gRPC is enabled, returns enrollment token and commands.
+      When gRPC is disabled, returns legacy setup token and link.
     operationId: getNodesSetup
     responses:
       '200':
-        description: Setup instructions
+        description: Setup data
         content:
           application/json:
             schema:
               type: object
               properties:
-                script:
+                link:
                   type: string
-                  description: Setup script
+                  description: Setup script URL
                 token:
                   type: string
-                  description: Setup token
+                  description: Setup token or key
+                host:
+                  type: string
+                  description: Panel base URL
+                grpc_enabled:
+                  type: boolean
+                  description: Whether gRPC enrollment is available
+                connect_url:
+                  type: string
+                  description: "gRPC connect URL (grpc://host:port/key), present when grpc_enabled=true"
+                linux_cmd:
+                  type: string
+                  description: Linux curl one-liner command, present when grpc_enabled=true
+                windows_cmd:
+                  type: string
+                  description: Windows gameapctl command, present when grpc_enabled=true
+                setup_link:
+                  type: string
+                  description: Setup script URL for enrollment flow, present when grpc_enabled=true
       '401':
         description: Unauthorized
         content:
