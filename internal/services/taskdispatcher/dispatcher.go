@@ -22,6 +22,8 @@ type Dispatcher struct {
 	daemonTaskRepo    repositories.DaemonTaskRepository
 	serverRepo        repositories.ServerRepository
 	serverSettingRepo repositories.ServerSettingRepository
+	gameModRepo       repositories.GameModRepository
+	nodeRepo          repositories.NodeRepository
 	publisher         pubsub.Publisher
 	logger            *slog.Logger
 }
@@ -31,6 +33,8 @@ func NewDispatcher(
 	daemonTaskRepo repositories.DaemonTaskRepository,
 	serverRepo repositories.ServerRepository,
 	serverSettingRepo repositories.ServerSettingRepository,
+	gameModRepo repositories.GameModRepository,
+	nodeRepo repositories.NodeRepository,
 	publisher pubsub.Publisher,
 	logger *slog.Logger,
 ) *Dispatcher {
@@ -43,6 +47,8 @@ func NewDispatcher(
 		daemonTaskRepo:    daemonTaskRepo,
 		serverRepo:        serverRepo,
 		serverSettingRepo: serverSettingRepo,
+		gameModRepo:       gameModRepo,
+		nodeRepo:          nodeRepo,
 		publisher:         publisher,
 		logger:            logger,
 	}
@@ -324,6 +330,34 @@ func (d *Dispatcher) sendServerConfigUpdate(ctx context.Context, task *domain.Da
 		return
 	}
 
+	server := &servers[0]
+
+	var gameMod *domain.GameMod
+	gameMods, gmErr := d.gameModRepo.Find(ctx, &filters.FindGameMod{
+		IDs: []uint{server.GameModID},
+	}, nil, nil)
+	if gmErr != nil {
+		d.logger.Warn("failed to load game mod for config update",
+			"game_mod_id", server.GameModID,
+			"error", gmErr,
+		)
+	} else if len(gameMods) > 0 {
+		gameMod = &gameMods[0]
+	}
+
+	var nodeOS domain.NodeOS
+	nodes, nodeErr := d.nodeRepo.Find(ctx, &filters.FindNode{
+		IDs: []uint{server.DSID},
+	}, nil, nil)
+	if nodeErr != nil {
+		d.logger.Warn("failed to load node for config update",
+			"node_id", server.DSID,
+			"error", nodeErr,
+		)
+	} else if len(nodes) > 0 {
+		nodeOS = nodes[0].OS
+	}
+
 	settings, err := d.serverSettingRepo.Find(ctx, &filters.FindServerSetting{
 		ServerIDs: []uint{*task.ServerID},
 	}, nil, nil)
@@ -338,7 +372,7 @@ func (d *Dispatcher) sendServerConfigUpdate(ctx context.Context, task *domain.Da
 		RequestId: idgen.New(),
 		Payload: &proto.GatewayMessage_ServerConfigUpdate{
 			ServerConfigUpdate: &proto.ServerConfigUpdate{
-				Server:   gateway.DomainServerToProto(&servers[0]),
+				Server:   gateway.DomainServerToProtoWithGameMod(server, gameMod, nodeOS),
 				Settings: gateway.DomainServerSettingsToProto(settings),
 			},
 		},

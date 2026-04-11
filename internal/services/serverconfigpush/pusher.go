@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/grpc/gateway"
 	"github.com/gameap/gameap/internal/grpc/session"
@@ -16,6 +17,8 @@ type Pusher struct {
 	registry          *session.Registry
 	serverRepo        repositories.ServerRepository
 	serverSettingRepo repositories.ServerSettingRepository
+	gameModRepo       repositories.GameModRepository
+	nodeRepo          repositories.NodeRepository
 	logger            *slog.Logger
 }
 
@@ -23,6 +26,8 @@ func NewPusher(
 	registry *session.Registry,
 	serverRepo repositories.ServerRepository,
 	serverSettingRepo repositories.ServerSettingRepository,
+	gameModRepo repositories.GameModRepository,
+	nodeRepo repositories.NodeRepository,
 	logger *slog.Logger,
 ) *Pusher {
 	if logger == nil {
@@ -33,6 +38,8 @@ func NewPusher(
 		registry:          registry,
 		serverRepo:        serverRepo,
 		serverSettingRepo: serverSettingRepo,
+		gameModRepo:       gameModRepo,
+		nodeRepo:          nodeRepo,
 		logger:            logger,
 	}
 }
@@ -52,6 +59,32 @@ func (p *Pusher) PushServerConfig(ctx context.Context, serverID uint) {
 
 	server := &servers[0]
 
+	var gameMod *domain.GameMod
+	gameMods, gmErr := p.gameModRepo.Find(ctx, &filters.FindGameMod{
+		IDs: []uint{server.GameModID},
+	}, nil, nil)
+	if gmErr != nil {
+		p.logger.Warn("failed to load game mod for config push",
+			"game_mod_id", server.GameModID,
+			"error", gmErr,
+		)
+	} else if len(gameMods) > 0 {
+		gameMod = &gameMods[0]
+	}
+
+	var nodeOS domain.NodeOS
+	nodes, nodeErr := p.nodeRepo.Find(ctx, &filters.FindNode{
+		IDs: []uint{server.DSID},
+	}, nil, nil)
+	if nodeErr != nil {
+		p.logger.Warn("failed to load node for config push",
+			"node_id", server.DSID,
+			"error", nodeErr,
+		)
+	} else if len(nodes) > 0 {
+		nodeOS = nodes[0].OS
+	}
+
 	settings, err := p.serverSettingRepo.Find(ctx, &filters.FindServerSetting{
 		ServerIDs: []uint{serverID},
 	}, nil, nil)
@@ -66,7 +99,7 @@ func (p *Pusher) PushServerConfig(ctx context.Context, serverID uint) {
 		RequestId: idgen.New(),
 		Payload: &proto.GatewayMessage_ServerConfigUpdate{
 			ServerConfigUpdate: &proto.ServerConfigUpdate{
-				Server:   gateway.DomainServerToProto(server),
+				Server:   gateway.DomainServerToProtoWithGameMod(server, gameMod, nodeOS),
 				Settings: gateway.DomainServerSettingsToProto(settings),
 			},
 		},

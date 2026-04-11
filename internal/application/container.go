@@ -559,6 +559,8 @@ func (c *Container) TaskDispatcher() *taskdispatcher.Dispatcher {
 			c.DaemonTaskRepository(),
 			c.ServerRepository(),
 			c.ServerSettingRepository(),
+			c.GameModRepository(),
+			c.NodeRepository(),
 			c.PubSub(),
 			slog.Default(),
 		)
@@ -573,6 +575,8 @@ func (c *Container) ServerConfigPusher() *serverconfigpush.Pusher {
 			c.SessionRegistry(),
 			c.ServerRepository(),
 			c.ServerSettingRepository(),
+			c.GameModRepository(),
+			c.NodeRepository(),
 			slog.Default(),
 		)
 	}

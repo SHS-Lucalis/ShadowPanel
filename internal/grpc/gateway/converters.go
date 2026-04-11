@@ -94,6 +94,27 @@ func DomainServerToProto(srv *domain.Server) *proto.Server {
 	}
 }
 
+func DomainServerToProtoWithGameMod(
+	srv *domain.Server, gameMod *domain.GameMod, nodeOS domain.NodeOS,
+) *proto.Server {
+	p := DomainServerToProto(srv)
+
+	if gameMod == nil {
+		return p
+	}
+
+	startCmd := gameMod.StartCmdLinux
+	if nodeOS == domain.NodeOSWindows {
+		startCmd = gameMod.StartCmdWindows
+	}
+
+	if (p.StartCommand == nil || *p.StartCommand == "") && startCmd != nil {
+		p.StartCommand = startCmd
+	}
+
+	return p
+}
+
 func domainInstalledStatusToProto(status domain.ServerInstalledStatus) proto.ServerInstalledStatus {
 	switch status {
 	case domain.ServerInstalledStatusNotInstalled:

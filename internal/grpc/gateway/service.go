@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/enrollment"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/grpc/session"
@@ -210,6 +211,28 @@ func (s *Service) validateAuth(ctx context.Context, reg *proto.RegisterRequest) 
 }
 
 func (s *Service) buildRegisterAck(ctx context.Context, reg *proto.RegisterRequest) (*proto.RegisterAck, error) {
+	nodes, err := s.nodeRepo.Find(ctx, &filters.FindNode{IDs: []uint{uint(reg.NodeId)}}, nil, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "find node")
+	}
+
+	var nodeOS domain.NodeOS
+	if len(nodes) > 0 {
+		nodeOS = nodes[0].OS
+	}
+
+	gameMods, err := s.gameModRepo.FindAll(ctx, nil, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "find game mods")
+	}
+
+	gameModByID := make(map[uint]*domain.GameMod, len(gameMods))
+	protoGameMods := make([]*proto.GameMod, 0, len(gameMods))
+	for i := range gameMods {
+		gameModByID[gameMods[i].ID] = &gameMods[i]
+		protoGameMods = append(protoGameMods, domainGameModToProto(&gameMods[i]))
+	}
+
 	servers, err := s.serverRepo.Find(ctx, &filters.FindServer{
 		DSIDs: []uint{uint(reg.NodeId)},
 	}, nil, nil)
@@ -220,7 +243,8 @@ func (s *Service) buildRegisterAck(ctx context.Context, reg *proto.RegisterReque
 	protoServers := make([]*proto.Server, 0, len(servers))
 	serverIDs := make([]uint, 0, len(servers))
 	for _, srv := range servers {
-		protoServers = append(protoServers, DomainServerToProto(&srv))
+		gm := gameModByID[srv.GameModID]
+		protoServers = append(protoServers, DomainServerToProtoWithGameMod(&srv, gm, nodeOS))
 		serverIDs = append(serverIDs, srv.ID)
 	}
 
@@ -255,16 +279,6 @@ func (s *Service) buildRegisterAck(ctx context.Context, reg *proto.RegisterReque
 			continue
 		}
 		protoGames = append(protoGames, domainGameToProto(&g))
-	}
-
-	gameMods, err := s.gameModRepo.FindAll(ctx, nil, nil)
-	if err != nil {
-		return nil, errors.Wrap(err, "find game mods")
-	}
-
-	protoGameMods := make([]*proto.GameMod, 0, len(gameMods))
-	for _, gm := range gameMods {
-		protoGameMods = append(protoGameMods, domainGameModToProto(&gm))
 	}
 
 	s.logger.Debug("register ack prepared",
