@@ -368,6 +368,13 @@ func (d *Dispatcher) sendServerConfigUpdate(ctx context.Context, task *domain.Da
 		)
 	}
 
+	d.logger.Info("sendServerConfigUpdate: sending config",
+		"server_id", server.ID,
+		"start_command", server.StartCommand,
+		"game_mod_id", server.GameModID,
+		"settings_count", len(settings),
+	)
+
 	configMsg := &proto.GatewayMessage{
 		RequestId: idgen.New(),
 		Payload: &proto.GatewayMessage_ServerConfigUpdate{
