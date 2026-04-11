@@ -63,6 +63,11 @@ func (s *State) AddPart() {
 
 func (s *State) Complete() {
 	s.mu.Lock()
+	if s.complete {
+		s.mu.Unlock()
+
+		return
+	}
 	s.complete = true
 	ch := s.ch
 	s.ch = make(chan struct{})

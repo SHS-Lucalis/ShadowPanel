@@ -200,7 +200,10 @@ func (s *FileService) downloadStreamLocal(ctx context.Context, nodeID uint64, pa
 	go func() {
 		if err := s.gateway.RequestFileDownloadTask(ctx, nodeID, transferID, path); err != nil {
 			state.SetError(errors.WithMessage(err, "daemon file download task"))
+
+			return
 		}
+		state.Complete()
 	}()
 
 	available, err := state.WaitForPart(ctx, 0)
@@ -326,7 +329,10 @@ func (s *FileService) downloadStreamRemote(ctx context.Context, nodeID uint64, p
 	go func() {
 		if err := s.dispatcher.DispatchDownloadTask(ctx, nodeID, transferID, path); err != nil {
 			errCh <- errors.WithMessage(err, "dispatched download task")
+
+			return
 		}
+		s.writeSentinelIfMissing(ctx, transferID)
 	}()
 
 	available, err := s.waitForPartS3(ctx, transferID, 0, errCh)
@@ -428,6 +434,26 @@ func (s *FileService) waitForPartS3(
 		case err := <-errCh:
 			return false, err
 		}
+	}
+}
+
+func (s *FileService) writeSentinelIfMissing(ctx context.Context, transferID string) {
+	donePath := transfers.TransferDonePath(transferID)
+	if s.storage.Exists(ctx, donePath) {
+		return
+	}
+
+	info := transfers.DoneInfo{Success: true, TotalParts: 0}
+
+	data, err := json.Marshal(info)
+	if err != nil {
+		s.logger.Error("failed to marshal fallback sentinel", "transfer_id", transferID, "error", err)
+
+		return
+	}
+
+	if writeErr := s.storage.Write(ctx, donePath, data); writeErr != nil {
+		s.logger.Error("failed to write fallback sentinel", "transfer_id", transferID, "error", writeErr)
 	}
 }
 
