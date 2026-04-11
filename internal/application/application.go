@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-
 	"strconv"
 
 	"github.com/gameap/gameap/internal/application/defaults"
@@ -120,6 +119,14 @@ func Run(runParams RunParams) {
 		slog.String("version", defaults.Version),
 		slog.String("build_date", defaults.BuildDate),
 	)
+
+	slog.InfoContext(ctx, "Starting HTTP server",
+		slog.String("address", net.JoinHostPort(cfg.HTTPBindIP, strconv.Itoa(int(cfg.HTTPPort)))),
+	)
+
+	if cfg.TLSEnabled() {
+		startHTTPSServer(ctx, cfg, container)
+	}
 
 	err = container.PluginLoader().LoadAll(ctx)
 	if err != nil {
