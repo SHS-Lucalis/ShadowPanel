@@ -9,8 +9,11 @@ import (
 	"crypto/x509/pkix"
 	"encoding/hex"
 	"encoding/pem"
+	"log/slog"
 	"math/big"
+	"net"
 	"os"
+	"slices"
 	"time"
 
 	"github.com/gameap/gameap/internal/files"
@@ -40,6 +43,24 @@ type SignOptions struct {
 	State              string
 	Locality           string
 	OrganizationalUnit string
+	IPAddresses        []net.IP
+	DNSNames           []string
+}
+
+func (opts *SignOptions) ipAddresses() []net.IP {
+	if opts == nil {
+		return nil
+	}
+
+	return opts.IPAddresses
+}
+
+func (opts *SignOptions) dnsNames() []string {
+	if opts == nil {
+		return nil
+	}
+
+	return opts.DNSNames
 }
 
 type Service struct {
@@ -143,36 +164,7 @@ func (s *Service) Sign(ctx context.Context, csrPEM string, opts *SignOptions) (s
 	}
 
 	subject := csr.Subject
-
-	//nolint:nestif
-	if opts != nil {
-		if opts.CommonName != "" {
-			subject.CommonName = opts.CommonName
-		}
-		if opts.Organization != "" {
-			subject.Organization = []string{opts.Organization}
-		}
-		if opts.Country != "" {
-			subject.Country = []string{opts.Country}
-		}
-		if opts.State != "" {
-			subject.Province = []string{opts.State}
-		}
-		if opts.Locality != "" {
-			subject.Locality = []string{opts.Locality}
-		}
-		if opts.OrganizationalUnit != "" {
-			subject.OrganizationalUnit = []string{opts.OrganizationalUnit}
-		}
-		if opts.Email != "" {
-			subject.ExtraNames = []pkix.AttributeTypeAndValue{
-				{
-					Type:  []int{1, 2, 840, 113549, 1, 9, 1}, // emailAddress OID
-					Value: opts.Email,
-				},
-			}
-		}
-	}
+	applySignOptions(&subject, opts)
 
 	template := &x509.Certificate{
 		SerialNumber:          serialNumber,
@@ -182,6 +174,8 @@ func (s *Service) Sign(ctx context.Context, csrPEM string, opts *SignOptions) (s
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
 		BasicConstraintsValid: true,
+		IPAddresses:           opts.ipAddresses(),
+		DNSNames:              opts.dnsNames(),
 	}
 
 	// Sign certificate
@@ -235,6 +229,11 @@ func (s *Service) Generate(
 		SignatureAlgorithm: x509.SHA256WithRSA,
 	}
 
+	if opts != nil {
+		csrTemplate.IPAddresses = opts.IPAddresses
+		csrTemplate.DNSNames = opts.DNSNames
+	}
+
 	// Create CSR
 	csrDER, err := x509.CreateCertificateRequest(rand.Reader, csrTemplate, privateKey)
 	if err != nil {
@@ -266,8 +265,9 @@ func (s *Service) Generate(
 	return certPEM, string(privateKeyPEM), nil
 }
 
-// EnsureGenerated generates a new certificate only if the files do not already exist.
-// If the files exist, it reads and returns them. Otherwise it delegates to Generate.
+// EnsureGenerated generates a new certificate only if the files do not already exist
+// or if the existing certificate does not match the required SANs.
+// If the files exist and match, it reads and returns them. Otherwise it delegates to Generate.
 func (s *Service) EnsureGenerated(
 	ctx context.Context,
 	certificatePath, keyPath string,
@@ -279,15 +279,49 @@ func (s *Service) EnsureGenerated(
 			return "", "", errors.Wrap(err, "failed to read existing certificate")
 		}
 
-		keyPEM, err := s.fileManager.Read(ctx, keyPath)
-		if err != nil {
-			return "", "", errors.Wrap(err, "failed to read existing private key")
+		if certificateMatchesSANs(certPEM, opts) {
+			keyPEM, err := s.fileManager.Read(ctx, keyPath)
+			if err != nil {
+				return "", "", errors.Wrap(err, "failed to read existing private key")
+			}
+
+			return string(certPEM), string(keyPEM), nil
 		}
 
-		return string(certPEM), string(keyPEM), nil
+		slog.Info("Certificate SANs mismatch, regenerating", slog.String("path", certificatePath))
 	}
 
 	return s.Generate(ctx, certificatePath, keyPath, opts)
+}
+
+func certificateMatchesSANs(certPEM []byte, opts *SignOptions) bool {
+	if opts == nil || (len(opts.IPAddresses) == 0 && len(opts.DNSNames) == 0) {
+		return true
+	}
+
+	block, _ := pem.Decode(certPEM)
+	if block == nil {
+		return false
+	}
+
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return false
+	}
+
+	for _, reqIP := range opts.IPAddresses {
+		if !slices.ContainsFunc(cert.IPAddresses, reqIP.Equal) {
+			return false
+		}
+	}
+
+	for _, reqDNS := range opts.DNSNames {
+		if !slices.Contains(cert.DNSNames, reqDNS) {
+			return false
+		}
+	}
+
+	return true
 }
 
 // GenerateInMemory generates a new certificate signed with the root certificate
@@ -317,6 +351,11 @@ func (s *Service) GenerateInMemory(ctx context.Context, opts *SignOptions) (stri
 	csrTemplate := &x509.CertificateRequest{
 		Subject:            subject,
 		SignatureAlgorithm: x509.SHA256WithRSA,
+	}
+
+	if opts != nil {
+		csrTemplate.IPAddresses = opts.IPAddresses
+		csrTemplate.DNSNames = opts.DNSNames
 	}
 
 	csrDER, err := x509.CreateCertificateRequest(rand.Reader, csrTemplate, privateKey)

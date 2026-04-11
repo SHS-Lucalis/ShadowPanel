@@ -1753,10 +1753,16 @@ func (c *Container) buildGRPCTLSConfig() (*tls.Config, error) {
 	ctx := c.context
 	certSvc := c.CertificatesService()
 
+	ipAddresses, dnsNames := c.grpcCertSANs()
+
 	certPEM, keyPEM, err := certSvc.EnsureGenerated(ctx,
 		certificates.ServerCertificatesPath+"/api-server.crt",
 		certificates.ServerCertificatesPath+"/api-server.key",
-		&certificates.SignOptions{CommonName: "GameAP API Server"},
+		&certificates.SignOptions{
+			CommonName:  "GameAP API Server",
+			IPAddresses: ipAddresses,
+			DNSNames:    dnsNames,
+		},
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to ensure gRPC server certificate")
@@ -1788,6 +1794,37 @@ func (c *Container) buildGRPCTLSConfig() (*tls.Config, error) {
 	}
 
 	return tlsCfg, nil
+}
+
+func (c *Container) grpcCertSANs() ([]net.IP, []string) {
+	var ips []net.IP
+	var dnsNames []string
+
+	seen := make(map[string]bool)
+
+	for _, h := range []string{c.config.HTTPHost, c.config.HTTPBindIP, c.config.GRPC.ExternalHost} {
+		if h == "" || h == "0.0.0.0" || seen[h] {
+			continue
+		}
+
+		seen[h] = true
+
+		if ip := net.ParseIP(h); ip != nil {
+			ips = append(ips, ip)
+		} else {
+			dnsNames = append(dnsNames, h)
+		}
+	}
+
+	if !seen["127.0.0.1"] {
+		ips = append(ips, net.IPv4(127, 0, 0, 1))
+	}
+
+	if !seen["localhost"] {
+		dnsNames = append(dnsNames, "localhost")
+	}
+
+	return ips, dnsNames
 }
 
 func (c *Container) MultiplexedServer() (*MultiplexedServer, error) {
