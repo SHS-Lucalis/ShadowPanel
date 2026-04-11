@@ -193,7 +193,12 @@ func runWithGRPC(ctx context.Context, cfg *config.Config, container *Container) 
 		slog.ErrorContext(ctx, "Failed to start HTTP proxy dispatcher", slog.String("error", err.Error()))
 	}
 
-	grpcServer := container.GRPCServer()
+	grpcServer, err := container.GRPCServer()
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to create gRPC server", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+
 	grpcAddr := net.JoinHostPort(cfg.HTTPBindIP, strconv.Itoa(int(cfg.GRPC.Port)))
 
 	lis, err := new(net.ListenConfig).Listen(ctx, "tcp", grpcAddr)

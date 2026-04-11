@@ -1679,9 +1679,9 @@ func (c *Container) TransferRegistry() *transfers.Registry {
 	return c.transferRegistry
 }
 
-func (c *Container) grpcTLSConfig() *tls.Config {
+func (c *Container) grpcTLSConfig() (*tls.Config, error) {
 	if !c.config.GRPC.Enabled {
-		return nil
+		return nil, nil
 	}
 
 	if !c.config.GRPC.TLSEnabled {
@@ -1691,21 +1691,26 @@ func (c *Container) grpcTLSConfig() *tls.Config {
 			slog.Warn("GRPC_REQUIRE_MTLS is enabled but GRPC_TLS_ENABLED is false; mTLS will not work without TLS")
 		}
 
-		return nil
+		return nil, nil
 	}
 
 	tlsConfig, err := c.buildGRPCTLSConfig()
 	if err != nil {
-		slog.Error("Failed to build gRPC TLS config", slog.String("error", err.Error()))
-
-		return nil
+		return nil, errors.WithMessage(err, "failed to build gRPC TLS config")
 	}
 
-	return tlsConfig
+	slog.Info("gRPC TLS configured successfully")
+
+	return tlsConfig, nil
 }
 
-func (c *Container) GRPCServer() *grpc.Server {
+func (c *Container) GRPCServer() (*grpc.Server, error) {
 	if c.grpcServer == nil {
+		tlsConfig, err := c.grpcTLSConfig()
+		if err != nil {
+			return nil, errors.WithMessage(err, "failed to configure gRPC TLS")
+		}
+
 		c.grpcServer = internalgrpc.NewServer(
 			&internalgrpc.ServerConfig{
 				MaxRecvMsgSize:       c.config.GRPC.MaxRecvMsgSize,
@@ -1714,7 +1719,7 @@ func (c *Container) GRPCServer() *grpc.Server {
 				RequireMTLS:          c.config.GRPC.RequireMTLS,
 				FileTransferBasePath: c.config.GRPC.FileTransferBasePath,
 				EnableReflection:     c.config.GRPC.EnableReflection,
-				TLSConfig:            c.grpcTLSConfig(),
+				TLSConfig:            tlsConfig,
 			},
 			&internalgrpc.ServerDependencies{
 				GatewayService:      c.GatewayService(),
@@ -1741,7 +1746,7 @@ func (c *Container) GRPCServer() *grpc.Server {
 		})
 	}
 
-	return c.grpcServer
+	return c.grpcServer, nil
 }
 
 func (c *Container) buildGRPCTLSConfig() (*tls.Config, error) {
@@ -1797,10 +1802,15 @@ func (c *Container) MultiplexedServer() (*MultiplexedServer, error) {
 
 	addr := c.getMultiplexerAddress()
 
+	grpcSrv, err := c.GRPCServer()
+	if err != nil {
+		return nil, errors.WithMessage(err, "failed to create gRPC server")
+	}
+
 	server, err := NewMultiplexedServer(c.context, &MultiplexerConfig{
 		Address:    addr,
 		TLSConfig:  tlsConfig,
-		GRPCServer: c.GRPCServer(),
+		GRPCServer: grpcSrv,
 		HTTPServer: c.HTTPServer(),
 		Logger:     slog.Default(),
 	})
