@@ -1606,7 +1606,7 @@ func (c *Container) SessionRegistry() *session.Registry {
 
 func (c *Container) TaskHandler() *handlers.TaskHandler {
 	if c.taskHandler == nil {
-		c.taskHandler = handlers.NewTaskHandler(c.DaemonTaskRepository(), c.PubSub(), slog.Default())
+		c.taskHandler = handlers.NewTaskHandler(c.DaemonTaskRepository(), c.ServerRepository(), c.PubSub(), slog.Default())
 	}
 
 	return c.taskHandler

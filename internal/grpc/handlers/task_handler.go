@@ -17,12 +17,14 @@ import (
 
 type TaskHandler struct {
 	daemonTaskRepo repositories.DaemonTaskRepository
+	serverRepo     repositories.ServerRepository
 	publisher      pubsub.Publisher
 	logger         *slog.Logger
 }
 
 func NewTaskHandler(
 	daemonTaskRepo repositories.DaemonTaskRepository,
+	serverRepo repositories.ServerRepository,
 	publisher pubsub.Publisher,
 	logger *slog.Logger,
 ) *TaskHandler {
@@ -32,6 +34,7 @@ func NewTaskHandler(
 
 	return &TaskHandler{
 		daemonTaskRepo: daemonTaskRepo,
+		serverRepo:     serverRepo,
 		publisher:      publisher,
 		logger:         logger,
 	}
@@ -62,6 +65,8 @@ func (h *TaskHandler) HandleTaskStatusUpdate(ctx context.Context, nodeID uint64,
 	if err := h.daemonTaskRepo.Save(ctx, &task); err != nil {
 		return errors.Wrap(err, "save task status")
 	}
+
+	h.updateServerInstalledStatus(ctx, &task)
 
 	h.logger.Info("publishing task status to pubsub",
 		"task_id", update.TaskId,
@@ -196,6 +201,65 @@ func (h *TaskHandler) publishTaskOutput(ctx context.Context, taskID uint64, chun
 	if err := h.publisher.Publish(ctx, channel, msg); err != nil {
 		h.logger.Warn("failed to publish task output", "task_id", taskID, "error", err)
 	}
+}
+
+func (h *TaskHandler) updateServerInstalledStatus(ctx context.Context, task *domain.DaemonTask) {
+	if h.serverRepo == nil || task.ServerID == nil {
+		return
+	}
+
+	installedStatus, ok := resolveInstalledStatus(task.Task, task.Status)
+	if !ok {
+		return
+	}
+
+	servers, err := h.serverRepo.Find(ctx, &filters.FindServer{IDs: []uint{*task.ServerID}}, nil, nil)
+	if err != nil {
+		h.logger.Warn("failed to find server for installed status update",
+			"server_id", *task.ServerID,
+			"error", err,
+		)
+
+		return
+	}
+
+	if len(servers) == 0 {
+		return
+	}
+
+	server := &servers[0]
+	server.Installed = installedStatus
+
+	if err := h.serverRepo.Save(ctx, server); err != nil {
+		h.logger.Warn("failed to update server installed status",
+			"server_id", server.ID,
+			"installed", installedStatus,
+			"error", err,
+		)
+	}
+}
+
+func resolveInstalledStatus(
+	taskType domain.DaemonTaskType,
+	taskStatus domain.DaemonTaskStatus,
+) (domain.ServerInstalledStatus, bool) {
+	switch taskType {
+	case domain.DaemonTaskTypeServerInstall:
+		switch taskStatus {
+		case domain.DaemonTaskStatusWorking:
+			return domain.ServerInstalledStatusInstallationInProg, true
+		case domain.DaemonTaskStatusSuccess:
+			return domain.ServerInstalledStatusInstalled, true
+		case domain.DaemonTaskStatusError, domain.DaemonTaskStatusCanceled:
+			return domain.ServerInstalledStatusNotInstalled, true
+		}
+	case domain.DaemonTaskTypeServerDelete:
+		if taskStatus == domain.DaemonTaskStatusSuccess {
+			return domain.ServerInstalledStatusNotInstalled, true
+		}
+	}
+
+	return 0, false
 }
 
 func isTerminalStatus(status domain.DaemonTaskStatus) bool {
