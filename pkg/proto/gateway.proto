@@ -11,6 +11,7 @@ import "pkg/proto/server.proto";
 import "pkg/proto/game.proto";
 import "pkg/proto/gamemod.proto";
 import "pkg/proto/filetransfer.proto";
+import "pkg/proto/serversetting.proto";
 
 service DaemonGateway {
   rpc Connect(stream DaemonMessage) returns (stream GatewayMessage);
@@ -65,6 +66,7 @@ message GatewayMessage {
 
     Server server_config = 50;
     ServerConfigBatch server_config_batch = 51;
+    ServerConfigUpdate server_config_update = 52;
 
     FileReadRequest file_read = 60;
     FileWriteRequest file_write = 61;
@@ -102,6 +104,7 @@ message RegisterAck {
   repeated Game games = 5;
   repeated GameMod game_mods = 6;
   google.protobuf.Duration heartbeat_interval = 7;
+  repeated ServerSetting server_settings = 8;
 }
 
 message Heartbeat {
@@ -169,6 +172,12 @@ message ServerStatusBatch {
 
 message ServerConfigBatch {
   repeated Server servers = 1;
+  repeated ServerSetting server_settings = 2;
+}
+
+message ServerConfigUpdate {
+  Server server = 1;
+  repeated ServerSetting settings = 2;
 }
 
 message ShutdownNotification {

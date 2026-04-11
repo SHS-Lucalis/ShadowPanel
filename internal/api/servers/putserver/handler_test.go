@@ -828,7 +828,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			serverRepo := inmemory.NewServerRepository()
 			responder := api.NewResponder()
-			handler := NewHandler(serverRepo, nil, responder)
+			handler := NewHandler(serverRepo, nil, nil, responder)
 
 			if tt.setupRepo != nil {
 				tt.setupRepo(serverRepo)
@@ -868,7 +868,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 func TestHandler_ServerUpdatePersistence(t *testing.T) {
 	serverRepo := inmemory.NewServerRepository()
 	responder := api.NewResponder()
-	handler := NewHandler(serverRepo, nil, responder)
+	handler := NewHandler(serverRepo, nil, nil, responder)
 
 	originalServer := &domain.Server{
 		ID:         1,
@@ -949,7 +949,7 @@ func TestHandler_ServerUpdatePersistence(t *testing.T) {
 func TestHandler_ServerUpdatePersistence_WithVarsAndLimits(t *testing.T) {
 	serverRepo := inmemory.NewServerRepository()
 	responder := api.NewResponder()
-	handler := NewHandler(serverRepo, nil, responder)
+	handler := NewHandler(serverRepo, nil, nil, responder)
 
 	originalServer := &domain.Server{
 		ID:         1,
@@ -1016,7 +1016,7 @@ func TestHandler_ServerUpdatePersistence_WithVarsAndLimits(t *testing.T) {
 func TestHandler_InvalidServerID(t *testing.T) {
 	serverRepo := inmemory.NewServerRepository()
 	responder := api.NewResponder()
-	handler := NewHandler(serverRepo, nil, responder)
+	handler := NewHandler(serverRepo, nil, nil, responder)
 
 	requestBody := `{
 		"name": "Test Server",

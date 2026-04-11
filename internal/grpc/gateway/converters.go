@@ -12,7 +12,7 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-func domainServerToProto(srv *domain.Server) *proto.Server {
+func DomainServerToProto(srv *domain.Server) *proto.Server {
 	var createdAt, updatedAt, deletedAt, expires, lastProcessCheck *timestamppb.Timestamp
 
 	if srv.CreatedAt != nil {
@@ -281,6 +281,21 @@ func ProtoTaskStatusToDomain(status proto.DaemonTaskStatus) domain.DaemonTaskSta
 	default:
 		return domain.DaemonTaskStatusWaiting
 	}
+}
+
+func DomainServerSettingsToProto(settings []domain.ServerSetting) []*proto.ServerSetting {
+	result := make([]*proto.ServerSetting, 0, len(settings))
+	for _, s := range settings {
+		valueStr, _ := s.Value.String()
+		result = append(result, &proto.ServerSetting{
+			Id:       uint64(s.ID),
+			ServerId: uint64(s.ServerID),
+			Name:     s.Name,
+			Value:    valueStr,
+		})
+	}
+
+	return result
 }
 
 func clampToInt32(v int) int32 {

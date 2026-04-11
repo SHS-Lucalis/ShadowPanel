@@ -27,19 +27,20 @@ const (
 type Service struct {
 	proto.UnimplementedDaemonGatewayServer
 
-	registry       *session.Registry
-	nodeRepo       repositories.NodeRepository
-	serverRepo     repositories.ServerRepository
-	daemonTaskRepo repositories.DaemonTaskRepository
-	gameRepo       repositories.GameRepository
-	gameModRepo    repositories.GameModRepository
-	logger         *slog.Logger
-	apiKeyVerifier APIKeyVerifier
-	taskHandler    TaskHandler
-	commandHandler CommandHandler
-	serverHandler  ServerStatusHandler
-	attachHandler  AttachHandler
-	enrollmentSvc  *enrollment.Service
+	registry          *session.Registry
+	nodeRepo          repositories.NodeRepository
+	serverRepo        repositories.ServerRepository
+	serverSettingRepo repositories.ServerSettingRepository
+	daemonTaskRepo    repositories.DaemonTaskRepository
+	gameRepo          repositories.GameRepository
+	gameModRepo       repositories.GameModRepository
+	logger            *slog.Logger
+	apiKeyVerifier    APIKeyVerifier
+	taskHandler       TaskHandler
+	commandHandler    CommandHandler
+	serverHandler     ServerStatusHandler
+	attachHandler     AttachHandler
+	enrollmentSvc     *enrollment.Service
 }
 
 type APIKeyVerifier interface {
@@ -75,6 +76,7 @@ func NewService(
 	registry *session.Registry,
 	nodeRepo repositories.NodeRepository,
 	serverRepo repositories.ServerRepository,
+	serverSettingRepo repositories.ServerSettingRepository,
 	daemonTaskRepo repositories.DaemonTaskRepository,
 	gameRepo repositories.GameRepository,
 	gameModRepo repositories.GameModRepository,
@@ -91,19 +93,20 @@ func NewService(
 	}
 
 	return &Service{
-		registry:       registry,
-		nodeRepo:       nodeRepo,
-		serverRepo:     serverRepo,
-		daemonTaskRepo: daemonTaskRepo,
-		gameRepo:       gameRepo,
-		gameModRepo:    gameModRepo,
-		apiKeyVerifier: apiKeyVerifier,
-		taskHandler:    taskHandler,
-		commandHandler: commandHandler,
-		serverHandler:  serverHandler,
-		attachHandler:  attachHandler,
-		enrollmentSvc:  enrollmentSvc,
-		logger:         logger,
+		registry:          registry,
+		nodeRepo:          nodeRepo,
+		serverRepo:        serverRepo,
+		serverSettingRepo: serverSettingRepo,
+		daemonTaskRepo:    daemonTaskRepo,
+		gameRepo:          gameRepo,
+		gameModRepo:       gameModRepo,
+		apiKeyVerifier:    apiKeyVerifier,
+		taskHandler:       taskHandler,
+		commandHandler:    commandHandler,
+		serverHandler:     serverHandler,
+		attachHandler:     attachHandler,
+		enrollmentSvc:     enrollmentSvc,
+		logger:            logger,
 	}
 }
 
@@ -215,8 +218,22 @@ func (s *Service) buildRegisterAck(ctx context.Context, reg *proto.RegisterReque
 	}
 
 	protoServers := make([]*proto.Server, 0, len(servers))
+	serverIDs := make([]uint, 0, len(servers))
 	for _, srv := range servers {
-		protoServers = append(protoServers, domainServerToProto(&srv))
+		protoServers = append(protoServers, DomainServerToProto(&srv))
+		serverIDs = append(serverIDs, srv.ID)
+	}
+
+	var protoSettings []*proto.ServerSetting
+	if len(serverIDs) > 0 {
+		settings, settingsErr := s.serverSettingRepo.Find(ctx, &filters.FindServerSetting{
+			ServerIDs: serverIDs,
+		}, nil, nil)
+		if settingsErr != nil {
+			s.logger.Warn("failed to load server settings for register ack", "error", settingsErr)
+		} else {
+			protoSettings = DomainServerSettingsToProto(settings)
+		}
 	}
 
 	var pendingTasks []*proto.DaemonTask
@@ -265,6 +282,7 @@ func (s *Service) buildRegisterAck(ctx context.Context, reg *proto.RegisterReque
 		Games:             protoGames,
 		GameMods:          protoGameMods,
 		HeartbeatInterval: durationpb.New(defaultHeartbeatInterval),
+		ServerSettings:    protoSettings,
 	}, nil
 }
 

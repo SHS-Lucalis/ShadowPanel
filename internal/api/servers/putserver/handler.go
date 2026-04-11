@@ -7,25 +7,29 @@ import (
 	"github.com/gameap/gameap/internal/api/base"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
+	"github.com/gameap/gameap/internal/services/serverconfigpush"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/pkg/errors"
 )
 
 type Handler struct {
-	serverRepo repositories.ServerRepository
-	rbac       base.RBAC
-	responder  base.Responder
+	serverRepo   repositories.ServerRepository
+	configPusher *serverconfigpush.Pusher
+	rbac         base.RBAC
+	responder    base.Responder
 }
 
 func NewHandler(
 	serverRepo repositories.ServerRepository,
+	configPusher *serverconfigpush.Pusher,
 	rbac base.RBAC,
 	responder base.Responder,
 ) *Handler {
 	return &Handler{
-		serverRepo: serverRepo,
-		rbac:       rbac,
-		responder:  responder,
+		serverRepo:   serverRepo,
+		configPusher: configPusher,
+		rbac:         rbac,
+		responder:    responder,
 	}
 }
 
@@ -90,6 +94,10 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		h.responder.WriteError(ctx, rw, errors.WithMessage(err, "failed to save server"))
 
 		return
+	}
+
+	if h.configPusher != nil {
+		h.configPusher.PushServerConfig(ctx, server.ID)
 	}
 
 	h.responder.Write(ctx, rw, base.Success)

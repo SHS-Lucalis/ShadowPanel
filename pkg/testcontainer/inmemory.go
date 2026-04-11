@@ -26,6 +26,7 @@ import (
 	"github.com/gameap/gameap/internal/services/gameexporter"
 	"github.com/gameap/gameap/internal/services/pelicaneggimporter"
 	"github.com/gameap/gameap/internal/services/pluginstore"
+	"github.com/gameap/gameap/internal/services/serverconfigpush"
 	"github.com/gameap/gameap/internal/services/servercontrol"
 	"github.com/gameap/gameap/internal/services/taskdispatcher"
 	"github.com/gameap/gameap/internal/ws"
@@ -120,6 +121,7 @@ func (c *InmemoryContainer) PelicanEggImporter() *pelicaneggimporter.Importer { 
 func (c *InmemoryContainer) GameAPImporter() *gameapimporter.Importer         { return nil }
 func (c *InmemoryContainer) GameExporter() *gameexporter.Exporter             { return nil }
 func (c *InmemoryContainer) TaskDispatcher() *taskdispatcher.Dispatcher       { return nil }
+func (c *InmemoryContainer) ServerConfigPusher() *serverconfigpush.Pusher     { return nil }
 func (c *InmemoryContainer) WSHub() *ws.Hub                                   { return ws.NewHub(nil) }
 func (c *InmemoryContainer) SessionRegistry() *session.Registry               { return nil }
 func (c *InmemoryContainer) CommandHandler() *grpchandlers.CommandHandler     { return nil }

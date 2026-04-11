@@ -10,6 +10,7 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
+	"github.com/gameap/gameap/internal/services/serverconfigpush"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
 	"github.com/pkg/errors"
@@ -26,6 +27,7 @@ type Handler struct {
 	serverFinder       *serversbase.ServerFinder
 	abilityChecker     *serversbase.AbilityChecker
 	gameModsRepo       repositories.GameModRepository
+	configPusher       *serverconfigpush.Pusher
 	rbac               base.RBAC
 	responder          base.Responder
 }
@@ -34,6 +36,7 @@ func NewHandler(
 	serverSettingsRepo repositories.ServerSettingRepository,
 	serverRepo repositories.ServerRepository,
 	gameModsRepo repositories.GameModRepository,
+	configPusher *serverconfigpush.Pusher,
 	rbac base.RBAC,
 	responder base.Responder,
 ) *Handler {
@@ -42,6 +45,7 @@ func NewHandler(
 		serverFinder:       serversbase.NewServerFinder(serverRepo, rbac),
 		abilityChecker:     serversbase.NewAbilityChecker(rbac),
 		gameModsRepo:       gameModsRepo,
+		configPusher:       configPusher,
 		rbac:               rbac,
 		responder:          responder,
 	}
@@ -126,6 +130,10 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		h.responder.WriteError(ctx, rw, errors.WithMessage(err, "failed to save settings"))
 
 		return
+	}
+
+	if h.configPusher != nil {
+		h.configPusher.PushServerConfig(ctx, server.ID)
 	}
 
 	h.responder.Write(ctx, rw, SuccessResponse{})

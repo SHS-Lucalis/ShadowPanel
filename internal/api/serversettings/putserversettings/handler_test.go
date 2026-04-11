@@ -796,6 +796,7 @@ func TestPutServerSettings(t *testing.T) {
 				serverSettingsRepo,
 				serversRepo,
 				gameModsRepo,
+				nil,
 				rbacService,
 				api.NewResponder(),
 			)

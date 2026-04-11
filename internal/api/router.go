@@ -149,6 +149,7 @@ import (
 	"github.com/gameap/gameap/internal/services/gameexporter"
 	"github.com/gameap/gameap/internal/services/pelicaneggimporter"
 	"github.com/gameap/gameap/internal/services/pluginstore"
+	"github.com/gameap/gameap/internal/services/serverconfigpush"
 	"github.com/gameap/gameap/internal/services/servercontrol"
 	"github.com/gameap/gameap/internal/services/taskdispatcher"
 	"github.com/gameap/gameap/internal/ws"
@@ -199,6 +200,7 @@ type container interface {
 	PluginStoreService() *pluginstore.Service
 	PluginsDir() string
 	TaskDispatcher() *taskdispatcher.Dispatcher
+	ServerConfigPusher() *serverconfigpush.Pusher
 	EnrollmentService() *enrollment.Service
 	EnrollmentServiceOrNil() *enrollment.Service
 	GRPCPort() uint16
@@ -497,6 +499,7 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 			Path:   "/api/servers/{id}",
 			Handler: putserver.NewHandler(
 				c.ServerRepository(),
+				c.ServerConfigPusher(),
 				c.RBAC(),
 				c.Responder(),
 			),
@@ -847,6 +850,7 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 				c.ServerSettingRepository(),
 				c.ServerRepository(),
 				c.GameModRepository(),
+				c.ServerConfigPusher(),
 				c.RBAC(),
 				c.Responder(),
 			),

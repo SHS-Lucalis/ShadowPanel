@@ -51,6 +51,7 @@ import (
 	"github.com/gameap/gameap/internal/services/gameexporter"
 	"github.com/gameap/gameap/internal/services/pelicaneggimporter"
 	"github.com/gameap/gameap/internal/services/pluginstore"
+	"github.com/gameap/gameap/internal/services/serverconfigpush"
 	"github.com/gameap/gameap/internal/services/servercontrol"
 	"github.com/gameap/gameap/internal/services/taskdispatcher"
 	"github.com/gameap/gameap/internal/transfers"
@@ -119,6 +120,7 @@ type Container struct {
 	userService          *services.UserService
 	serverControlService *servercontrol.Service
 	taskDispatcher       *taskdispatcher.Dispatcher
+	serverConfigPusher   *serverconfigpush.Pusher
 	globalAPIService     *services.GlobalAPIService
 	pluginStoreService   *pluginstore.Service
 	gameUpgrader         *services.GameUpgradeService
@@ -555,12 +557,27 @@ func (c *Container) TaskDispatcher() *taskdispatcher.Dispatcher {
 		c.taskDispatcher = taskdispatcher.NewDispatcher(
 			c.SessionRegistry(),
 			c.DaemonTaskRepository(),
+			c.ServerRepository(),
+			c.ServerSettingRepository(),
 			c.PubSub(),
 			slog.Default(),
 		)
 	}
 
 	return c.taskDispatcher
+}
+
+func (c *Container) ServerConfigPusher() *serverconfigpush.Pusher {
+	if c.serverConfigPusher == nil {
+		c.serverConfigPusher = serverconfigpush.NewPusher(
+			c.SessionRegistry(),
+			c.ServerRepository(),
+			c.ServerSettingRepository(),
+			slog.Default(),
+		)
+	}
+
+	return c.serverConfigPusher
 }
 
 func (c *Container) AuthService() auth.Service {
@@ -1642,6 +1659,7 @@ func (c *Container) GatewayService() *gateway.Service {
 			c.SessionRegistry(),
 			c.NodeRepository(),
 			c.ServerRepository(),
+			c.ServerSettingRepository(),
 			c.DaemonTaskRepository(),
 			c.GameRepository(),
 			c.GameModRepository(),

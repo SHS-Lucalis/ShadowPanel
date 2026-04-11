@@ -18,15 +18,19 @@ import (
 )
 
 type Dispatcher struct {
-	registry       *session.Registry
-	daemonTaskRepo repositories.DaemonTaskRepository
-	publisher      pubsub.Publisher
-	logger         *slog.Logger
+	registry          *session.Registry
+	daemonTaskRepo    repositories.DaemonTaskRepository
+	serverRepo        repositories.ServerRepository
+	serverSettingRepo repositories.ServerSettingRepository
+	publisher         pubsub.Publisher
+	logger            *slog.Logger
 }
 
 func NewDispatcher(
 	registry *session.Registry,
 	daemonTaskRepo repositories.DaemonTaskRepository,
+	serverRepo repositories.ServerRepository,
+	serverSettingRepo repositories.ServerSettingRepository,
 	publisher pubsub.Publisher,
 	logger *slog.Logger,
 ) *Dispatcher {
@@ -35,10 +39,12 @@ func NewDispatcher(
 	}
 
 	return &Dispatcher{
-		registry:       registry,
-		daemonTaskRepo: daemonTaskRepo,
-		publisher:      publisher,
-		logger:         logger,
+		registry:          registry,
+		daemonTaskRepo:    daemonTaskRepo,
+		serverRepo:        serverRepo,
+		serverSettingRepo: serverSettingRepo,
+		publisher:         publisher,
+		logger:            logger,
 	}
 }
 
@@ -46,6 +52,8 @@ func (d *Dispatcher) Dispatch(ctx context.Context, task *domain.DaemonTask) erro
 	if err := d.daemonTaskRepo.Save(ctx, task); err != nil {
 		return errors.Wrap(err, "persist task")
 	}
+
+	d.sendServerConfigUpdate(ctx, task)
 
 	protoTask := gateway.DomainDaemonTaskToProto(task)
 	msg := &proto.GatewayMessage{
@@ -96,6 +104,9 @@ func (d *Dispatcher) FlushPending(ctx context.Context, nodeID uint64) error {
 
 	for i := range tasks {
 		task := &tasks[i]
+
+		d.sendServerConfigUpdate(ctx, task)
+
 		protoTask := gateway.DomainDaemonTaskToProto(task)
 		msg := &proto.GatewayMessage{
 			RequestId: idgen.New(),
@@ -293,5 +304,51 @@ func (d *Dispatcher) publishTaskOutput(ctx context.Context, taskID uint64, chunk
 
 	if err := d.publisher.Publish(ctx, channel, msg); err != nil {
 		d.logger.Warn("failed to publish task output", "task_id", taskID, "error", err)
+	}
+}
+
+func (d *Dispatcher) sendServerConfigUpdate(ctx context.Context, task *domain.DaemonTask) {
+	if task.ServerID == nil {
+		return
+	}
+
+	servers, err := d.serverRepo.Find(ctx, &filters.FindServer{
+		IDs: []uint{*task.ServerID},
+	}, nil, nil)
+	if err != nil || len(servers) == 0 {
+		d.logger.Warn("failed to load server for config update",
+			"server_id", *task.ServerID,
+			"error", err,
+		)
+
+		return
+	}
+
+	settings, err := d.serverSettingRepo.Find(ctx, &filters.FindServerSetting{
+		ServerIDs: []uint{*task.ServerID},
+	}, nil, nil)
+	if err != nil {
+		d.logger.Warn("failed to load server settings for config update",
+			"server_id", *task.ServerID,
+			"error", err,
+		)
+	}
+
+	configMsg := &proto.GatewayMessage{
+		RequestId: idgen.New(),
+		Payload: &proto.GatewayMessage_ServerConfigUpdate{
+			ServerConfigUpdate: &proto.ServerConfigUpdate{
+				Server:   gateway.DomainServerToProto(&servers[0]),
+				Settings: gateway.DomainServerSettingsToProto(settings),
+			},
+		},
+	}
+
+	if err := d.registry.SendTask(ctx, uint64(task.DedicatedServerID), configMsg); err != nil {
+		d.logger.Warn("failed to send server config update",
+			"server_id", *task.ServerID,
+			"node_id", task.DedicatedServerID,
+			"error", err,
+		)
 	}
 }
