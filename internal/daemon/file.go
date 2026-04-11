@@ -27,6 +27,7 @@ const (
 	transferPrefix         = "transfers/"
 	capabilityFileTransfer = "file_transfer"
 	s3PollInterval         = 200 * time.Millisecond
+	initialPartTimeout     = 2 * time.Minute
 )
 
 type daemonNotConnectedError struct{}
@@ -206,7 +207,10 @@ func (s *FileService) downloadStreamLocal(ctx context.Context, nodeID uint64, pa
 		state.Complete()
 	}()
 
-	available, err := state.WaitForPart(ctx, 0)
+	waitCtx, waitCancel := context.WithTimeout(ctx, initialPartTimeout)
+	defer waitCancel()
+
+	available, err := state.WaitForPart(waitCtx, 0)
 	if err != nil {
 		s.transferReg.Unregister(transferID)
 
@@ -335,7 +339,10 @@ func (s *FileService) downloadStreamRemote(ctx context.Context, nodeID uint64, p
 		s.writeSentinelIfMissing(ctx, transferID)
 	}()
 
-	available, err := s.waitForPartS3(ctx, transferID, 0, errCh)
+	waitCtx, waitCancel := context.WithTimeout(ctx, initialPartTimeout)
+	defer waitCancel()
+
+	available, err := s.waitForPartS3(waitCtx, transferID, 0, errCh)
 	if err != nil {
 		return nil, errors.WithMessage(err, "remote download task")
 	}
