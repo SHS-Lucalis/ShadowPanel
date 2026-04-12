@@ -11,6 +11,9 @@
           <div v-if="!serverActive" class="bg-red-500 text-white dark:bg-red-800 dark:text-stone-200 font-bold rounded px-4 py-2 mt-6 mb-3">
             {{ trans('servers.offline_console_msg') }}
           </div>
+          <div v-if="closeReason" class="bg-amber-500 text-white dark:bg-amber-700 dark:text-stone-200 font-bold rounded px-4 py-2 mt-6 mb-3">
+            {{ trans('servers.console_unavailable') }}: {{ closeReason }}
+          </div>
           <div ref="consoleRef" class="break-all whitespace-pre-wrap mt-4 flex h-[60vh] overflow-y-scroll overscroll-contain">
             {{ output }}
           </div>
@@ -25,6 +28,8 @@
                     type="text"
                     ref="inputRef"
                     class="terminal-input inline md:w-[40vw] lg:w-[50vw]"
+                    :class="{ 'opacity-50 cursor-not-allowed': closeReason }"
+                    :disabled="!!closeReason"
                     :placeholder="trans('servers.enter_command') +' ...'"
                 >
               </div>
@@ -61,7 +66,7 @@ const inputRef = ref();
 const inputText = ref('');
 const autoScroll = ref(true);
 
-const { output: rawOutput, sendInput, closeReason } = useAttachWebSocket(props.serverId)
+const { output: rawOutput, sendInput, closeReason, attached } = useAttachWebSocket(props.serverId)
 
 const output = computed(() => {
   if (!rawOutput.value) return ''

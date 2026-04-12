@@ -27,6 +27,9 @@ export function useAttachWebSocket(serverId) {
             } else if (msg.type === 'attach.closed') {
                 attached.value = false
                 closeReason.value = msg.payload.reason
+            } else if (msg.type === 'error') {
+                attached.value = false
+                closeReason.value = msg.payload?.message || 'unknown error'
             }
         },
         onClose() {
