@@ -59,7 +59,11 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				assert.Contains(t, resp, "set -e")
 				assert.Contains(t, resp, "trap cleanup EXIT")
 				assert.Contains(t, resp, "CONNECT_URL=\"grpc://panel.example.com:31718/AbCdEfGh1234567890AbCdEfGh123456\"")
+				assert.Contains(t, resp, "command -v gameapctl")
+				assert.Contains(t, resp, "gameapctl self-update")
+				assert.Contains(t, resp, "command -v \"$cmd\"")
 				assert.Contains(t, resp, "curl -sLf")
+				assert.Contains(t, resp, "api.github.com/repos/gameap/gameapctl/releases")
 				assert.Contains(t, resp, "gameapctl")
 				assert.Contains(t, resp, "--connect=\"$CONNECT_URL\"")
 			},

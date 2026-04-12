@@ -118,7 +118,7 @@ func (h *Handler) resolveGRPCHost(r *http.Request) string {
 
 func (h *Handler) buildSetupScript(connectURL, config string, github bool, branch string) string {
 	sb := strings.Builder{}
-	sb.Grow(512)
+	sb.Grow(1024)
 
 	sb.WriteString("#!/bin/bash\nset -e\n\n")
 	sb.WriteString("cleanup() { rm -f /tmp/gameapctl /tmp/gameapctl.tar.gz; }\n")
@@ -127,6 +127,27 @@ func (h *Handler) buildSetupScript(connectURL, config string, github bool, branc
 	sb.WriteString("CONNECT_URL=\"")
 	sb.WriteString(connectURL)
 	sb.WriteString("\"\n\n")
+
+	installCmd := h.buildInstallCmd(config, github, branch)
+
+	// Check if gameapctl is already installed
+	sb.WriteString("if command -v gameapctl >/dev/null 2>&1; then\n")
+	sb.WriteString("  echo \"gameapctl found, updating...\"\n")
+	sb.WriteString("  gameapctl self-update || true\n")
+	sb.WriteString("  ")
+	sb.WriteString(strings.Replace(installCmd, "/tmp/gameapctl", "gameapctl", 1))
+	sb.WriteString("\n  exit 0\nfi\n\n")
+
+	// Check required utilities
+	sb.WriteString("for cmd in curl tar; do\n")
+	sb.WriteString("  if ! command -v \"$cmd\" >/dev/null 2>&1; then\n")
+	sb.WriteString("    echo \"Error: '$cmd' is required but not installed.\"\n")
+	sb.WriteString("    echo \"Install it with:\"\n")
+	sb.WriteString("    echo \"  apt-get install $cmd  (Debian/Ubuntu)\"\n")
+	sb.WriteString("    echo \"  yum install $cmd      (RHEL/CentOS)\"\n")
+	sb.WriteString("    exit 1\n")
+	sb.WriteString("  fi\n")
+	sb.WriteString("done\n\n")
 
 	sb.WriteString("OS=$(uname -s | tr '[:upper:]' '[:lower:]')\n")
 	sb.WriteString("ARCH=$(uname -m)\n")
@@ -137,19 +158,31 @@ func (h *Handler) buildSetupScript(connectURL, config string, github bool, branc
 	sb.WriteString("esac\n\n")
 
 	sb.WriteString("echo \"Downloading gameapctl...\"\n")
-	sb.WriteString("LATEST_URL=$(curl -sIL -o /dev/null -w '%{url_effective}' ")
-	sb.WriteString("https://github.com/gameap/gameapctl/releases/latest)\n")
-	sb.WriteString("VERSION=$(echo \"$LATEST_URL\" | sed 's|.*/||')\n")
-	sb.WriteString("if [ -z \"$VERSION\" ]; then ")
-	sb.WriteString("echo \"Failed to detect latest gameapctl version\"; exit 1; fi\n")
+	sb.WriteString("VERSION=$(curl -sL ")
+	sb.WriteString("https://api.github.com/repos/gameap/gameapctl/releases")
+	sb.WriteString(" | grep -m1 '\"tag_name\"' | sed 's/.*\"tag_name\": *\"//;s/\".*//')\n")
+	sb.WriteString("if [ -z \"$VERSION\" ]; then\n")
+	sb.WriteString("  echo \"Failed to detect latest gameapctl version\"\n")
+	sb.WriteString("  exit 1\nfi\n\n")
 	sb.WriteString("ARCHIVE=\"gameapctl-${VERSION}-${OS}-${ARCH}.tar.gz\"\n")
 	sb.WriteString("DOWNLOAD_URL=\"https://github.com/gameap/gameapctl/releases/")
 	sb.WriteString("download/${VERSION}/${ARCHIVE}\"\n")
-	sb.WriteString("echo \"Downloading ${DOWNLOAD_URL}...\"\n")
+	sb.WriteString("echo \"Downloading ${DOWNLOAD_URL}\"\n")
 	sb.WriteString("curl -sLf -o /tmp/gameapctl.tar.gz \"$DOWNLOAD_URL\"\n")
 	sb.WriteString("tar -xzf /tmp/gameapctl.tar.gz -C /tmp gameapctl\n")
 	sb.WriteString("chmod +x /tmp/gameapctl\n")
 	sb.WriteString("rm -f /tmp/gameapctl.tar.gz\n\n")
+
+	sb.WriteString(installCmd)
+	sb.WriteString("\n")
+
+	return sb.String()
+}
+
+func (h *Handler) buildInstallCmd(
+	config string, github bool, branch string,
+) string {
+	sb := strings.Builder{}
 
 	sb.WriteString("/tmp/gameapctl daemon install --connect=\"$CONNECT_URL\"")
 
@@ -166,8 +199,6 @@ func (h *Handler) buildSetupScript(connectURL, config string, github bool, branc
 		sb.WriteString(" --branch=")
 		sb.WriteString(shellEscape(branch))
 	}
-
-	sb.WriteString("\n")
 
 	return sb.String()
 }
