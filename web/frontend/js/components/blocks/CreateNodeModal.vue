@@ -175,11 +175,21 @@
 
 <script setup>
 import {trans} from "@/i18n/i18n";
-import {computed, onMounted, ref, watch} from "vue";
+import {computed, ref, watch} from "vue";
 import { GIcon } from '@gameap/ui';
 import {useNodeListStore} from "@/store/nodeList";
 import {storeToRefs} from "pinia"
 import {NFormItem} from "naive-ui";
+import {errorNotification} from "@/parts/dialogs";
+
+const props = defineProps({
+  modelValue: {
+    type: Boolean,
+    default: false,
+  },
+})
+
+const emit = defineEmits(['update:modelValue'])
 
 const nodeListStore = useNodeListStore()
 
@@ -212,7 +222,10 @@ const windowsCmd = computed(() => {
   return autoSetupData.value.windows_cmd || ''
 })
 
-const showModal = ref(false);
+const showModal = computed({
+  get: () => props.modelValue,
+  set: (val) => emit('update:modelValue', val),
+});
 
 const activeTab = ref('linux')
 
@@ -284,12 +297,12 @@ const copyToClipboard = async (key, text) => {
   }, 2000)
 }
 
-onMounted(() => {
-  nodeListStore.fetchAutoSetupData().catch((error) => {
-    errorNotification(error)
-  })
-
-  showModal.value = true;
+watch(() => props.modelValue, (visible) => {
+  if (visible) {
+    nodeListStore.fetchAutoSetupData().catch((error) => {
+      errorNotification(error)
+    })
+  }
 });
 
 </script>

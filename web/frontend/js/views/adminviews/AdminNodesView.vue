@@ -1,7 +1,7 @@
 <template>
   <GBreadcrumbs :items="breadcrumbs"></GBreadcrumbs>
 
-  <GButton color="green" size="middle" class="mb-5 mr-1" :route="{name: 'admin.nodes.create'}">
+  <GButton color="green" size="middle" class="mb-5 mr-1" @click="showCreateModal = true">
     <GIcon name="add-square" class="mr-0.5" />
     <span>{{ trans('dedicated_servers.create')}}</span>
   </GButton>
@@ -25,6 +25,8 @@
       <GEmpty :description="trans('servers.empty_list')" />
     </template>
   </GDataTable>
+
+  <CreateNodeModal v-model="showCreateModal" />
 </template>
 
 <script setup>
@@ -32,6 +34,7 @@ import { GBreadcrumbs, Loading, GIcon, GDataTable, GEmpty } from "@gameap/ui"
 import {computed, h, ref, onMounted} from "vue"
 import {trans} from "../../i18n/i18n"
 import GButton from "../../components/GButton.vue"
+import CreateNodeModal from "../../components/blocks/CreateNodeModal.vue"
 import {useNodeListStore} from "../../store/nodeList"
 import {errorNotification, notification} from "../../parts/dialogs"
 import {storeToRefs} from "pinia"
@@ -107,6 +110,8 @@ const createColumns = () => {
     }
   ]
 }
+
+const showCreateModal = ref(false)
 
 const {loading, nodes} = storeToRefs(nodeListStore)
 
