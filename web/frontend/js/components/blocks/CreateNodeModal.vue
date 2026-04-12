@@ -86,6 +86,15 @@
               <n-form-item :label="trans('dedicated_servers.process_manager')">
                 <n-select v-model:value="daemonConfigProcessManager" :options="daemonConfigProcessManagerOptions" />
               </n-form-item>
+
+              <n-form-item label="GitHub">
+                <n-switch v-model:value="useGithubSource" />
+                <span class="ml-2 text-sm text-gray-500">Install from GitHub source</span>
+              </n-form-item>
+
+              <n-form-item v-if="useGithubSource" label="Branch">
+                <n-input v-model:value="branchName" placeholder="develop" />
+              </n-form-item>
             </n-collapse-item>
           </n-collapse>
         </n-tab-pane>
@@ -179,7 +188,7 @@ import {computed, ref, watch} from "vue";
 import { GIcon } from '@gameap/ui';
 import {useNodeListStore} from "@/store/nodeList";
 import {storeToRefs} from "pinia"
-import {NFormItem} from "naive-ui";
+import {NFormItem, NSwitch, NInput} from "naive-ui";
 import {errorNotification} from "@/parts/dialogs";
 
 const props = defineProps({
@@ -207,19 +216,48 @@ const token = computed(() => {
   return autoSetupData.value.token
 })
 
+const hasCustomParams = computed(() => {
+  return (daemonConfigProcessManager.value && daemonConfigProcessManager.value !== 'auto')
+      || useGithubSource.value
+      || branchName.value
+})
+
+const buildQueryParams = () => {
+  const params = new URLSearchParams()
+  if (daemonConfigProcessManager.value && daemonConfigProcessManager.value !== 'auto') {
+    params.set('config', `process_manager.name=${daemonConfigProcessManager.value}`)
+  }
+  if (useGithubSource.value) {
+    params.set('github', 'true')
+  }
+  if (branchName.value) {
+    params.set('branch', branchName.value)
+  }
+  return params.toString()
+}
+
 const linuxCmd = computed(() => {
   const cmd = autoSetupData.value.linux_cmd || ''
-  if (!daemonConfigProcessManager.value || daemonConfigProcessManager.value === 'auto') {
+  if (!hasCustomParams.value) {
     return cmd
   }
   const setupLink = autoSetupData.value.setup_link || ''
-  const configValue = `process_manager.name=${daemonConfigProcessManager.value}`
   const separator = setupLink.includes('?') ? '&' : '?'
-  return `curl -sLf ${setupLink}${separator}config=${encodeURIComponent(configValue)} | bash`
+  return `curl -sLf ${setupLink}${separator}${buildQueryParams()} | bash`
 })
 
 const windowsCmd = computed(() => {
-  return autoSetupData.value.windows_cmd || ''
+  let cmd = autoSetupData.value.windows_cmd || ''
+  if (daemonConfigProcessManager.value && daemonConfigProcessManager.value !== 'auto') {
+    cmd += ` --config="process_manager.name=${daemonConfigProcessManager.value}"`
+  }
+  if (useGithubSource.value) {
+    cmd += ' --github'
+  }
+  if (branchName.value) {
+    cmd += ` --branch=${branchName.value}`
+  }
+  return cmd
 })
 
 const showModal = computed({
@@ -230,6 +268,8 @@ const showModal = computed({
 const activeTab = ref('linux')
 
 const daemonConfigProcessManager = ref('auto');
+const useGithubSource = ref(false);
+const branchName = ref('');
 
 const daemonConfigProcessManagerOptions = computed(() => {
   const linuxOptions = [
@@ -258,12 +298,11 @@ watch(activeTab, () => {
 
 const linkWithConfig = computed(() => {
   const baseLink = autoSetupData.value.link
-  if (!daemonConfigProcessManager.value || daemonConfigProcessManager.value === 'auto') {
+  if (!hasCustomParams.value) {
     return baseLink
   }
-  const configValue = `process_manager.name=${daemonConfigProcessManager.value}`
   const separator = baseLink.includes('?') ? '&' : '?'
-  return `${baseLink}${separator}config=${encodeURIComponent(configValue)}`
+  return `${baseLink}${separator}${buildQueryParams()}`
 })
 
 const curlCommand = computed(() => {

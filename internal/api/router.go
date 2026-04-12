@@ -221,7 +221,9 @@ func CreateRouter(c container) *http.ServeMux {
 	serverMux.Handle("/api/",
 		handlers.HTTPMethodOverrideHandler(apiRoutes(c, router)),
 	)
-	serverMux.Handle("/gdaemon/", gdaemonSetupRoutes(c, router))
+	setupRoutes := gdaemonSetupRoutes(c, router)
+	serverMux.Handle("/gdaemon/", setupRoutes)
+	serverMux.Handle("/nodes/", setupRoutes)
 	serverMux.Handle("/gdaemon_api/", gdaemonAPIRoutes(c, router))
 
 	static, err := webstatic.GetFS()

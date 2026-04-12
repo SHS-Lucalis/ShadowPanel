@@ -82,9 +82,12 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	connectURL := enrollment.FormatConnectURL(grpcHost, grpcPort, key)
 
-	config, _ := api.NewQueryReader(r).ReadString("config")
+	queryReader := api.NewQueryReader(r)
+	config, _ := queryReader.ReadString("config")
+	github, _ := queryReader.ReadString("github")
+	branch, _ := queryReader.ReadString("branch")
 
-	script := h.buildSetupScript(connectURL, config)
+	script := h.buildSetupScript(connectURL, config, github == "true", branch)
 
 	rw.Header().Set("Content-Type", "text/plain")
 	_, _ = rw.Write([]byte(script))
@@ -113,7 +116,7 @@ func (h *Handler) resolveGRPCHost(r *http.Request) string {
 	return host
 }
 
-func (h *Handler) buildSetupScript(connectURL, config string) string {
+func (h *Handler) buildSetupScript(connectURL, config string, github bool, branch string) string {
 	sb := strings.Builder{}
 	sb.Grow(512)
 
@@ -142,12 +145,24 @@ func (h *Handler) buildSetupScript(connectURL, config string) string {
 	sb.WriteString("/tmp/gameapctl daemon install --connect=\"$CONNECT_URL\"")
 
 	if config != "" {
-		sb.WriteString(" --config=\"")
-		sb.WriteString(config)
-		sb.WriteString("\"")
+		sb.WriteString(" --config=")
+		sb.WriteString(shellEscape(config))
+	}
+
+	if github {
+		sb.WriteString(" --github")
+	}
+
+	if branch != "" {
+		sb.WriteString(" --branch=")
+		sb.WriteString(shellEscape(branch))
 	}
 
 	sb.WriteString("\n")
 
 	return sb.String()
+}
+
+func shellEscape(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", "'\\''") + "'"
 }

@@ -39,6 +39,8 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		panelHost      string
 		requestHost    string
 		config         string
+		github         string
+		branch         string
 		expectedStatus int
 		wantError      string
 		validateResp   func(*testing.T, string)
@@ -88,7 +90,68 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			validateResp: func(t *testing.T, resp string) {
 				t.Helper()
 
-				assert.Contains(t, resp, "--config=\"process_manager.name=systemd\"")
+				assert.Contains(t, resp, "--config='process_manager.name=systemd'")
+			},
+		},
+		{
+			name:           "with_github_parameter",
+			key:            "AbCdEfGh1234567890AbCdEfGh123456",
+			setupKey:       "AbCdEfGh1234567890AbCdEfGh123456",
+			grpcPort:       31718,
+			panelHost:      "panel.example.com",
+			github:         "true",
+			expectedStatus: http.StatusOK,
+			validateResp: func(t *testing.T, resp string) {
+				t.Helper()
+
+				assert.Contains(t, resp, " --github")
+			},
+		},
+		{
+			name:           "with_branch_parameter",
+			key:            "AbCdEfGh1234567890AbCdEfGh123456",
+			setupKey:       "AbCdEfGh1234567890AbCdEfGh123456",
+			grpcPort:       31718,
+			panelHost:      "panel.example.com",
+			branch:         "develop",
+			expectedStatus: http.StatusOK,
+			validateResp: func(t *testing.T, resp string) {
+				t.Helper()
+
+				assert.Contains(t, resp, "--branch='develop'")
+			},
+		},
+		{
+			name:           "with_all_parameters",
+			key:            "AbCdEfGh1234567890AbCdEfGh123456",
+			setupKey:       "AbCdEfGh1234567890AbCdEfGh123456",
+			grpcPort:       31718,
+			panelHost:      "panel.example.com",
+			config:         "process_manager.name=systemd",
+			github:         "true",
+			branch:         "develop",
+			expectedStatus: http.StatusOK,
+			validateResp: func(t *testing.T, resp string) {
+				t.Helper()
+
+				assert.Contains(t, resp, "--config='process_manager.name=systemd'")
+				assert.Contains(t, resp, " --github")
+				assert.Contains(t, resp, "--branch='develop'")
+			},
+		},
+		{
+			name:           "shell_escape_in_config",
+			key:            "AbCdEfGh1234567890AbCdEfGh123456",
+			setupKey:       "AbCdEfGh1234567890AbCdEfGh123456",
+			grpcPort:       31718,
+			panelHost:      "panel.example.com",
+			config:         "val=$(whoami)",
+			expectedStatus: http.StatusOK,
+			validateResp: func(t *testing.T, resp string) {
+				t.Helper()
+
+				assert.Contains(t, resp, "--config='val=$(whoami)'")
+				assert.NotContains(t, resp, "--config=\"val=$(whoami)\"")
 			},
 		},
 		{
@@ -151,8 +214,18 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			)
 
 			path := "/nodes/setup/" + tt.key
+			params := ""
 			if tt.config != "" {
-				path += "?config=" + tt.config
+				params += "&config=" + tt.config
+			}
+			if tt.github != "" {
+				params += "&github=" + tt.github
+			}
+			if tt.branch != "" {
+				params += "&branch=" + tt.branch
+			}
+			if params != "" {
+				path += "?" + params[1:]
 			}
 
 			req := httptest.NewRequest(http.MethodGet, path, nil)

@@ -64,6 +64,23 @@
           Example: process_manager.name=systemd
         schema:
           type: string
+      - name: github
+        in: query
+        required: false
+        description: |
+          When set to "true", passes --github flag to gameapctl
+          to install from GitHub source instead of release binary.
+        schema:
+          type: boolean
+      - name: branch
+        in: query
+        required: false
+        description: |
+          Branch name to pass to gameapctl via --branch flag.
+          Typically used with github=true.
+          Example: develop
+        schema:
+          type: string
     responses:
       '200':
         description: Bash script that downloads and runs gameapctl with enrollment
