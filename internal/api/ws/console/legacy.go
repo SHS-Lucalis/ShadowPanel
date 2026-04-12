@@ -136,6 +136,11 @@ func (p *legacyPoller) poll(ctx context.Context) {
 
 	content, err := p.fileService.Download(ctx, p.node, outputPath)
 	if err != nil {
+		p.logger.Debug("legacy console poll: download failed",
+			"path", outputPath,
+			"error", err,
+		)
+
 		return
 	}
 

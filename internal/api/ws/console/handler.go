@@ -93,8 +93,8 @@ func NewHandler(
 func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	session := auth.SessionFromContext(ctx)
-	if !session.IsAuthenticated() {
+	s := auth.SessionFromContext(ctx)
+	if !s.IsAuthenticated() {
 		h.responder.WriteError(ctx, rw, api.NewError(http.StatusUnauthorized, "user not authenticated"))
 
 		return
@@ -112,7 +112,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	server, err := h.serverFinder.FindUserServer(ctx, session.User, serverID)
+	server, err := h.serverFinder.FindUserServer(ctx, s.User, serverID)
 	if err != nil {
 		h.responder.WriteError(ctx, rw, err)
 
@@ -121,7 +121,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	if err = h.abilityChecker.CheckOrError(
 		ctx,
-		session.User.ID,
+		s.User.ID,
 		server.ID,
 		[]domain.AbilityName{domain.AbilityNameGameServerConsoleView},
 	); err != nil {
@@ -137,7 +137,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conn, err := websocket.Accept(rw, r, &websocket.AcceptOptions{
+	conn, err := ws.Accept(rw, r, &websocket.AcceptOptions{
 		OriginPatterns: h.originPatterns,
 	})
 	if err != nil {
@@ -148,12 +148,12 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	consoleTopic := ws.ChannelToTopic(channels.BuildRealtimeConsoleOutputChannel(uint64(serverID)))
 
-	canSend := h.canSendCommands(ctx, session.User, server)
+	canSend := h.canSendCommands(ctx, s.User, server)
 
 	if h.registry.IsConnected(uint64(server.DSID)) {
-		h.runGRPCMode(ctx, conn, server, node, consoleTopic, session.User, canSend)
+		h.runGRPCMode(ctx, conn, server, node, consoleTopic, s.User, canSend)
 	} else {
-		h.runLegacyMode(ctx, conn, server, node, consoleTopic, session.User, canSend)
+		h.runLegacyMode(ctx, conn, server, node, consoleTopic, s.User, canSend)
 	}
 }
 

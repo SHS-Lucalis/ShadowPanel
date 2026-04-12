@@ -88,7 +88,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conn, err := websocket.Accept(rw, r, &websocket.AcceptOptions{
+	conn, err := ws.Accept(rw, r, &websocket.AcceptOptions{
 		OriginPatterns: h.originPatterns,
 	})
 	if err != nil {

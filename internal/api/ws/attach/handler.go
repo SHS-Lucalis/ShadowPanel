@@ -140,7 +140,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	nodeID := uint64(server.DSID)
 
-	conn, err := websocket.Accept(rw, r, &websocket.AcceptOptions{
+	conn, err := ws.Accept(rw, r, &websocket.AcceptOptions{
 		OriginPatterns: h.originPatterns,
 	})
 	if err != nil {
@@ -466,6 +466,11 @@ func (p *legacyAttachPoller) poll(ctx context.Context) {
 
 	content, err := p.fileService.Download(ctx, p.node, outputPath)
 	if err != nil {
+		p.logger.Debug("legacy attach poll: download failed",
+			"path", outputPath,
+			"error", err,
+		)
+
 		return
 	}
 
