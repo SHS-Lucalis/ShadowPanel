@@ -243,7 +243,7 @@ const linuxCmd = computed(() => {
   }
   const setupLink = autoSetupData.value.setup_link || ''
   const separator = setupLink.includes('?') ? '&' : '?'
-  return `curl -sLf ${setupLink}${separator}${buildQueryParams()} | bash`
+  return `curl -sLf '${setupLink}${separator}${buildQueryParams()}' | bash`
 })
 
 const windowsCmd = computed(() => {
@@ -306,7 +306,7 @@ const linkWithConfig = computed(() => {
 })
 
 const curlCommand = computed(() => {
-  return `curl ${linkWithConfig.value} | bash --`
+  return `curl '${linkWithConfig.value}' | bash --`
 })
 
 const copiedKey = ref(null)
