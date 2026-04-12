@@ -13,6 +13,18 @@ properties:
     type: string
     description: API key
     example: "abc123"
+  connection_type:
+    type: string
+    description: |
+      Current communication channel between API and daemon.
+      - `grpc`: daemon is connected via gRPC bidirectional stream (any cluster instance).
+      - `legacy`: no gRPC session is registered, the API will fall back to the legacy binn protocol.
+      - `none`: daemon is not reachable through any channel.
+    enum:
+      - grpc
+      - legacy
+      - none
+    example: "grpc"
   version:
     type: object
     properties:
@@ -55,5 +67,6 @@ required:
   - id
   - name
   - api_key
+  - connection_type
   - version
   - base_info

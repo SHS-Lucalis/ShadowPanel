@@ -30,8 +30,9 @@ var testUser = domain.User{
 }
 
 type mockDaemonStatusService struct {
-	statusFunc  func(ctx context.Context, node *domain.Node) (*daemon.NodeStatus, error)
-	versionFunc func(ctx context.Context, node *domain.Node) (*daemon.NodeVersion, error)
+	statusFunc         func(ctx context.Context, node *domain.Node) (*daemon.NodeStatus, error)
+	versionFunc        func(ctx context.Context, node *domain.Node) (*daemon.NodeVersion, error)
+	connectionTypeFunc func(nodeID uint64) string
 }
 
 func (m *mockDaemonStatusService) Status(ctx context.Context, node *domain.Node) (*daemon.NodeStatus, error) {
@@ -50,17 +51,26 @@ func (m *mockDaemonStatusService) Version(ctx context.Context, node *domain.Node
 	return nil, errNotImplemented
 }
 
+func (m *mockDaemonStatusService) ConnectionType(nodeID uint64) string {
+	if m.connectionTypeFunc != nil {
+		return m.connectionTypeFunc(nodeID)
+	}
+
+	return daemon.ConnectionTypeNone
+}
+
 func TestHandler_ServeHTTP(t *testing.T) {
 	tests := []struct {
-		name             string
-		nodeID           string
-		setupAuth        func() context.Context
-		setupRepo        func(*inmemory.NodeRepository)
-		setupStatusFunc  func(ctx context.Context, node *domain.Node) (*daemon.NodeStatus, error)
-		expectedStatus   int
-		wantError        string
-		expectResponse   bool
-		validateResponse func(t *testing.T, resp daemonStatusResponse)
+		name                    string
+		nodeID                  string
+		setupAuth               func() context.Context
+		setupRepo               func(*inmemory.NodeRepository)
+		setupStatusFunc         func(ctx context.Context, node *domain.Node) (*daemon.NodeStatus, error)
+		setupConnectionTypeFunc func(nodeID uint64) string
+		expectedStatus          int
+		wantError               string
+		expectResponse          bool
+		validateResponse        func(t *testing.T, resp daemonStatusResponse)
 	}{
 		{
 			name:   "successful daemon status retrieval",
@@ -101,6 +111,9 @@ func TestHandler_ServeHTTP(t *testing.T) {
 					OnlineServers: 10,
 				}, nil
 			},
+			setupConnectionTypeFunc: func(_ uint64) string {
+				return daemon.ConnectionTypeGRPC
+			},
 			expectedStatus: http.StatusOK,
 			expectResponse: true,
 			validateResponse: func(t *testing.T, resp daemonStatusResponse) {
@@ -109,6 +122,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				assert.Equal(t, uint(1), resp.ID)
 				assert.Equal(t, "Test Node", resp.Name)
 				assert.Equal(t, "test-api-key", resp.APIKey)
+				assert.Equal(t, "grpc", resp.ConnectionType)
 				assert.Equal(t, "3.0.0", resp.Version.Version)
 				assert.Equal(t, "2024-01-15", resp.Version.CompileDate)
 				assert.Equal(t, "1h0m0s", resp.BaseInfo.Uptime)
@@ -243,6 +257,9 @@ func TestHandler_ServeHTTP(t *testing.T) {
 					OnlineServers: 0,
 				}, nil
 			},
+			setupConnectionTypeFunc: func(_ uint64) string {
+				return daemon.ConnectionTypeLegacy
+			},
 			expectedStatus: http.StatusOK,
 			expectResponse: true,
 			validateResponse: func(t *testing.T, resp daemonStatusResponse) {
@@ -251,6 +268,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				assert.Equal(t, uint(2), resp.ID)
 				assert.Equal(t, "Test Node 2", resp.Name)
 				assert.Equal(t, "test-api-key-2", resp.APIKey)
+				assert.Equal(t, "legacy", resp.ConnectionType)
 				assert.Equal(t, "2.5.0", resp.Version.Version)
 				assert.Equal(t, "2023-12-01", resp.Version.CompileDate)
 				assert.Equal(t, "0s", resp.BaseInfo.Uptime)
@@ -259,13 +277,145 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				assert.Equal(t, "0", resp.BaseInfo.OnlineServersCount)
 			},
 		},
+		{
+			name:   "connection_type_grpc_when_session_registry_has_node",
+			nodeID: "3",
+			setupAuth: func() context.Context {
+				session := &auth.Session{
+					Login: "admin",
+					Email: "admin@example.com",
+					User:  &testUser,
+				}
+
+				return auth.ContextWithSession(context.Background(), session)
+			},
+			setupRepo: func(nodeRepo *inmemory.NodeRepository) {
+				now := time.Now()
+				node := &domain.Node{
+					ID:            3,
+					Enabled:       true,
+					Name:          "GRPC Node",
+					OS:            "linux",
+					Location:      "US",
+					GdaemonHost:   "10.0.0.3",
+					GdaemonPort:   31717,
+					GdaemonAPIKey: "key-3",
+					CreatedAt:     &now,
+					UpdatedAt:     &now,
+				}
+
+				require.NoError(t, nodeRepo.Save(context.Background(), node))
+			},
+			setupStatusFunc: func(_ context.Context, _ *domain.Node) (*daemon.NodeStatus, error) {
+				return &daemon.NodeStatus{Version: "3.1.0", BuildDate: "2024-03-01"}, nil
+			},
+			setupConnectionTypeFunc: func(nodeID uint64) string {
+				assert.Equal(t, uint64(3), nodeID)
+
+				return daemon.ConnectionTypeGRPC
+			},
+			expectedStatus: http.StatusOK,
+			expectResponse: true,
+			validateResponse: func(t *testing.T, resp daemonStatusResponse) {
+				t.Helper()
+
+				assert.Equal(t, "grpc", resp.ConnectionType)
+			},
+		},
+		{
+			name:   "connection_type_legacy_when_no_session_but_legacy_available",
+			nodeID: "4",
+			setupAuth: func() context.Context {
+				session := &auth.Session{
+					Login: "admin",
+					Email: "admin@example.com",
+					User:  &testUser,
+				}
+
+				return auth.ContextWithSession(context.Background(), session)
+			},
+			setupRepo: func(nodeRepo *inmemory.NodeRepository) {
+				now := time.Now()
+				node := &domain.Node{
+					ID:            4,
+					Enabled:       true,
+					Name:          "Legacy Node",
+					OS:            "linux",
+					Location:      "EU",
+					GdaemonHost:   "10.0.0.4",
+					GdaemonPort:   31717,
+					GdaemonAPIKey: "key-4",
+					CreatedAt:     &now,
+					UpdatedAt:     &now,
+				}
+
+				require.NoError(t, nodeRepo.Save(context.Background(), node))
+			},
+			setupStatusFunc: func(_ context.Context, _ *domain.Node) (*daemon.NodeStatus, error) {
+				return &daemon.NodeStatus{Version: "2.9.0", BuildDate: "2023-11-01"}, nil
+			},
+			setupConnectionTypeFunc: func(_ uint64) string {
+				return daemon.ConnectionTypeLegacy
+			},
+			expectedStatus: http.StatusOK,
+			expectResponse: true,
+			validateResponse: func(t *testing.T, resp daemonStatusResponse) {
+				t.Helper()
+
+				assert.Equal(t, "legacy", resp.ConnectionType)
+			},
+		},
+		{
+			name:   "connection_type_none_when_neither_session_nor_legacy",
+			nodeID: "5",
+			setupAuth: func() context.Context {
+				session := &auth.Session{
+					Login: "admin",
+					Email: "admin@example.com",
+					User:  &testUser,
+				}
+
+				return auth.ContextWithSession(context.Background(), session)
+			},
+			setupRepo: func(nodeRepo *inmemory.NodeRepository) {
+				now := time.Now()
+				node := &domain.Node{
+					ID:            5,
+					Enabled:       true,
+					Name:          "Detached Node",
+					OS:            "linux",
+					Location:      "AS",
+					GdaemonHost:   "10.0.0.5",
+					GdaemonPort:   31717,
+					GdaemonAPIKey: "key-5",
+					CreatedAt:     &now,
+					UpdatedAt:     &now,
+				}
+
+				require.NoError(t, nodeRepo.Save(context.Background(), node))
+			},
+			setupStatusFunc: func(_ context.Context, _ *domain.Node) (*daemon.NodeStatus, error) {
+				return &daemon.NodeStatus{Version: "3.0.0", BuildDate: "2024-01-01"}, nil
+			},
+			setupConnectionTypeFunc: func(_ uint64) string {
+				return daemon.ConnectionTypeNone
+			},
+			expectedStatus: http.StatusOK,
+			expectResponse: true,
+			validateResponse: func(t *testing.T, resp daemonStatusResponse) {
+				t.Helper()
+
+				assert.Equal(t, "none", resp.ConnectionType)
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			nodeRepo := inmemory.NewNodeRepository()
 			mockStatus := &mockDaemonStatusService{
-				statusFunc: tt.setupStatusFunc,
+				statusFunc:         tt.setupStatusFunc,
+				connectionTypeFunc: tt.setupConnectionTypeFunc,
 			}
 			responder := api.NewResponder()
 			handler := NewHandler(nodeRepo, mockStatus, responder)
@@ -324,13 +474,14 @@ func TestHandler_NewHandler(t *testing.T) {
 
 func TestNewDaemonStatusResponse(t *testing.T) {
 	tests := []struct {
-		name   string
-		node   *domain.Node
-		status *daemon.NodeStatus
-		want   daemonStatusResponse
+		name           string
+		node           *domain.Node
+		status         *daemon.NodeStatus
+		connectionType string
+		want           daemonStatusResponse
 	}{
 		{
-			name: "complete_status_response",
+			name: "complete_status_response_grpc",
 			node: &domain.Node{
 				ID:            1,
 				Name:          "Test Node",
@@ -344,10 +495,12 @@ func TestNewDaemonStatusResponse(t *testing.T) {
 				WaitingTasks:  7,
 				OnlineServers: 15,
 			},
+			connectionType: daemon.ConnectionTypeGRPC,
 			want: daemonStatusResponse{
-				ID:     1,
-				Name:   "Test Node",
-				APIKey: "api-key-123",
+				ID:             1,
+				Name:           "Test Node",
+				APIKey:         "api-key-123",
+				ConnectionType: "grpc",
 				Version: versionInfo{
 					Version:     "3.1.0",
 					CompileDate: "2024-02-01",
@@ -361,7 +514,7 @@ func TestNewDaemonStatusResponse(t *testing.T) {
 			},
 		},
 		{
-			name: "zero_values",
+			name: "zero_values_legacy",
 			node: &domain.Node{
 				ID:            2,
 				Name:          "Node 2",
@@ -375,13 +528,44 @@ func TestNewDaemonStatusResponse(t *testing.T) {
 				WaitingTasks:  0,
 				OnlineServers: 0,
 			},
+			connectionType: daemon.ConnectionTypeLegacy,
 			want: daemonStatusResponse{
-				ID:     2,
-				Name:   "Node 2",
-				APIKey: "key-2",
+				ID:             2,
+				Name:           "Node 2",
+				APIKey:         "key-2",
+				ConnectionType: "legacy",
 				Version: versionInfo{
 					Version:     "",
 					CompileDate: "",
+				},
+				BaseInfo: baseInfo{
+					Uptime:             "0s",
+					WorkingTasksCount:  "0",
+					WaitingTasksCount:  "0",
+					OnlineServersCount: "0",
+				},
+			},
+		},
+		{
+			name: "none_connection_type",
+			node: &domain.Node{
+				ID:            3,
+				Name:          "Detached",
+				GdaemonAPIKey: "key-3",
+			},
+			status: &daemon.NodeStatus{
+				Version:   "3.0.0",
+				BuildDate: "2024-01-01",
+			},
+			connectionType: daemon.ConnectionTypeNone,
+			want: daemonStatusResponse{
+				ID:             3,
+				Name:           "Detached",
+				APIKey:         "key-3",
+				ConnectionType: "none",
+				Version: versionInfo{
+					Version:     "3.0.0",
+					CompileDate: "2024-01-01",
 				},
 				BaseInfo: baseInfo{
 					Uptime:             "0s",
@@ -395,7 +579,7 @@ func TestNewDaemonStatusResponse(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := newDaemonStatusResponse(tt.node, tt.status)
+			got := newDaemonStatusResponse(tt.node, tt.status, tt.connectionType)
 			assert.Equal(t, tt.want, got)
 		})
 	}

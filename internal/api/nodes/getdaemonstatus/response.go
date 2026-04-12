@@ -20,18 +20,24 @@ type baseInfo struct {
 }
 
 type daemonStatusResponse struct {
-	ID       uint        `json:"id"`
-	Name     string      `json:"name"`
-	APIKey   string      `json:"api_key"`
-	Version  versionInfo `json:"version"`
-	BaseInfo baseInfo    `json:"base_info"`
+	ID             uint        `json:"id"`
+	Name           string      `json:"name"`
+	APIKey         string      `json:"api_key"`
+	ConnectionType string      `json:"connection_type"`
+	Version        versionInfo `json:"version"`
+	BaseInfo       baseInfo    `json:"base_info"`
 }
 
-func newDaemonStatusResponse(node *domain.Node, status *daemon.NodeStatus) daemonStatusResponse {
+func newDaemonStatusResponse(
+	node *domain.Node,
+	status *daemon.NodeStatus,
+	connectionType string,
+) daemonStatusResponse {
 	return daemonStatusResponse{
-		ID:     node.ID,
-		Name:   node.Name,
-		APIKey: node.GdaemonAPIKey,
+		ID:             node.ID,
+		Name:           node.Name,
+		APIKey:         node.GdaemonAPIKey,
+		ConnectionType: connectionType,
 		Version: versionInfo{
 			Version:     status.Version,
 			CompileDate: status.BuildDate,

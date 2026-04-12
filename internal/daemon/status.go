@@ -56,6 +56,33 @@ func (s *StatusService) Status(ctx context.Context, node *domain.Node) (*NodeSta
 	return nil, ErrDaemonNotConnected
 }
 
+// ConnectionType reports which communication channel the API will use to talk
+// to the daemon for the given node:
+//   - "grpc"   the daemon has a registered gRPC bidi session (local or any cluster instance);
+//   - "legacy" no gRPC session is available, but the legacy binn fallback is wired up;
+//   - "none"   the daemon is not reachable through any channel.
+//
+// The legacy answer does not guarantee that the daemon will actually respond
+// over binn — it only means the API is willing to attempt that path on the
+// next request.
+func (s *StatusService) ConnectionType(nodeID uint64) string {
+	if s.registry.IsConnected(nodeID) || s.registry.IsConnectedAnywhere(nodeID) {
+		return ConnectionTypeGRPC
+	}
+
+	if s.legacy != nil {
+		return ConnectionTypeLegacy
+	}
+
+	return ConnectionTypeNone
+}
+
+const (
+	ConnectionTypeGRPC   = "grpc"
+	ConnectionTypeLegacy = "legacy"
+	ConnectionTypeNone   = "none"
+)
+
 func (s *StatusService) Version(ctx context.Context, node *domain.Node) (*NodeVersion, error) {
 	nodeID := uint64(node.ID)
 

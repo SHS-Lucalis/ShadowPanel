@@ -16,6 +16,7 @@ import (
 
 type daemonStatusService interface {
 	Status(ctx context.Context, node *domain.Node) (*daemon.NodeStatus, error)
+	ConnectionType(nodeID uint64) string
 }
 
 type Handler struct {
@@ -92,5 +93,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.responder.Write(ctx, rw, newDaemonStatusResponse(node, status))
+	connectionType := h.daemonStatus.ConnectionType(uint64(node.ID))
+
+	h.responder.Write(ctx, rw, newDaemonStatusResponse(node, status, connectionType))
 }
