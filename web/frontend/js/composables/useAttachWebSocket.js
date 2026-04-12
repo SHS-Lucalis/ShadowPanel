@@ -19,14 +19,14 @@ export function useAttachWebSocket(serverId) {
     const ws = useWebSocket({
         onMessage(msg) {
             if (msg.type === 'attach.started') {
-                sessionId.value = msg.payload.session_id
+                sessionId.value = msg.payload?.session_id
                 attached.value = true
                 closeReason.value = null
             } else if (msg.type === 'attach.output') {
-                output.value += decodeBase64(msg.payload.data)
+                output.value += decodeBase64(msg.payload?.data ?? '')
             } else if (msg.type === 'attach.closed') {
                 attached.value = false
-                closeReason.value = msg.payload.reason
+                closeReason.value = msg.payload?.reason
             } else if (msg.type === 'error') {
                 attached.value = false
                 closeReason.value = msg.payload?.message || 'unknown error'

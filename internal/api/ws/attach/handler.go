@@ -291,6 +291,11 @@ type attachInputPayload struct {
 	Data []byte `json:"data"`
 }
 
+type attachStartedPayload struct {
+	SessionID string `json:"session_id"`
+	ServerID  uint64 `json:"server_id"`
+}
+
 type attachOutputPayload struct {
 	Data []byte `json:"data"`
 }
@@ -310,9 +315,12 @@ func (h *Handler) runLegacyMode(
 	msgHandler := h.newLegacyMessageHandler(ctx, client, server, node, user, canSend)
 	client.SetMessageHandler(msgHandler)
 
-	client.SendMessage(ws.NewOutboundMessage(typeAttachStarted, nil))
+	client.SendMessage(ws.NewOutboundMessage(typeAttachStarted, attachStartedPayload{
+		SessionID: idgen.New(),
+		ServerID:  uint64(server.ID),
+	}))
 
-	h.sendLegacyHistory(ctx, client, server, node)
+	lastContent := h.sendLegacyHistory(ctx, client, server, node)
 
 	poller := &legacyAttachPoller{
 		client:      client,
@@ -320,6 +328,7 @@ func (h *Handler) runLegacyMode(
 		node:        node,
 		serverDir:   server.Dir,
 		logger:      h.logger,
+		lastContent: lastContent,
 	}
 	go poller.run(ctx)
 
@@ -390,7 +399,9 @@ func (h *Handler) sendLegacyInput(
 	}
 }
 
-func (h *Handler) sendLegacyHistory(ctx context.Context, client *ws.Client, server *domain.Server, node *domain.Node) {
+func (h *Handler) sendLegacyHistory(
+	ctx context.Context, client *ws.Client, server *domain.Server, node *domain.Node,
+) string {
 	if node.ScriptGetConsole != nil && *node.ScriptGetConsole != "" {
 		cmd := server.ReplaceServerShortcodes(node, *node.ScriptGetConsole, nil)
 
@@ -400,7 +411,7 @@ func (h *Handler) sendLegacyHistory(ctx context.Context, client *ws.Client, serv
 				Data: []byte(result.Output),
 			}))
 
-			return
+			return result.Output
 		}
 	}
 
@@ -408,7 +419,7 @@ func (h *Handler) sendLegacyHistory(ctx context.Context, client *ws.Client, serv
 
 	content, err := h.fileService.Download(ctx, node, outputPath)
 	if err != nil {
-		return
+		return ""
 	}
 
 	const maxBytes = 65536
@@ -421,6 +432,8 @@ func (h *Handler) sendLegacyHistory(ctx context.Context, client *ws.Client, serv
 			Data: content,
 		}))
 	}
+
+	return string(content)
 }
 
 type legacyAttachPoller struct {
