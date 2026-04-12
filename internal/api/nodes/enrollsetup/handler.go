@@ -121,7 +121,7 @@ func (h *Handler) buildSetupScript(connectURL, config string, github bool, branc
 	sb.Grow(512)
 
 	sb.WriteString("#!/bin/bash\nset -e\n\n")
-	sb.WriteString("cleanup() { rm -f /tmp/gameapctl; }\n")
+	sb.WriteString("cleanup() { rm -f /tmp/gameapctl /tmp/gameapctl.tar.gz; }\n")
 	sb.WriteString("trap cleanup EXIT\n\n")
 
 	sb.WriteString("CONNECT_URL=\"")
@@ -136,11 +136,16 @@ func (h *Handler) buildSetupScript(connectURL, config string, github bool, branc
 	sb.WriteString("  *) echo \"Unsupported architecture: $ARCH\"; exit 1 ;;\n")
 	sb.WriteString("esac\n\n")
 
-	sb.WriteString("GAMEAPCTL_URL=\"https://github.com/gameap/gameapctl/releases/")
-	sb.WriteString("latest/download/gameapctl_${OS}_${ARCH}\"\n")
 	sb.WriteString("echo \"Downloading gameapctl...\"\n")
-	sb.WriteString("curl -sLf -o /tmp/gameapctl \"$GAMEAPCTL_URL\"\n")
-	sb.WriteString("chmod +x /tmp/gameapctl\n\n")
+	sb.WriteString("RELEASE_JSON=$(curl -sLf https://api.github.com/repos/gameap/gameapctl/releases/latest)\n")
+	sb.WriteString("ASSET_NAME=$(echo \"$RELEASE_JSON\" | ")
+	sb.WriteString("grep -oP '\"name\":\\s*\"\\Kgameapctl-[^\"]*-'\"${OS}-${ARCH}\"'\\.tar\\.gz')\n")
+	sb.WriteString("if [ -z \"$ASSET_NAME\" ]; then echo \"No release asset found for ${OS}-${ARCH}\"; exit 1; fi\n")
+	sb.WriteString("GAMEAPCTL_URL=\"https://github.com/gameap/gameapctl/releases/latest/download/${ASSET_NAME}\"\n")
+	sb.WriteString("curl -sLf -o /tmp/gameapctl.tar.gz \"$GAMEAPCTL_URL\"\n")
+	sb.WriteString("tar -xzf /tmp/gameapctl.tar.gz -C /tmp gameapctl\n")
+	sb.WriteString("chmod +x /tmp/gameapctl\n")
+	sb.WriteString("rm -f /tmp/gameapctl.tar.gz\n\n")
 
 	sb.WriteString("/tmp/gameapctl daemon install --connect=\"$CONNECT_URL\"")
 
