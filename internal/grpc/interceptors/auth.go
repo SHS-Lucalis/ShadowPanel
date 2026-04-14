@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/subtle"
 	"log/slog"
+	"time"
 
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
@@ -48,7 +49,7 @@ func NewAuthInterceptor(
 	}
 }
 
-func (i *AuthInterceptor) StreamServerInterceptor() grpc.StreamServerInterceptor {
+func (ai *AuthInterceptor) StreamServerInterceptor() grpc.StreamServerInterceptor {
 	return func(
 		srv any,
 		ss grpc.ServerStream,
@@ -57,8 +58,8 @@ func (i *AuthInterceptor) StreamServerInterceptor() grpc.StreamServerInterceptor
 	) error {
 		ctx := ss.Context()
 
-		if i.requireMTLS {
-			if err := i.verifyMTLS(ctx); err != nil {
+		if ai.requireMTLS {
+			if err := ai.verifyMTLS(ctx); err != nil {
 				return err
 			}
 		}
@@ -67,7 +68,7 @@ func (i *AuthInterceptor) StreamServerInterceptor() grpc.StreamServerInterceptor
 	}
 }
 
-func (i *AuthInterceptor) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
+func (ai *AuthInterceptor) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
 		req any,
@@ -78,13 +79,13 @@ func (i *AuthInterceptor) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 			return handler(ctx, req)
 		}
 
-		if i.requireMTLS {
-			if err := i.verifyMTLS(ctx); err != nil {
+		if ai.requireMTLS {
+			if err := ai.verifyMTLS(ctx); err != nil {
 				return nil, err
 			}
 		}
 
-		nodeID, err := i.extractAndVerifyAPIKey(ctx)
+		nodeID, err := ai.extractAndVerifyAPIKey(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -97,25 +98,44 @@ func (i *AuthInterceptor) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 	}
 }
 
-func (i *AuthInterceptor) verifyMTLS(ctx context.Context) error {
+func (ai *AuthInterceptor) verifyMTLS(ctx context.Context) error {
 	p, ok := peer.FromContext(ctx)
 	if !ok {
+		ai.logger.Warn("mTLS verification failed: no peer info")
+
 		return status.Error(codes.Unauthenticated, "no peer information")
 	}
 
+	peerAddr := p.Addr.String()
+
 	tlsInfo, ok := p.AuthInfo.(credentials.TLSInfo)
 	if !ok {
+		ai.logger.Warn("mTLS verification failed: no TLS info",
+			"peer", peerAddr,
+		)
+
 		return status.Error(codes.Unauthenticated, "no TLS info")
 	}
 
 	if len(tlsInfo.State.PeerCertificates) == 0 {
+		ai.logger.Warn("mTLS verification failed: no client certificate",
+			"peer", peerAddr,
+		)
+
 		return status.Error(codes.Unauthenticated, "no client certificate")
 	}
+
+	cert := tlsInfo.State.PeerCertificates[0]
+	ai.logger.Debug("mTLS verification succeeded",
+		"peer", peerAddr,
+		"client_cn", cert.Subject.CommonName,
+		"client_not_after", cert.NotAfter.Format(time.RFC3339),
+	)
 
 	return nil
 }
 
-func (i *AuthInterceptor) extractAndVerifyAPIKey(ctx context.Context) (uint64, error) {
+func (ai *AuthInterceptor) extractAndVerifyAPIKey(ctx context.Context) (uint64, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return 0, nil
@@ -140,9 +160,9 @@ func (i *AuthInterceptor) extractAndVerifyAPIKey(ctx context.Context) (uint64, e
 		}
 	}
 
-	nodes, err := i.nodeRepo.Find(ctx, &filters.FindNode{IDs: []uint{uint(nodeID)}}, nil, nil)
+	nodes, err := ai.nodeRepo.Find(ctx, &filters.FindNode{IDs: []uint{uint(nodeID)}}, nil, nil)
 	if err != nil {
-		i.logger.Error("failed to find node", "node_id", nodeID, "error", err)
+		ai.logger.Error("failed to find node", "node_id", nodeID, "error", err)
 
 		return 0, status.Error(codes.Internal, "failed to verify node")
 	}

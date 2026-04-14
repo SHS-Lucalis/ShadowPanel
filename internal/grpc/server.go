@@ -52,6 +52,8 @@ func NewServer(config *ServerConfig, deps *ServerDependencies) *grpc.Server {
 		logger = slog.Default()
 	}
 
+	InstallGRPCLog(logger)
+
 	recoveryInterceptor := interceptors.NewRecoveryInterceptor(logger)
 	loggingInterceptor := interceptors.NewLoggingInterceptor(logger)
 	authInterceptor := interceptors.NewAuthInterceptor(deps.NodeRepo, config.RequireMTLS, logger)
@@ -60,6 +62,7 @@ func NewServer(config *ServerConfig, deps *ServerDependencies) *grpc.Server {
 		grpc.MaxRecvMsgSize(config.MaxRecvMsgSize),
 		grpc.MaxSendMsgSize(config.MaxSendMsgSize),
 		grpc.MaxConcurrentStreams(config.MaxConcurrentStreams),
+		grpc.StatsHandler(NewConnectionLogger(logger)),
 	}
 
 	if config.TLSConfig != nil {

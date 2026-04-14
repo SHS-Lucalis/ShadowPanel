@@ -215,7 +215,14 @@ func runWithGRPC(ctx context.Context, cfg *config.Config, container *Container) 
 	}
 
 	go func() {
-		slog.InfoContext(ctx, "Starting gRPC server", slog.String("address", grpcAddr))
+		slog.InfoContext(ctx, "Starting gRPC server",
+			slog.String("address", grpcAddr),
+			slog.Bool("tls_enabled", cfg.GRPC.TLSEnabled),
+			slog.Bool("mtls_required", cfg.GRPC.RequireMTLS),
+			slog.Bool("reflection_enabled", cfg.GRPC.EnableReflection),
+			slog.Int("max_recv_mb", cfg.GRPC.MaxRecvMsgSize/(1<<20)),
+			slog.Int("max_send_mb", cfg.GRPC.MaxSendMsgSize/(1<<20)),
+		)
 		if err := grpcServer.Serve(lis); err != nil {
 			slog.ErrorContext(ctx, "gRPC server error", slog.String("error", err.Error()))
 		}

@@ -1795,9 +1795,60 @@ func (c *Container) buildGRPCTLSConfig() (*tls.Config, error) {
 		return nil, errors.Wrap(err, "failed to load gRPC server certificate")
 	}
 
+	if leaf, parseErr := x509.ParseCertificate(cert.Certificate[0]); parseErr == nil {
+		slog.Info("gRPC TLS server certificate loaded",
+			"common_name", leaf.Subject.CommonName,
+			"dns_names", leaf.DNSNames,
+			"ip_addresses", ipAddressesToStrings(leaf.IPAddresses),
+			"not_before", leaf.NotBefore.Format(time.RFC3339),
+			"not_after", leaf.NotAfter.Format(time.RFC3339),
+			"mtls_required", c.config.GRPC.RequireMTLS,
+		)
+	} else {
+		slog.Warn("failed to parse gRPC TLS server certificate for logging",
+			"error", parseErr.Error(),
+		)
+	}
+
 	tlsCfg := &tls.Config{
 		Certificates: []tls.Certificate{cert},
 		MinVersion:   tls.VersionTLS12,
+		GetConfigForClient: func(chi *tls.ClientHelloInfo) (*tls.Config, error) {
+			remoteAddr := "unknown"
+			if chi.Conn != nil && chi.Conn.RemoteAddr() != nil {
+				remoteAddr = chi.Conn.RemoteAddr().String()
+			}
+
+			slog.Debug("gRPC TLS ClientHello received",
+				"remote_addr", remoteAddr,
+				"server_name", chi.ServerName,
+				"supported_versions", chi.SupportedVersions,
+				"supported_protos", chi.SupportedProtos,
+			)
+
+			return nil, nil //nolint:nilnil // returning nil config means "use the outer tlsCfg"
+		},
+		VerifyConnection: func(state tls.ConnectionState) error {
+			attrs := []any{
+				"tls_version", tlsVersionName(state.Version),
+				"cipher_suite", tls.CipherSuiteName(state.CipherSuite),
+				"server_name", state.ServerName,
+				"negotiated_protocol", state.NegotiatedProtocol,
+			}
+
+			if len(state.PeerCertificates) > 0 {
+				peerCert := state.PeerCertificates[0]
+				attrs = append(attrs,
+					"client_cn", peerCert.Subject.CommonName,
+					"client_serial", peerCert.SerialNumber.String(),
+					"client_not_after", peerCert.NotAfter.Format(time.RFC3339),
+				)
+			}
+
+			slog.Info("gRPC TLS handshake completed", attrs...)
+
+			return nil
+		},
 	}
 
 	if c.config.GRPC.RequireMTLS {
