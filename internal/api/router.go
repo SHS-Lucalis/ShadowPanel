@@ -1786,6 +1786,15 @@ func gdaemonAPIRoutes(c container, router *mux.Router) *mux.Router {
 		c.Responder(),
 	)
 
+	// The wrap loop below applies middleware entries in order, so the LAST
+	// entry becomes the outermost handler and runs first at request time.
+	// daemonAuthMiddleware must stay last in every slice so it populates the
+	// daemon session in context before daemonGRPCGuardMiddleware reads it.
+	daemonGRPCGuardMiddleware := middlewares.NewDaemonGRPCGuardMiddleware(
+		c.SessionRegistry(),
+		c.Responder(),
+	)
+
 	recoveryMiddleware := middlewares.NewRecoveryMiddleware(
 		c.Responder(),
 	)
@@ -1806,6 +1815,7 @@ func gdaemonAPIRoutes(c container, router *mux.Router) *mux.Router {
 			Path:    "/gdaemon_api/dedicated_servers/get_init_data/{node}",
 			Handler: getinitdata.NewHandler(c.Responder()),
 			Middlewares: []mux.MiddlewareFunc{
+				daemonGRPCGuardMiddleware.Middleware,
 				daemonAuthMiddleware.Middleware,
 			},
 		},
@@ -1820,6 +1830,7 @@ func gdaemonAPIRoutes(c container, router *mux.Router) *mux.Router {
 				c.Responder(),
 			),
 			Middlewares: []mux.MiddlewareFunc{
+				daemonGRPCGuardMiddleware.Middleware,
 				daemonAuthMiddleware.Middleware,
 			},
 		},
@@ -1834,6 +1845,7 @@ func gdaemonAPIRoutes(c container, router *mux.Router) *mux.Router {
 				c.Responder(),
 			),
 			Middlewares: []mux.MiddlewareFunc{
+				daemonGRPCGuardMiddleware.Middleware,
 				daemonAuthMiddleware.Middleware,
 			},
 		},
@@ -1845,6 +1857,7 @@ func gdaemonAPIRoutes(c container, router *mux.Router) *mux.Router {
 				c.Responder(),
 			),
 			Middlewares: []mux.MiddlewareFunc{
+				daemonGRPCGuardMiddleware.Middleware,
 				daemonAuthMiddleware.Middleware,
 			},
 		},
@@ -1856,6 +1869,7 @@ func gdaemonAPIRoutes(c container, router *mux.Router) *mux.Router {
 				c.Responder(),
 			),
 			Middlewares: []mux.MiddlewareFunc{
+				daemonGRPCGuardMiddleware.Middleware,
 				daemonAuthMiddleware.Middleware,
 			},
 		},
@@ -1867,6 +1881,7 @@ func gdaemonAPIRoutes(c container, router *mux.Router) *mux.Router {
 				c.Responder(),
 			),
 			Middlewares: []mux.MiddlewareFunc{
+				daemonGRPCGuardMiddleware.Middleware,
 				daemonAuthMiddleware.Middleware,
 			},
 		},
@@ -1879,6 +1894,7 @@ func gdaemonAPIRoutes(c container, router *mux.Router) *mux.Router {
 				c.Responder(),
 			),
 			Middlewares: []mux.MiddlewareFunc{
+				daemonGRPCGuardMiddleware.Middleware,
 				daemonAuthMiddleware.Middleware,
 			},
 		},
@@ -1891,6 +1907,7 @@ func gdaemonAPIRoutes(c container, router *mux.Router) *mux.Router {
 				c.Responder(),
 			),
 			Middlewares: []mux.MiddlewareFunc{
+				daemonGRPCGuardMiddleware.Middleware,
 				daemonAuthMiddleware.Middleware,
 			},
 		},
@@ -1903,6 +1920,7 @@ func gdaemonAPIRoutes(c container, router *mux.Router) *mux.Router {
 				c.Responder(),
 			),
 			Middlewares: []mux.MiddlewareFunc{
+				daemonGRPCGuardMiddleware.Middleware,
 				daemonAuthMiddleware.Middleware,
 			},
 		},
@@ -1915,6 +1933,7 @@ func gdaemonAPIRoutes(c container, router *mux.Router) *mux.Router {
 				c.Responder(),
 			),
 			Middlewares: []mux.MiddlewareFunc{
+				daemonGRPCGuardMiddleware.Middleware,
 				daemonAuthMiddleware.Middleware,
 			},
 		},
@@ -1927,6 +1946,7 @@ func gdaemonAPIRoutes(c container, router *mux.Router) *mux.Router {
 				c.Responder(),
 			),
 			Middlewares: []mux.MiddlewareFunc{
+				daemonGRPCGuardMiddleware.Middleware,
 				daemonAuthMiddleware.Middleware,
 			},
 		},
@@ -1940,6 +1960,7 @@ func gdaemonAPIRoutes(c container, router *mux.Router) *mux.Router {
 				c.Responder(),
 			),
 			Middlewares: []mux.MiddlewareFunc{
+				daemonGRPCGuardMiddleware.Middleware,
 				daemonAuthMiddleware.Middleware,
 			},
 		},
