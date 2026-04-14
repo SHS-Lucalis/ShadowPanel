@@ -178,7 +178,7 @@ func (s *Service) Connect(stream proto.DaemonGateway_ConnectServer) error {
 func (s *Service) validateAuth(ctx context.Context, reg *proto.RegisterRequest) error {
 	nodes, err := s.nodeRepo.Find(ctx, &filters.FindNode{IDs: []uint{uint(reg.NodeId)}}, nil, nil)
 	if err != nil {
-		s.logger.Error("failed to find node", "node_id", reg.NodeId, "error", err)
+		s.logger.Error("failed to find node", "node_id", reg.GetNodeId(), "error", err)
 
 		return status.Error(codes.Internal, "failed to verify node")
 	}
@@ -193,17 +193,21 @@ func (s *Service) validateAuth(ctx context.Context, reg *proto.RegisterRequest) 
 		return status.Error(codes.PermissionDenied, "node is disabled")
 	}
 
+	if reg.GetApiKey() == "" {
+		return status.Error(codes.InvalidArgument, "API key is required")
+	}
+
 	if s.apiKeyVerifier != nil {
-		valid, err := s.apiKeyVerifier.Verify(reg.ApiKey, reg.NodeId)
+		valid, err := s.apiKeyVerifier.Verify(reg.GetApiKey(), reg.GetNodeId())
 		if err != nil {
-			s.logger.Error("failed to verify API key", "node_id", reg.NodeId, "error", err)
+			s.logger.Error("failed to verify API key", "node_id", reg.GetNodeId(), "error", err)
 
 			return status.Error(codes.Internal, "failed to verify API key")
 		}
 		if !valid {
 			return status.Error(codes.Unauthenticated, "invalid API key")
 		}
-	} else if reg.ApiKey != node.GdaemonAPIKey {
+	} else if reg.GetApiKey() != node.GdaemonAPIKey {
 		return status.Error(codes.Unauthenticated, "invalid API key")
 	}
 
