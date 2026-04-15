@@ -1808,7 +1808,7 @@ func gdaemonAPIRoutes(c container, router *mux.Router) *mux.Router {
 		{
 			Method:  http.MethodGet,
 			Path:    "/gdaemon_api/get_token",
-			Handler: daemonapiinit.NewHandler(c.NodeRepository(), c.Responder()),
+			Handler: daemonapiinit.NewHandler(c.NodeRepository(), c.SessionRegistry(), c.Responder()),
 		},
 		{
 			Method:  http.MethodGet,

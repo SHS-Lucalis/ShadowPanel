@@ -16,17 +16,20 @@ import (
 const tokenLength = 64
 
 type Handler struct {
-	nodeRepo  repositories.NodeRepository
-	responder base.Responder
+	nodeRepo    repositories.NodeRepository
+	connChecker DaemonConnectionChecker
+	responder   base.Responder
 }
 
 func NewHandler(
 	nodeRepo repositories.NodeRepository,
+	connChecker DaemonConnectionChecker,
 	responder base.Responder,
 ) *Handler {
 	return &Handler{
-		nodeRepo:  nodeRepo,
-		responder: responder,
+		nodeRepo:    nodeRepo,
+		connChecker: connChecker,
+		responder:   responder,
 	}
 }
 
@@ -75,6 +78,15 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	node := &nodes[0]
+
+	if h.connChecker.IsConnectedAnywhere(uint64(node.ID)) {
+		h.responder.WriteError(ctx, rw, api.WrapHTTPError(
+			errors.New("daemon is connected via gRPC bidi stream, HTTP API is disabled for this node"),
+			http.StatusConflict,
+		))
+
+		return
+	}
 
 	token, err := pkgstrings.CryptoRandomString(tokenLength)
 	if err != nil {

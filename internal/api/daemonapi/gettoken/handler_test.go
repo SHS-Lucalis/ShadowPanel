@@ -15,11 +15,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type fakeConnectionChecker struct {
+	connected bool
+}
+
+func (f *fakeConnectionChecker) IsConnectedAnywhere(_ uint64) bool {
+	return f.connected
+}
+
 func TestHandler_ServeHTTP(t *testing.T) {
 	tests := []struct {
 		name           string
 		authHeader     string
 		setupRepo      func(*inmemory.NodeRepository) *domain.Node
+		grpcConnected  bool
 		expectedStatus int
 		wantError      string
 		expectToken    bool
@@ -101,13 +110,46 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			wantError:      "invalid api key",
 			expectToken:    false,
 		},
+		{
+			name:       "daemon_connected_via_grpc_returns_conflict",
+			authHeader: "Bearer test-api-key",
+			setupRepo: func(nodesRepo *inmemory.NodeRepository) *domain.Node {
+				now := time.Now()
+				node := &domain.Node{
+					ID:                  1,
+					Enabled:             true,
+					Name:                "test-node",
+					OS:                  "linux",
+					Location:            "Montenegro",
+					IPs:                 []string{"172.18.0.5"},
+					WorkPath:            "/srv/gameap",
+					GdaemonHost:         "172.18.0.5",
+					GdaemonPort:         31717,
+					GdaemonAPIKey:       "test-api-key",
+					GdaemonServerCert:   "certs/root.crt",
+					ClientCertificateID: 1,
+					PreferInstallMethod: "auto",
+					CreatedAt:           &now,
+					UpdatedAt:           &now,
+				}
+
+				require.NoError(t, nodesRepo.Save(context.Background(), node))
+
+				return node
+			},
+			grpcConnected:  true,
+			expectedStatus: http.StatusConflict,
+			wantError:      "HTTP API is disabled",
+			expectToken:    false,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			nodesRepo := inmemory.NewNodeRepository()
 			responder := api.NewResponder()
-			handler := NewHandler(nodesRepo, responder)
+			connChecker := &fakeConnectionChecker{connected: tt.grpcConnected}
+			handler := NewHandler(nodesRepo, connChecker, responder)
 
 			var node *domain.Node
 			if tt.setupRepo != nil {
@@ -161,7 +203,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 func TestHandler_TokenGeneration(t *testing.T) {
 	nodesRepo := inmemory.NewNodeRepository()
 	responder := api.NewResponder()
-	handler := NewHandler(nodesRepo, responder)
+	handler := NewHandler(nodesRepo, &fakeConnectionChecker{}, responder)
 
 	now := time.Now()
 	node := &domain.Node{
@@ -207,11 +249,13 @@ func TestHandler_TokenGeneration(t *testing.T) {
 func TestHandler_NewHandler(t *testing.T) {
 	nodesRepo := inmemory.NewNodeRepository()
 	responder := api.NewResponder()
+	connChecker := &fakeConnectionChecker{}
 
-	handler := NewHandler(nodesRepo, responder)
+	handler := NewHandler(nodesRepo, connChecker, responder)
 
 	require.NotNil(t, handler)
 	assert.Equal(t, nodesRepo, handler.nodeRepo)
+	assert.Equal(t, connChecker, handler.connChecker)
 	assert.Equal(t, responder, handler.responder)
 }
 
@@ -228,7 +272,7 @@ func TestNewTokenResponse(t *testing.T) {
 func TestHandler_TokenResponseJSON(t *testing.T) {
 	nodesRepo := inmemory.NewNodeRepository()
 	responder := api.NewResponder()
-	handler := NewHandler(nodesRepo, responder)
+	handler := NewHandler(nodesRepo, &fakeConnectionChecker{}, responder)
 
 	now := time.Now()
 	node := &domain.Node{
@@ -273,7 +317,7 @@ func TestHandler_TokenResponseJSON(t *testing.T) {
 func TestHandler_UpdatesNodeTimestamp(t *testing.T) {
 	nodesRepo := inmemory.NewNodeRepository()
 	responder := api.NewResponder()
-	handler := NewHandler(nodesRepo, responder)
+	handler := NewHandler(nodesRepo, &fakeConnectionChecker{}, responder)
 
 	originalTime := time.Now().Add(-1 * time.Hour)
 	node := &domain.Node{
