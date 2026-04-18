@@ -22,6 +22,7 @@ type Dispatcher struct {
 	daemonTaskRepo    repositories.DaemonTaskRepository
 	serverRepo        repositories.ServerRepository
 	serverSettingRepo repositories.ServerSettingRepository
+	gameRepo          repositories.GameRepository
 	gameModRepo       repositories.GameModRepository
 	nodeRepo          repositories.NodeRepository
 	publisher         pubsub.Publisher
@@ -33,6 +34,7 @@ func NewDispatcher(
 	daemonTaskRepo repositories.DaemonTaskRepository,
 	serverRepo repositories.ServerRepository,
 	serverSettingRepo repositories.ServerSettingRepository,
+	gameRepo repositories.GameRepository,
 	gameModRepo repositories.GameModRepository,
 	nodeRepo repositories.NodeRepository,
 	publisher pubsub.Publisher,
@@ -47,6 +49,7 @@ func NewDispatcher(
 		daemonTaskRepo:    daemonTaskRepo,
 		serverRepo:        serverRepo,
 		serverSettingRepo: serverSettingRepo,
+		gameRepo:          gameRepo,
 		gameModRepo:       gameModRepo,
 		nodeRepo:          nodeRepo,
 		publisher:         publisher,
@@ -368,13 +371,35 @@ func (d *Dispatcher) sendServerConfigUpdate(ctx context.Context, task *domain.Da
 		)
 	}
 
+	var game *domain.Game
+	if d.gameRepo != nil {
+		games, gErr := d.gameRepo.Find(ctx, filters.FindGameByCodes(server.GameID), nil, nil)
+		if gErr != nil {
+			d.logger.Warn("failed to load game for config update",
+				"game_id", server.GameID,
+				"error", gErr,
+			)
+		} else if len(games) > 0 {
+			game = &games[0]
+		}
+	}
+
+	update := &proto.ServerConfigUpdate{
+		Server:   gateway.DomainServerToProtoWithGameMod(server, gameMod, nodeOS),
+		Settings: gateway.DomainServerSettingsToProto(settings),
+	}
+
+	if game != nil {
+		update.Game = gateway.DomainGameToProto(game)
+	}
+	if gameMod != nil {
+		update.GameMod = gateway.DomainGameModToProto(gameMod)
+	}
+
 	configMsg := &proto.GatewayMessage{
 		RequestId: idgen.New(),
 		Payload: &proto.GatewayMessage_ServerConfigUpdate{
-			ServerConfigUpdate: &proto.ServerConfigUpdate{
-				Server:   gateway.DomainServerToProtoWithGameMod(server, gameMod, nodeOS),
-				Settings: gateway.DomainServerSettingsToProto(settings),
-			},
+			ServerConfigUpdate: update,
 		},
 	}
 

@@ -1,13 +1,16 @@
 package putgamemod
 
 import (
+	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 
 	"github.com/gameap/gameap/internal/api/base"
 	gmBase "github.com/gameap/gameap/internal/api/gamemods/base"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
+	"github.com/gameap/gameap/internal/services/serverconfigpush"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/pkg/errors"
 )
@@ -15,14 +18,23 @@ import (
 var ErrGameModNotFound = api.NewNotFoundError("game mod not found")
 
 type Handler struct {
-	repo      repositories.GameModRepository
-	responder base.Responder
+	repo         repositories.GameModRepository
+	serverRepo   repositories.ServerRepository
+	configPusher *serverconfigpush.Pusher
+	responder    base.Responder
 }
 
-func NewHandler(repo repositories.GameModRepository, responder base.Responder) *Handler {
+func NewHandler(
+	repo repositories.GameModRepository,
+	serverRepo repositories.ServerRepository,
+	configPusher *serverconfigpush.Pusher,
+	responder base.Responder,
+) *Handler {
 	return &Handler{
-		repo:      repo,
-		responder: responder,
+		repo:         repo,
+		serverRepo:   serverRepo,
+		configPusher: configPusher,
+		responder:    responder,
 	}
 }
 
@@ -84,5 +96,29 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.pushConfigForGameModServers(ctx, gameMod.ID)
+
 	h.responder.Write(ctx, rw, gmBase.NewGameModResponseFromGameMod(gameMod))
+}
+
+func (h *Handler) pushConfigForGameModServers(ctx context.Context, gameModID uint) {
+	if h.configPusher == nil || h.serverRepo == nil {
+		return
+	}
+
+	servers, err := h.serverRepo.Find(ctx, &filters.FindServer{
+		GameModIDs: []uint{gameModID},
+	}, nil, nil)
+	if err != nil {
+		slog.Default().Warn("failed to load servers for game mod config push",
+			"game_mod_id", gameModID,
+			"error", err,
+		)
+
+		return
+	}
+
+	for i := range servers {
+		h.configPusher.PushServerConfig(ctx, servers[i].ID)
+	}
 }

@@ -178,6 +178,8 @@ message ServerConfigBatch {
 message ServerConfigUpdate {
   Server server = 1;
   repeated ServerSetting settings = 2;
+  optional Game game = 3;
+  optional GameMod game_mod = 4;
 }
 
 message ShutdownNotification {

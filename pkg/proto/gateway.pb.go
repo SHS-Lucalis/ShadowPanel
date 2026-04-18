@@ -1655,6 +1655,8 @@ type ServerConfigUpdate struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Server        *Server                `protobuf:"bytes,1,opt,name=server,proto3" json:"server,omitempty"`
 	Settings      []*ServerSetting       `protobuf:"bytes,2,rep,name=settings,proto3" json:"settings,omitempty"`
+	Game          *Game                  `protobuf:"bytes,3,opt,name=game,proto3,oneof" json:"game,omitempty"`
+	GameMod       *GameMod               `protobuf:"bytes,4,opt,name=game_mod,json=gameMod,proto3,oneof" json:"game_mod,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1699,6 +1701,20 @@ func (x *ServerConfigUpdate) GetServer() *Server {
 func (x *ServerConfigUpdate) GetSettings() []*ServerSetting {
 	if x != nil {
 		return x.Settings
+	}
+	return nil
+}
+
+func (x *ServerConfigUpdate) GetGame() *Game {
+	if x != nil {
+		return x.Game
+	}
+	return nil
+}
+
+func (x *ServerConfigUpdate) GetGameMod() *GameMod {
+	if x != nil {
+		return x.GameMod
 	}
 	return nil
 }
@@ -3403,10 +3419,14 @@ const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"\bstatuses\x18\x01 \x03(\v2\x14.gameap.ServerStatusR\bstatuses\"}\n" +
 	"\x11ServerConfigBatch\x12(\n" +
 	"\aservers\x18\x01 \x03(\v2\x0e.gameap.ServerR\aservers\x12>\n" +
-	"\x0fserver_settings\x18\x02 \x03(\v2\x15.gameap.ServerSettingR\x0eserverSettings\"o\n" +
+	"\x0fserver_settings\x18\x02 \x03(\v2\x15.gameap.ServerSettingR\x0eserverSettings\"\xdd\x01\n" +
 	"\x12ServerConfigUpdate\x12&\n" +
 	"\x06server\x18\x01 \x01(\v2\x0e.gameap.ServerR\x06server\x121\n" +
-	"\bsettings\x18\x02 \x03(\v2\x15.gameap.ServerSettingR\bsettings\"r\n" +
+	"\bsettings\x18\x02 \x03(\v2\x15.gameap.ServerSettingR\bsettings\x12%\n" +
+	"\x04game\x18\x03 \x01(\v2\f.gameap.GameH\x00R\x04game\x88\x01\x01\x12/\n" +
+	"\bgame_mod\x18\x04 \x01(\v2\x0f.gameap.GameModH\x01R\agameMod\x88\x01\x01B\a\n" +
+	"\x05_gameB\v\n" +
+	"\t_game_mod\"r\n" +
 	"\x14ShutdownNotification\x12\x16\n" +
 	"\x06reason\x18\x01 \x01(\tR\x06reason\x12B\n" +
 	"\x0freconnect_delay\x18\x02 \x01(\v2\x19.google.protobuf.DurationR\x0ereconnectDelay\"p\n" +
@@ -3667,20 +3687,22 @@ var file_pkg_proto_gateway_proto_depIdxs = []int32{
 	50, // 53: gameap.ServerConfigBatch.server_settings:type_name -> gameap.ServerSetting
 	43, // 54: gameap.ServerConfigUpdate.server:type_name -> gameap.Server
 	50, // 55: gameap.ServerConfigUpdate.settings:type_name -> gameap.ServerSetting
-	49, // 56: gameap.ShutdownNotification.reconnect_delay:type_name -> google.protobuf.Duration
-	51, // 57: gameap.FileListResponse.files:type_name -> gameap.FileStat
-	38, // 58: gameap.HTTPProxyRequest.headers:type_name -> gameap.HeaderEntry
-	49, // 59: gameap.HTTPProxyRequest.timeout:type_name -> google.protobuf.Duration
-	38, // 60: gameap.HTTPProxyResponse.headers:type_name -> gameap.HeaderEntry
-	0,  // 61: gameap.DaemonGateway.Connect:input_type -> gameap.DaemonMessage
-	26, // 62: gameap.DaemonGateway.Enroll:input_type -> gameap.EnrollRequest
-	1,  // 63: gameap.DaemonGateway.Connect:output_type -> gameap.GatewayMessage
-	27, // 64: gameap.DaemonGateway.Enroll:output_type -> gameap.EnrollResponse
-	63, // [63:65] is the sub-list for method output_type
-	61, // [61:63] is the sub-list for method input_type
-	61, // [61:61] is the sub-list for extension type_name
-	61, // [61:61] is the sub-list for extension extendee
-	0,  // [0:61] is the sub-list for field type_name
+	47, // 56: gameap.ServerConfigUpdate.game:type_name -> gameap.Game
+	48, // 57: gameap.ServerConfigUpdate.game_mod:type_name -> gameap.GameMod
+	49, // 58: gameap.ShutdownNotification.reconnect_delay:type_name -> google.protobuf.Duration
+	51, // 59: gameap.FileListResponse.files:type_name -> gameap.FileStat
+	38, // 60: gameap.HTTPProxyRequest.headers:type_name -> gameap.HeaderEntry
+	49, // 61: gameap.HTTPProxyRequest.timeout:type_name -> google.protobuf.Duration
+	38, // 62: gameap.HTTPProxyResponse.headers:type_name -> gameap.HeaderEntry
+	0,  // 63: gameap.DaemonGateway.Connect:input_type -> gameap.DaemonMessage
+	26, // 64: gameap.DaemonGateway.Enroll:input_type -> gameap.EnrollRequest
+	1,  // 65: gameap.DaemonGateway.Connect:output_type -> gameap.GatewayMessage
+	27, // 66: gameap.DaemonGateway.Enroll:output_type -> gameap.EnrollResponse
+	65, // [65:67] is the sub-list for method output_type
+	63, // [63:65] is the sub-list for method input_type
+	63, // [63:63] is the sub-list for extension type_name
+	63, // [63:63] is the sub-list for extension extendee
+	0,  // [0:63] is the sub-list for field type_name
 }
 
 func init() { file_pkg_proto_gateway_proto_init() }
@@ -3735,6 +3757,7 @@ func file_pkg_proto_gateway_proto_init() {
 		(*GatewayMessage_StatusRequest)(nil),
 		(*GatewayMessage_HttpProxy)(nil),
 	}
+	file_pkg_proto_gateway_proto_msgTypes[16].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

@@ -234,7 +234,7 @@ func (s *Service) buildRegisterAck(ctx context.Context, reg *proto.RegisterReque
 	protoGameMods := make([]*proto.GameMod, 0, len(gameMods))
 	for i := range gameMods {
 		gameModByID[gameMods[i].ID] = &gameMods[i]
-		protoGameMods = append(protoGameMods, domainGameModToProto(&gameMods[i]))
+		protoGameMods = append(protoGameMods, DomainGameModToProto(&gameMods[i]))
 	}
 
 	servers, err := s.serverRepo.Find(ctx, &filters.FindServer{
@@ -282,7 +282,7 @@ func (s *Service) buildRegisterAck(ctx context.Context, reg *proto.RegisterReque
 		if g.Enabled == 0 {
 			continue
 		}
-		protoGames = append(protoGames, domainGameToProto(&g))
+		protoGames = append(protoGames, DomainGameToProto(&g))
 	}
 
 	s.logger.Debug("register ack prepared",

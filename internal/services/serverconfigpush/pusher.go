@@ -17,6 +17,7 @@ type Pusher struct {
 	registry          *session.Registry
 	serverRepo        repositories.ServerRepository
 	serverSettingRepo repositories.ServerSettingRepository
+	gameRepo          repositories.GameRepository
 	gameModRepo       repositories.GameModRepository
 	nodeRepo          repositories.NodeRepository
 	logger            *slog.Logger
@@ -26,6 +27,7 @@ func NewPusher(
 	registry *session.Registry,
 	serverRepo repositories.ServerRepository,
 	serverSettingRepo repositories.ServerSettingRepository,
+	gameRepo repositories.GameRepository,
 	gameModRepo repositories.GameModRepository,
 	nodeRepo repositories.NodeRepository,
 	logger *slog.Logger,
@@ -38,6 +40,7 @@ func NewPusher(
 		registry:          registry,
 		serverRepo:        serverRepo,
 		serverSettingRepo: serverSettingRepo,
+		gameRepo:          gameRepo,
 		gameModRepo:       gameModRepo,
 		nodeRepo:          nodeRepo,
 		logger:            logger,
@@ -72,6 +75,17 @@ func (p *Pusher) PushServerConfig(ctx context.Context, serverID uint) {
 		gameMod = &gameMods[0]
 	}
 
+	var game *domain.Game
+	games, gErr := p.gameRepo.Find(ctx, filters.FindGameByCodes(server.GameID), nil, nil)
+	if gErr != nil {
+		p.logger.Warn("failed to load game for config push",
+			"game_id", server.GameID,
+			"error", gErr,
+		)
+	} else if len(games) > 0 {
+		game = &games[0]
+	}
+
 	var nodeOS domain.NodeOS
 	nodes, nodeErr := p.nodeRepo.Find(ctx, &filters.FindNode{
 		IDs: []uint{server.DSID},
@@ -95,13 +109,22 @@ func (p *Pusher) PushServerConfig(ctx context.Context, serverID uint) {
 		)
 	}
 
+	update := &proto.ServerConfigUpdate{
+		Server:   gateway.DomainServerToProtoWithGameMod(server, gameMod, nodeOS),
+		Settings: gateway.DomainServerSettingsToProto(settings),
+	}
+
+	if game != nil {
+		update.Game = gateway.DomainGameToProto(game)
+	}
+	if gameMod != nil {
+		update.GameMod = gateway.DomainGameModToProto(gameMod)
+	}
+
 	msg := &proto.GatewayMessage{
 		RequestId: idgen.New(),
 		Payload: &proto.GatewayMessage_ServerConfigUpdate{
-			ServerConfigUpdate: &proto.ServerConfigUpdate{
-				Server:   gateway.DomainServerToProtoWithGameMod(server, gameMod, nodeOS),
-				Settings: gateway.DomainServerSettingsToProto(settings),
-			},
+			ServerConfigUpdate: update,
 		},
 	}
 

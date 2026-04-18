@@ -389,7 +389,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := inmemory.NewGameModRepository()
 			responder := api.NewResponder()
-			handler := NewHandler(repo, responder)
+			handler := NewHandler(repo, nil, nil, responder)
 
 			if tt.setupRepo != nil {
 				tt.setupRepo(repo)
@@ -430,7 +430,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 func TestHandler_GameModUpdatePersistence(t *testing.T) {
 	repo := inmemory.NewGameModRepository()
 	responder := api.NewResponder()
-	handler := NewHandler(repo, responder)
+	handler := NewHandler(repo, nil, nil, responder)
 
 	originalGameMod := &domain.GameMod{
 		ID:       1,
@@ -536,7 +536,7 @@ func TestHandler_GameModUpdatePersistence(t *testing.T) {
 func TestHandler_EmptyGameModID(t *testing.T) {
 	repo := inmemory.NewGameModRepository()
 	responder := api.NewResponder()
-	handler := NewHandler(repo, responder)
+	handler := NewHandler(repo, nil, nil, responder)
 
 	requestBody := `{
 		"game_code": "valve",
@@ -561,7 +561,7 @@ func TestHandler_EmptyGameModID(t *testing.T) {
 func TestHandler_MinecraftGameModUpdate(t *testing.T) {
 	repo := inmemory.NewGameModRepository()
 	responder := api.NewResponder()
-	handler := NewHandler(repo, responder)
+	handler := NewHandler(repo, nil, nil, responder)
 
 	originalGameMod := &domain.GameMod{
 		ID:       16,
@@ -645,7 +645,7 @@ func TestHandler_MinecraftGameModUpdate(t *testing.T) {
 func TestHandler_GameModUpdateMetadataPersistence(t *testing.T) {
 	repo := inmemory.NewGameModRepository()
 	responder := api.NewResponder()
-	handler := NewHandler(repo, responder)
+	handler := NewHandler(repo, nil, nil, responder)
 
 	originalGameMod := &domain.GameMod{
 		ID:       1,
@@ -697,7 +697,7 @@ func TestHandler_GameModUpdateMetadataPersistence(t *testing.T) {
 func TestHandler_GameModUpdateWithNilMetadata(t *testing.T) {
 	repo := inmemory.NewGameModRepository()
 	responder := api.NewResponder()
-	handler := NewHandler(repo, responder)
+	handler := NewHandler(repo, nil, nil, responder)
 
 	originalGameMod := &domain.GameMod{
 		ID:       1,
@@ -742,7 +742,7 @@ func TestHandler_GameModUpdateWithNilMetadata(t *testing.T) {
 func TestHandler_GameModChangeGameCode(t *testing.T) {
 	repo := inmemory.NewGameModRepository()
 	responder := api.NewResponder()
-	handler := NewHandler(repo, responder)
+	handler := NewHandler(repo, nil, nil, responder)
 
 	originalGameMod := &domain.GameMod{
 		ID:       1,

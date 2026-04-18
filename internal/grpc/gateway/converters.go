@@ -128,7 +128,7 @@ func domainInstalledStatusToProto(status domain.ServerInstalledStatus) proto.Ser
 	}
 }
 
-func domainGameToProto(g *domain.Game) *proto.Game {
+func DomainGameToProto(g *domain.Game) *proto.Game {
 	var steamAppIDLinux, steamAppIDWindows *uint32
 	if g.SteamAppIDLinux != nil {
 		steamAppIDLinux = new(clampToUint32(*g.SteamAppIDLinux))
@@ -154,7 +154,7 @@ func domainGameToProto(g *domain.Game) *proto.Game {
 	}
 }
 
-func domainGameModToProto(gm *domain.GameMod) *proto.GameMod {
+func DomainGameModToProto(gm *domain.GameMod) *proto.GameMod {
 	fastRcon := make([]*proto.GameModFastRcon, 0, len(gm.FastRcon))
 	for _, fr := range gm.FastRcon {
 		fastRcon = append(fastRcon, &proto.GameModFastRcon{

@@ -1,12 +1,15 @@
 package putgame
 
 import (
+	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 
 	"github.com/gameap/gameap/internal/api/base"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
+	"github.com/gameap/gameap/internal/services/serverconfigpush"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
@@ -15,14 +18,23 @@ import (
 var ErrGameNotFound = api.NewNotFoundError("game not found")
 
 type Handler struct {
-	repo      repositories.GameRepository
-	responder base.Responder
+	repo         repositories.GameRepository
+	serverRepo   repositories.ServerRepository
+	configPusher *serverconfigpush.Pusher
+	responder    base.Responder
 }
 
-func NewHandler(repo repositories.GameRepository, responder base.Responder) *Handler {
+func NewHandler(
+	repo repositories.GameRepository,
+	serverRepo repositories.ServerRepository,
+	configPusher *serverconfigpush.Pusher,
+	responder base.Responder,
+) *Handler {
 	return &Handler{
-		repo:      repo,
-		responder: responder,
+		repo:         repo,
+		serverRepo:   serverRepo,
+		configPusher: configPusher,
+		responder:    responder,
 	}
 }
 
@@ -81,5 +93,29 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.pushConfigForGameServers(ctx, game.Code)
+
 	h.responder.Write(ctx, rw, base.Success)
+}
+
+func (h *Handler) pushConfigForGameServers(ctx context.Context, gameCode string) {
+	if h.configPusher == nil || h.serverRepo == nil {
+		return
+	}
+
+	servers, err := h.serverRepo.Find(ctx, &filters.FindServer{
+		GameIDs: []string{gameCode},
+	}, nil, nil)
+	if err != nil {
+		slog.Default().Warn("failed to load servers for game config push",
+			"game_code", gameCode,
+			"error", err,
+		)
+
+		return
+	}
+
+	for i := range servers {
+		h.configPusher.PushServerConfig(ctx, servers[i].ID)
+	}
 }

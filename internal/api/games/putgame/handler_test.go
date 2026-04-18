@@ -293,7 +293,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := inmemory.NewGameRepository()
 			responder := api.NewResponder()
-			handler := NewHandler(repo, responder)
+			handler := NewHandler(repo, nil, nil, responder)
 
 			if tt.setupRepo != nil {
 				tt.setupRepo(repo)
@@ -328,7 +328,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 func TestHandler_GameUpdatePersistence(t *testing.T) {
 	repo := inmemory.NewGameRepository()
 	responder := api.NewResponder()
-	handler := NewHandler(repo, responder)
+	handler := NewHandler(repo, nil, nil, responder)
 
 	originalGame := &domain.Game{
 		Code:    "hl2",
@@ -395,7 +395,7 @@ func TestHandler_GameUpdatePersistence(t *testing.T) {
 func TestHandler_GameUpdateMetadataPersistence(t *testing.T) {
 	repo := inmemory.NewGameRepository()
 	responder := api.NewResponder()
-	handler := NewHandler(repo, responder)
+	handler := NewHandler(repo, nil, nil, responder)
 
 	originalGame := &domain.Game{
 		Code:    "minecraft",
@@ -449,7 +449,7 @@ func TestHandler_GameUpdateMetadataPersistence(t *testing.T) {
 func TestHandler_GameUpdateWithNilMetadata(t *testing.T) {
 	repo := inmemory.NewGameRepository()
 	responder := api.NewResponder()
-	handler := NewHandler(repo, responder)
+	handler := NewHandler(repo, nil, nil, responder)
 
 	originalGame := &domain.Game{
 		Code:    "minecraft",
@@ -496,7 +496,7 @@ func TestHandler_GameUpdateWithNilMetadata(t *testing.T) {
 func TestHandler_EmptyGameCode(t *testing.T) {
 	repo := inmemory.NewGameRepository()
 	responder := api.NewResponder()
-	handler := NewHandler(repo, responder)
+	handler := NewHandler(repo, nil, nil, responder)
 
 	requestBody := `{
 		"code": "cs16",

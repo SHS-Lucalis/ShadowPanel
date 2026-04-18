@@ -1309,9 +1309,14 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 			AdminOnly: true,
 		},
 		{
-			Method:    http.MethodPut,
-			Path:      "/api/games/{code}",
-			Handler:   putgame.NewHandler(c.GameRepository(), c.Responder()),
+			Method: http.MethodPut,
+			Path:   "/api/games/{code}",
+			Handler: putgame.NewHandler(
+				c.GameRepository(),
+				c.ServerRepository(),
+				c.ServerConfigPusher(),
+				c.Responder(),
+			),
 			AdminOnly: true,
 		},
 		{
@@ -1423,9 +1428,14 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 			AdminOnly: true,
 		},
 		{
-			Method:    http.MethodPut,
-			Path:      "/api/game_mods/{id}",
-			Handler:   putgamemod.NewHandler(c.GameModRepository(), c.Responder()),
+			Method: http.MethodPut,
+			Path:   "/api/game_mods/{id}",
+			Handler: putgamemod.NewHandler(
+				c.GameModRepository(),
+				c.ServerRepository(),
+				c.ServerConfigPusher(),
+				c.Responder(),
+			),
 			AdminOnly: true,
 		},
 		{
