@@ -658,6 +658,78 @@ func (s *ServerRepositorySuite) TestServerRepositoryExists() {
 	})
 }
 
+func (s *ServerRepositorySuite) TestServerRepositoryCount() {
+	ctx := context.Background()
+
+	server1 := &domain.Server{
+		UID:        uuid.New(),
+		UUIDShort:  "count1",
+		Name:       "Count Server 1",
+		GameID:     "csgo",
+		DSID:       10,
+		Enabled:    true,
+		ServerIP:   "192.168.4.1",
+		ServerPort: 27015,
+		Dir:        "/servers/count1",
+	}
+	server2 := &domain.Server{
+		UID:        uuid.New(),
+		UUIDShort:  "count2",
+		Name:       "Count Server 2",
+		GameID:     "csgo",
+		DSID:       11,
+		Enabled:    false,
+		ServerIP:   "192.168.4.2",
+		ServerPort: 27016,
+		Dir:        "/servers/count2",
+	}
+	server3 := &domain.Server{
+		UID:        uuid.New(),
+		UUIDShort:  "count3",
+		Name:       "Count Server 3",
+		GameID:     "hlds",
+		DSID:       10,
+		Enabled:    true,
+		ServerIP:   "192.168.4.3",
+		ServerPort: 27017,
+		Dir:        "/servers/count3",
+	}
+	require.NoError(s.T(), s.repo.Save(ctx, server1))
+	require.NoError(s.T(), s.repo.Save(ctx, server2))
+	require.NoError(s.T(), s.repo.Save(ctx, server3))
+
+	s.T().Run("count_all_with_empty_filter", func(t *testing.T) {
+		count, err := s.repo.Count(ctx, &filters.FindServer{})
+		require.NoError(t, err)
+		assert.GreaterOrEqual(t, count, 3)
+	})
+
+	s.T().Run("count_by_game_id", func(t *testing.T) {
+		count, err := s.repo.Count(ctx, &filters.FindServer{GameIDs: []string{"csgo"}})
+		require.NoError(t, err)
+		assert.GreaterOrEqual(t, count, 2)
+	})
+
+	s.T().Run("count_by_ds_id", func(t *testing.T) {
+		count, err := s.repo.Count(ctx, &filters.FindServer{DSIDs: []uint{10}})
+		require.NoError(t, err)
+		assert.GreaterOrEqual(t, count, 2)
+	})
+
+	s.T().Run("count_by_enabled_true", func(t *testing.T) {
+		enabled := true
+		count, err := s.repo.Count(ctx, &filters.FindServer{Enabled: &enabled})
+		require.NoError(t, err)
+		assert.GreaterOrEqual(t, count, 2)
+	})
+
+	s.T().Run("count_no_match", func(t *testing.T) {
+		count, err := s.repo.Count(ctx, &filters.FindServer{GameIDs: []string{"nonexistent_game_code"}})
+		require.NoError(t, err)
+		assert.Equal(t, 0, count)
+	})
+}
+
 func (s *ServerRepositorySuite) TestServerRepositorySearch() {
 	ctx := context.Background()
 

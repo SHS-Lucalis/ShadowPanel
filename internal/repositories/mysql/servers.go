@@ -421,6 +421,25 @@ func (r *ServerRepository) SetUserServers(ctx context.Context, userID uint, serv
 	})
 }
 
+func (r *ServerRepository) Count(ctx context.Context, filter *filters.FindServer) (int, error) {
+	query, args, err := sq.Select("COUNT(*)").
+		From(base.ServersTable).
+		Where(r.filterToSq(filter)).
+		PlaceholderFormat(sq.Question).
+		ToSql()
+	if err != nil {
+		return 0, errors.WithMessage(err, "failed to build query")
+	}
+
+	var count int
+	err = r.db.QueryRowContext(ctx, query, args...).Scan(&count)
+	if err != nil {
+		return 0, errors.WithMessage(err, "failed to execute query")
+	}
+
+	return count, nil
+}
+
 func (r *ServerRepository) Exists(ctx context.Context, filter *filters.FindServer) (bool, error) {
 	if filter == nil {
 		return false, nil

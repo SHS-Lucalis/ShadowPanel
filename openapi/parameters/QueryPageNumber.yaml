@@ -1,0 +1,9 @@
+name: page[number]
+in: query
+required: false
+description: Page number (1-based)
+schema:
+  type: integer
+  minimum: 1
+  default: 1
+example: 1

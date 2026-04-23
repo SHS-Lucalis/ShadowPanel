@@ -1,0 +1,7 @@
+name: filter[ds_id]
+in: query
+required: false
+description: Filter by dedicated server (node) ID. Use comma-separated values for multiple IDs.
+schema:
+  type: string
+example: "1"

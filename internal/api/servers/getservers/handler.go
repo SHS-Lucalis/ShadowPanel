@@ -5,7 +5,6 @@ import (
 
 	"github.com/gameap/gameap/internal/api/base"
 	"github.com/gameap/gameap/internal/domain"
-	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
@@ -46,6 +45,16 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	input, err := readInput(r)
+	if err != nil {
+		h.responder.WriteError(ctx, rw, api.WrapHTTPError(
+			errors.WithMessage(err, "failed to read input"),
+			http.StatusBadRequest,
+		))
+
+		return
+	}
+
 	isAdmin, err := h.rbac.Can(ctx, session.User.ID, []domain.AbilityName{domain.AbilityNameAdminRolesPermissions})
 	if err != nil {
 		h.responder.WriteError(ctx, rw, errors.WithMessage(err, "failed to check admin permissions"))
@@ -53,12 +62,16 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	filter := &filters.FindServer{}
-	if !isAdmin {
-		filter.UserIDs = []uint{session.User.ID}
+	filter := buildFilter(input, session.User.ID, isAdmin)
+
+	total, err := h.serverRepo.Count(ctx, filter)
+	if err != nil {
+		h.responder.WriteError(ctx, rw, errors.WithMessage(err, "failed to count servers"))
+
+		return
 	}
 
-	servers, err := h.serverRepo.Find(ctx, filter, nil, nil)
+	servers, err := h.serverRepo.Find(ctx, filter, buildSorting(input), buildPagination(input))
 	if err != nil {
 		h.responder.WriteError(ctx, rw, errors.WithMessage(err, "failed to find user servers"))
 
@@ -73,6 +86,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	serversResponse := newServersResponseFromServers(servers, games)
+	response := base.NewPaginatedResponse(serversResponse, input.PageNumber, input.PageSize, total)
 
-	h.responder.Write(ctx, rw, serversResponse)
+	h.responder.Write(ctx, rw, response)
 }

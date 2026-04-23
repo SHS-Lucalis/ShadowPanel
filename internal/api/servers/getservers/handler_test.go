@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gameap/gameap/internal/api/base"
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/rbac"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
@@ -31,105 +32,360 @@ var testUser2 = domain.User{
 	Email: "noservers@example.com",
 }
 
+var testAdminUser = domain.User{
+	ID:    3,
+	Login: "admin",
+	Email: "admin@example.com",
+}
+
+func setupAdminUser(t *testing.T, rbacRepo *inmemory.RBACRepository, userID uint) {
+	t.Helper()
+
+	adminAbility := &domain.Ability{
+		ID:   100,
+		Name: domain.AbilityNameAdminRolesPermissions,
+	}
+	require.NoError(t, rbacRepo.SaveAbility(context.Background(), adminAbility))
+	require.NoError(t, rbacRepo.AssignAbilityToUser(context.Background(), userID, adminAbility.ID))
+}
+
+func sessionFor(user *domain.User) context.Context {
+	session := &auth.Session{
+		Login: user.Login,
+		Email: user.Email,
+		User:  user,
+	}
+
+	return auth.ContextWithSession(context.Background(), session)
+}
+
 func TestHandler_ServeHTTP(t *testing.T) {
 	tests := []struct {
 		name           string
+		queryParams    string
 		setupAuth      func() context.Context
-		setupRepo      func(*inmemory.ServerRepository)
+		setupRepo      func(*inmemory.ServerRepository, *inmemory.GameRepository, *inmemory.RBACRepository)
 		expectedStatus int
 		wantError      string
-		expectServers  bool
-		expectedCount  int
+		checkResponse  func(*testing.T, *base.PaginatedResponse[serverResponse])
 	}{
 		{
-			name: "successful servers retrieval",
+			name: "successful_default_pagination",
 			setupAuth: func() context.Context {
-				session := &auth.Session{
-					Login: "testuser",
-					Email: "test@example.com",
-					User:  &testUser1,
-				}
-
-				return auth.ContextWithSession(context.Background(), session)
+				return sessionFor(&testUser1)
 			},
-			setupRepo: func(serverRepo *inmemory.ServerRepository) {
-				now := time.Now()
-
-				// Create test servers for the user
-				server1 := &domain.Server{
-					ID:            1,
-					UID:           uuid.MustParse("11111111-1111-1111-1111-111111111111"),
-					UUIDShort:     "short1",
-					Enabled:       true,
-					Installed:     1,
-					Blocked:       false,
-					Name:          "Test Server 1",
-					GameID:        "cs",
-					DSID:          1,
-					GameModID:     1,
-					ServerIP:      "127.0.0.1",
-					ServerPort:    27015,
-					Dir:           "/home/gameap/servers/test1",
-					ProcessActive: false,
-					CreatedAt:     &now,
-					UpdatedAt:     &now,
-				}
-				server2 := &domain.Server{
-					ID:            2,
-					UID:           uuid.MustParse("22222222-2222-2222-2222-222222222222"),
-					UUIDShort:     "short2",
-					Enabled:       true,
-					Installed:     1,
-					Blocked:       false,
-					Name:          "Test Server 2",
-					GameID:        "cs",
-					DSID:          1,
-					GameModID:     1,
-					ServerIP:      "127.0.0.1",
-					ServerPort:    27016,
-					Dir:           "/home/gameap/servers/test2",
-					ProcessActive: true,
-					CreatedAt:     &now,
-					UpdatedAt:     &now,
-				}
-
-				require.NoError(t, serverRepo.Save(context.Background(), server1))
-				require.NoError(t, serverRepo.Save(context.Background(), server2))
-
-				// Associate servers with user
-				serverRepo.AddUserServer(1, 1)
-				serverRepo.AddUserServer(1, 2)
+			setupRepo: func(serverRepo *inmemory.ServerRepository, _ *inmemory.GameRepository, _ *inmemory.RBACRepository) {
+				saveServer(t, serverRepo, testUser1.ID, &domain.Server{
+					ID: 1, UID: uuid.New(), UUIDShort: "short1", Enabled: true, Name: "Server 1",
+					GameID: "cs", DSID: 1, GameModID: 1, ServerIP: "127.0.0.1", ServerPort: 27015,
+				})
+				saveServer(t, serverRepo, testUser1.ID, &domain.Server{
+					ID: 2, UID: uuid.New(), UUIDShort: "short2", Enabled: true, Name: "Server 2",
+					GameID: "cs", DSID: 1, GameModID: 1, ServerIP: "127.0.0.1", ServerPort: 27016,
+				})
 			},
 			expectedStatus: http.StatusOK,
-			expectServers:  true,
-			expectedCount:  2,
+			checkResponse: func(t *testing.T, resp *base.PaginatedResponse[serverResponse]) {
+				t.Helper()
+				assert.Equal(t, 1, resp.CurrentPage)
+				assert.Equal(t, base.DefaultPageSize, resp.PerPage)
+				assert.Equal(t, 2, resp.Total)
+				assert.Equal(t, 1, resp.LastPage)
+				assert.Equal(t, 1, resp.From)
+				require.Len(t, resp.Data, 2)
+			},
 		},
 		{
-			name: "user not authenticated",
-			//nolint:gocritic
+			name:        "successful_custom_page_size_first_page",
+			queryParams: "?page[size]=1&page[number]=1",
 			setupAuth: func() context.Context {
-				return context.Background()
+				return sessionFor(&testUser1)
 			},
-			setupRepo:      func(_ *inmemory.ServerRepository) {},
+			setupRepo: func(serverRepo *inmemory.ServerRepository, _ *inmemory.GameRepository, _ *inmemory.RBACRepository) {
+				saveServer(t, serverRepo, testUser1.ID, &domain.Server{
+					ID: 1, UID: uuid.New(), UUIDShort: "s1", Name: "S1", GameID: "cs", DSID: 1, ServerIP: "1.1.1.1", ServerPort: 27015,
+				})
+				saveServer(t, serverRepo, testUser1.ID, &domain.Server{
+					ID: 2, UID: uuid.New(), UUIDShort: "s2", Name: "S2", GameID: "cs", DSID: 1, ServerIP: "1.1.1.1", ServerPort: 27016,
+				})
+			},
+			expectedStatus: http.StatusOK,
+			checkResponse: func(t *testing.T, resp *base.PaginatedResponse[serverResponse]) {
+				t.Helper()
+				assert.Equal(t, 1, resp.CurrentPage)
+				assert.Equal(t, 1, resp.PerPage)
+				assert.Equal(t, 2, resp.Total)
+				assert.Equal(t, 2, resp.LastPage)
+				assert.Equal(t, 1, resp.From)
+				require.Len(t, resp.Data, 1)
+			},
+		},
+		{
+			name:        "successful_custom_page_size_second_page",
+			queryParams: "?page[size]=1&page[number]=2",
+			setupAuth: func() context.Context {
+				return sessionFor(&testUser1)
+			},
+			setupRepo: func(serverRepo *inmemory.ServerRepository, _ *inmemory.GameRepository, _ *inmemory.RBACRepository) {
+				saveServer(t, serverRepo, testUser1.ID, &domain.Server{
+					ID: 1, UID: uuid.New(), UUIDShort: "s1", Name: "S1", GameID: "cs", DSID: 1, ServerIP: "1.1.1.1", ServerPort: 27015,
+				})
+				saveServer(t, serverRepo, testUser1.ID, &domain.Server{
+					ID: 2, UID: uuid.New(), UUIDShort: "s2", Name: "S2", GameID: "cs", DSID: 1, ServerIP: "1.1.1.1", ServerPort: 27016,
+				})
+			},
+			expectedStatus: http.StatusOK,
+			checkResponse: func(t *testing.T, resp *base.PaginatedResponse[serverResponse]) {
+				t.Helper()
+				assert.Equal(t, 2, resp.CurrentPage)
+				assert.Equal(t, 1, resp.PerPage)
+				assert.Equal(t, 2, resp.Total)
+				assert.Equal(t, 2, resp.LastPage)
+				assert.Equal(t, 2, resp.From)
+				require.Len(t, resp.Data, 1)
+			},
+		},
+		{
+			name:        "successful_filter_by_ds_id",
+			queryParams: "?filter[ds_id]=2",
+			setupAuth: func() context.Context {
+				return sessionFor(&testUser1)
+			},
+			setupRepo: func(serverRepo *inmemory.ServerRepository, _ *inmemory.GameRepository, _ *inmemory.RBACRepository) {
+				saveServer(t, serverRepo, testUser1.ID, &domain.Server{
+					ID: 1, UID: uuid.New(), UUIDShort: "s1", Name: "S1", GameID: "cs", DSID: 1, ServerIP: "1.1.1.1", ServerPort: 27015,
+				})
+				saveServer(t, serverRepo, testUser1.ID, &domain.Server{
+					ID: 2, UID: uuid.New(), UUIDShort: "s2", Name: "S2", GameID: "cs", DSID: 2, ServerIP: "1.1.1.1", ServerPort: 27016,
+				})
+			},
+			expectedStatus: http.StatusOK,
+			checkResponse: func(t *testing.T, resp *base.PaginatedResponse[serverResponse]) {
+				t.Helper()
+				assert.Equal(t, 1, resp.Total)
+				require.Len(t, resp.Data, 1)
+				assert.Equal(t, uint(2), resp.Data[0].ID)
+				assert.Equal(t, uint(2), resp.Data[0].DSID)
+			},
+		},
+		{
+			name:        "successful_filter_by_game_id",
+			queryParams: "?filter[game_id]=cs,hl",
+			setupAuth: func() context.Context {
+				return sessionFor(&testAdminUser)
+			},
+			setupRepo: func(serverRepo *inmemory.ServerRepository, _ *inmemory.GameRepository, rbacRepo *inmemory.RBACRepository) {
+				setupAdminUser(t, rbacRepo, testAdminUser.ID)
+				saveServer(t, serverRepo, testAdminUser.ID, &domain.Server{
+					ID: 1, UID: uuid.New(), UUIDShort: "s1", Name: "S1", GameID: "cs", DSID: 1, ServerIP: "1.1.1.1", ServerPort: 27015,
+				})
+				saveServer(t, serverRepo, testAdminUser.ID, &domain.Server{
+					ID: 2, UID: uuid.New(), UUIDShort: "s2", Name: "S2", GameID: "hl", DSID: 1, ServerIP: "1.1.1.1", ServerPort: 27016,
+				})
+				saveServer(t, serverRepo, testAdminUser.ID, &domain.Server{
+					ID: 3, UID: uuid.New(), UUIDShort: "s3", Name: "S3", GameID: "csgo", DSID: 1, ServerIP: "1.1.1.1", ServerPort: 27017,
+				})
+			},
+			expectedStatus: http.StatusOK,
+			checkResponse: func(t *testing.T, resp *base.PaginatedResponse[serverResponse]) {
+				t.Helper()
+				assert.Equal(t, 2, resp.Total)
+				require.Len(t, resp.Data, 2)
+			},
+		},
+		{
+			name:        "successful_filter_by_enabled_true",
+			queryParams: "?filter[enabled]=true",
+			setupAuth: func() context.Context {
+				return sessionFor(&testUser1)
+			},
+			setupRepo: func(serverRepo *inmemory.ServerRepository, _ *inmemory.GameRepository, _ *inmemory.RBACRepository) {
+				saveServer(t, serverRepo, testUser1.ID, &domain.Server{
+					ID: 1, UID: uuid.New(), UUIDShort: "s1", Name: "S1", Enabled: true, GameID: "cs", DSID: 1, ServerIP: "1.1.1.1", ServerPort: 27015,
+				})
+				saveServer(t, serverRepo, testUser1.ID, &domain.Server{
+					ID: 2, UID: uuid.New(), UUIDShort: "s2", Name: "S2", Enabled: false, GameID: "cs", DSID: 1, ServerIP: "1.1.1.1", ServerPort: 27016,
+				})
+			},
+			expectedStatus: http.StatusOK,
+			checkResponse: func(t *testing.T, resp *base.PaginatedResponse[serverResponse]) {
+				t.Helper()
+				assert.Equal(t, 1, resp.Total)
+				require.Len(t, resp.Data, 1)
+				assert.True(t, resp.Data[0].Enabled)
+			},
+		},
+		{
+			name:        "successful_filter_by_enabled_false",
+			queryParams: "?filter[enabled]=false",
+			setupAuth: func() context.Context {
+				return sessionFor(&testUser1)
+			},
+			setupRepo: func(serverRepo *inmemory.ServerRepository, _ *inmemory.GameRepository, _ *inmemory.RBACRepository) {
+				saveServer(t, serverRepo, testUser1.ID, &domain.Server{
+					ID: 1, UID: uuid.New(), UUIDShort: "s1", Name: "S1", Enabled: true, GameID: "cs", DSID: 1, ServerIP: "1.1.1.1", ServerPort: 27015,
+				})
+				saveServer(t, serverRepo, testUser1.ID, &domain.Server{
+					ID: 2, UID: uuid.New(), UUIDShort: "s2", Name: "S2", Enabled: false, GameID: "cs", DSID: 1, ServerIP: "1.1.1.1", ServerPort: 27016,
+				})
+			},
+			expectedStatus: http.StatusOK,
+			checkResponse: func(t *testing.T, resp *base.PaginatedResponse[serverResponse]) {
+				t.Helper()
+				assert.Equal(t, 1, resp.Total)
+				require.Len(t, resp.Data, 1)
+				assert.False(t, resp.Data[0].Enabled)
+			},
+		},
+		{
+			name:        "successful_sort_by_name_asc",
+			queryParams: "?sort=name",
+			setupAuth: func() context.Context {
+				return sessionFor(&testUser1)
+			},
+			setupRepo: func(serverRepo *inmemory.ServerRepository, _ *inmemory.GameRepository, _ *inmemory.RBACRepository) {
+				saveServer(t, serverRepo, testUser1.ID, &domain.Server{
+					ID: 1, UID: uuid.New(), UUIDShort: "s1", Name: "Zebra", GameID: "cs", DSID: 1, ServerIP: "1.1.1.1", ServerPort: 27015,
+				})
+				saveServer(t, serverRepo, testUser1.ID, &domain.Server{
+					ID: 2, UID: uuid.New(), UUIDShort: "s2", Name: "Alpha", GameID: "cs", DSID: 1, ServerIP: "1.1.1.1", ServerPort: 27016,
+				})
+			},
+			expectedStatus: http.StatusOK,
+			checkResponse: func(t *testing.T, resp *base.PaginatedResponse[serverResponse]) {
+				t.Helper()
+				require.Len(t, resp.Data, 2)
+				assert.Equal(t, "Alpha", resp.Data[0].Name)
+				assert.Equal(t, "Zebra", resp.Data[1].Name)
+			},
+		},
+		{
+			name:        "successful_sort_by_id_desc_default",
+			queryParams: "",
+			setupAuth: func() context.Context {
+				return sessionFor(&testUser1)
+			},
+			setupRepo: func(serverRepo *inmemory.ServerRepository, _ *inmemory.GameRepository, _ *inmemory.RBACRepository) {
+				saveServer(t, serverRepo, testUser1.ID, &domain.Server{
+					ID: 1, UID: uuid.New(), UUIDShort: "s1", Name: "S1", GameID: "cs", DSID: 1, ServerIP: "1.1.1.1", ServerPort: 27015,
+				})
+				saveServer(t, serverRepo, testUser1.ID, &domain.Server{
+					ID: 2, UID: uuid.New(), UUIDShort: "s2", Name: "S2", GameID: "cs", DSID: 1, ServerIP: "1.1.1.1", ServerPort: 27016,
+				})
+			},
+			expectedStatus: http.StatusOK,
+			checkResponse: func(t *testing.T, resp *base.PaginatedResponse[serverResponse]) {
+				t.Helper()
+				require.Len(t, resp.Data, 2)
+				assert.Equal(t, uint(2), resp.Data[0].ID)
+				assert.Equal(t, uint(1), resp.Data[1].ID)
+			},
+		},
+		{
+			name: "successful_empty_result",
+			setupAuth: func() context.Context {
+				return sessionFor(&testUser2)
+			},
+			setupRepo:      func(_ *inmemory.ServerRepository, _ *inmemory.GameRepository, _ *inmemory.RBACRepository) {},
+			expectedStatus: http.StatusOK,
+			checkResponse: func(t *testing.T, resp *base.PaginatedResponse[serverResponse]) {
+				t.Helper()
+				assert.Equal(t, 1, resp.CurrentPage)
+				assert.Equal(t, base.DefaultPageSize, resp.PerPage)
+				assert.Equal(t, 0, resp.Total)
+				assert.Equal(t, 1, resp.LastPage)
+				assert.Equal(t, 0, resp.From)
+				require.Len(t, resp.Data, 0)
+			},
+		},
+		{
+			name: "successful_non_admin_sees_only_own_servers",
+			setupAuth: func() context.Context {
+				return sessionFor(&testUser1)
+			},
+			setupRepo: func(serverRepo *inmemory.ServerRepository, _ *inmemory.GameRepository, _ *inmemory.RBACRepository) {
+				saveServer(t, serverRepo, testUser1.ID, &domain.Server{
+					ID: 1, UID: uuid.New(), UUIDShort: "s1", Name: "Own", GameID: "cs", DSID: 1, ServerIP: "1.1.1.1", ServerPort: 27015,
+				})
+				saveServer(t, serverRepo, testAdminUser.ID, &domain.Server{
+					ID: 2, UID: uuid.New(), UUIDShort: "s2", Name: "NotOwn", GameID: "cs", DSID: 1, ServerIP: "1.1.1.1", ServerPort: 27016,
+				})
+			},
+			expectedStatus: http.StatusOK,
+			checkResponse: func(t *testing.T, resp *base.PaginatedResponse[serverResponse]) {
+				t.Helper()
+				assert.Equal(t, 1, resp.Total)
+				require.Len(t, resp.Data, 1)
+				assert.Equal(t, uint(1), resp.Data[0].ID)
+			},
+		},
+		{
+			name: "successful_admin_sees_all_servers",
+			setupAuth: func() context.Context {
+				return sessionFor(&testAdminUser)
+			},
+			setupRepo: func(serverRepo *inmemory.ServerRepository, _ *inmemory.GameRepository, rbacRepo *inmemory.RBACRepository) {
+				setupAdminUser(t, rbacRepo, testAdminUser.ID)
+				saveServer(t, serverRepo, testUser1.ID, &domain.Server{
+					ID: 1, UID: uuid.New(), UUIDShort: "s1", Name: "User1Own", GameID: "cs", DSID: 1, ServerIP: "1.1.1.1", ServerPort: 27015,
+				})
+				saveServer(t, serverRepo, testUser2.ID, &domain.Server{
+					ID: 2, UID: uuid.New(), UUIDShort: "s2", Name: "User2Own", GameID: "cs", DSID: 1, ServerIP: "1.1.1.1", ServerPort: 27016,
+				})
+			},
+			expectedStatus: http.StatusOK,
+			checkResponse: func(t *testing.T, resp *base.PaginatedResponse[serverResponse]) {
+				t.Helper()
+				assert.Equal(t, 2, resp.Total)
+				require.Len(t, resp.Data, 2)
+			},
+		},
+		{
+			name:           "error_user_not_authenticated",
+			setupAuth:      context.Background,
+			setupRepo:      func(_ *inmemory.ServerRepository, _ *inmemory.GameRepository, _ *inmemory.RBACRepository) {},
 			expectedStatus: http.StatusUnauthorized,
 			wantError:      "user not authenticated",
-			expectServers:  false,
 		},
 		{
-			name: "user with no servers",
+			name:        "error_invalid_page_size",
+			queryParams: "?page[size]=invalid",
 			setupAuth: func() context.Context {
-				session := &auth.Session{
-					Login: "usernoservers",
-					Email: "noservers@example.com",
-					User:  &testUser2,
-				}
-
-				return auth.ContextWithSession(context.Background(), session)
+				return sessionFor(&testUser1)
 			},
-			setupRepo:      func(_ *inmemory.ServerRepository) {},
-			expectedStatus: http.StatusOK,
-			expectServers:  true,
-			expectedCount:  0,
+			setupRepo:      func(_ *inmemory.ServerRepository, _ *inmemory.GameRepository, _ *inmemory.RBACRepository) {},
+			expectedStatus: http.StatusBadRequest,
+			wantError:      "failed to read input",
+		},
+		{
+			name:        "error_negative_page_size",
+			queryParams: "?page[size]=-1",
+			setupAuth: func() context.Context {
+				return sessionFor(&testUser1)
+			},
+			setupRepo:      func(_ *inmemory.ServerRepository, _ *inmemory.GameRepository, _ *inmemory.RBACRepository) {},
+			expectedStatus: http.StatusBadRequest,
+			wantError:      "page[size] must be positive",
+		},
+		{
+			name:        "error_zero_page_number",
+			queryParams: "?page[number]=0",
+			setupAuth: func() context.Context {
+				return sessionFor(&testUser1)
+			},
+			setupRepo:      func(_ *inmemory.ServerRepository, _ *inmemory.GameRepository, _ *inmemory.RBACRepository) {},
+			expectedStatus: http.StatusBadRequest,
+			wantError:      "page[number] must be positive",
+		},
+		{
+			name:        "error_invalid_enabled_filter",
+			queryParams: "?filter[enabled]=notbool",
+			setupAuth: func() context.Context {
+				return sessionFor(&testUser1)
+			},
+			setupRepo:      func(_ *inmemory.ServerRepository, _ *inmemory.GameRepository, _ *inmemory.RBACRepository) {},
+			expectedStatus: http.StatusBadRequest,
+			wantError:      "invalid filter[enabled] value",
 		},
 	}
 
@@ -142,12 +398,10 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			responder := api.NewResponder()
 			handler := NewHandler(serverRepo, gameRepo, rbacService, responder)
 
-			if tt.setupRepo != nil {
-				tt.setupRepo(serverRepo)
-			}
+			tt.setupRepo(serverRepo, gameRepo, rbacRepo)
 
 			ctx := tt.setupAuth()
-			req := httptest.NewRequest(http.MethodGet, "/api/servers", nil)
+			req := httptest.NewRequest(http.MethodGet, "/api/servers"+tt.queryParams, nil)
 			req = req.WithContext(ctx)
 			w := httptest.NewRecorder()
 
@@ -156,28 +410,19 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			assert.Equal(t, tt.expectedStatus, w.Code)
 
 			if tt.wantError != "" {
-				var response map[string]any
-				require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
-				assert.Equal(t, "error", response["status"])
-				errorMsg, ok := response["error"].(string)
+				var errResp map[string]any
+				require.NoError(t, json.Unmarshal(w.Body.Bytes(), &errResp))
+				assert.Equal(t, "error", errResp["status"])
+				errMsg, ok := errResp["error"].(string)
 				require.True(t, ok)
-				assert.Contains(t, errorMsg, tt.wantError)
+				assert.Contains(t, errMsg, tt.wantError)
+
+				return
 			}
 
-			if tt.expectServers {
-				var servers []serverResponse
-				require.NoError(t, json.Unmarshal(w.Body.Bytes(), &servers))
-				assert.Len(t, servers, tt.expectedCount)
-
-				if tt.expectedCount > 0 {
-					// Verify first server structure
-					server := servers[0]
-					assert.NotZero(t, server.ID)
-					assert.NotEmpty(t, server.Name)
-					assert.NotEmpty(t, server.GameID)
-					assert.NotZero(t, server.ServerPort)
-				}
-			}
+			var resp base.PaginatedResponse[serverResponse]
+			require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+			tt.checkResponse(t, &resp)
 		})
 	}
 }
@@ -245,11 +490,11 @@ func TestHandler_ServersResponseFields(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, w.Code)
 
-	var servers []serverResponse
-	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &servers))
+	var resp base.PaginatedResponse[serverResponse]
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 
-	require.Len(t, servers, 1)
-	serverResp := servers[0]
+	require.Len(t, resp.Data, 1)
+	serverResp := resp.Data[0]
 
 	assert.Equal(t, uint(1), serverResp.ID)
 	assert.True(t, serverResp.Enabled)
@@ -388,4 +633,10 @@ func TestNewServerResponseFromServer(t *testing.T) {
 	assert.Equal(t, "Counter-Strike", response.Game.Name)
 	assert.Equal(t, "GoldSource", response.Game.Engine)
 	assert.Equal(t, "1", response.Game.EngineVersion)
+}
+
+func saveServer(t *testing.T, repo *inmemory.ServerRepository, userID uint, server *domain.Server) {
+	t.Helper()
+	require.NoError(t, repo.Save(context.Background(), server))
+	repo.AddUserServer(userID, server.ID)
 }

@@ -3,8 +3,11 @@ import { ref, computed } from 'vue'
 import axios from '../config/axios'
 
 export const useServerListStore = defineStore('serverList', () => {
-    // State
     const servers = ref([])
+    const currentPage = ref(1)
+    const perPage = ref(30)
+    const total = ref(0)
+    const lastPage = ref(1)
     const summary = ref({
         total: 0,
         online: 0,
@@ -12,15 +15,46 @@ export const useServerListStore = defineStore('serverList', () => {
     })
     const apiProcesses = ref(0)
 
-    // Getters
     const loading = computed(() => apiProcesses.value > 0)
 
-    // Actions
-    async function fetchServersByFilter(filter) {
+    function buildParams(filter = {}) {
+        const params = {
+            'page[number]': filter.page ?? currentPage.value ?? 1,
+            'page[size]': filter.perPage ?? perPage.value ?? 30,
+        }
+
+        if (filter.nodeId) {
+            params['filter[ds_id]'] = filter.nodeId
+        }
+
+        if (filter.gameIds && filter.gameIds.length > 0) {
+            params['filter[game_id]'] = filter.gameIds.join(',')
+        }
+
+        if (filter.enabled !== undefined && filter.enabled !== null) {
+            params['filter[enabled]'] = filter.enabled ? 'true' : 'false'
+        }
+
+        if (filter.sort) {
+            params.sort = filter.sort
+        }
+
+        return params
+    }
+
+    function applyResponse(data) {
+        servers.value = data.data
+        currentPage.value = data.current_page
+        perPage.value = data.per_page
+        total.value = data.total
+        lastPage.value = data.last_page
+    }
+
+    async function fetchServersByFilter(filter = {}) {
         apiProcesses.value++
         try {
-            const response = await axios.get('/api/servers')
-            servers.value = response.data
+            const response = await axios.get('/api/servers', { params: buildParams(filter) })
+            applyResponse(response.data)
         } catch (error) {
             if (error.__CANCEL__) {
                 return
@@ -31,24 +65,8 @@ export const useServerListStore = defineStore('serverList', () => {
         }
     }
 
-    // From legacy servers.js - fetches servers optionally filtered by node ID
-    async function fetchServersByNode(nodeId = null) {
-        apiProcesses.value++
-        try {
-            let url = '/api/servers'
-            if (nodeId) {
-                url = '/api/servers?filter[ds_id]=' + nodeId + '&append=full_path'
-            }
-            const response = await axios.get(url)
-            servers.value = response.data
-        } catch (error) {
-            if (error.__CANCEL__) {
-                return
-            }
-            throw error
-        } finally {
-            apiProcesses.value--
-        }
+    async function fetchServersByNode(nodeId = null, filter = {}) {
+        return fetchServersByFilter({ ...filter, nodeId })
     }
 
     async function fetchServersSummary() {
@@ -99,15 +117,16 @@ export const useServerListStore = defineStore('serverList', () => {
     }
 
     return {
-        // State
         servers,
+        currentPage,
+        perPage,
+        total,
+        lastPage,
         summary,
         apiProcesses,
 
-        // Getters
         loading,
 
-        // Actions
         fetchServersByFilter,
         fetchServersByNode,
         fetchServersSummary,

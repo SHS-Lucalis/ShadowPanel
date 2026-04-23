@@ -3,13 +3,18 @@
     tags:
       - Servers
     summary: List servers
-    description: Returns a paginated list of game servers
+    description: |
+      Returns a paginated list of game servers.
+
+      Supports filtering by node (`filter[ds_id]`), game (`filter[game_id]`), and enabled status (`filter[enabled]`).
+      Sorting is available via `sort` (prefix with `-` for descending). Allowed sort fields: `id`, `name`, `server_ip`,
+      `server_port`, `game_id`, `ds_id`.
     operationId: listServers
     x-codeSamples:
       - lang: cURL
         label: CLI
         source: |
-          curl -s -X GET "https://demo.gameap.com/api/servers?page=1&per_page=15" \
+          curl -s -X GET "https://demo.gameap.com/api/servers?page%5Bnumber%5D=1&page%5Bsize%5D=30" \
             -H "Authorization: Bearer YOUR_API_KEY" \
             -w "\nHTTP Status: %{http_code}\n"
 
@@ -17,7 +22,7 @@
         source: |
           <?php
 
-          $url = 'https://demo.gameap.com/api/servers?page=1&per_page=15';
+          $url = 'https://demo.gameap.com/api/servers?page%5Bnumber%5D=1&page%5Bsize%5D=30';
           $apiKey = 'YOUR_API_KEY';
 
           $curl = curl_init();
@@ -75,7 +80,7 @@
           )
 
           func main() {
-              url := "https://demo.gameap.com/api/servers?page=1&per_page=15"
+              url := "https://demo.gameap.com/api/servers?page%5Bnumber%5D=1&page%5Bsize%5D=30"
               apiKey := "YOUR_API_KEY"
 
               ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -120,7 +125,7 @@
       - lang: NodeJS
         source: |
           const apiKey = 'YOUR_API_KEY';
-          const url = 'https://demo.gameap.com/api/servers?page=1&per_page=15';
+          const url = 'https://demo.gameap.com/api/servers?page%5Bnumber%5D=1&page%5Bsize%5D=30';
 
           const response = await fetch(url, {
             method: 'GET',
@@ -140,10 +145,12 @@
             console.log(`Server #${server.id}: ${server.name}`);
           }
     parameters:
-      - $ref: '../parameters/QueryPage.yaml'
-      - $ref: '../parameters/QueryPerPage.yaml'
+      - $ref: '../parameters/QueryPageNumber.yaml'
+      - $ref: '../parameters/QueryPageSize.yaml'
       - $ref: '../parameters/QuerySort.yaml'
-      - $ref: '../parameters/QueryIds.yaml'
+      - $ref: '../parameters/QueryFilterDSID.yaml'
+      - $ref: '../parameters/QueryFilterGameID.yaml'
+      - $ref: '../parameters/QueryFilterEnabled.yaml'
     responses:
       '200':
         description: List of servers
@@ -158,6 +165,12 @@
                       type: array
                       items:
                         $ref: '../schemas/Server.yaml'
+      '400':
+        description: Invalid query parameters
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
       '401':
         description: Unauthorized
         content:

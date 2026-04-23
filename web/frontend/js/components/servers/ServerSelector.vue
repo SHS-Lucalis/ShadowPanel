@@ -46,6 +46,6 @@ onMounted(() => {
 })
 
 watch(dsId, () => {
-    serverListStore.fetchServersByNode(dsId.value)
+    serverListStore.fetchServersByNode(dsId.value, {perPage: 1000})
 })
 </script>

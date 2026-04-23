@@ -7,11 +7,13 @@
   </GButton>
 
   <GDataTable
+      remote
       ref="tableRef"
       :columns="columns"
       :data="serversData"
       :loading="loading"
       :pagination="pagination"
+      @update:page="handlePageChange"
   >
     <template #loading>
       <Loading />
@@ -26,7 +28,7 @@
 import { GBreadcrumbs, Loading, GIcon, GDataTable, GEmpty, GGameIcon } from "@gameap/ui"
 import {trans} from "../../i18n/i18n"
 import GButton from "../../components/GButton.vue"
-import {h, onMounted, computed, ref} from "vue"
+import {h, onMounted, computed, ref, reactive} from "vue"
 import {useServerListStore} from "../../store/serverList"
 import {useNodeListStore} from "../../store/nodeList"
 import {errorNotification} from "../../parts/dialogs"
@@ -66,7 +68,9 @@ const createColumns = () => {
       render: (row) => {
         let node = nodes.value.find(node => node.id === row.nodeId)
 
-        // return node.name
+        if (!node) {
+          return ''
+        }
 
         return h(
             RouterLink,
@@ -106,7 +110,7 @@ const createColumns = () => {
   ]
 }
 
-const {servers} = storeToRefs(serverListStore)
+const {servers, currentPage, perPage, total, lastPage} = storeToRefs(serverListStore)
 const {nodes} = storeToRefs(nodeListStore)
 
 const loading = computed(() => {
@@ -114,9 +118,12 @@ const loading = computed(() => {
 })
 
 const columns = ref(createColumns())
-const pagination = {
-  pageSize: 20,
-};
+const pagination = reactive({
+  page: 1,
+  pageSize: 30,
+  pageCount: 1,
+  itemCount: 0,
+});
 
 onMounted(() => {
   fetchServers()
@@ -124,10 +131,19 @@ onMounted(() => {
 })
 
 const fetchServers = () => {
-  serverListStore.fetchServersByFilter([]).
-  catch((error) => {
-    errorNotification(error)
+  return serverListStore.fetchServersByFilter({
+    page: pagination.page,
+    perPage: pagination.pageSize,
   })
+    .then(() => {
+      pagination.pageCount = lastPage.value
+      pagination.itemCount = total.value
+      pagination.page = currentPage.value
+      pagination.pageSize = perPage.value
+    })
+    .catch((error) => {
+      errorNotification(error)
+    })
 }
 
 const fetchNodes = () => {
@@ -135,6 +151,11 @@ const fetchNodes = () => {
   catch((error) => {
     errorNotification(error)
   })
+}
+
+const handlePageChange = (page) => {
+  pagination.page = page
+  fetchServers()
 }
 
 const serversData = computed(() => {

@@ -109,6 +109,13 @@ func (r *ServerRepository) Exists(_ context.Context, filter *filters.FindServer)
 	return len(candidateIDs) > 0, nil
 }
 
+func (r *ServerRepository) Count(_ context.Context, filter *filters.FindServer) (int, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	return len(r.getFilteredServerIDs(filter)), nil
+}
+
 func (r *ServerRepository) Search(_ context.Context, query string) ([]*domain.Server, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()

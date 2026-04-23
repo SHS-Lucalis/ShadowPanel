@@ -1,6 +1,6 @@
 <script setup>
     import { Loading, GIcon, GDataTable, GEmpty, GGameIcon } from "@gameap/ui";
-    import {h, ref, onMounted, onUnmounted, computed} from 'vue'
+    import {h, ref, reactive, onMounted, onUnmounted, computed, watch} from 'vue'
     import {storeToRefs} from 'pinia'
     import {trans} from "@/i18n/i18n";
     import {useAuthStore} from "@/store/auth";
@@ -22,7 +22,7 @@
     const authStore = useAuthStore();
     const filtersStore = useServerFiltersStore();
     const serverListStore = useServerListStore();
-    const { servers: serversList } = storeToRefs(serverListStore);
+    const { servers: serversList, currentPage, perPage, total, lastPage } = storeToRefs(serverListStore);
 
     const isSmallScreen = ref(window.innerWidth < 768);
 
@@ -196,9 +196,14 @@
 
         return cols;
     });
-    const pagination = {
-        pageSize: 20,
-    };
+
+    const pagination = reactive({
+        page: 1,
+        pageSize: 30,
+        pageCount: 1,
+        itemCount: 0,
+    });
+
     const loading = ref(true);
     const tableRef = ref(null);
 
@@ -212,12 +217,42 @@
         set: (value) => filtersStore.setIPFilter(value)
     });
 
+    const fetchServers = () => {
+        loading.value = true;
+
+        return serverListStore.fetchServersByFilter({
+            page: pagination.page,
+            perPage: pagination.pageSize,
+            gameIds: (selectedGame.value && selectedGame.value.length > 0) ? selectedGame.value : null,
+        })
+            .then(() => {
+                pagination.pageCount = lastPage.value;
+                pagination.itemCount = total.value;
+                pagination.page = currentPage.value;
+                pagination.pageSize = perPage.value;
+            })
+            .catch((error) => {
+                errorNotification(error);
+            })
+            .finally(() => {
+                loading.value = false;
+            });
+    };
+
+    const handlePageChange = (page) => {
+        pagination.page = page;
+        fetchServers();
+    };
+
+    watch(selectedGame, () => {
+        pagination.page = 1;
+        fetchServers();
+    });
+
     onMounted(() => {
         window.addEventListener('resize', handleResize);
 
-        serverListStore.fetchServersByNode().finally(() => {
-            loading.value = false;
-        });
+        fetchServers();
 
         if (!authStore.isAdmin) {
             authStore.fetchServersAbilities().catch((error) =>{
@@ -230,28 +265,13 @@
         window.removeEventListener('resize', handleResize);
     });
 
+    // IP filter remains client-side (applied on the current page only).
     const data = computed(() => {
         return serversList.value.filter((server) => {
-            let skip = false;
-
-            if (
-                selectedGame.value !== null &&
-                selectedGame.value !== "" &&
-                selectedGame.value.length > 0
-            ) {
-                skip = !selectedGame.value.includes(server.game.code)
-            }
-
-            if (
-                !skip &&
-                selectedIP.value !== null &&
+            return !(selectedIP.value !== null &&
                 selectedIP.value !== "" &&
-                selectedIP.value.length > 0
-            ) {
-                skip = !selectedIP.value.includes(server.server_ip)
-            }
-
-            return !skip
+                selectedIP.value.length > 0 &&
+                !selectedIP.value.includes(server.server_ip));
         });
     });
 
@@ -315,7 +335,8 @@
     });
 
     function handleUpdateFilters() {
-        // Filters are automatically updated via computed properties
+        // Filters are automatically updated via computed properties.
+        // Server-side filters (game) trigger a refetch via the watcher.
     }
 
     function clearFilters() {
@@ -387,11 +408,13 @@
     </div>
 
     <GDataTable
+        remote
         ref="tableRef"
         :columns="columns"
         :data="data"
         :loading="loading"
         :pagination="pagination"
+        @update:page="handlePageChange"
     >
         <template #loading>
           <Loading />

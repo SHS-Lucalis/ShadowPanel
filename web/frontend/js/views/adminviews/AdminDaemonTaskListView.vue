@@ -213,7 +213,7 @@ const fetchNodes = () => {
 }
 
 const fetchServers = () => {
-  serverListStore.fetchServersByFilter([]).
+  serverListStore.fetchServersByFilter({perPage: 1000}).
   catch((error) => {
     errorNotification(error)
   })

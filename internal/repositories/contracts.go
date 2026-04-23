@@ -83,6 +83,8 @@ type ServerRepository interface {
 		ctx context.Context, filter *filters.FindServer, order []filters.Sorting, pagination *filters.Pagination,
 	) ([]domain.Server, error)
 
+	Count(ctx context.Context, filter *filters.FindServer) (int, error)
+
 	FindUserServers(
 		ctx context.Context,
 		userID uint,

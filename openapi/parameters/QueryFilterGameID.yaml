@@ -1,0 +1,7 @@
+name: filter[game_id]
+in: query
+required: false
+description: Filter by game code. Use comma-separated values for multiple games.
+schema:
+  type: string
+example: cs,csgo

@@ -1,0 +1,10 @@
+name: filter[enabled]
+in: query
+required: false
+description: Filter by enabled status
+schema:
+  type: string
+  enum:
+    - "true"
+    - "false"
+example: "true"
