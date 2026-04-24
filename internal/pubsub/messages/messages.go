@@ -47,6 +47,9 @@ const (
 
 	TypeDaemonHTTPProxyRequest  = "daemon.httpproxy.request"
 	TypeDaemonHTTPProxyResponse = "daemon.httpproxy.response"
+
+	TypeMetricsBatch  = "metrics.batch"
+	TypeDaemonMetrics = "daemon.metrics"
 )
 
 type CacheInvalidatePayload struct {
@@ -236,6 +239,16 @@ type DaemonHTTPProxyResponsePayload struct {
 	Error       string `json:"error,omitempty"`
 	Data        []byte `json:"data,omitempty"`
 	StoragePath string `json:"storage_path,omitempty"`
+}
+
+type MetricsBatchPayload struct {
+	NodeID uint64 `json:"node_id"`
+	Data   []byte `json:"data"`
+}
+
+type DaemonMetricsDispatchPayload struct {
+	NodeID uint64 `json:"node_id"`
+	Data   []byte `json:"data"`
 }
 
 func NewMessage(channel, msgType string, payload any) (*pubsub.Message, error) {

@@ -58,6 +58,11 @@ func (r *Registry) Start(ctx context.Context) error {
 		return errors.Wrap(err, "subscribe to attach dispatch")
 	}
 
+	err = r.pubsub.Subscribe(ctx, channels.DaemonMetricsDispatchAll, r.handleMetricsDispatch)
+	if err != nil {
+		return errors.Wrap(err, "subscribe to metrics dispatch")
+	}
+
 	r.logger.Info("session registry started", "instance_id", r.instanceID)
 
 	return nil
@@ -484,6 +489,90 @@ func (r *Registry) handleAttachDispatch(_ context.Context, msg *pubsub.Message) 
 		)
 
 		return errors.Wrap(err, "send attach message to session")
+	}
+
+	return nil
+}
+
+func (r *Registry) SendMetricsCommand(
+	ctx context.Context, nodeID uint64, cmd *proto.MetricsCommand,
+) error {
+	msg := &proto.GatewayMessage{
+		Payload: &proto.GatewayMessage_MetricsCommand{
+			MetricsCommand: cmd,
+		},
+	}
+
+	return r.sendOrDispatchMetrics(ctx, nodeID, msg)
+}
+
+func (r *Registry) sendOrDispatchMetrics(
+	ctx context.Context, nodeID uint64, msg *proto.GatewayMessage,
+) error {
+	r.mu.RLock()
+	session, isLocal := r.localSessions[nodeID]
+	r.mu.RUnlock()
+
+	if isLocal {
+		return session.Stream.Send(msg)
+	}
+
+	return r.dispatchMetricsViaPubSub(ctx, nodeID, msg)
+}
+
+func (r *Registry) dispatchMetricsViaPubSub(
+	ctx context.Context, nodeID uint64, gatewayMsg *proto.GatewayMessage,
+) error {
+	data, err := gatewayMsg.MarshalVT()
+	if err != nil {
+		return errors.Wrap(err, "marshal metrics gateway message")
+	}
+
+	channel := channels.BuildDaemonMetricsDispatchChannel(nodeID)
+	msg, err := messages.NewMessage(channel, messages.TypeDaemonMetrics, messages.DaemonMetricsDispatchPayload{
+		NodeID: nodeID,
+		Data:   data,
+	})
+	if err != nil {
+		return errors.Wrap(err, "create metrics dispatch message")
+	}
+
+	return r.pubsub.Publish(ctx, channel, msg)
+}
+
+func (r *Registry) handleMetricsDispatch(_ context.Context, msg *pubsub.Message) error {
+	payload, err := messages.ParsePayload[messages.DaemonMetricsDispatchPayload](msg)
+	if err != nil {
+		r.logger.Warn("failed to parse metrics dispatch payload", "error", err)
+
+		return nil
+	}
+
+	r.mu.RLock()
+	session, ok := r.localSessions[payload.NodeID]
+	r.mu.RUnlock()
+
+	if !ok {
+		return nil
+	}
+
+	var gatewayMsg proto.GatewayMessage
+	if err := gatewayMsg.UnmarshalVT(payload.Data); err != nil {
+		r.logger.Warn("failed to unmarshal metrics gateway message",
+			"node_id", payload.NodeID,
+			"error", err,
+		)
+
+		return nil
+	}
+
+	if err := session.Stream.Send(&gatewayMsg); err != nil {
+		r.logger.Warn("failed to send metrics message to session",
+			"node_id", payload.NodeID,
+			"error", err,
+		)
+
+		return errors.Wrap(err, "send metrics message to session")
 	}
 
 	return nil

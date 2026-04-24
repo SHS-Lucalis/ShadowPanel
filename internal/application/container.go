@@ -178,6 +178,7 @@ type Container struct {
 	commandHandler      *handlers.CommandHandler
 	serverStatusHandler *handlers.ServerStatusHandler
 	attachHandler       *handlers.AttachHandler
+	metricsHandler      *handlers.MetricsHandler
 	grpcServer          *grpc.Server
 	multiplexedServer   *MultiplexedServer
 
@@ -1659,6 +1660,14 @@ func (c *Container) AttachHandler() *handlers.AttachHandler {
 	return c.attachHandler
 }
 
+func (c *Container) MetricsHandler() *handlers.MetricsHandler {
+	if c.metricsHandler == nil {
+		c.metricsHandler = handlers.NewMetricsHandler(c.PubSub(), slog.Default())
+	}
+
+	return c.metricsHandler
+}
+
 func (c *Container) GatewayService() *gateway.Service {
 	if c.gatewayService == nil {
 		c.gatewayService = gateway.NewService(
@@ -1674,6 +1683,7 @@ func (c *Container) GatewayService() *gateway.Service {
 			c.CommandHandler(),
 			c.ServerStatusHandler(),
 			c.AttachHandler(),
+			c.MetricsHandler(),
 			c.EnrollmentService(),
 			slog.Default(),
 		)

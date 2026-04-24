@@ -46,8 +46,7 @@ message DaemonMessage {
 
     HTTPProxyResponse http_proxy_response = 80;
 
-    GetMetricsHistoryResponse metrics_history_response = 90;
-    MetricsBatch metrics_batch = 91;
+    MetricsBatch metrics_batch = 90;
   }
 }
 
@@ -82,8 +81,7 @@ message GatewayMessage {
 
     HTTPProxyRequest http_proxy = 80;
 
-    GetMetricsHistoryRequest metrics_history_request = 90;
-    MetricsCommand metrics_command = 91;
+    MetricsCommand metrics_command = 90;
   }
 }
 
@@ -194,6 +192,11 @@ message MetricSeries {
 // active. Machine-level and per-server series coexist, distinguished by
 // the presence of a "server_id" label.
 //
+// Historical data is delivered through this same message: after
+// StartRealtimeMetricsCommand the daemon's first batch may contain
+// series with many historical points; subsequent batches carry live
+// data. There is no separate history request/response path.
+//
 // The sending daemon's node_id is established by the authenticated
 // session; no explicit machine_id is carried here.
 message MetricsBatch {
@@ -224,55 +227,6 @@ message MetricsCommand {
     StartRealtimeMetricsCommand start = 1;
     StopRealtimeMetricsCommand stop = 2;
   }
-}
-
-// A single historical sample. Self-contained: name, labels, timestamp
-// and value live on the sample so consumers can filter / regroup /
-// overlay without nested parsing.
-//
-// min/max/avg/sample_count populated only on downsampled rows
-// (resolution_seconds > native). Aggregation fields use double;
-// precision caps at 2^53.
-message MetricSample {
-  string name = 1;
-  google.protobuf.Timestamp timestamp = 2;
-  map<string, string> labels = 3;
-  MetricType type = 4;
-  MetricUnit unit = 5;
-
-  oneof value {
-    double double_value = 6;
-    uint64 uint_value = 7;
-    int64 int_value = 8;
-  }
-
-  optional double min = 9;
-  optional double max = 10;
-  optional double avg = 11;
-  optional uint32 sample_count = 12;
-}
-
-// Request for historical data served by the daemon. Correlated with the
-// response via the enclosing GatewayMessage.request_id — same pattern
-// as FileReadRequest/FileReadResponse.
-//
-// Currently has no parameters: the daemon decides what to return. Query
-// parameters (time range, resolution, filters) may be added later.
-message GetMetricsHistoryRequest {}
-
-// Single response, carrying all matching samples in one message. Size
-// is bounded by the gRPC max message size. On too-many-samples the
-// daemon returns success=false with an error asking for a coarser
-// resolution_seconds.
-message GetMetricsHistoryResponse {
-  bool success = 1;
-  string error = 2;
-
-  // Resolution the daemon actually used (equals request if possible,
-  // otherwise a coarser fallback or the auto-picked value).
-  uint32 resolution_seconds = 3;
-
-  repeated MetricSample samples = 4;
 }
 
 message TaskStatusUpdate {

@@ -41,6 +41,7 @@ type Service struct {
 	commandHandler    CommandHandler
 	serverHandler     ServerStatusHandler
 	attachHandler     AttachHandler
+	metricsHandler    MetricsHandler
 	enrollmentSvc     *enrollment.Service
 }
 
@@ -69,6 +70,10 @@ type AttachHandler interface {
 	HandleAttachClosed(ctx context.Context, nodeID uint64, closed *proto.AttachClosed) error
 }
 
+type MetricsHandler interface {
+	HandleMetricsBatch(ctx context.Context, nodeID uint64, batch *proto.MetricsBatch) error
+}
+
 type Config struct {
 	HeartbeatInterval int32
 }
@@ -86,6 +91,7 @@ func NewService(
 	commandHandler CommandHandler,
 	serverHandler ServerStatusHandler,
 	attachHandler AttachHandler,
+	metricsHandler MetricsHandler,
 	enrollmentSvc *enrollment.Service,
 	logger *slog.Logger,
 ) *Service {
@@ -106,6 +112,7 @@ func NewService(
 		commandHandler:    commandHandler,
 		serverHandler:     serverHandler,
 		attachHandler:     attachHandler,
+		metricsHandler:    metricsHandler,
 		enrollmentSvc:     enrollmentSvc,
 		logger:            logger,
 	}
@@ -377,39 +384,25 @@ func (s *Service) processMessage(ctx context.Context, sess *session.Session, msg
 		s.logger.Warn("received server statuses but handler is nil", "node_id", sess.NodeID)
 
 	case *proto.DaemonMessage_FileReadResponse:
-		sess.ResolvePendingRequest(payload.FileReadResponse.RequestId, msg)
-
-		return nil
+		return resolveResponse(sess, payload.FileReadResponse.RequestId, msg)
 
 	case *proto.DaemonMessage_FileWriteResponse:
-		sess.ResolvePendingRequest(payload.FileWriteResponse.RequestId, msg)
-
-		return nil
+		return resolveResponse(sess, payload.FileWriteResponse.RequestId, msg)
 
 	case *proto.DaemonMessage_FileListResponse:
-		sess.ResolvePendingRequest(payload.FileListResponse.RequestId, msg)
-
-		return nil
+		return resolveResponse(sess, payload.FileListResponse.RequestId, msg)
 
 	case *proto.DaemonMessage_FileOperationResponse:
-		sess.ResolvePendingRequest(payload.FileOperationResponse.RequestId, msg)
-
-		return nil
+		return resolveResponse(sess, payload.FileOperationResponse.RequestId, msg)
 
 	case *proto.DaemonMessage_StatusResponse:
-		sess.ResolvePendingRequest(payload.StatusResponse.RequestId, msg)
-
-		return nil
+		return resolveResponse(sess, payload.StatusResponse.RequestId, msg)
 
 	case *proto.DaemonMessage_ConsoleLogResponse:
-		sess.ResolvePendingRequest(payload.ConsoleLogResponse.RequestId, msg)
-
-		return nil
+		return resolveResponse(sess, payload.ConsoleLogResponse.RequestId, msg)
 
 	case *proto.DaemonMessage_HttpProxyResponse:
-		sess.ResolvePendingRequest(payload.HttpProxyResponse.RequestId, msg)
-
-		return nil
+		return resolveResponse(sess, payload.HttpProxyResponse.RequestId, msg)
 
 	case *proto.DaemonMessage_AttachStarted:
 		if s.attachHandler != nil {
@@ -426,12 +419,23 @@ func (s *Service) processMessage(ctx context.Context, sess *session.Session, msg
 			return s.attachHandler.HandleAttachClosed(ctx, sess.NodeID, payload.AttachClosed)
 		}
 
+	case *proto.DaemonMessage_MetricsBatch:
+		if s.metricsHandler != nil {
+			return s.metricsHandler.HandleMetricsBatch(ctx, sess.NodeID, payload.MetricsBatch)
+		}
+
 	default:
 		s.logger.Warn("unknown message type received",
 			"node_id", sess.NodeID,
 			"request_id", msg.RequestId,
 		)
 	}
+
+	return nil
+}
+
+func resolveResponse(sess *session.Session, requestID string, msg *proto.DaemonMessage) error {
+	sess.ResolvePendingRequest(requestID, msg)
 
 	return nil
 }
@@ -862,6 +866,24 @@ func (s *Service) RequestFileDownloadTask(
 
 		return nil
 	}
+}
+
+func (s *Service) SendStartRealtimeMetrics(
+	ctx context.Context, nodeID uint64, intervalSec uint32,
+) error {
+	return s.registry.SendMetricsCommand(ctx, nodeID, &proto.MetricsCommand{
+		Command: &proto.MetricsCommand_Start{
+			Start: &proto.StartRealtimeMetricsCommand{IntervalSeconds: intervalSec},
+		},
+	})
+}
+
+func (s *Service) SendStopRealtimeMetrics(ctx context.Context, nodeID uint64) error {
+	return s.registry.SendMetricsCommand(ctx, nodeID, &proto.MetricsCommand{
+		Command: &proto.MetricsCommand_Stop{
+			Stop: &proto.StopRealtimeMetricsCommand{},
+		},
+	})
 }
 
 func (s *Service) Enroll(ctx context.Context, req *proto.EnrollRequest) (*proto.EnrollResponse, error) {

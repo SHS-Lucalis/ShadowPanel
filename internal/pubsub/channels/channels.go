@@ -71,6 +71,12 @@ const (
 	DaemonHTTPProxyRequest    = DaemonPrefix + "httpproxy:request:"
 	DaemonHTTPProxyResponse   = DaemonPrefix + "httpproxy:response:"
 	DaemonHTTPProxyRequestAll = DaemonPrefix + "httpproxy:request:*"
+
+	RealtimeMetrics    = RealtimePrefix + "metrics:"
+	RealtimeMetricsAll = RealtimePrefix + "metrics:*"
+
+	DaemonMetricsDispatch    = DaemonPrefix + "metrics:dispatch:"
+	DaemonMetricsDispatchAll = DaemonPrefix + "metrics:dispatch:*"
 )
 
 func BuildCacheInvalidateChannel(entityType string, entityID string) string {
@@ -167,4 +173,12 @@ func BuildDaemonHTTPProxyRequestChannel(nodeID uint64) string {
 
 func BuildDaemonHTTPProxyResponseChannel(instanceID string) string {
 	return DaemonHTTPProxyResponse + instanceID
+}
+
+func BuildRealtimeMetricsChannel(nodeID uint64) string {
+	return RealtimeMetrics + strconv.FormatUint(nodeID, 10)
+}
+
+func BuildDaemonMetricsDispatchChannel(nodeID uint64) string {
+	return DaemonMetricsDispatch + strconv.FormatUint(nodeID, 10)
 }
