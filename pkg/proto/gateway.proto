@@ -45,6 +45,9 @@ message DaemonMessage {
     StatusResponse status_response = 70;
 
     HTTPProxyResponse http_proxy_response = 80;
+
+    GetMetricsHistoryResponse metrics_history_response = 90;
+    MetricsBatch metrics_batch = 91;
   }
 }
 
@@ -78,6 +81,9 @@ message GatewayMessage {
     StatusRequest status_request = 70;
 
     HTTPProxyRequest http_proxy = 80;
+
+    GetMetricsHistoryRequest metrics_history_request = 90;
+    MetricsCommand metrics_command = 91;
   }
 }
 
@@ -119,6 +125,154 @@ message SystemStats {
   double cpu_usage_percent = 4;
   uint64 memory_used_bytes = 5;
   uint64 memory_total_bytes = 6;
+}
+
+enum MetricType {
+  METRIC_TYPE_UNSPECIFIED = 0;
+  METRIC_TYPE_GAUGE = 1;
+  METRIC_TYPE_COUNTER = 2;
+}
+
+enum MetricUnit {
+  METRIC_UNIT_UNSPECIFIED = 0;
+
+  METRIC_UNIT_COUNT = 1;
+  METRIC_UNIT_PERCENT = 2;
+  METRIC_UNIT_RATIO = 3;
+
+  METRIC_UNIT_BYTES = 10;
+  METRIC_UNIT_BITS = 11;
+
+  METRIC_UNIT_SECONDS = 20;
+  METRIC_UNIT_MILLISECONDS = 21;
+  METRIC_UNIT_MICROSECONDS = 22;
+  METRIC_UNIT_NANOSECONDS = 23;
+
+  METRIC_UNIT_HERTZ = 30;
+
+  METRIC_UNIT_CELSIUS = 40;
+  METRIC_UNIT_WATTS = 41;
+  METRIC_UNIT_VOLTS = 42;
+  METRIC_UNIT_RPM = 43;
+}
+
+// One point in a real-time series. Identity metadata (name, type, unit,
+// labels) lives on the enclosing MetricSeries.
+//
+// min/max/avg/sample_count are populated only when the daemon
+// pre-aggregates raw samples into buckets before pushing (e.g. collects
+// every 1s, ships every 10s). Leave unset for raw single-sample points.
+// Aggregation fields use double; precision caps at 2^53.
+message MetricPoint {
+  google.protobuf.Timestamp timestamp = 1;
+
+  oneof value {
+    double double_value = 2;
+    uint64 uint_value = 3;
+    int64 int_value = 4;
+  }
+
+  optional double min = 5;
+  optional double max = 6;
+  optional double avg = 7;
+  optional uint32 sample_count = 8;
+}
+
+// A group of points sharing one name and one label set.
+//
+// For per-game-server process metrics, labels MUST include "server_id".
+// "pid" is optional and debug-only (changes across restarts).
+message MetricSeries {
+  string name = 1;
+  MetricType type = 2;
+  MetricUnit unit = 3;
+  map<string, string> labels = 4;
+  repeated MetricPoint points = 5;
+}
+
+// Real-time batch pushed from daemon to API while realtime streaming is
+// active. Machine-level and per-server series coexist, distinguished by
+// the presence of a "server_id" label.
+//
+// The sending daemon's node_id is established by the authenticated
+// session; no explicit machine_id is carried here.
+message MetricsBatch {
+  google.protobuf.Timestamp timestamp = 1;
+
+  // Labels applied to ALL series in the batch. On label-key conflict,
+  // per-series labels win.
+  map<string, string> common_labels = 2;
+
+  repeated MetricSeries series = 3;
+}
+
+// Instructs the daemon to start pushing MetricsBatch messages.
+// Idempotent: already-streaming is a no-op. No filters on the wire —
+// daemon ships the full set; API filters per subscriber.
+//
+// interval_seconds = 0 means "use the daemon's configured default".
+// Any non-zero value overrides that default for this session only.
+message StartRealtimeMetricsCommand {
+  uint32 interval_seconds = 1;
+}
+
+// Instructs the daemon to stop pushing MetricsBatch. Idempotent.
+message StopRealtimeMetricsCommand {}
+
+message MetricsCommand {
+  oneof command {
+    StartRealtimeMetricsCommand start = 1;
+    StopRealtimeMetricsCommand stop = 2;
+  }
+}
+
+// A single historical sample. Self-contained: name, labels, timestamp
+// and value live on the sample so consumers can filter / regroup /
+// overlay without nested parsing.
+//
+// min/max/avg/sample_count populated only on downsampled rows
+// (resolution_seconds > native). Aggregation fields use double;
+// precision caps at 2^53.
+message MetricSample {
+  string name = 1;
+  google.protobuf.Timestamp timestamp = 2;
+  map<string, string> labels = 3;
+  MetricType type = 4;
+  MetricUnit unit = 5;
+
+  oneof value {
+    double double_value = 6;
+    uint64 uint_value = 7;
+    int64 int_value = 8;
+  }
+
+  optional double min = 9;
+  optional double max = 10;
+  optional double avg = 11;
+  optional uint32 sample_count = 12;
+}
+
+// Request for historical data served by the daemon. Correlated with the
+// response via the enclosing GatewayMessage.request_id — same pattern
+// as FileReadRequest/FileReadResponse.
+//
+// Currently has no parameters: the daemon decides what to return. Query
+// parameters (time range, resolution, filters) may be added later.
+message GetMetricsHistoryRequest {}
+
+// Single response, carrying all matching samples in one message. Size
+// is bounded by the gRPC max message size. On too-many-samples the
+// daemon returns success=false with an error asking for a coarser
+// resolution_seconds.
+message GetMetricsHistoryResponse {
+  bool success = 1;
+  string error = 2;
+
+  // Resolution the daemon actually used (equals request if possible,
+  // otherwise a coarser fallback or the auto-picked value).
+  uint32 resolution_seconds = 3;
+
+  repeated MetricSample samples = 4;
 }
 
 message TaskStatusUpdate {
