@@ -9,6 +9,10 @@ import (
 	"github.com/coder/websocket"
 )
 
+// Default tuning parameters for a Client. The send buffer is bounded so a
+// stalled WebSocket peer cannot grow memory without limit; the read limit
+// caps an inbound frame size; the ping interval and pong timeout drive
+// liveness detection over the WebSocket connection.
 const (
 	defaultSendBufferSize = 64
 	defaultMaxMessageSize = 8192
@@ -16,8 +20,29 @@ const (
 	defaultPongTimeout    = 60 * time.Second
 )
 
+// MessageHandler is invoked by a Client for every well-formed inbound
+// message that is not a transport-level ping.
+//
+// The handler runs on the Client's read pump goroutine, so it must not block
+// for long; offload heavy work to a separate goroutine if needed. The ctx
+// is the Client's context and is cancelled when the connection is closed.
 type MessageHandler func(ctx context.Context, msg *InboundMessage)
 
+// Client represents a single connected WebSocket peer on this API instance.
+//
+// Each Client owns its own bounded send channel and a context that is
+// cancelled when the connection is torn down. Inbound and outbound traffic
+// are driven by two goroutines started by Run: the read pump decodes
+// frames, answers application-level pings, and dispatches everything else
+// to the MessageHandler; the write pump drains the send buffer onto the
+// socket and emits periodic transport pings for liveness.
+//
+// The Client is tied to exactly one Hub on the local instance: the Hub
+// fans out a Broadcast to every subscribed Client by calling Send, which
+// is non-blocking and drops messages when the buffer is full. In a
+// multi-instance deployment a Client is reachable only from the API
+// instance it is connected to; cross-instance delivery is handled by the
+// Bridge translating shared PubSub events into local Hub broadcasts.
 type Client struct {
 	conn    *websocket.Conn
 	hub     *Hub
@@ -28,11 +53,25 @@ type Client struct {
 	logger  *slog.Logger
 }
 
+// ClientConfig collects the per-connection liveness tuning knobs.
+//
+// PingInterval is the period between transport-level pings sent by the
+// write pump. PongTimeout is the maximum time the peer may stay silent
+// before the connection is considered dead.
 type ClientConfig struct {
 	PingInterval time.Duration
 	PongTimeout  time.Duration
 }
 
+// NewClient constructs a Client wrapped around an already-accepted
+// WebSocket connection.
+//
+// The provided ctx is wrapped with a cancel function exposed via Close and
+// Done; cancelling either the parent ctx or calling Close terminates both
+// pumps. If logger is nil, slog.Default is used. handler may be nil, in
+// which case inbound non-ping messages are silently ignored until
+// SetMessageHandler is called. NewClient does not start any goroutines;
+// call Run to begin processing.
 func NewClient(
 	ctx context.Context,
 	conn *websocket.Conn,
@@ -57,15 +96,35 @@ func NewClient(
 	}
 }
 
+// SetMessageHandler installs handler as the callback for inbound messages.
+//
+// It may be called before Run to defer handler wiring, or at runtime to
+// swap the handler. There is no synchronization with the read pump, so the
+// caller must avoid swapping the handler while messages are being
+// processed if that would race with handler-side state.
 func (c *Client) SetMessageHandler(handler MessageHandler) {
 	c.handler = handler
 }
 
+// Run starts the write pump in a new goroutine and blocks on the read pump
+// in the calling goroutine.
+//
+// Run returns when the connection is closed (either side), the context is
+// cancelled, or a fatal read error occurs. On exit the Client is
+// automatically Unregistered from the Hub and the underlying connection is
+// closed by the read pump. Intended to be invoked once per Client, usually
+// from the HTTP handler that accepted the WebSocket upgrade.
 func (c *Client) Run() {
 	go c.writePump()
 	c.readPump()
 }
 
+// Send enqueues msg onto the Client's bounded send buffer.
+//
+// The call is non-blocking: if the buffer is full the message is dropped
+// and a warning is logged, so a slow WebSocket peer cannot back-pressure
+// the Hub. This is the entry point used by Hub.Broadcast for fan-out.
+// Safe for concurrent use.
 func (c *Client) Send(msg []byte) {
 	select {
 	case c.send <- msg:
@@ -74,6 +133,11 @@ func (c *Client) Send(msg []byte) {
 	}
 }
 
+// SendMessage marshals msg as JSON and enqueues the result via Send.
+//
+// Marshalling errors are logged and the message is silently dropped; the
+// connection is not torn down, since a single bad payload should not kill
+// the session. Safe for concurrent use.
 func (c *Client) SendMessage(msg *OutboundMessage) {
 	data, err := json.Marshal(msg)
 	if err != nil {
@@ -85,10 +149,20 @@ func (c *Client) SendMessage(msg *OutboundMessage) {
 	c.Send(data)
 }
 
+// Close cancels the Client's context, which causes both pumps to terminate
+// and the underlying WebSocket connection to be closed.
+//
+// Close is idempotent and safe for concurrent use. It does not block on
+// the pumps draining; callers that need to wait should observe Done.
 func (c *Client) Close() {
 	c.cancel()
 }
 
+// Done returns a channel that is closed when the Client's context has been
+// cancelled — i.e. when the connection is being or has been torn down.
+//
+// Useful for callers that want to observe disconnection without holding a
+// reference to the cancel function.
 func (c *Client) Done() <-chan struct{} {
 	return c.ctx.Done()
 }
