@@ -30,6 +30,7 @@ import (
 	"github.com/gameap/gameap/internal/grpc/gateway"
 	"github.com/gameap/gameap/internal/grpc/handlers"
 	"github.com/gameap/gameap/internal/grpc/session"
+	"github.com/gameap/gameap/internal/metrics"
 	internalplugin "github.com/gameap/gameap/internal/plugin"
 	"github.com/gameap/gameap/internal/plugin/hostlibrary"
 	"github.com/gameap/gameap/internal/pubsub"
@@ -179,6 +180,7 @@ type Container struct {
 	serverStatusHandler *handlers.ServerStatusHandler
 	attachHandler       *handlers.AttachHandler
 	metricsHandler      *handlers.MetricsHandler
+	metricsHub          metrics.Hub
 	grpcServer          *grpc.Server
 	multiplexedServer   *MultiplexedServer
 
@@ -1623,6 +1625,7 @@ func (c *Container) SessionRegistry() *session.Registry {
 			instanceID = defaultInstanceID
 		}
 		c.sessionRegistry = session.NewRegistry(c.PubSub(), instanceID, slog.Default())
+		c.sessionRegistry.SetMetricsWaiterRegistrar(c.MetricsHandler())
 	}
 
 	return c.sessionRegistry
@@ -1666,6 +1669,25 @@ func (c *Container) MetricsHandler() *handlers.MetricsHandler {
 	}
 
 	return c.metricsHandler
+}
+
+func (c *Container) MetricsHub() metrics.Hub {
+	if c.metricsHub == nil {
+		instanceID := c.config.PubSub.InstanceID
+		if instanceID == "" {
+			instanceID = defaultInstanceID
+		}
+		c.metricsHub = metrics.NewHub(
+			c.PubSub(),
+			c.SessionRegistry(),
+			c.MetricsHandler(),
+			instanceID,
+			slog.Default(),
+			metrics.Options{},
+		)
+	}
+
+	return c.metricsHub
 }
 
 func (c *Container) GatewayService() *gateway.Service {

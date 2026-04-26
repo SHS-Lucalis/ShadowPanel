@@ -15,6 +15,7 @@ import (
 	"github.com/gameap/gameap/internal/files"
 	grpchandlers "github.com/gameap/gameap/internal/grpc/handlers"
 	"github.com/gameap/gameap/internal/grpc/session"
+	"github.com/gameap/gameap/internal/metrics"
 	internalplugin "github.com/gameap/gameap/internal/plugin"
 	"github.com/gameap/gameap/internal/pubsub"
 	"github.com/gameap/gameap/internal/rbac"
@@ -126,6 +127,7 @@ func (c *InmemoryContainer) WSHub() *ws.Hub                                   { 
 func (c *InmemoryContainer) SessionRegistry() *session.Registry               { return nil }
 func (c *InmemoryContainer) CommandHandler() *grpchandlers.CommandHandler     { return nil }
 func (c *InmemoryContainer) AttachHandler() *grpchandlers.AttachHandler       { return nil }
+func (c *InmemoryContainer) MetricsHub() metrics.Hub                          { return nil }
 func (c *InmemoryContainer) PubSub() pubsub.PubSub                            { return nil }
 func (c *InmemoryContainer) EnrollmentService() *enrollment.Service {
 	keyManager := enrollment.NewSetupKeyManager(c.cacheService, "")

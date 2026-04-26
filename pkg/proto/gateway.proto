@@ -24,6 +24,7 @@ message DaemonMessage {
   oneof payload {
     RegisterRequest register = 10;
     Heartbeat heartbeat = 11;
+    MetricsResponse metrics_response = 12;
 
     TaskStatusUpdate task_status = 20;
     TaskOutput task_output = 21;
@@ -45,8 +46,6 @@ message DaemonMessage {
     StatusResponse status_response = 70;
 
     HTTPProxyResponse http_proxy_response = 80;
-
-    MetricsBatch metrics_batch = 90;
   }
 }
 
@@ -56,6 +55,7 @@ message GatewayMessage {
   oneof payload {
     RegisterAck register_ack = 10;
     ShutdownNotification shutdown = 11;
+    MetricsRequest metrics_request = 12;
 
     DaemonTask task = 20;
     TaskCancel task_cancel = 21;
@@ -80,8 +80,6 @@ message GatewayMessage {
     StatusRequest status_request = 70;
 
     HTTPProxyRequest http_proxy = 80;
-
-    MetricsCommand metrics_command = 90;
   }
 }
 
@@ -188,45 +186,47 @@ message MetricSeries {
   repeated MetricPoint points = 5;
 }
 
-// Real-time batch pushed from daemon to API while realtime streaming is
-// active. Machine-level and per-server series coexist, distinguished by
-// the presence of a "server_id" label.
-//
-// Historical data is delivered through this same message: after
-// StartRealtimeMetricsCommand the daemon's first batch may contain
-// series with many historical points; subsequent batches carry live
-// data. There is no separate history request/response path.
+// API → daemon. Pull-mode metrics request. Either fetch the most recent
+// snapshot of all metrics or replay recent history from the daemon's
+// in-process ring buffer.
+message MetricsRequest {
+  oneof kind {
+    CurrentMetricsRequest current = 1;
+    MetricsHistoryRequest history = 2;
+  }
+}
+
+// Empty body — fetch the most recent reading of all collected metrics.
+// One MetricPoint per series in the response.
+message CurrentMetricsRequest {}
+
+// Fetch metrics from the daemon's ring buffer for the requested window.
+// Daemon's retention bounds the answer (typically 10-60 min); a window
+// exceeding retention is truncated to whatever is available.
+message MetricsHistoryRequest {
+  uint32 seconds = 1;
+}
+
+// daemon → API. Series-grouped response shared by current snapshot and
+// history. For current responses each series carries a single
+// MetricPoint; for history responses each series carries multiple
+// MetricPoints ordered by timestamp.
 //
 // The sending daemon's node_id is established by the authenticated
 // session; no explicit machine_id is carried here.
-message MetricsBatch {
+message MetricsResponse {
   google.protobuf.Timestamp timestamp = 1;
 
-  // Labels applied to ALL series in the batch. On label-key conflict,
-  // per-series labels win.
+  // Labels applied to ALL series. On label-key conflict, per-series
+  // labels win.
   map<string, string> common_labels = 2;
 
   repeated MetricSeries series = 3;
-}
 
-// Instructs the daemon to start pushing MetricsBatch messages.
-// Idempotent: already-streaming is a no-op. No filters on the wire —
-// daemon ships the full set; API filters per subscriber.
-//
-// interval_seconds = 0 means "use the daemon's configured default".
-// Any non-zero value overrides that default for this session only.
-message StartRealtimeMetricsCommand {
-  uint32 interval_seconds = 1;
-}
-
-// Instructs the daemon to stop pushing MetricsBatch. Idempotent.
-message StopRealtimeMetricsCommand {}
-
-message MetricsCommand {
-  oneof command {
-    StartRealtimeMetricsCommand start = 1;
-    StopRealtimeMetricsCommand stop = 2;
-  }
+  // For history responses: actual covered window in seconds (may be
+  // less than requested if daemon's ring is shorter). 0 / unset for
+  // current snapshots.
+  uint32 actual_window_seconds = 4;
 }
 
 message TaskStatusUpdate {

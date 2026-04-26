@@ -71,7 +71,7 @@ type AttachHandler interface {
 }
 
 type MetricsHandler interface {
-	HandleMetricsBatch(ctx context.Context, nodeID uint64, batch *proto.MetricsBatch) error
+	HandleMetricsResponse(ctx context.Context, nodeID uint64, requestID string, resp *proto.MetricsResponse) error
 }
 
 type Config struct {
@@ -419,9 +419,9 @@ func (s *Service) processMessage(ctx context.Context, sess *session.Session, msg
 			return s.attachHandler.HandleAttachClosed(ctx, sess.NodeID, payload.AttachClosed)
 		}
 
-	case *proto.DaemonMessage_MetricsBatch:
+	case *proto.DaemonMessage_MetricsResponse:
 		if s.metricsHandler != nil {
-			return s.metricsHandler.HandleMetricsBatch(ctx, sess.NodeID, payload.MetricsBatch)
+			return s.metricsHandler.HandleMetricsResponse(ctx, sess.NodeID, msg.RequestId, payload.MetricsResponse)
 		}
 
 	default:
@@ -866,24 +866,6 @@ func (s *Service) RequestFileDownloadTask(
 
 		return nil
 	}
-}
-
-func (s *Service) SendStartRealtimeMetrics(
-	ctx context.Context, nodeID uint64, intervalSec uint32,
-) error {
-	return s.registry.SendMetricsCommand(ctx, nodeID, &proto.MetricsCommand{
-		Command: &proto.MetricsCommand_Start{
-			Start: &proto.StartRealtimeMetricsCommand{IntervalSeconds: intervalSec},
-		},
-	})
-}
-
-func (s *Service) SendStopRealtimeMetrics(ctx context.Context, nodeID uint64) error {
-	return s.registry.SendMetricsCommand(ctx, nodeID, &proto.MetricsCommand{
-		Command: &proto.MetricsCommand_Stop{
-			Stop: &proto.StopRealtimeMetricsCommand{},
-		},
-	})
 }
 
 func (s *Service) Enroll(ctx context.Context, req *proto.EnrollRequest) (*proto.EnrollResponse, error) {

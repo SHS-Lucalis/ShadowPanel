@@ -200,6 +200,10 @@ func runWithGRPC(ctx context.Context, cfg *config.Config, container *Container) 
 		slog.ErrorContext(ctx, "Failed to start HTTP proxy dispatcher", slog.String("error", err.Error()))
 	}
 
+	if err := container.MetricsHub().Start(ctx); err != nil {
+		slog.ErrorContext(ctx, "Failed to start metrics hub", slog.String("error", err.Error()))
+	}
+
 	grpcServer, err := container.GRPCServer()
 	if err != nil {
 		slog.ErrorContext(ctx, "Failed to create gRPC server", slog.String("error", err.Error()))

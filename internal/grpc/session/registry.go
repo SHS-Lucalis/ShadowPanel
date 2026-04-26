@@ -17,15 +17,24 @@ import (
 )
 
 type Registry struct {
-	pubsub     pubsub.PubSub
-	instanceID string
-	logger     *slog.Logger
+	pubsub         pubsub.PubSub
+	instanceID     string
+	metricsWaiters MetricsWaiterRegistrar
+	logger         *slog.Logger
 
 	mu            sync.RWMutex
 	localSessions map[uint64]*Session
 
 	globalMu    sync.RWMutex
 	globalNodes map[uint64]string
+}
+
+// MetricsWaiterRegistrar lets the registry register cross-instance
+// metrics request waiters before forwarding the request to the local
+// daemon session.
+type MetricsWaiterRegistrar interface {
+	RegisterRemoteWaiter(requestID string, nodeID uint64, requesterInstanceID string)
+	CancelWaiter(requestID string)
 }
 
 func NewRegistry(ps pubsub.PubSub, instanceID string, logger *slog.Logger) *Registry {
@@ -40,6 +49,18 @@ func NewRegistry(ps pubsub.PubSub, instanceID string, logger *slog.Logger) *Regi
 		localSessions: make(map[uint64]*Session),
 		globalNodes:   make(map[uint64]string),
 	}
+}
+
+// SetMetricsWaiterRegistrar wires the metrics handler used to track
+// cross-instance request waiters. Called once during application
+// bootstrap.
+func (r *Registry) SetMetricsWaiterRegistrar(reg MetricsWaiterRegistrar) {
+	r.metricsWaiters = reg
+}
+
+// InstanceID returns this registry's instance identifier.
+func (r *Registry) InstanceID() string {
+	return r.instanceID
 }
 
 func (r *Registry) Start(ctx context.Context) error {
@@ -58,9 +79,9 @@ func (r *Registry) Start(ctx context.Context) error {
 		return errors.Wrap(err, "subscribe to attach dispatch")
 	}
 
-	err = r.pubsub.Subscribe(ctx, channels.DaemonMetricsDispatchAll, r.handleMetricsDispatch)
+	err = r.pubsub.Subscribe(ctx, channels.DaemonMetricsRequestAll, r.handleMetricsRequest)
 	if err != nil {
-		return errors.Wrap(err, "subscribe to metrics dispatch")
+		return errors.Wrap(err, "subscribe to metrics request")
 	}
 
 	r.logger.Info("session registry started", "instance_id", r.instanceID)
@@ -494,56 +515,62 @@ func (r *Registry) handleAttachDispatch(_ context.Context, msg *pubsub.Message) 
 	return nil
 }
 
-func (r *Registry) SendMetricsCommand(
-	ctx context.Context, nodeID uint64, cmd *proto.MetricsCommand,
+// SendMetricsRequest delivers a MetricsRequest to the daemon session
+// for nodeID. If the session is local, it is sent directly via the
+// bidi stream; otherwise the request is dispatched to the holder
+// instance via pubsub. The request_id is used by the holder to register
+// a remote waiter so the response is routed back to this instance.
+func (r *Registry) SendMetricsRequest(
+	ctx context.Context, nodeID uint64, requestID string, req *proto.MetricsRequest,
 ) error {
 	msg := &proto.GatewayMessage{
-		Payload: &proto.GatewayMessage_MetricsCommand{
-			MetricsCommand: cmd,
+		RequestId: requestID,
+		Payload: &proto.GatewayMessage_MetricsRequest{
+			MetricsRequest: req,
 		},
 	}
 
-	return r.sendOrDispatchMetrics(ctx, nodeID, msg)
-}
-
-func (r *Registry) sendOrDispatchMetrics(
-	ctx context.Context, nodeID uint64, msg *proto.GatewayMessage,
-) error {
 	r.mu.RLock()
 	session, isLocal := r.localSessions[nodeID]
 	r.mu.RUnlock()
 
 	if isLocal {
-		return session.Stream.Send(msg)
+		if err := session.Stream.Send(msg); err != nil {
+			return errors.Wrap(err, "send metrics request to local session")
+		}
+
+		return nil
 	}
 
-	return r.dispatchMetricsViaPubSub(ctx, nodeID, msg)
+	return r.dispatchMetricsRequestViaPubSub(ctx, nodeID, requestID, msg)
 }
 
-func (r *Registry) dispatchMetricsViaPubSub(
-	ctx context.Context, nodeID uint64, gatewayMsg *proto.GatewayMessage,
+func (r *Registry) dispatchMetricsRequestViaPubSub(
+	ctx context.Context, nodeID uint64, requestID string, gatewayMsg *proto.GatewayMessage,
 ) error {
 	data, err := gatewayMsg.MarshalVT()
 	if err != nil {
 		return errors.Wrap(err, "marshal metrics gateway message")
 	}
 
-	channel := channels.BuildDaemonMetricsDispatchChannel(nodeID)
-	msg, err := messages.NewMessage(channel, messages.TypeDaemonMetrics, messages.DaemonMetricsDispatchPayload{
-		NodeID: nodeID,
-		Data:   data,
+	channel := channels.BuildDaemonMetricsRequestChannel(nodeID)
+	msg, err := messages.NewMessage(channel, messages.TypeDaemonMetricsRequest, messages.DaemonMetricsRequestPayload{
+		NodeID:     nodeID,
+		RequestID:  requestID,
+		InstanceID: r.instanceID,
+		Data:       data,
 	})
 	if err != nil {
-		return errors.Wrap(err, "create metrics dispatch message")
+		return errors.Wrap(err, "create metrics request message")
 	}
 
 	return r.pubsub.Publish(ctx, channel, msg)
 }
 
-func (r *Registry) handleMetricsDispatch(_ context.Context, msg *pubsub.Message) error {
-	payload, err := messages.ParsePayload[messages.DaemonMetricsDispatchPayload](msg)
+func (r *Registry) handleMetricsRequest(_ context.Context, msg *pubsub.Message) error {
+	payload, err := messages.ParsePayload[messages.DaemonMetricsRequestPayload](msg)
 	if err != nil {
-		r.logger.Warn("failed to parse metrics dispatch payload", "error", err)
+		r.logger.Warn("failed to parse metrics request payload", "error", err)
 
 		return nil
 	}
@@ -566,13 +593,21 @@ func (r *Registry) handleMetricsDispatch(_ context.Context, msg *pubsub.Message)
 		return nil
 	}
 
+	if r.metricsWaiters != nil && payload.InstanceID != "" && payload.InstanceID != r.instanceID {
+		r.metricsWaiters.RegisterRemoteWaiter(payload.RequestID, payload.NodeID, payload.InstanceID)
+	}
+
 	if err := session.Stream.Send(&gatewayMsg); err != nil {
-		r.logger.Warn("failed to send metrics message to session",
+		if r.metricsWaiters != nil {
+			r.metricsWaiters.CancelWaiter(payload.RequestID)
+		}
+
+		r.logger.Warn("failed to send metrics request to session",
 			"node_id", payload.NodeID,
 			"error", err,
 		)
 
-		return errors.Wrap(err, "send metrics message to session")
+		return errors.Wrap(err, "send metrics request to session")
 	}
 
 	return nil

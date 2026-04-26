@@ -128,6 +128,8 @@ import (
 	"github.com/gameap/gameap/internal/api/users/putuser"
 	wsattach "github.com/gameap/gameap/internal/api/ws/attach"
 	wsconsole "github.com/gameap/gameap/internal/api/ws/console"
+	wsnodemetrics "github.com/gameap/gameap/internal/api/ws/nodemetrics"
+	wsservermetrics "github.com/gameap/gameap/internal/api/ws/servermetrics"
 	wstaskstatus "github.com/gameap/gameap/internal/api/ws/taskstatus"
 	"github.com/gameap/gameap/internal/cache"
 	"github.com/gameap/gameap/internal/certificates"
@@ -139,6 +141,7 @@ import (
 	grpchandlers "github.com/gameap/gameap/internal/grpc/handlers"
 	"github.com/gameap/gameap/internal/grpc/session"
 	"github.com/gameap/gameap/internal/i18n"
+	"github.com/gameap/gameap/internal/metrics"
 	internalplugin "github.com/gameap/gameap/internal/plugin"
 	"github.com/gameap/gameap/internal/pubsub"
 	"github.com/gameap/gameap/internal/rbac"
@@ -210,6 +213,7 @@ type container interface {
 	SessionRegistry() *session.Registry
 	CommandHandler() *grpchandlers.CommandHandler
 	AttachHandler() *grpchandlers.AttachHandler
+	MetricsHub() metrics.Hub
 	PubSub() pubsub.PubSub
 }
 
@@ -1633,6 +1637,31 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 				c.AttachHandler(),
 				c.DaemonCommands(),
 				c.DaemonFiles(),
+				c.Responder(),
+			),
+		},
+		{
+			Method: http.MethodGet,
+			Path:   "/api/ws/nodes/{id}/metrics",
+			Handler: wsnodemetrics.NewHandler(
+				c.MetricsHub(),
+				c.RBAC(),
+				c.NodeRepository(),
+				c.WSHub(),
+				wsOriginPatterns(c.Config()),
+				c.Responder(),
+			),
+			AdminOnly: true,
+		},
+		{
+			Method: http.MethodGet,
+			Path:   "/api/ws/servers/{server}/metrics",
+			Handler: wsservermetrics.NewHandler(
+				c.MetricsHub(),
+				c.ServerRepository(),
+				c.RBAC(),
+				c.WSHub(),
+				wsOriginPatterns(c.Config()),
 				c.Responder(),
 			),
 		},

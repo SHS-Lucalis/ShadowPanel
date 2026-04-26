@@ -48,8 +48,10 @@ const (
 	TypeDaemonHTTPProxyRequest  = "daemon.httpproxy.request"
 	TypeDaemonHTTPProxyResponse = "daemon.httpproxy.response"
 
-	TypeMetricsBatch  = "metrics.batch"
-	TypeDaemonMetrics = "daemon.metrics"
+	TypeMetricsLive           = "metrics.live"
+	TypeDaemonMetricsRequest  = "daemon.metrics.request"
+	TypeDaemonMetricsResponse = "daemon.metrics.response"
+	TypeMetricsSubscribers    = "metrics.subscribers"
 )
 
 type CacheInvalidatePayload struct {
@@ -241,14 +243,30 @@ type DaemonHTTPProxyResponsePayload struct {
 	StoragePath string `json:"storage_path,omitempty"`
 }
 
-type MetricsBatchPayload struct {
+type MetricsLivePayload struct {
 	NodeID uint64 `json:"node_id"`
 	Data   []byte `json:"data"`
 }
 
-type DaemonMetricsDispatchPayload struct {
-	NodeID uint64 `json:"node_id"`
-	Data   []byte `json:"data"`
+type DaemonMetricsRequestPayload struct {
+	NodeID     uint64 `json:"node_id"`
+	RequestID  string `json:"request_id"`
+	InstanceID string `json:"instance_id"`
+	Data       []byte `json:"data"`
+}
+
+type DaemonMetricsResponsePayload struct {
+	RequestID string `json:"request_id"`
+	NodeID    uint64 `json:"node_id"`
+	Error     string `json:"error,omitempty"`
+	Data      []byte `json:"data,omitempty"`
+}
+
+type MetricsSubscribersPayload struct {
+	InstanceID string    `json:"instance_id"`
+	NodeID     uint64    `json:"node_id"`
+	Count      int       `json:"count"`
+	Timestamp  time.Time `json:"timestamp"`
 }
 
 func NewMessage(channel, msgType string, payload any) (*pubsub.Message, error) {

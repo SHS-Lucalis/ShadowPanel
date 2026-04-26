@@ -164,6 +164,7 @@ type DaemonMessage struct {
 	//
 	//	*DaemonMessage_Register
 	//	*DaemonMessage_Heartbeat
+	//	*DaemonMessage_MetricsResponse
 	//	*DaemonMessage_TaskStatus
 	//	*DaemonMessage_TaskOutput
 	//	*DaemonMessage_CommandOutput
@@ -179,7 +180,6 @@ type DaemonMessage struct {
 	//	*DaemonMessage_FileOperationResponse
 	//	*DaemonMessage_StatusResponse
 	//	*DaemonMessage_HttpProxyResponse
-	//	*DaemonMessage_MetricsBatch
 	Payload       isDaemonMessage_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -242,6 +242,15 @@ func (x *DaemonMessage) GetHeartbeat() *Heartbeat {
 	if x != nil {
 		if x, ok := x.Payload.(*DaemonMessage_Heartbeat); ok {
 			return x.Heartbeat
+		}
+	}
+	return nil
+}
+
+func (x *DaemonMessage) GetMetricsResponse() *MetricsResponse {
+	if x != nil {
+		if x, ok := x.Payload.(*DaemonMessage_MetricsResponse); ok {
+			return x.MetricsResponse
 		}
 	}
 	return nil
@@ -382,15 +391,6 @@ func (x *DaemonMessage) GetHttpProxyResponse() *HTTPProxyResponse {
 	return nil
 }
 
-func (x *DaemonMessage) GetMetricsBatch() *MetricsBatch {
-	if x != nil {
-		if x, ok := x.Payload.(*DaemonMessage_MetricsBatch); ok {
-			return x.MetricsBatch
-		}
-	}
-	return nil
-}
-
 type isDaemonMessage_Payload interface {
 	isDaemonMessage_Payload()
 }
@@ -401,6 +401,10 @@ type DaemonMessage_Register struct {
 
 type DaemonMessage_Heartbeat struct {
 	Heartbeat *Heartbeat `protobuf:"bytes,11,opt,name=heartbeat,proto3,oneof"`
+}
+
+type DaemonMessage_MetricsResponse struct {
+	MetricsResponse *MetricsResponse `protobuf:"bytes,12,opt,name=metrics_response,json=metricsResponse,proto3,oneof"`
 }
 
 type DaemonMessage_TaskStatus struct {
@@ -463,13 +467,11 @@ type DaemonMessage_HttpProxyResponse struct {
 	HttpProxyResponse *HTTPProxyResponse `protobuf:"bytes,80,opt,name=http_proxy_response,json=httpProxyResponse,proto3,oneof"`
 }
 
-type DaemonMessage_MetricsBatch struct {
-	MetricsBatch *MetricsBatch `protobuf:"bytes,90,opt,name=metrics_batch,json=metricsBatch,proto3,oneof"`
-}
-
 func (*DaemonMessage_Register) isDaemonMessage_Payload() {}
 
 func (*DaemonMessage_Heartbeat) isDaemonMessage_Payload() {}
+
+func (*DaemonMessage_MetricsResponse) isDaemonMessage_Payload() {}
 
 func (*DaemonMessage_TaskStatus) isDaemonMessage_Payload() {}
 
@@ -501,8 +503,6 @@ func (*DaemonMessage_StatusResponse) isDaemonMessage_Payload() {}
 
 func (*DaemonMessage_HttpProxyResponse) isDaemonMessage_Payload() {}
 
-func (*DaemonMessage_MetricsBatch) isDaemonMessage_Payload() {}
-
 type GatewayMessage struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
 	RequestId string                 `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
@@ -510,6 +510,7 @@ type GatewayMessage struct {
 	//
 	//	*GatewayMessage_RegisterAck
 	//	*GatewayMessage_Shutdown
+	//	*GatewayMessage_MetricsRequest
 	//	*GatewayMessage_Task
 	//	*GatewayMessage_TaskCancel
 	//	*GatewayMessage_Command
@@ -528,7 +529,6 @@ type GatewayMessage struct {
 	//	*GatewayMessage_FileDownloadTask
 	//	*GatewayMessage_StatusRequest
 	//	*GatewayMessage_HttpProxy
-	//	*GatewayMessage_MetricsCommand
 	Payload       isGatewayMessage_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -591,6 +591,15 @@ func (x *GatewayMessage) GetShutdown() *ShutdownNotification {
 	if x != nil {
 		if x, ok := x.Payload.(*GatewayMessage_Shutdown); ok {
 			return x.Shutdown
+		}
+	}
+	return nil
+}
+
+func (x *GatewayMessage) GetMetricsRequest() *MetricsRequest {
+	if x != nil {
+		if x, ok := x.Payload.(*GatewayMessage_MetricsRequest); ok {
+			return x.MetricsRequest
 		}
 	}
 	return nil
@@ -758,15 +767,6 @@ func (x *GatewayMessage) GetHttpProxy() *HTTPProxyRequest {
 	return nil
 }
 
-func (x *GatewayMessage) GetMetricsCommand() *MetricsCommand {
-	if x != nil {
-		if x, ok := x.Payload.(*GatewayMessage_MetricsCommand); ok {
-			return x.MetricsCommand
-		}
-	}
-	return nil
-}
-
 type isGatewayMessage_Payload interface {
 	isGatewayMessage_Payload()
 }
@@ -777,6 +777,10 @@ type GatewayMessage_RegisterAck struct {
 
 type GatewayMessage_Shutdown struct {
 	Shutdown *ShutdownNotification `protobuf:"bytes,11,opt,name=shutdown,proto3,oneof"`
+}
+
+type GatewayMessage_MetricsRequest struct {
+	MetricsRequest *MetricsRequest `protobuf:"bytes,12,opt,name=metrics_request,json=metricsRequest,proto3,oneof"`
 }
 
 type GatewayMessage_Task struct {
@@ -851,13 +855,11 @@ type GatewayMessage_HttpProxy struct {
 	HttpProxy *HTTPProxyRequest `protobuf:"bytes,80,opt,name=http_proxy,json=httpProxy,proto3,oneof"`
 }
 
-type GatewayMessage_MetricsCommand struct {
-	MetricsCommand *MetricsCommand `protobuf:"bytes,90,opt,name=metrics_command,json=metricsCommand,proto3,oneof"`
-}
-
 func (*GatewayMessage_RegisterAck) isGatewayMessage_Payload() {}
 
 func (*GatewayMessage_Shutdown) isGatewayMessage_Payload() {}
+
+func (*GatewayMessage_MetricsRequest) isGatewayMessage_Payload() {}
 
 func (*GatewayMessage_Task) isGatewayMessage_Payload() {}
 
@@ -894,8 +896,6 @@ func (*GatewayMessage_FileDownloadTask) isGatewayMessage_Payload() {}
 func (*GatewayMessage_StatusRequest) isGatewayMessage_Payload() {}
 
 func (*GatewayMessage_HttpProxy) isGatewayMessage_Payload() {}
-
-func (*GatewayMessage_MetricsCommand) isGatewayMessage_Payload() {}
 
 type RegisterRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1502,42 +1502,34 @@ func (x *MetricSeries) GetPoints() []*MetricPoint {
 	return nil
 }
 
-// Real-time batch pushed from daemon to API while realtime streaming is
-// active. Machine-level and per-server series coexist, distinguished by
-// the presence of a "server_id" label.
-//
-// Historical data is delivered through this same message: after
-// StartRealtimeMetricsCommand the daemon's first batch may contain
-// series with many historical points; subsequent batches carry live
-// data. There is no separate history request/response path.
-//
-// The sending daemon's node_id is established by the authenticated
-// session; no explicit machine_id is carried here.
-type MetricsBatch struct {
-	state     protoimpl.MessageState `protogen:"open.v1"`
-	Timestamp *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	// Labels applied to ALL series in the batch. On label-key conflict,
-	// per-series labels win.
-	CommonLabels  map[string]string `protobuf:"bytes,2,rep,name=common_labels,json=commonLabels,proto3" json:"common_labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	Series        []*MetricSeries   `protobuf:"bytes,3,rep,name=series,proto3" json:"series,omitempty"`
+// API → daemon. Pull-mode metrics request. Either fetch the most recent
+// snapshot of all metrics or replay recent history from the daemon's
+// in-process ring buffer.
+type MetricsRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Kind:
+	//
+	//	*MetricsRequest_Current
+	//	*MetricsRequest_History
+	Kind          isMetricsRequest_Kind `protobuf_oneof:"kind"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *MetricsBatch) Reset() {
-	*x = MetricsBatch{}
+func (x *MetricsRequest) Reset() {
+	*x = MetricsRequest{}
 	mi := &file_pkg_proto_gateway_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *MetricsBatch) String() string {
+func (x *MetricsRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MetricsBatch) ProtoMessage() {}
+func (*MetricsRequest) ProtoMessage() {}
 
-func (x *MetricsBatch) ProtoReflect() protoreflect.Message {
+func (x *MetricsRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_proto_gateway_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1549,200 +1541,216 @@ func (x *MetricsBatch) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use MetricsBatch.ProtoReflect.Descriptor instead.
-func (*MetricsBatch) Descriptor() ([]byte, []int) {
+// Deprecated: Use MetricsRequest.ProtoReflect.Descriptor instead.
+func (*MetricsRequest) Descriptor() ([]byte, []int) {
 	return file_pkg_proto_gateway_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *MetricsBatch) GetTimestamp() *timestamppb.Timestamp {
+func (x *MetricsRequest) GetKind() isMetricsRequest_Kind {
+	if x != nil {
+		return x.Kind
+	}
+	return nil
+}
+
+func (x *MetricsRequest) GetCurrent() *CurrentMetricsRequest {
+	if x != nil {
+		if x, ok := x.Kind.(*MetricsRequest_Current); ok {
+			return x.Current
+		}
+	}
+	return nil
+}
+
+func (x *MetricsRequest) GetHistory() *MetricsHistoryRequest {
+	if x != nil {
+		if x, ok := x.Kind.(*MetricsRequest_History); ok {
+			return x.History
+		}
+	}
+	return nil
+}
+
+type isMetricsRequest_Kind interface {
+	isMetricsRequest_Kind()
+}
+
+type MetricsRequest_Current struct {
+	Current *CurrentMetricsRequest `protobuf:"bytes,1,opt,name=current,proto3,oneof"`
+}
+
+type MetricsRequest_History struct {
+	History *MetricsHistoryRequest `protobuf:"bytes,2,opt,name=history,proto3,oneof"`
+}
+
+func (*MetricsRequest_Current) isMetricsRequest_Kind() {}
+
+func (*MetricsRequest_History) isMetricsRequest_Kind() {}
+
+// Empty body — fetch the most recent reading of all collected metrics.
+// One MetricPoint per series in the response.
+type CurrentMetricsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CurrentMetricsRequest) Reset() {
+	*x = CurrentMetricsRequest{}
+	mi := &file_pkg_proto_gateway_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CurrentMetricsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CurrentMetricsRequest) ProtoMessage() {}
+
+func (x *CurrentMetricsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_gateway_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CurrentMetricsRequest.ProtoReflect.Descriptor instead.
+func (*CurrentMetricsRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_gateway_proto_rawDescGZIP(), []int{10}
+}
+
+// Fetch metrics from the daemon's ring buffer for the requested window.
+// Daemon's retention bounds the answer (typically 10-60 min); a window
+// exceeding retention is truncated to whatever is available.
+type MetricsHistoryRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Seconds       uint32                 `protobuf:"varint,1,opt,name=seconds,proto3" json:"seconds,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MetricsHistoryRequest) Reset() {
+	*x = MetricsHistoryRequest{}
+	mi := &file_pkg_proto_gateway_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MetricsHistoryRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MetricsHistoryRequest) ProtoMessage() {}
+
+func (x *MetricsHistoryRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_gateway_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MetricsHistoryRequest.ProtoReflect.Descriptor instead.
+func (*MetricsHistoryRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_gateway_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *MetricsHistoryRequest) GetSeconds() uint32 {
+	if x != nil {
+		return x.Seconds
+	}
+	return 0
+}
+
+// daemon → API. Series-grouped response shared by current snapshot and
+// history. For current responses each series carries a single
+// MetricPoint; for history responses each series carries multiple
+// MetricPoints ordered by timestamp.
+//
+// The sending daemon's node_id is established by the authenticated
+// session; no explicit machine_id is carried here.
+type MetricsResponse struct {
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	Timestamp *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	// Labels applied to ALL series. On label-key conflict, per-series
+	// labels win.
+	CommonLabels map[string]string `protobuf:"bytes,2,rep,name=common_labels,json=commonLabels,proto3" json:"common_labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Series       []*MetricSeries   `protobuf:"bytes,3,rep,name=series,proto3" json:"series,omitempty"`
+	// For history responses: actual covered window in seconds (may be
+	// less than requested if daemon's ring is shorter). 0 / unset for
+	// current snapshots.
+	ActualWindowSeconds uint32 `protobuf:"varint,4,opt,name=actual_window_seconds,json=actualWindowSeconds,proto3" json:"actual_window_seconds,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *MetricsResponse) Reset() {
+	*x = MetricsResponse{}
+	mi := &file_pkg_proto_gateway_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MetricsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MetricsResponse) ProtoMessage() {}
+
+func (x *MetricsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_gateway_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MetricsResponse.ProtoReflect.Descriptor instead.
+func (*MetricsResponse) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_gateway_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *MetricsResponse) GetTimestamp() *timestamppb.Timestamp {
 	if x != nil {
 		return x.Timestamp
 	}
 	return nil
 }
 
-func (x *MetricsBatch) GetCommonLabels() map[string]string {
+func (x *MetricsResponse) GetCommonLabels() map[string]string {
 	if x != nil {
 		return x.CommonLabels
 	}
 	return nil
 }
 
-func (x *MetricsBatch) GetSeries() []*MetricSeries {
+func (x *MetricsResponse) GetSeries() []*MetricSeries {
 	if x != nil {
 		return x.Series
 	}
 	return nil
 }
 
-// Instructs the daemon to start pushing MetricsBatch messages.
-// Idempotent: already-streaming is a no-op. No filters on the wire —
-// daemon ships the full set; API filters per subscriber.
-//
-// interval_seconds = 0 means "use the daemon's configured default".
-// Any non-zero value overrides that default for this session only.
-type StartRealtimeMetricsCommand struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	IntervalSeconds uint32                 `protobuf:"varint,1,opt,name=interval_seconds,json=intervalSeconds,proto3" json:"interval_seconds,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
-}
-
-func (x *StartRealtimeMetricsCommand) Reset() {
-	*x = StartRealtimeMetricsCommand{}
-	mi := &file_pkg_proto_gateway_proto_msgTypes[10]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *StartRealtimeMetricsCommand) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*StartRealtimeMetricsCommand) ProtoMessage() {}
-
-func (x *StartRealtimeMetricsCommand) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_proto_gateway_proto_msgTypes[10]
+func (x *MetricsResponse) GetActualWindowSeconds() uint32 {
 	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use StartRealtimeMetricsCommand.ProtoReflect.Descriptor instead.
-func (*StartRealtimeMetricsCommand) Descriptor() ([]byte, []int) {
-	return file_pkg_proto_gateway_proto_rawDescGZIP(), []int{10}
-}
-
-func (x *StartRealtimeMetricsCommand) GetIntervalSeconds() uint32 {
-	if x != nil {
-		return x.IntervalSeconds
+		return x.ActualWindowSeconds
 	}
 	return 0
 }
-
-// Instructs the daemon to stop pushing MetricsBatch. Idempotent.
-type StopRealtimeMetricsCommand struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *StopRealtimeMetricsCommand) Reset() {
-	*x = StopRealtimeMetricsCommand{}
-	mi := &file_pkg_proto_gateway_proto_msgTypes[11]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *StopRealtimeMetricsCommand) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*StopRealtimeMetricsCommand) ProtoMessage() {}
-
-func (x *StopRealtimeMetricsCommand) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_proto_gateway_proto_msgTypes[11]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use StopRealtimeMetricsCommand.ProtoReflect.Descriptor instead.
-func (*StopRealtimeMetricsCommand) Descriptor() ([]byte, []int) {
-	return file_pkg_proto_gateway_proto_rawDescGZIP(), []int{11}
-}
-
-type MetricsCommand struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Types that are valid to be assigned to Command:
-	//
-	//	*MetricsCommand_Start
-	//	*MetricsCommand_Stop
-	Command       isMetricsCommand_Command `protobuf_oneof:"command"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *MetricsCommand) Reset() {
-	*x = MetricsCommand{}
-	mi := &file_pkg_proto_gateway_proto_msgTypes[12]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *MetricsCommand) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*MetricsCommand) ProtoMessage() {}
-
-func (x *MetricsCommand) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_proto_gateway_proto_msgTypes[12]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use MetricsCommand.ProtoReflect.Descriptor instead.
-func (*MetricsCommand) Descriptor() ([]byte, []int) {
-	return file_pkg_proto_gateway_proto_rawDescGZIP(), []int{12}
-}
-
-func (x *MetricsCommand) GetCommand() isMetricsCommand_Command {
-	if x != nil {
-		return x.Command
-	}
-	return nil
-}
-
-func (x *MetricsCommand) GetStart() *StartRealtimeMetricsCommand {
-	if x != nil {
-		if x, ok := x.Command.(*MetricsCommand_Start); ok {
-			return x.Start
-		}
-	}
-	return nil
-}
-
-func (x *MetricsCommand) GetStop() *StopRealtimeMetricsCommand {
-	if x != nil {
-		if x, ok := x.Command.(*MetricsCommand_Stop); ok {
-			return x.Stop
-		}
-	}
-	return nil
-}
-
-type isMetricsCommand_Command interface {
-	isMetricsCommand_Command()
-}
-
-type MetricsCommand_Start struct {
-	Start *StartRealtimeMetricsCommand `protobuf:"bytes,1,opt,name=start,proto3,oneof"`
-}
-
-type MetricsCommand_Stop struct {
-	Stop *StopRealtimeMetricsCommand `protobuf:"bytes,2,opt,name=stop,proto3,oneof"`
-}
-
-func (*MetricsCommand_Start) isMetricsCommand_Command() {}
-
-func (*MetricsCommand_Stop) isMetricsCommand_Command() {}
 
 type TaskStatusUpdate struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -3924,13 +3932,14 @@ var File_pkg_proto_gateway_proto protoreflect.FileDescriptor
 
 const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"\n" +
-	"\x17pkg/proto/gateway.proto\x12\x06gameap\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x1apkg/proto/daemontask.proto\x1a\x16pkg/proto/server.proto\x1a\x14pkg/proto/game.proto\x1a\x17pkg/proto/gamemod.proto\x1a\x1cpkg/proto/filetransfer.proto\x1a\x1dpkg/proto/serversetting.proto\"\xee\t\n" +
+	"\x17pkg/proto/gateway.proto\x12\x06gameap\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x1apkg/proto/daemontask.proto\x1a\x16pkg/proto/server.proto\x1a\x14pkg/proto/game.proto\x1a\x17pkg/proto/gamemod.proto\x1a\x1cpkg/proto/filetransfer.proto\x1a\x1dpkg/proto/serversetting.proto\"\xf7\t\n" +
 	"\rDaemonMessage\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x01 \x01(\tR\trequestId\x125\n" +
 	"\bregister\x18\n" +
 	" \x01(\v2\x17.gameap.RegisterRequestH\x00R\bregister\x121\n" +
-	"\theartbeat\x18\v \x01(\v2\x11.gameap.HeartbeatH\x00R\theartbeat\x12;\n" +
+	"\theartbeat\x18\v \x01(\v2\x11.gameap.HeartbeatH\x00R\theartbeat\x12D\n" +
+	"\x10metrics_response\x18\f \x01(\v2\x17.gameap.MetricsResponseH\x00R\x0fmetricsResponse\x12;\n" +
 	"\vtask_status\x18\x14 \x01(\v2\x18.gameap.TaskStatusUpdateH\x00R\n" +
 	"taskStatus\x125\n" +
 	"\vtask_output\x18\x15 \x01(\v2\x12.gameap.TaskOutputH\x00R\n" +
@@ -3947,8 +3956,7 @@ const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"\x12file_list_response\x18> \x01(\v2\x18.gameap.FileListResponseH\x00R\x10fileListResponse\x12W\n" +
 	"\x17file_operation_response\x18? \x01(\v2\x1d.gameap.FileOperationResponseH\x00R\x15fileOperationResponse\x12A\n" +
 	"\x0fstatus_response\x18F \x01(\v2\x16.gameap.StatusResponseH\x00R\x0estatusResponse\x12K\n" +
-	"\x13http_proxy_response\x18P \x01(\v2\x19.gameap.HTTPProxyResponseH\x00R\x11httpProxyResponse\x12;\n" +
-	"\rmetrics_batch\x18Z \x01(\v2\x14.gameap.MetricsBatchH\x00R\fmetricsBatchB\t\n" +
+	"\x13http_proxy_response\x18P \x01(\v2\x19.gameap.HTTPProxyResponseH\x00R\x11httpProxyResponseB\t\n" +
 	"\apayload\"\xdb\n" +
 	"\n" +
 	"\x0eGatewayMessage\x12\x1d\n" +
@@ -3956,7 +3964,8 @@ const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"request_id\x18\x01 \x01(\tR\trequestId\x128\n" +
 	"\fregister_ack\x18\n" +
 	" \x01(\v2\x13.gameap.RegisterAckH\x00R\vregisterAck\x12:\n" +
-	"\bshutdown\x18\v \x01(\v2\x1c.gameap.ShutdownNotificationH\x00R\bshutdown\x12(\n" +
+	"\bshutdown\x18\v \x01(\v2\x1c.gameap.ShutdownNotificationH\x00R\bshutdown\x12A\n" +
+	"\x0fmetrics_request\x18\f \x01(\v2\x16.gameap.MetricsRequestH\x00R\x0emetricsRequest\x12(\n" +
 	"\x04task\x18\x14 \x01(\v2\x12.gameap.DaemonTaskH\x00R\x04task\x125\n" +
 	"\vtask_cancel\x18\x15 \x01(\v2\x12.gameap.TaskCancelH\x00R\n" +
 	"taskCancel\x122\n" +
@@ -3977,8 +3986,7 @@ const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"\x12file_download_task\x18A \x01(\v2\x18.gameap.FileDownloadTaskH\x00R\x10fileDownloadTask\x12>\n" +
 	"\x0estatus_request\x18F \x01(\v2\x15.gameap.StatusRequestH\x00R\rstatusRequest\x129\n" +
 	"\n" +
-	"http_proxy\x18P \x01(\v2\x18.gameap.HTTPProxyRequestH\x00R\thttpProxy\x12A\n" +
-	"\x0fmetrics_command\x18Z \x01(\v2\x16.gameap.MetricsCommandH\x00R\x0emetricsCommandB\t\n" +
+	"http_proxy\x18P \x01(\v2\x18.gameap.HTTPProxyRequestH\x00R\thttpProxyB\t\n" +
 	"\apayload\"\xbf\x01\n" +
 	"\x0fRegisterRequest\x12\x17\n" +
 	"\anode_id\x18\x01 \x01(\x04R\x06nodeId\x12\x17\n" +
@@ -4034,21 +4042,22 @@ const file_pkg_proto_gateway_proto_rawDesc = "" +
 	"\x06points\x18\x05 \x03(\v2\x13.gameap.MetricPointR\x06points\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x84\x02\n" +
-	"\fMetricsBatch\x128\n" +
-	"\ttimestamp\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\x12K\n" +
-	"\rcommon_labels\x18\x02 \x03(\v2&.gameap.MetricsBatch.CommonLabelsEntryR\fcommonLabels\x12,\n" +
-	"\x06series\x18\x03 \x03(\v2\x14.gameap.MetricSeriesR\x06series\x1a?\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x8e\x01\n" +
+	"\x0eMetricsRequest\x129\n" +
+	"\acurrent\x18\x01 \x01(\v2\x1d.gameap.CurrentMetricsRequestH\x00R\acurrent\x129\n" +
+	"\ahistory\x18\x02 \x01(\v2\x1d.gameap.MetricsHistoryRequestH\x00R\ahistoryB\x06\n" +
+	"\x04kind\"\x17\n" +
+	"\x15CurrentMetricsRequest\"1\n" +
+	"\x15MetricsHistoryRequest\x12\x18\n" +
+	"\aseconds\x18\x01 \x01(\rR\aseconds\"\xbe\x02\n" +
+	"\x0fMetricsResponse\x128\n" +
+	"\ttimestamp\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\x12N\n" +
+	"\rcommon_labels\x18\x02 \x03(\v2).gameap.MetricsResponse.CommonLabelsEntryR\fcommonLabels\x12,\n" +
+	"\x06series\x18\x03 \x03(\v2\x14.gameap.MetricSeriesR\x06series\x122\n" +
+	"\x15actual_window_seconds\x18\x04 \x01(\rR\x13actualWindowSeconds\x1a?\n" +
 	"\x11CommonLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"H\n" +
-	"\x1bStartRealtimeMetricsCommand\x12)\n" +
-	"\x10interval_seconds\x18\x01 \x01(\rR\x0fintervalSeconds\"\x1c\n" +
-	"\x1aStopRealtimeMetricsCommand\"\x92\x01\n" +
-	"\x0eMetricsCommand\x12;\n" +
-	"\x05start\x18\x01 \x01(\v2#.gameap.StartRealtimeMetricsCommandH\x00R\x05start\x128\n" +
-	"\x04stop\x18\x02 \x01(\v2\".gameap.StopRealtimeMetricsCommandH\x00R\x04stopB\t\n" +
-	"\acommand\"w\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"w\n" +
 	"\x10TaskStatusUpdate\x12\x17\n" +
 	"\atask_id\x18\x01 \x01(\x04R\x06taskId\x120\n" +
 	"\x06status\x18\x02 \x01(\x0e2\x18.gameap.DaemonTaskStatusR\x06status\x12\x18\n" +
@@ -4274,109 +4283,109 @@ func file_pkg_proto_gateway_proto_rawDescGZIP() []byte {
 var file_pkg_proto_gateway_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
 var file_pkg_proto_gateway_proto_msgTypes = make([]protoimpl.MessageInfo, 49)
 var file_pkg_proto_gateway_proto_goTypes = []any{
-	(MetricType)(0),                     // 0: gameap.MetricType
-	(MetricUnit)(0),                     // 1: gameap.MetricUnit
-	(*DaemonMessage)(nil),               // 2: gameap.DaemonMessage
-	(*GatewayMessage)(nil),              // 3: gameap.GatewayMessage
-	(*RegisterRequest)(nil),             // 4: gameap.RegisterRequest
-	(*InFlightTask)(nil),                // 5: gameap.InFlightTask
-	(*RegisterAck)(nil),                 // 6: gameap.RegisterAck
-	(*Heartbeat)(nil),                   // 7: gameap.Heartbeat
-	(*SystemStats)(nil),                 // 8: gameap.SystemStats
-	(*MetricPoint)(nil),                 // 9: gameap.MetricPoint
-	(*MetricSeries)(nil),                // 10: gameap.MetricSeries
-	(*MetricsBatch)(nil),                // 11: gameap.MetricsBatch
-	(*StartRealtimeMetricsCommand)(nil), // 12: gameap.StartRealtimeMetricsCommand
-	(*StopRealtimeMetricsCommand)(nil),  // 13: gameap.StopRealtimeMetricsCommand
-	(*MetricsCommand)(nil),              // 14: gameap.MetricsCommand
-	(*TaskStatusUpdate)(nil),            // 15: gameap.TaskStatusUpdate
-	(*TaskOutput)(nil),                  // 16: gameap.TaskOutput
-	(*TaskCancel)(nil),                  // 17: gameap.TaskCancel
-	(*CommandRequest)(nil),              // 18: gameap.CommandRequest
-	(*CommandOutput)(nil),               // 19: gameap.CommandOutput
-	(*CommandResult)(nil),               // 20: gameap.CommandResult
-	(*ServerStatus)(nil),                // 21: gameap.ServerStatus
-	(*ServerStatusBatch)(nil),           // 22: gameap.ServerStatusBatch
-	(*ServerConfigBatch)(nil),           // 23: gameap.ServerConfigBatch
-	(*ServerConfigUpdate)(nil),          // 24: gameap.ServerConfigUpdate
-	(*ShutdownNotification)(nil),        // 25: gameap.ShutdownNotification
-	(*FileReadRequest)(nil),             // 26: gameap.FileReadRequest
-	(*FileReadResponse)(nil),            // 27: gameap.FileReadResponse
-	(*FileWriteRequest)(nil),            // 28: gameap.FileWriteRequest
-	(*FileWriteResponse)(nil),           // 29: gameap.FileWriteResponse
-	(*FileListRequest)(nil),             // 30: gameap.FileListRequest
-	(*FileListResponse)(nil),            // 31: gameap.FileListResponse
-	(*FileUploadTask)(nil),              // 32: gameap.FileUploadTask
-	(*FileDownloadTask)(nil),            // 33: gameap.FileDownloadTask
-	(*EnrollRequest)(nil),               // 34: gameap.EnrollRequest
-	(*EnrollResponse)(nil),              // 35: gameap.EnrollResponse
-	(*AttachRequest)(nil),               // 36: gameap.AttachRequest
-	(*AttachStarted)(nil),               // 37: gameap.AttachStarted
-	(*AttachInput)(nil),                 // 38: gameap.AttachInput
-	(*AttachOutput)(nil),                // 39: gameap.AttachOutput
-	(*AttachDetach)(nil),                // 40: gameap.AttachDetach
-	(*AttachClosed)(nil),                // 41: gameap.AttachClosed
-	(*ConsoleLogRequest)(nil),           // 42: gameap.ConsoleLogRequest
-	(*ConsoleLogResponse)(nil),          // 43: gameap.ConsoleLogResponse
-	(*StatusRequest)(nil),               // 44: gameap.StatusRequest
-	(*StatusResponse)(nil),              // 45: gameap.StatusResponse
-	(*HeaderEntry)(nil),                 // 46: gameap.HeaderEntry
-	(*HTTPProxyRequest)(nil),            // 47: gameap.HTTPProxyRequest
-	(*HTTPProxyResponse)(nil),           // 48: gameap.HTTPProxyResponse
-	nil,                                 // 49: gameap.MetricSeries.LabelsEntry
-	nil,                                 // 50: gameap.MetricsBatch.CommonLabelsEntry
-	(*FileOperationResponse)(nil),       // 51: gameap.FileOperationResponse
-	(*DaemonTask)(nil),                  // 52: gameap.DaemonTask
-	(*Server)(nil),                      // 53: gameap.Server
-	(*FileOperationRequest)(nil),        // 54: gameap.FileOperationRequest
-	(DaemonTaskStatus)(0),               // 55: gameap.DaemonTaskStatus
-	(*timestamppb.Timestamp)(nil),       // 56: google.protobuf.Timestamp
-	(*Game)(nil),                        // 57: gameap.Game
-	(*GameMod)(nil),                     // 58: gameap.GameMod
-	(*durationpb.Duration)(nil),         // 59: google.protobuf.Duration
-	(*ServerSetting)(nil),               // 60: gameap.ServerSetting
-	(*FileStat)(nil),                    // 61: gameap.FileStat
+	(MetricType)(0),               // 0: gameap.MetricType
+	(MetricUnit)(0),               // 1: gameap.MetricUnit
+	(*DaemonMessage)(nil),         // 2: gameap.DaemonMessage
+	(*GatewayMessage)(nil),        // 3: gameap.GatewayMessage
+	(*RegisterRequest)(nil),       // 4: gameap.RegisterRequest
+	(*InFlightTask)(nil),          // 5: gameap.InFlightTask
+	(*RegisterAck)(nil),           // 6: gameap.RegisterAck
+	(*Heartbeat)(nil),             // 7: gameap.Heartbeat
+	(*SystemStats)(nil),           // 8: gameap.SystemStats
+	(*MetricPoint)(nil),           // 9: gameap.MetricPoint
+	(*MetricSeries)(nil),          // 10: gameap.MetricSeries
+	(*MetricsRequest)(nil),        // 11: gameap.MetricsRequest
+	(*CurrentMetricsRequest)(nil), // 12: gameap.CurrentMetricsRequest
+	(*MetricsHistoryRequest)(nil), // 13: gameap.MetricsHistoryRequest
+	(*MetricsResponse)(nil),       // 14: gameap.MetricsResponse
+	(*TaskStatusUpdate)(nil),      // 15: gameap.TaskStatusUpdate
+	(*TaskOutput)(nil),            // 16: gameap.TaskOutput
+	(*TaskCancel)(nil),            // 17: gameap.TaskCancel
+	(*CommandRequest)(nil),        // 18: gameap.CommandRequest
+	(*CommandOutput)(nil),         // 19: gameap.CommandOutput
+	(*CommandResult)(nil),         // 20: gameap.CommandResult
+	(*ServerStatus)(nil),          // 21: gameap.ServerStatus
+	(*ServerStatusBatch)(nil),     // 22: gameap.ServerStatusBatch
+	(*ServerConfigBatch)(nil),     // 23: gameap.ServerConfigBatch
+	(*ServerConfigUpdate)(nil),    // 24: gameap.ServerConfigUpdate
+	(*ShutdownNotification)(nil),  // 25: gameap.ShutdownNotification
+	(*FileReadRequest)(nil),       // 26: gameap.FileReadRequest
+	(*FileReadResponse)(nil),      // 27: gameap.FileReadResponse
+	(*FileWriteRequest)(nil),      // 28: gameap.FileWriteRequest
+	(*FileWriteResponse)(nil),     // 29: gameap.FileWriteResponse
+	(*FileListRequest)(nil),       // 30: gameap.FileListRequest
+	(*FileListResponse)(nil),      // 31: gameap.FileListResponse
+	(*FileUploadTask)(nil),        // 32: gameap.FileUploadTask
+	(*FileDownloadTask)(nil),      // 33: gameap.FileDownloadTask
+	(*EnrollRequest)(nil),         // 34: gameap.EnrollRequest
+	(*EnrollResponse)(nil),        // 35: gameap.EnrollResponse
+	(*AttachRequest)(nil),         // 36: gameap.AttachRequest
+	(*AttachStarted)(nil),         // 37: gameap.AttachStarted
+	(*AttachInput)(nil),           // 38: gameap.AttachInput
+	(*AttachOutput)(nil),          // 39: gameap.AttachOutput
+	(*AttachDetach)(nil),          // 40: gameap.AttachDetach
+	(*AttachClosed)(nil),          // 41: gameap.AttachClosed
+	(*ConsoleLogRequest)(nil),     // 42: gameap.ConsoleLogRequest
+	(*ConsoleLogResponse)(nil),    // 43: gameap.ConsoleLogResponse
+	(*StatusRequest)(nil),         // 44: gameap.StatusRequest
+	(*StatusResponse)(nil),        // 45: gameap.StatusResponse
+	(*HeaderEntry)(nil),           // 46: gameap.HeaderEntry
+	(*HTTPProxyRequest)(nil),      // 47: gameap.HTTPProxyRequest
+	(*HTTPProxyResponse)(nil),     // 48: gameap.HTTPProxyResponse
+	nil,                           // 49: gameap.MetricSeries.LabelsEntry
+	nil,                           // 50: gameap.MetricsResponse.CommonLabelsEntry
+	(*FileOperationResponse)(nil), // 51: gameap.FileOperationResponse
+	(*DaemonTask)(nil),            // 52: gameap.DaemonTask
+	(*Server)(nil),                // 53: gameap.Server
+	(*FileOperationRequest)(nil),  // 54: gameap.FileOperationRequest
+	(DaemonTaskStatus)(0),         // 55: gameap.DaemonTaskStatus
+	(*timestamppb.Timestamp)(nil), // 56: google.protobuf.Timestamp
+	(*Game)(nil),                  // 57: gameap.Game
+	(*GameMod)(nil),               // 58: gameap.GameMod
+	(*durationpb.Duration)(nil),   // 59: google.protobuf.Duration
+	(*ServerSetting)(nil),         // 60: gameap.ServerSetting
+	(*FileStat)(nil),              // 61: gameap.FileStat
 }
 var file_pkg_proto_gateway_proto_depIdxs = []int32{
 	4,  // 0: gameap.DaemonMessage.register:type_name -> gameap.RegisterRequest
 	7,  // 1: gameap.DaemonMessage.heartbeat:type_name -> gameap.Heartbeat
-	15, // 2: gameap.DaemonMessage.task_status:type_name -> gameap.TaskStatusUpdate
-	16, // 3: gameap.DaemonMessage.task_output:type_name -> gameap.TaskOutput
-	19, // 4: gameap.DaemonMessage.command_output:type_name -> gameap.CommandOutput
-	20, // 5: gameap.DaemonMessage.command_result:type_name -> gameap.CommandResult
-	37, // 6: gameap.DaemonMessage.attach_started:type_name -> gameap.AttachStarted
-	39, // 7: gameap.DaemonMessage.attach_output:type_name -> gameap.AttachOutput
-	41, // 8: gameap.DaemonMessage.attach_closed:type_name -> gameap.AttachClosed
-	43, // 9: gameap.DaemonMessage.console_log_response:type_name -> gameap.ConsoleLogResponse
-	22, // 10: gameap.DaemonMessage.server_statuses:type_name -> gameap.ServerStatusBatch
-	27, // 11: gameap.DaemonMessage.file_read_response:type_name -> gameap.FileReadResponse
-	29, // 12: gameap.DaemonMessage.file_write_response:type_name -> gameap.FileWriteResponse
-	31, // 13: gameap.DaemonMessage.file_list_response:type_name -> gameap.FileListResponse
-	51, // 14: gameap.DaemonMessage.file_operation_response:type_name -> gameap.FileOperationResponse
-	45, // 15: gameap.DaemonMessage.status_response:type_name -> gameap.StatusResponse
-	48, // 16: gameap.DaemonMessage.http_proxy_response:type_name -> gameap.HTTPProxyResponse
-	11, // 17: gameap.DaemonMessage.metrics_batch:type_name -> gameap.MetricsBatch
+	14, // 2: gameap.DaemonMessage.metrics_response:type_name -> gameap.MetricsResponse
+	15, // 3: gameap.DaemonMessage.task_status:type_name -> gameap.TaskStatusUpdate
+	16, // 4: gameap.DaemonMessage.task_output:type_name -> gameap.TaskOutput
+	19, // 5: gameap.DaemonMessage.command_output:type_name -> gameap.CommandOutput
+	20, // 6: gameap.DaemonMessage.command_result:type_name -> gameap.CommandResult
+	37, // 7: gameap.DaemonMessage.attach_started:type_name -> gameap.AttachStarted
+	39, // 8: gameap.DaemonMessage.attach_output:type_name -> gameap.AttachOutput
+	41, // 9: gameap.DaemonMessage.attach_closed:type_name -> gameap.AttachClosed
+	43, // 10: gameap.DaemonMessage.console_log_response:type_name -> gameap.ConsoleLogResponse
+	22, // 11: gameap.DaemonMessage.server_statuses:type_name -> gameap.ServerStatusBatch
+	27, // 12: gameap.DaemonMessage.file_read_response:type_name -> gameap.FileReadResponse
+	29, // 13: gameap.DaemonMessage.file_write_response:type_name -> gameap.FileWriteResponse
+	31, // 14: gameap.DaemonMessage.file_list_response:type_name -> gameap.FileListResponse
+	51, // 15: gameap.DaemonMessage.file_operation_response:type_name -> gameap.FileOperationResponse
+	45, // 16: gameap.DaemonMessage.status_response:type_name -> gameap.StatusResponse
+	48, // 17: gameap.DaemonMessage.http_proxy_response:type_name -> gameap.HTTPProxyResponse
 	6,  // 18: gameap.GatewayMessage.register_ack:type_name -> gameap.RegisterAck
 	25, // 19: gameap.GatewayMessage.shutdown:type_name -> gameap.ShutdownNotification
-	52, // 20: gameap.GatewayMessage.task:type_name -> gameap.DaemonTask
-	17, // 21: gameap.GatewayMessage.task_cancel:type_name -> gameap.TaskCancel
-	18, // 22: gameap.GatewayMessage.command:type_name -> gameap.CommandRequest
-	36, // 23: gameap.GatewayMessage.attach_request:type_name -> gameap.AttachRequest
-	38, // 24: gameap.GatewayMessage.attach_input:type_name -> gameap.AttachInput
-	40, // 25: gameap.GatewayMessage.attach_detach:type_name -> gameap.AttachDetach
-	42, // 26: gameap.GatewayMessage.console_log_request:type_name -> gameap.ConsoleLogRequest
-	53, // 27: gameap.GatewayMessage.server_config:type_name -> gameap.Server
-	23, // 28: gameap.GatewayMessage.server_config_batch:type_name -> gameap.ServerConfigBatch
-	24, // 29: gameap.GatewayMessage.server_config_update:type_name -> gameap.ServerConfigUpdate
-	26, // 30: gameap.GatewayMessage.file_read:type_name -> gameap.FileReadRequest
-	28, // 31: gameap.GatewayMessage.file_write:type_name -> gameap.FileWriteRequest
-	30, // 32: gameap.GatewayMessage.file_list:type_name -> gameap.FileListRequest
-	32, // 33: gameap.GatewayMessage.file_upload_task:type_name -> gameap.FileUploadTask
-	54, // 34: gameap.GatewayMessage.file_operation:type_name -> gameap.FileOperationRequest
-	33, // 35: gameap.GatewayMessage.file_download_task:type_name -> gameap.FileDownloadTask
-	44, // 36: gameap.GatewayMessage.status_request:type_name -> gameap.StatusRequest
-	47, // 37: gameap.GatewayMessage.http_proxy:type_name -> gameap.HTTPProxyRequest
-	14, // 38: gameap.GatewayMessage.metrics_command:type_name -> gameap.MetricsCommand
+	11, // 20: gameap.GatewayMessage.metrics_request:type_name -> gameap.MetricsRequest
+	52, // 21: gameap.GatewayMessage.task:type_name -> gameap.DaemonTask
+	17, // 22: gameap.GatewayMessage.task_cancel:type_name -> gameap.TaskCancel
+	18, // 23: gameap.GatewayMessage.command:type_name -> gameap.CommandRequest
+	36, // 24: gameap.GatewayMessage.attach_request:type_name -> gameap.AttachRequest
+	38, // 25: gameap.GatewayMessage.attach_input:type_name -> gameap.AttachInput
+	40, // 26: gameap.GatewayMessage.attach_detach:type_name -> gameap.AttachDetach
+	42, // 27: gameap.GatewayMessage.console_log_request:type_name -> gameap.ConsoleLogRequest
+	53, // 28: gameap.GatewayMessage.server_config:type_name -> gameap.Server
+	23, // 29: gameap.GatewayMessage.server_config_batch:type_name -> gameap.ServerConfigBatch
+	24, // 30: gameap.GatewayMessage.server_config_update:type_name -> gameap.ServerConfigUpdate
+	26, // 31: gameap.GatewayMessage.file_read:type_name -> gameap.FileReadRequest
+	28, // 32: gameap.GatewayMessage.file_write:type_name -> gameap.FileWriteRequest
+	30, // 33: gameap.GatewayMessage.file_list:type_name -> gameap.FileListRequest
+	32, // 34: gameap.GatewayMessage.file_upload_task:type_name -> gameap.FileUploadTask
+	54, // 35: gameap.GatewayMessage.file_operation:type_name -> gameap.FileOperationRequest
+	33, // 36: gameap.GatewayMessage.file_download_task:type_name -> gameap.FileDownloadTask
+	44, // 37: gameap.GatewayMessage.status_request:type_name -> gameap.StatusRequest
+	47, // 38: gameap.GatewayMessage.http_proxy:type_name -> gameap.HTTPProxyRequest
 	5,  // 39: gameap.RegisterRequest.in_flight_tasks:type_name -> gameap.InFlightTask
 	55, // 40: gameap.InFlightTask.status:type_name -> gameap.DaemonTaskStatus
 	56, // 41: gameap.InFlightTask.started_at:type_name -> google.protobuf.Timestamp
@@ -4393,11 +4402,11 @@ var file_pkg_proto_gateway_proto_depIdxs = []int32{
 	1,  // 52: gameap.MetricSeries.unit:type_name -> gameap.MetricUnit
 	49, // 53: gameap.MetricSeries.labels:type_name -> gameap.MetricSeries.LabelsEntry
 	9,  // 54: gameap.MetricSeries.points:type_name -> gameap.MetricPoint
-	56, // 55: gameap.MetricsBatch.timestamp:type_name -> google.protobuf.Timestamp
-	50, // 56: gameap.MetricsBatch.common_labels:type_name -> gameap.MetricsBatch.CommonLabelsEntry
-	10, // 57: gameap.MetricsBatch.series:type_name -> gameap.MetricSeries
-	12, // 58: gameap.MetricsCommand.start:type_name -> gameap.StartRealtimeMetricsCommand
-	13, // 59: gameap.MetricsCommand.stop:type_name -> gameap.StopRealtimeMetricsCommand
+	12, // 55: gameap.MetricsRequest.current:type_name -> gameap.CurrentMetricsRequest
+	13, // 56: gameap.MetricsRequest.history:type_name -> gameap.MetricsHistoryRequest
+	56, // 57: gameap.MetricsResponse.timestamp:type_name -> google.protobuf.Timestamp
+	50, // 58: gameap.MetricsResponse.common_labels:type_name -> gameap.MetricsResponse.CommonLabelsEntry
+	10, // 59: gameap.MetricsResponse.series:type_name -> gameap.MetricSeries
 	55, // 60: gameap.TaskStatusUpdate.status:type_name -> gameap.DaemonTaskStatus
 	59, // 61: gameap.CommandRequest.timeout:type_name -> google.protobuf.Duration
 	56, // 62: gameap.ServerStatus.last_check:type_name -> google.protobuf.Timestamp
@@ -4438,6 +4447,7 @@ func file_pkg_proto_gateway_proto_init() {
 	file_pkg_proto_gateway_proto_msgTypes[0].OneofWrappers = []any{
 		(*DaemonMessage_Register)(nil),
 		(*DaemonMessage_Heartbeat)(nil),
+		(*DaemonMessage_MetricsResponse)(nil),
 		(*DaemonMessage_TaskStatus)(nil),
 		(*DaemonMessage_TaskOutput)(nil),
 		(*DaemonMessage_CommandOutput)(nil),
@@ -4453,11 +4463,11 @@ func file_pkg_proto_gateway_proto_init() {
 		(*DaemonMessage_FileOperationResponse)(nil),
 		(*DaemonMessage_StatusResponse)(nil),
 		(*DaemonMessage_HttpProxyResponse)(nil),
-		(*DaemonMessage_MetricsBatch)(nil),
 	}
 	file_pkg_proto_gateway_proto_msgTypes[1].OneofWrappers = []any{
 		(*GatewayMessage_RegisterAck)(nil),
 		(*GatewayMessage_Shutdown)(nil),
+		(*GatewayMessage_MetricsRequest)(nil),
 		(*GatewayMessage_Task)(nil),
 		(*GatewayMessage_TaskCancel)(nil),
 		(*GatewayMessage_Command)(nil),
@@ -4476,16 +4486,15 @@ func file_pkg_proto_gateway_proto_init() {
 		(*GatewayMessage_FileDownloadTask)(nil),
 		(*GatewayMessage_StatusRequest)(nil),
 		(*GatewayMessage_HttpProxy)(nil),
-		(*GatewayMessage_MetricsCommand)(nil),
 	}
 	file_pkg_proto_gateway_proto_msgTypes[7].OneofWrappers = []any{
 		(*MetricPoint_DoubleValue)(nil),
 		(*MetricPoint_UintValue)(nil),
 		(*MetricPoint_IntValue)(nil),
 	}
-	file_pkg_proto_gateway_proto_msgTypes[12].OneofWrappers = []any{
-		(*MetricsCommand_Start)(nil),
-		(*MetricsCommand_Stop)(nil),
+	file_pkg_proto_gateway_proto_msgTypes[9].OneofWrappers = []any{
+		(*MetricsRequest_Current)(nil),
+		(*MetricsRequest_History)(nil),
 	}
 	file_pkg_proto_gateway_proto_msgTypes[22].OneofWrappers = []any{}
 	type x struct{}

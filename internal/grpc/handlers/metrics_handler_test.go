@@ -17,12 +17,14 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func TestMetricsHandler_HandleMetricsBatch(t *testing.T) {
-	t.Run("publishes_batch_to_node_channel", func(t *testing.T) {
+func TestMetricsHandler_HandleMetricsResponse(t *testing.T) {
+	t.Run("poll_waiter_publishes_to_realtime_channel", func(t *testing.T) {
 		ps := memory.New()
 		t.Cleanup(func() { _ = ps.Close() })
 
 		const nodeID uint64 = 42
+		const requestID = "poll-req-1"
+
 		var (
 			received   *pubsub.Message
 			receivedMu sync.Mutex
@@ -40,8 +42,9 @@ func TestMetricsHandler_HandleMetricsBatch(t *testing.T) {
 		require.NoError(t, err)
 
 		handler := NewMetricsHandler(ps, slog.Default())
+		handler.RegisterPollWaiter(requestID, nodeID)
 
-		batch := &proto.MetricsBatch{
+		resp := &proto.MetricsResponse{
 			Timestamp:    timestamppb.Now(),
 			CommonLabels: map[string]string{"env": "prod"},
 			Series: []*proto.MetricSeries{
@@ -59,7 +62,7 @@ func TestMetricsHandler_HandleMetricsBatch(t *testing.T) {
 			},
 		}
 
-		err = handler.HandleMetricsBatch(context.Background(), nodeID, batch)
+		err = handler.HandleMetricsResponse(context.Background(), nodeID, requestID, resp)
 		require.NoError(t, err)
 
 		select {
@@ -73,23 +76,133 @@ func TestMetricsHandler_HandleMetricsBatch(t *testing.T) {
 
 		require.NotNil(t, received)
 		assert.Equal(t, channels.BuildRealtimeMetricsChannel(nodeID), received.Channel)
-		assert.Equal(t, messages.TypeMetricsBatch, received.Type)
+		assert.Equal(t, messages.TypeMetricsLive, received.Type)
 
-		payload, err := messages.ParsePayload[messages.MetricsBatchPayload](received)
+		payload, err := messages.ParsePayload[messages.MetricsLivePayload](received)
 		require.NoError(t, err)
 		assert.Equal(t, nodeID, payload.NodeID)
 		require.NotEmpty(t, payload.Data)
 
-		var decoded proto.MetricsBatch
+		var decoded proto.MetricsResponse
 		require.NoError(t, decoded.UnmarshalVT(payload.Data))
 		require.Len(t, decoded.Series, 1)
 		assert.Equal(t, "cpu_usage_percent", decoded.Series[0].Name)
 	})
 
+	t.Run("remote_waiter_publishes_to_response_channel", func(t *testing.T) {
+		ps := memory.New()
+		t.Cleanup(func() { _ = ps.Close() })
+
+		const nodeID uint64 = 7
+		const requestID = "remote-req-1"
+		const requesterInstanceID = "instance-b"
+
+		var (
+			received   *pubsub.Message
+			receivedMu sync.Mutex
+			done       = make(chan struct{})
+		)
+
+		err := ps.Subscribe(context.Background(), channels.BuildDaemonMetricsResponseChannel(requesterInstanceID),
+			func(_ context.Context, msg *pubsub.Message) error {
+				receivedMu.Lock()
+				received = msg
+				receivedMu.Unlock()
+				close(done)
+
+				return nil
+			})
+		require.NoError(t, err)
+
+		handler := NewMetricsHandler(ps, slog.Default())
+		handler.RegisterRemoteWaiter(requestID, nodeID, requesterInstanceID)
+
+		resp := &proto.MetricsResponse{
+			Timestamp:           timestamppb.Now(),
+			ActualWindowSeconds: 60,
+			Series:              []*proto.MetricSeries{{Name: "memory_used_bytes"}},
+		}
+
+		err = handler.HandleMetricsResponse(context.Background(), nodeID, requestID, resp)
+		require.NoError(t, err)
+
+		select {
+		case <-done:
+		case <-time.After(time.Second):
+			t.Fatal("timed out waiting for pubsub delivery")
+		}
+
+		receivedMu.Lock()
+		defer receivedMu.Unlock()
+
+		require.NotNil(t, received)
+		assert.Equal(t, channels.BuildDaemonMetricsResponseChannel(requesterInstanceID), received.Channel)
+		assert.Equal(t, messages.TypeDaemonMetricsResponse, received.Type)
+
+		payload, err := messages.ParsePayload[messages.DaemonMetricsResponsePayload](received)
+		require.NoError(t, err)
+		assert.Equal(t, requestID, payload.RequestID)
+		assert.Equal(t, nodeID, payload.NodeID)
+		require.NotEmpty(t, payload.Data)
+	})
+
+	t.Run("unknown_request_id_is_dropped", func(t *testing.T) {
+		ps := memory.New()
+		t.Cleanup(func() { _ = ps.Close() })
+
+		published := make(chan struct{}, 1)
+		err := ps.Subscribe(context.Background(), channels.RealtimeMetricsAll, func(_ context.Context, _ *pubsub.Message) error {
+			published <- struct{}{}
+
+			return nil
+		})
+		require.NoError(t, err)
+
+		handler := NewMetricsHandler(ps, slog.Default())
+
+		err = handler.HandleMetricsResponse(context.Background(), 99, "unknown", &proto.MetricsResponse{})
+		require.NoError(t, err)
+
+		select {
+		case <-published:
+			t.Fatal("unexpected publish for unknown request_id")
+		case <-time.After(50 * time.Millisecond):
+		}
+	})
+
+	t.Run("cancel_waiter_drops_subsequent_response", func(t *testing.T) {
+		ps := memory.New()
+		t.Cleanup(func() { _ = ps.Close() })
+
+		const requestID = "cancel-1"
+
+		published := make(chan struct{}, 1)
+		err := ps.Subscribe(context.Background(), channels.RealtimeMetricsAll, func(_ context.Context, _ *pubsub.Message) error {
+			published <- struct{}{}
+
+			return nil
+		})
+		require.NoError(t, err)
+
+		handler := NewMetricsHandler(ps, slog.Default())
+		handler.RegisterPollWaiter(requestID, 1)
+		handler.CancelWaiter(requestID)
+
+		err = handler.HandleMetricsResponse(context.Background(), 1, requestID, &proto.MetricsResponse{})
+		require.NoError(t, err)
+
+		select {
+		case <-published:
+			t.Fatal("unexpected publish after waiter cancel")
+		case <-time.After(50 * time.Millisecond):
+		}
+	})
+
 	t.Run("nil_publisher_is_noop", func(t *testing.T) {
 		handler := NewMetricsHandler(nil, slog.Default())
+		handler.RegisterPollWaiter("x", 1)
 
-		err := handler.HandleMetricsBatch(context.Background(), 1, &proto.MetricsBatch{})
+		err := handler.HandleMetricsResponse(context.Background(), 1, "x", &proto.MetricsResponse{})
 		assert.NoError(t, err)
 	})
 }
