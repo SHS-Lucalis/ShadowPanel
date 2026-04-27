@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
-	"strings"
 	"sync"
 	"time"
 
@@ -16,7 +15,15 @@ import (
 	"github.com/pkg/errors"
 )
 
-const maxPayloadSize = 7900
+const (
+	maxPayloadSize = 7900
+
+	// transportChannel is the single PostgreSQL LISTEN/NOTIFY channel used to
+	// route every pub-sub message. Pattern matching happens in Go via
+	// pubsub.MatchPattern because PG LISTEN/NOTIFY only supports exact
+	// channel-name matching.
+	transportChannel = "gameap_pubsub"
+)
 
 type Postgres struct {
 	pool              *pgxpool.Pool
@@ -30,15 +37,6 @@ type Postgres struct {
 	wg                sync.WaitGroup
 	reconnectInterval time.Duration
 	maxReconnectDelay time.Duration
-
-	started       bool
-	subRequests   chan subRequest
-	unsubRequests chan string
-}
-
-type subRequest struct {
-	pattern string
-	done    chan error
 }
 
 type Config struct {
@@ -82,12 +80,10 @@ func New(cfg Config) (*Postgres, error) {
 		instanceID:        instanceID,
 		reconnectInterval: reconnectInterval,
 		maxReconnectDelay: maxReconnectDelay,
-		subRequests:       make(chan subRequest),
-		unsubRequests:     make(chan string),
 	}, nil
 }
 
-func (p *Postgres) Publish(ctx context.Context, channel string, msg *pubsub.Message) error {
+func (p *Postgres) Publish(ctx context.Context, _ string, msg *pubsub.Message) error {
 	p.mu.RLock()
 	closed := p.closed
 	p.mu.RUnlock()
@@ -107,9 +103,7 @@ func (p *Postgres) Publish(ctx context.Context, channel string, msg *pubsub.Mess
 		return pubsub.ErrPayloadTooLarge
 	}
 
-	pgChannel := sanitizeChannelName(channel)
-
-	_, err = p.pool.Exec(ctx, "SELECT pg_notify($1, $2)", pgChannel, string(data))
+	_, err = p.pool.Exec(ctx, "SELECT pg_notify($1, $2)", transportChannel, string(data))
 	if err != nil {
 		return errors.Wrap(err, "failed to send notification")
 	}
@@ -117,56 +111,33 @@ func (p *Postgres) Publish(ctx context.Context, channel string, msg *pubsub.Mess
 	return nil
 }
 
-func (p *Postgres) Subscribe(ctx context.Context, pattern string, handler pubsub.Handler) error {
+func (p *Postgres) Subscribe(_ context.Context, pattern string, handler pubsub.Handler) error {
 	if pattern == "" {
 		return pubsub.ErrEmptyPattern
 	}
 
 	p.mu.Lock()
-	if p.closed {
-		p.mu.Unlock()
+	defer p.mu.Unlock()
 
+	if p.closed {
 		return pubsub.ErrClosed
 	}
-	p.handlers[pattern] = append(p.handlers[pattern], handler)
-	started := p.started
-	p.mu.Unlock()
 
-	if started {
-		req := subRequest{pattern: pattern, done: make(chan error, 1)}
-		select {
-		case p.subRequests <- req:
-			return <-req.done
-		case <-ctx.Done():
-			return ctx.Err()
-		}
-	}
+	p.handlers[pattern] = append(p.handlers[pattern], handler)
 
 	return nil
 }
 
-func (p *Postgres) Unsubscribe(ctx context.Context, pattern string) error {
+func (p *Postgres) Unsubscribe(_ context.Context, pattern string) error {
 	p.mu.Lock()
-	delete(p.handlers, pattern)
-	started := p.started
-	p.mu.Unlock()
+	defer p.mu.Unlock()
 
-	if started {
-		select {
-		case p.unsubRequests <- pattern:
-		case <-ctx.Done():
-			return ctx.Err()
-		}
-	}
+	delete(p.handlers, pattern)
 
 	return nil
 }
 
 func (p *Postgres) Start(ctx context.Context) error {
-	p.mu.Lock()
-	p.started = true
-	p.mu.Unlock()
-
 	p.wg.Go(func() {
 		p.listenLoop(ctx)
 	})
@@ -217,59 +188,33 @@ func (p *Postgres) listen(ctx context.Context) error {
 		_ = conn.Close(ctx)
 	}()
 
-	listeningChannels := make(map[string]struct{})
-	channels := p.getListenChannels()
-	for _, ch := range channels {
-		pgChannel := sanitizeChannelName(ch)
-
-		_, err := conn.Exec(ctx, "LISTEN "+pgChannel)
-		if err != nil {
-			return errors.Wrapf(err, "failed to listen on channel %s", pgChannel)
-		}
-		listeningChannels[pgChannel] = struct{}{}
+	if _, err := conn.Exec(ctx, "LISTEN "+transportChannel); err != nil {
+		return errors.Wrapf(err, "failed to listen on channel %s", transportChannel)
 	}
 
 	for {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case req := <-p.subRequests:
-			pgChannel := sanitizeChannelName(getBaseChannel(req.pattern))
-			if _, exists := listeningChannels[pgChannel]; !exists {
-				_, err := conn.Exec(ctx, "LISTEN "+pgChannel)
-				if err != nil {
-					req.done <- errors.Wrapf(err, "failed to listen on channel %s", pgChannel)
-				} else {
-					listeningChannels[pgChannel] = struct{}{}
-					req.done <- nil
-				}
-			} else {
-				req.done <- nil
-			}
-		case pattern := <-p.unsubRequests:
-			pgChannel := sanitizeChannelName(getBaseChannel(pattern))
-			if _, exists := listeningChannels[pgChannel]; exists {
-				_, _ = conn.Exec(ctx, "UNLISTEN "+pgChannel)
-				delete(listeningChannels, pgChannel)
-			}
 		default:
-			waitCtx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
-			notification, err := conn.WaitForNotification(waitCtx)
-			cancel()
+		}
 
-			if err != nil {
-				if ctx.Err() != nil {
-					return ctx.Err()
-				}
-				if errors.Is(err, context.DeadlineExceeded) {
-					continue
-				}
+		waitCtx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
+		notification, err := conn.WaitForNotification(waitCtx)
+		cancel()
 
-				return errors.Wrap(err, "notification error")
+		if err != nil {
+			if ctx.Err() != nil {
+				return ctx.Err()
+			}
+			if errors.Is(err, context.DeadlineExceeded) {
+				continue
 			}
 
-			p.handleNotification(ctx, notification)
+			return errors.Wrap(err, "notification error")
 		}
+
+		p.handleNotification(ctx, notification)
 	}
 }
 
@@ -305,24 +250,6 @@ func (p *Postgres) getMatchingHandlers(channel string) []pubsub.Handler {
 	return handlers
 }
 
-func (p *Postgres) getListenChannels() []string {
-	p.mu.RLock()
-	defer p.mu.RUnlock()
-
-	channelSet := make(map[string]struct{})
-	for pattern := range p.handlers {
-		baseChannel := getBaseChannel(pattern)
-		channelSet[baseChannel] = struct{}{}
-	}
-
-	channels := make([]string, 0, len(channelSet))
-	for ch := range channelSet {
-		channels = append(channels, ch)
-	}
-
-	return channels
-}
-
 func (p *Postgres) Close() error {
 	p.closeOnce.Do(func() {
 		p.mu.Lock()
@@ -334,21 +261,4 @@ func (p *Postgres) Close() error {
 	})
 
 	return nil
-}
-
-func sanitizeChannelName(channel string) string {
-	r := strings.ReplaceAll(channel, ":", "__")
-	r = strings.ReplaceAll(r, ".", "_")
-	r = strings.ReplaceAll(r, "-", "_")
-	r = strings.TrimSuffix(r, "*")
-
-	return r
-}
-
-func getBaseChannel(pattern string) string {
-	if before, _, found := strings.Cut(pattern, "*"); found {
-		return before
-	}
-
-	return pattern
 }
