@@ -21,6 +21,18 @@ export const useNodeListStore = defineStore("nodeList",{
     }),
     getters: {
         loading: (state) => state.apiProcesses > 0,
+        summaryById: (state) => {
+            const map = new Map()
+            const online = state.summary?.onlineNodes || []
+            const offline = state.summary?.offlineNodes || []
+            for (const n of online) {
+                map.set(String(n.id), { ...n, online: true })
+            }
+            for (const n of offline) {
+                map.set(String(n.id), { ...n, online: false })
+            }
+            return map
+        },
     },
     actions: {
         async fetchNodesByFilter(filter) {

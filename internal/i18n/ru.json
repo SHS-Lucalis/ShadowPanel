@@ -115,7 +115,14 @@
     "additional_settings": "Дополнительные настройки",
     "process_manager": "Менеджер процессов",
     "pm_auto": "Авто (Рекомендуется)",
-    "pm_simple": "Простой (Управление скриптами)"
+    "pm_simple": "Простой (Управление скриптами)",
+    "online": "Онлайн",
+    "offline": "Оффлайн",
+    "filter_search_placeholder": "Поиск по имени или IP",
+    "tab_overview": "Обзор",
+    "tab_metrics": "Метрики",
+    "no_metrics_data": "Нет данных метрик",
+    "work_path": "Рабочий путь"
   },
   "games": {
     "title_games_list": "Список игр",
@@ -362,6 +369,7 @@
   },
   "main": {
     "actions": "Действия",
+    "all": "Все",
     "view": "Просмотр",
     "edit": "Редактировать",
     "delete": "Удалить",

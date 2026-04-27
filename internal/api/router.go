@@ -129,6 +129,7 @@ import (
 	wsattach "github.com/gameap/gameap/internal/api/ws/attach"
 	wsconsole "github.com/gameap/gameap/internal/api/ws/console"
 	wsnodemetrics "github.com/gameap/gameap/internal/api/ws/nodemetrics"
+	wsnodesmetrics "github.com/gameap/gameap/internal/api/ws/nodesmetrics"
 	wsservermetrics "github.com/gameap/gameap/internal/api/ws/servermetrics"
 	wstaskstatus "github.com/gameap/gameap/internal/api/ws/taskstatus"
 	"github.com/gameap/gameap/internal/cache"
@@ -1644,6 +1645,19 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 			Method: http.MethodGet,
 			Path:   "/api/ws/nodes/{id}/metrics",
 			Handler: wsnodemetrics.NewHandler(
+				c.MetricsHub(),
+				c.RBAC(),
+				c.NodeRepository(),
+				c.WSHub(),
+				wsOriginPatterns(c.Config()),
+				c.Responder(),
+			),
+			AdminOnly: true,
+		},
+		{
+			Method: http.MethodGet,
+			Path:   "/api/ws/nodes/metrics",
+			Handler: wsnodesmetrics.NewHandler(
 				c.MetricsHub(),
 				c.RBAC(),
 				c.NodeRepository(),

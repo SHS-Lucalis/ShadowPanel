@@ -1,169 +1,201 @@
 <template>
   <GBreadcrumbs :items="breadcrumbs"></GBreadcrumbs>
 
-  <GButton color="green" size="middle" class="mb-5 mr-1" @click="showCreateModal = true">
-    <GIcon name="add-square" class="mr-0.5" />
-    <span>{{ trans('dedicated_servers.create')}}</span>
-  </GButton>
+  <div class="mb-4 flex flex-wrap gap-2">
+    <GButton color="green" size="middle" @click="showCreateModal = true">
+      <GIcon name="add-square" class="mr-0.5" />
+      <span>{{ trans('dedicated_servers.create') }}</span>
+    </GButton>
 
-  <GButton color="orange" size="middle" class="mb-5" :route="{name: 'admin.client_certificates.index'}">
-    <GIcon name="certificate" class="mr-0.5" />
-    <span>{{ trans('client_certificates.client_certificates')}}</span>
-  </GButton>
+    <GButton color="orange" size="middle" :route="{ name: 'admin.client_certificates.index' }">
+      <GIcon name="certificate" class="mr-0.5" />
+      <span>{{ trans('client_certificates.client_certificates') }}</span>
+    </GButton>
+  </div>
 
-  <GDataTable
-      ref="tableRef"
-      :columns="columns"
-      :data="nodesData"
-      :loading="loading"
-      :pagination="pagination"
-  >
-    <template #loading>
-      <Loading />
-    </template>
-    <template #empty>
-      <GEmpty :description="trans('servers.empty_list')" />
-    </template>
-  </GDataTable>
+  <NodesFilters v-model="filters" />
+
+  <div v-if="loading && nodes.length === 0" class="py-10 text-center">
+    <Loading />
+  </div>
+
+  <div v-else-if="filteredNodes.length === 0" class="py-10">
+    <GEmpty :description="trans('servers.empty_list')" />
+  </div>
+
+  <div v-else>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <NodeCard
+          v-for="node in pagedNodes"
+          :key="node.id"
+          :node="node"
+          :online="onlineMap.get(String(node.id)) === true"
+          :snapshot="metricsSnapshotFor(node.id)"
+          @open-details="openDetails"
+      />
+    </div>
+
+    <div v-if="totalPages > 1" class="mt-6 flex justify-center">
+      <n-pagination
+          v-model:page="page"
+          :page-count="totalPages"
+          :page-slot="7"
+      />
+    </div>
+  </div>
 
   <CreateNodeModal v-model="showCreateModal" />
+
+  <NodeDetailsModal
+      :show="modalOpen"
+      :node-id="selectedNodeId"
+      :node="selectedNode"
+      :online="onlineMap.get(String(selectedNodeId)) === true"
+      @update:show="onModalShowChange"
+      @deleted="onNodeDeleted"
+  />
 </template>
 
 <script setup>
-import { GBreadcrumbs, Loading, GIcon, GDataTable, GEmpty } from "@gameap/ui"
-import {computed, h, ref, onMounted} from "vue"
-import {trans} from "../../i18n/i18n"
-import GButton from "../../components/GButton.vue"
-import CreateNodeModal from "../../components/blocks/CreateNodeModal.vue"
-import {useNodeListStore} from "../../store/nodeList"
-import {errorNotification, notification} from "../../parts/dialogs"
-import {storeToRefs} from "pinia"
-import { join } from "lodash-es"
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
+import { NPagination } from 'naive-ui'
+import { useRoute, useRouter } from 'vue-router'
 
+import { GBreadcrumbs, GIcon, GEmpty, Loading } from '@gameap/ui'
+import GButton from '@/components/GButton.vue'
+import CreateNodeModal from '@/components/blocks/CreateNodeModal.vue'
+import NodeCard from '@/components/blocks/NodeCard.vue'
+import NodesFilters from '@/components/blocks/NodesFilters.vue'
+import NodeDetailsModal from '@/components/blocks/NodeDetailsModal.vue'
+
+import { useNodeListStore } from '@/store/nodeList'
+import { useNodesMetricsWebSocket } from '@/composables/useNodesMetricsWebSocket'
+import { errorNotification } from '@/parts/dialogs'
+import { trans } from '@/i18n/i18n'
+
+const PAGE_SIZE = 24
+const SUMMARY_POLL_MS = 30_000
+
+const route = useRoute()
+const router = useRouter()
 const nodeListStore = useNodeListStore()
+const { nodes, loading } = storeToRefs(nodeListStore)
 
-const breadcrumbs = computed(() => {
-  return [
-    {'route':'/', 'text':'GameAP', 'icon': 'gicon gicon-gameap'},
-    {'route':{name: 'admin.nodes.index'}, 'text':trans('sidebar.dedicated_servers')},
-  ]
-})
+const breadcrumbs = computed(() => [
+    { route: '/', text: 'GameAP', icon: 'gicon gicon-gameap' },
+    { route: { name: 'admin.nodes.index' }, text: trans('sidebar.dedicated_servers') },
+])
 
-const createColumns = () => {
-  return [
-    {
-      title: trans('dedicated_servers.name'),
-      key: "name"
-    },
-    {
-      title: trans('dedicated_servers.location'),
-      key: "location"
-    },
-    {
-      title: trans('dedicated_servers.provider'),
-      key: "provider"
-    },
-    {
-      title: trans('dedicated_servers.ip'),
-      key: "ip",
-      render(row) {
-        return join(row.ip, ', ')
-      }
-    },
-    {
-      title: trans('dedicated_servers.os'),
-      key: "os"
-    },
-    {
-      title: trans('main.actions'),
-      render(row) {
-        return [
-          h(GButton, {
-            color: 'green',
-            size: 'small',
-            class: 'mr-0.5',
-            route: {name: 'admin.nodes.view', params: {id: row.id}},
-          }, { default: () => [
-            h(GIcon, {name: 'view'}),
-            h("span", {class: 'hidden lg:inline'}, trans('main.view')),
-          ]}),
-          h(GButton, {
-            color: 'blue',
-            size: 'small',
-            class: 'mr-0.5',
-            route: {name: 'admin.nodes.edit', params: {id: row.id}},
-          }, { default: () => [
-            h(GIcon, {name: 'edit'}),
-            h("span", {class: 'hidden lg:inline'}, trans('main.edit')),
-          ]}),
-          h(GButton, {
-            color: 'red',
-            size: 'small',
-            text: trans('main.delete'),
-            onClick: () => {onClickDelete(row.id)},
-          }, { default: () => [
-            h(GIcon, {name: 'delete'}),
-            h("span", {class: 'hidden lg:inline'}, trans('main.delete')),
-          ]}),
-        ]
-      },
-    }
-  ]
-}
-
+const filters = ref({ search: '', status: 'all', os: 'all' })
+const page = ref(1)
 const showCreateModal = ref(false)
 
-const {loading, nodes} = storeToRefs(nodeListStore)
+const { snapshotFor } = useNodesMetricsWebSocket()
 
-const columns = ref(createColumns())
-const pagination = {
-  pageSize: 20,
-};
-
-onMounted(() => {
-  fetchNodes()
+const onlineMap = computed(() => {
+    const map = new Map()
+    nodeListStore.summaryById.forEach((v, k) => {
+        map.set(k, !!v.online)
+    })
+    return map
 })
 
-const fetchNodes = () => {
-  nodeListStore.fetchNodesByFilter([]).
-  catch((error) => {
-    errorNotification(error)
-  })
+const filteredNodes = computed(() => {
+    const q = filters.value.search.trim().toLowerCase()
+    const wantStatus = filters.value.status
+    const wantOS = filters.value.os
+
+    return nodes.value.filter((node) => {
+        if (q) {
+            const inName = node.name?.toLowerCase().includes(q)
+            const ips = Array.isArray(node.ip) ? node.ip : []
+            const inIp = ips.some(ip => ip.toLowerCase().includes(q))
+            if (!inName && !inIp) return false
+        }
+        if (wantStatus !== 'all') {
+            const isOnline = onlineMap.value.get(String(node.id)) === true
+            if (wantStatus === 'online' && !isOnline) return false
+            if (wantStatus === 'offline' && isOnline) return false
+        }
+        if (wantOS !== 'all') {
+            const os = String(node.os || '').toLowerCase()
+            if (wantOS === 'linux' && !(os === '' || os.startsWith('l') || /^(ubu|deb|cen|fed|alm|roc|arc|sus)/.test(os))) return false
+            if (wantOS === 'windows' && !os.startsWith('w')) return false
+            if (wantOS === 'macos' && !os.startsWith('m')) return false
+        }
+        return true
+    })
+})
+
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredNodes.value.length / PAGE_SIZE)))
+
+const pagedNodes = computed(() => {
+    const start = (page.value - 1) * PAGE_SIZE
+    return filteredNodes.value.slice(start, start + PAGE_SIZE)
+})
+
+watch(filters, () => {
+    page.value = 1
+}, { deep: true })
+
+watch(totalPages, (n) => {
+    if (page.value > n) page.value = n
+})
+
+const modalOpen = computed(() => !!route.query.node)
+const selectedNodeId = computed(() => {
+    const v = route.query.node
+    if (!v) return null
+    return Number(Array.isArray(v) ? v[0] : v)
+})
+const selectedNode = computed(() =>
+    selectedNodeId.value ? nodes.value.find(n => n.id === selectedNodeId.value) || null : null,
+)
+
+function openDetails(id) {
+    router.push({ query: { ...route.query, node: String(id) } })
 }
 
-const nodesData = computed(() => {
-  return nodes.value.map((node) => {
-    return {
-      id: node.id,
-      name: node.name,
-      location: node.location,
-      provider: node.provider,
-      ip: node.ip,
-      os: node.os,
+function onModalShowChange(v) {
+    if (v) return
+    const q = { ...route.query }
+    delete q.node
+    router.push({ query: q })
+}
+
+function onNodeDeleted() {
+    fetchAll()
+}
+
+function metricsSnapshotFor(id) {
+    return snapshotFor(id)
+}
+
+async function fetchAll() {
+    try {
+        await Promise.all([
+            nodeListStore.fetchNodesByFilter([]),
+            nodeListStore.fetchNodesSummary(),
+        ])
+    } catch (e) {
+        errorNotification(e)
     }
-  })
-})
-
-const onClickDelete = (id) => {
-  window.$dialog.success({
-    title: trans('dedicated_servers.delete_confirm_msg'),
-    positiveText: trans('main.yes'),
-    negativeText: trans('main.no' ),
-    closable: false,
-    onPositiveClick: () => {
-      nodeListStore.deleteNode(id).then(() => {
-        notification({
-          content: trans('dedicated_servers.delete_success_msg'),
-          type: "success",
-        }, () => {
-          fetchNodes()
-        })
-      }).catch((error) => {
-        errorNotification(error)
-      })
-    },
-    onNegativeClick: () => {}
-  })
 }
 
+let summaryTimer = null
+
+onMounted(async () => {
+    await fetchAll()
+    summaryTimer = setInterval(() => {
+        nodeListStore.fetchNodesSummary().catch(() => {})
+    }, SUMMARY_POLL_MS)
+})
+
+onBeforeUnmount(() => {
+    if (summaryTimer) {
+        clearInterval(summaryTimer)
+        summaryTimer = null
+    }
+})
 </script>

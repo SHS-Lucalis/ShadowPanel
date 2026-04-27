@@ -116,7 +116,14 @@
     "additional_settings": "Additional settings",
     "process_manager": "Process Manager",
     "pm_auto": "Auto (Recommended)",
-    "pm_simple": "Simple (Custom scripts controlled)"
+    "pm_simple": "Simple (Custom scripts controlled)",
+    "online": "Online",
+    "offline": "Offline",
+    "filter_search_placeholder": "Search by name or IP",
+    "tab_overview": "Overview",
+    "tab_metrics": "Metrics",
+    "no_metrics_data": "No metrics data",
+    "work_path": "Work path"
   },
   "games": {
     "title_games_list": "Games List",
@@ -361,6 +368,7 @@
   },
   "main": {
     "actions": "Actions",
+    "all": "All",
     "view": "View",
     "edit": "Edit",
     "delete": "Delete",

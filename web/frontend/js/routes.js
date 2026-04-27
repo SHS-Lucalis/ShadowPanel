@@ -24,7 +24,6 @@ const AdminGamesEdit = () => import("./views/adminviews/AdminGamesEdit.vue");
 const AdminGamesImportView = () => import("./views/adminviews/AdminGamesImportView.vue");
 const AdminGamesList = () => import("./views/adminviews/AdminGamesList.vue");
 const AdminModEdit = () => import("./views/adminviews/AdminModEdit.vue");
-const AdminNodeShowView = () => import("./views/adminviews/AdminNodeShowView.vue");
 const AdminNodesEditView = () => import("./views/adminviews/AdminNodesEditView.vue");
 const AdminNodesView = () => import("./views/adminviews/AdminNodesView.vue");
 const AdminPluginsView = () => import("./views/adminviews/AdminPluginsView.vue");
@@ -83,11 +82,8 @@ const routes = [
     {
         path: '/admin/nodes/:id',
         name: 'admin.nodes.view',
-        component: AdminNodeShowView,
         alias: '/admin/dedicated_servers/:id',
-        meta: {
-            title: trans('dedicated_servers.title_view'),
-        },
+        redirect: to => ({ name: 'admin.nodes.index', query: { node: String(to.params.id) } }),
     },
     {
         path: '/admin/nodes/:id/edit',

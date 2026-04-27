@@ -58,6 +58,61 @@ info:
       "total": 75
     }
     ```
+
+    ## WebSocket endpoints
+
+    OpenAPI does not natively model WebSocket flows; this section documents
+    them informally. All WS endpoints accept the same Bearer token via the
+    `?token=` query parameter (the browser does not allow setting headers
+    on a WebSocket upgrade). Outbound frames are JSON
+    `{"type": string, "payload": any, "ts": int64}` envelopes.
+
+    ### `/api/ws/nodes/metrics` (admin only)
+
+    Live metrics for **all enabled nodes**, multiplexed over a single
+    socket. No replay is sent. Each `metrics` envelope's
+    `payload.common_labels.node_id` identifies the source node.
+
+    Frames:
+    - `metrics.replay.done` — emitted once at start, before live samples.
+    - `metrics` — payload is `MetricsWireResponse`.
+    - `metrics.error` — payload is `{ "error": string }`.
+
+    ### `/api/ws/nodes/{id}/metrics` (admin only)
+
+    Per-node stream with 30-minute replay history. Used by the node
+    details modal for sparkline charts.
+
+    Frames: `metrics.replay` (array of `MetricsWireResponse`),
+    `metrics.replay.done`, `metrics`, `metrics.error`.
+
+    ### `/api/ws/servers/{server}/metrics`
+
+    Per-server stream filtered to envelopes carrying the matching
+    `server_id` label, plus machine-level series. Same frame protocol as
+    the per-node endpoint.
+
+    ### `MetricsWireResponse` shape
+
+    ```json
+    {
+      "timestamp": "2026-04-27T15:30:45.123Z",
+      "common_labels": { "node_id": "1" },
+      "series": [{
+        "name": "gameap_node_cpu_usage_percent",
+        "type": "gauge",
+        "unit": "percent",
+        "labels": {},
+        "points": [{
+          "timestamp": "2026-04-27T15:30:45.123Z",
+          "value": "47.2"
+        }]
+      }],
+      "actual_window_seconds": 0
+    }
+    ```
+
+    See `schemas/responses/MetricsWireResponse.yaml` for the JSON schema.
   contact:
     name: GameAP
     url: https://gameap.com

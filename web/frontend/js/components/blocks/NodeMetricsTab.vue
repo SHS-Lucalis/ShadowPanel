@@ -1,58 +1,36 @@
 <template>
-    <div class="md:flex md:flex-wrap mt-2">
-        <div v-if="errorMessage" class="md:w-full">
-            <n-alert type="warning" class="mb-3" :title="trans('servers.statistics_error')">
-                {{ errorMessage }}
-            </n-alert>
+  <div>
+    <n-alert v-if="errorMessage" type="warning" class="mb-3" :title="trans('servers.statistics_error')">
+      {{ errorMessage }}
+    </n-alert>
+
+    <div v-if="!hasAnyData && !errorMessage">
+      <GCard class="mb-3">
+        <Loading />
+        <div class="text-center text-stone-500 mt-2">
+          {{ trans('servers.statistics_no_data') }}
         </div>
-
-        <div v-if="!hasAnyData && !errorMessage" class="md:w-full">
-            <n-card class="mb-3">
-                <Loading />
-                <div class="text-center text-stone-500 mt-2">
-                    {{ trans('servers.statistics_no_data') }}
-                </div>
-            </n-card>
-        </div>
-
-        <div v-if="hasAnyData" class="md:w-full md:grid md:grid-cols-2 md:gap-4">
-            <n-card
-                :title="trans('servers.statistics_cpu')"
-                class="mb-3"
-                header-class="g-card-header"
-                :segmented="{ content: true, footer: 'soft' }"
-            >
-                <v-chart class="h-72 w-full" :option="cpuOption" :update-options="updateOptions" autoresize />
-            </n-card>
-
-            <n-card
-                :title="trans('servers.statistics_memory')"
-                class="mb-3"
-                header-class="g-card-header"
-                :segmented="{ content: true, footer: 'soft' }"
-            >
-                <v-chart class="h-72 w-full" :option="memoryOption" :update-options="updateOptions" autoresize />
-            </n-card>
-
-            <n-card
-                :title="trans('servers.statistics_disk_io')"
-                class="mb-3"
-                header-class="g-card-header"
-                :segmented="{ content: true, footer: 'soft' }"
-            >
-                <v-chart class="h-72 w-full" :option="diskOption" :update-options="updateOptions" autoresize />
-            </n-card>
-
-            <n-card
-                :title="trans('servers.statistics_network_io')"
-                class="mb-3"
-                header-class="g-card-header"
-                :segmented="{ content: true, footer: 'soft' }"
-            >
-                <v-chart class="h-72 w-full" :option="networkOption" :update-options="updateOptions" autoresize />
-            </n-card>
-        </div>
+      </GCard>
     </div>
+
+    <div v-if="hasAnyData" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <GCard :title="trans('servers.statistics_cpu')" class="mb-3">
+        <v-chart class="h-56 lg:h-64 w-full" :option="cpuOption" :update-options="updateOptions" autoresize />
+      </GCard>
+
+      <GCard :title="trans('servers.statistics_memory')" class="mb-3">
+        <v-chart class="h-56 lg:h-64 w-full" :option="memoryOption" :update-options="updateOptions" autoresize />
+      </GCard>
+
+      <GCard :title="trans('servers.statistics_disk_io')" class="mb-3">
+        <v-chart class="h-56 lg:h-64 w-full" :option="diskOption" :update-options="updateOptions" autoresize />
+      </GCard>
+
+      <GCard :title="trans('servers.statistics_network_io')" class="mb-3">
+        <v-chart class="h-56 lg:h-64 w-full" :option="networkOption" :update-options="updateOptions" autoresize />
+      </GCard>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -67,9 +45,9 @@ import {
     DataZoomComponent,
 } from 'echarts/components'
 import VChart from 'vue-echarts'
-import { NCard, NAlert } from 'naive-ui'
-import { Loading } from '@gameap/ui'
-import { useServerMetricsWebSocket } from '@/composables/useServerMetricsWebSocket'
+import { NAlert } from 'naive-ui'
+import { Loading, GCard } from '@gameap/ui'
+import { useNodeMetricsWebSocket } from '@/composables/useNodeMetricsWebSocket'
 import { trans } from '@/i18n/i18n'
 
 use([
@@ -82,14 +60,13 @@ use([
 ])
 
 const props = defineProps({
-    serverId: { type: Number, required: true },
+    nodeId: { type: [Number, String], required: true },
 })
 
-const PALETTE_PRIMARY = '#3097D1'
-const PALETTE_SUCCESS = '#2ab27b'
-const PALETTE_WARNING = '#cbb956'
-const PALETTE_DANGER = '#bf5329'
-const PALETTE_INFO = '#8eb4cb'
+const PALETTE_LIME = '#84cc16'
+const PALETTE_CYAN = '#22d3ee'
+const PALETTE_MAGENTA = '#e879f9'
+const PALETTE_DANGER = '#ef4444'
 
 const updateOptions = { replaceMerge: ['series'] }
 
@@ -101,7 +78,7 @@ const {
     diskWriteSeries,
     networkInSeries,
     networkOutSeries,
-} = useServerMetricsWebSocket(() => props.serverId)
+} = useNodeMetricsWebSocket(() => Number(props.nodeId))
 
 const hasAnyData = computed(() => {
     return (
@@ -183,10 +160,10 @@ const cpuOption = computed(() => {
     const opt = baseOption({
         yMax: 100,
         yFormatter: formatPercent,
-        palette: [PALETTE_PRIMARY, PALETTE_SUCCESS, PALETTE_WARNING],
+        palette: [PALETTE_LIME],
     })
     opt.series = cpuSeries.value.map(s =>
-        makeLineSeries(trans('servers.statistics_cpu'), s.points, { areaStyle: { opacity: 0.1 } }),
+        makeLineSeries(trans('servers.statistics_cpu'), s.points, { areaStyle: { opacity: 0.12 } }),
     )
     return opt
 })
@@ -195,10 +172,10 @@ const memoryOption = computed(() => {
     const opt = baseOption({
         yMax: null,
         yFormatter: formatBytes,
-        palette: [PALETTE_PRIMARY],
+        palette: [PALETTE_CYAN],
     })
     opt.series = memoryBytesSeries.value.map(s =>
-        makeLineSeries(trans('servers.statistics_memory'), s.points, { areaStyle: { opacity: 0.1 } }),
+        makeLineSeries(trans('servers.statistics_memory'), s.points, { areaStyle: { opacity: 0.12 } }),
     )
     return opt
 })
@@ -206,7 +183,7 @@ const memoryOption = computed(() => {
 const diskOption = computed(() => {
     const opt = baseOption({
         yFormatter: formatBitrate,
-        palette: [PALETTE_SUCCESS, PALETTE_WARNING],
+        palette: [PALETTE_LIME, PALETTE_MAGENTA],
         showLegend: true,
     })
     const seriesList = []
@@ -223,7 +200,7 @@ const diskOption = computed(() => {
 const networkOption = computed(() => {
     const opt = baseOption({
         yFormatter: formatBitrate,
-        palette: [PALETTE_PRIMARY, PALETTE_DANGER],
+        palette: [PALETTE_CYAN, PALETTE_DANGER],
         showLegend: true,
     })
     const seriesList = []

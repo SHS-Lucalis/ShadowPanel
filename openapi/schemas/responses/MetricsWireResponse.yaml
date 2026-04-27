@@ -1,0 +1,96 @@
+type: object
+description: |
+  JSON envelope sent over the metrics WebSocket endpoints. Mirrors the
+  `metrics.WireResponse` Go struct. Used as the `payload` of `metrics`
+  and `metrics.replay` frames on `/api/ws/nodes/metrics`,
+  `/api/ws/nodes/{id}/metrics` and `/api/ws/servers/{server}/metrics`.
+properties:
+  timestamp:
+    type: string
+    format: date-time
+    description: When the envelope was produced.
+    example: "2026-04-27T15:30:45.123Z"
+  common_labels:
+    type: object
+    additionalProperties:
+      type: string
+    description: |
+      Labels shared by every series in this envelope. The multi-node
+      endpoint (`/api/ws/nodes/metrics`) injects `node_id` here so the
+      browser can demultiplex.
+    example:
+      node_id: "1"
+  series:
+    type: array
+    description: Series-grouped metric points.
+    items:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Metric series name (e.g. `gameap_node_cpu_usage_percent`).
+        type:
+          type: string
+          enum: [gauge, counter, unspecified]
+        unit:
+          type: string
+          enum:
+            - percent
+            - bytes
+            - bits
+            - count
+            - ratio
+            - seconds
+            - milliseconds
+            - microseconds
+            - nanoseconds
+            - hertz
+            - celsius
+            - watts
+            - volts
+            - rpm
+            - unspecified
+        labels:
+          type: object
+          additionalProperties:
+            type: string
+          description: Per-series labels (e.g. `server_id`, `cpu_id`).
+        points:
+          type: array
+          items:
+            type: object
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+              value:
+                type: string
+                description: Stringified numeric value (preserves precision across JSON).
+              min:
+                type: number
+                nullable: true
+              max:
+                type: number
+                nullable: true
+              avg:
+                type: number
+                nullable: true
+              sample_count:
+                type: integer
+                format: uint32
+                nullable: true
+            required:
+              - timestamp
+              - value
+      required:
+        - name
+        - type
+        - unit
+        - points
+  actual_window_seconds:
+    type: integer
+    format: uint32
+    description: Window of the response in seconds (0 for live samples).
+required:
+  - timestamp
+  - series

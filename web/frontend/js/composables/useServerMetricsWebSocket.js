@@ -13,7 +13,7 @@ function seriesKey(name, labels) {
     return `${name}|${parts.join(',')}`
 }
 
-export function useMetricsWebSocket(serverId) {
+export function useServerMetricsWebSocket(serverId) {
     const seriesMap = shallowRef(new Map())
     const replayDone = ref(false)
     const errorMessage = ref('')
