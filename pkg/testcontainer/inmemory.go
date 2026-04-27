@@ -180,11 +180,13 @@ func buildInmemoryTestContainer() *InmemoryContainer {
 		serverSettingRepo:     serverSettingRepo,
 		nodeRepo:              inmemory.NewNodeRepository(),
 		clientCertificateRepo: inmemory.NewClientCertificateRepository(),
-		rbacService:           rbac.NewRBAC(tm, rbacRepo, time.Minute),
+		// Use a very short cache TTL so that role/permission changes are observed
+		// immediately by tests (e.g. revoking admin must remove access on the next request).
+		rbacService:           rbac.NewRBAC(tm, rbacRepo, time.Millisecond),
 		serverControlService:  servercontrol.NewService(daemonTaskRepo, serverSettingRepo, tm),
 		gameUpgradeService:    nil,
 		fileManager:           nil,
-		cacheService:          nil,
+		cacheService:          cache.NewInMemory(),
 		certificatesService:   nil,
 		globalAPIService:      nil,
 		daemonStatusService:   nil,
@@ -263,7 +265,17 @@ type TestFixtures struct {
 	RegularUser *domain.User
 	Server1     *domain.Server
 	Server2     *domain.Server
+	Node1       *domain.Node
+	Node2       *domain.Node
+	// EnrollmentSetupKey is a valid daemon enrollment setup key stored in cache.
+	EnrollmentSetupKey string
 }
+
+// Node tokens used in security tests for daemon X-Auth-Token authentication.
+const (
+	Node1GDaemonAPIToken = "test-daemon-token-node1"
+	Node2GDaemonAPIToken = "test-daemon-token-node2"
+)
 
 func SetupFixtures(ctx context.Context, c *InmemoryContainer) (*TestFixtures, error) {
 	adminUser := &domain.User{
@@ -296,6 +308,42 @@ func SetupFixtures(ctx context.Context, c *InmemoryContainer) (*TestFixtures, er
 	err = c.rbacService.SetRolesToUser(ctx, regularUser.ID, []string{"user"})
 	if err != nil {
 		return nil, fmt.Errorf("failed to set user roles: %w", err)
+	}
+
+	node1Token := Node1GDaemonAPIToken
+	node1 := &domain.Node{
+		ID:              1,
+		Enabled:         true,
+		Name:            "Test Node 1",
+		OS:              domain.NodeOSLinux,
+		Location:        "Test",
+		IPs:             domain.IPList{"127.0.0.1"},
+		WorkPath:        "/srv/gameap",
+		GdaemonHost:     "127.0.0.1",
+		GdaemonPort:     31717,
+		GdaemonAPIKey:   "test-api-key-node1",
+		GdaemonAPIToken: &node1Token,
+	}
+	if err := c.nodeRepo.Save(ctx, node1); err != nil {
+		return nil, fmt.Errorf("failed to create node 1: %w", err)
+	}
+
+	node2Token := Node2GDaemonAPIToken
+	node2 := &domain.Node{
+		ID:              2,
+		Enabled:         true,
+		Name:            "Test Node 2",
+		OS:              domain.NodeOSLinux,
+		Location:        "Test",
+		IPs:             domain.IPList{"127.0.0.2"},
+		WorkPath:        "/srv/gameap",
+		GdaemonHost:     "127.0.0.2",
+		GdaemonPort:     31717,
+		GdaemonAPIKey:   "test-api-key-node2",
+		GdaemonAPIToken: &node2Token,
+	}
+	if err := c.nodeRepo.Save(ctx, node2); err != nil {
+		return nil, fmt.Errorf("failed to create node 2: %w", err)
 	}
 
 	game := &domain.Game{
@@ -390,10 +438,20 @@ func SetupFixtures(ctx context.Context, c *InmemoryContainer) (*TestFixtures, er
 		abilityID++
 	}
 
+	const enrollmentSetupKey = "test-enrollment-setup-key"
+	if c.cacheService != nil {
+		if err := c.cacheService.Set(ctx, enrollment.SetupKeyCacheKey, enrollmentSetupKey); err != nil {
+			return nil, fmt.Errorf("failed to seed enrollment setup key: %w", err)
+		}
+	}
+
 	return &TestFixtures{
-		AdminUser:   adminUser,
-		RegularUser: regularUser,
-		Server1:     server1,
-		Server2:     server2,
+		AdminUser:          adminUser,
+		RegularUser:        regularUser,
+		Server1:            server1,
+		Server2:            server2,
+		Node1:              node1,
+		Node2:              node2,
+		EnrollmentSetupKey: enrollmentSetupKey,
 	}, nil
 }

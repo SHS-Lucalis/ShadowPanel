@@ -1,0 +1,175 @@
+name: Security Fuzz
+
+# Weekly fuzz run for the API security harness.
+# - Seed corpus is already exercised by the regular Test workflow on every push/PR.
+# - This workflow lets the Go fuzz mutator burn cycles to find new crashing inputs.
+# - Each target runs in its own matrix job so they execute in parallel.
+
+on:
+  schedule:
+    # 03:00 UTC every Monday.
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+    inputs:
+      fuzztime:
+        description: 'Per-target fuzz duration (e.g. 10m, 1h, 30m).'
+        required: false
+        default: '10m'
+        type: string
+      targets:
+        description: 'Optional regex of target names to run (default: all).'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  # Avoid overlapping runs that would race on the cached corpus.
+  group: security-fuzz
+  cancel-in-progress: false
+
+jobs:
+  fuzz:
+    name: ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    # Generous: covers the longest fuzztime input (1h) plus build/cache overhead.
+    timeout-minutes: 90
+    strategy:
+      # One target failing must NOT cancel sibling targets — every target should
+      # always get its full slot, otherwise we lose corpus for the others.
+      fail-fast: false
+      matrix:
+        target:
+          - FuzzAuthMiddleware_AuthorizationHeader
+          - FuzzAuthMiddleware_TokenParsing
+          - FuzzAuthMiddleware_AdminEndpointBypass
+          - FuzzFileManagerPath_DoesNotBypassAuthorization
+          - FuzzFileManagerPath_OwnServer_DoesNotLeakOtherServerFiles
+          - FuzzServerIDPathParam_DoesNotLeakOtherServer
+          - FuzzPATAbilities_PostToken_SingleAbility
+          - FuzzPATAbilities_PostToken_RawBody
+          - FuzzPutUserBody_MassAssignment
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: 1.26.x
+
+      - name: Filter targets
+        id: filter
+        run: |
+          filter='${{ github.event.inputs.targets }}'
+          if [ -z "$filter" ] || echo '${{ matrix.target }}' | grep -Eq "$filter"; then
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Target ${{ matrix.target }} excluded by filter '$filter'"
+          fi
+
+      - name: Restore Go module cache
+        if: steps.filter.outputs.skip == 'false'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: gocache-fuzz-${{ runner.os }}-${{ hashFiles('go.sum') }}
+          restore-keys: |
+            gocache-fuzz-${{ runner.os }}-
+
+      # Persist corpus across runs so the mutator builds on previous discoveries.
+      # Key tied to target+target file hash; restore-keys falls back to the most
+      # recent corpus when the source changes.
+      - name: Restore fuzz corpus
+        if: steps.filter.outputs.skip == 'false'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build/fuzz/github.com/gameap/gameap/internal/api/${{ matrix.target }}
+            internal/api/testdata/fuzz/${{ matrix.target }}
+          key: fuzz-corpus-${{ matrix.target }}-${{ hashFiles('internal/api/router_security_*_fuzz_test.go') }}-${{ github.run_id }}
+          restore-keys: |
+            fuzz-corpus-${{ matrix.target }}-${{ hashFiles('internal/api/router_security_*_fuzz_test.go') }}-
+            fuzz-corpus-${{ matrix.target }}-
+
+      - name: Download dependencies
+        if: steps.filter.outputs.skip == 'false'
+        run: go mod download
+
+      - name: Run fuzz target
+        if: steps.filter.outputs.skip == 'false'
+        env:
+          FUZZTIME: ${{ github.event.inputs.fuzztime || '10m' }}
+        run: |
+          set -o pipefail
+          go test \
+            -run '^$' \
+            -fuzz='^${{ matrix.target }}$' \
+            -fuzztime="$FUZZTIME" \
+            ./internal/api/ 2>&1 | tee fuzz-${{ matrix.target }}.log
+
+      # On failure, Go writes the crashing input to testdata/fuzz/<Target>/<id>.
+      # Upload that and the log so the failure can be reproduced locally with:
+      #   go test -run='<Target>/<id>' ./internal/api/
+      - name: Upload crashing inputs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-failure-${{ matrix.target }}
+          path: |
+            internal/api/testdata/fuzz/${{ matrix.target }}
+            fuzz-${{ matrix.target }}.log
+          if-no-files-found: warn
+          retention-days: 30
+
+      # File a GitHub issue once per failing target. Skipped if an open issue
+      # with the same title already exists, so a single broken target does not
+      # spam the tracker week after week.
+      - name: Open issue on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const target = '${{ matrix.target }}';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const title = `Security fuzz: ${target} found a failing input`;
+
+            const existing = await github.rest.search.issuesAndPullRequests({
+              q: `repo:${context.repo.owner}/${context.repo.repo} is:open is:issue in:title "${title}"`,
+            });
+            if (existing.data.total_count > 0) {
+              core.info(`Open issue already exists; skipping creation: ${existing.data.items[0].html_url}`);
+              return;
+            }
+
+            const body = [
+              `The weekly fuzz workflow for **${target}** found at least one failing input.`,
+              ``,
+              `**Run:** ${runUrl}`,
+              ``,
+              `**Reproduce locally:**`,
+              ``,
+              '```',
+              `# 1. Download the artifact "fuzz-failure-${target}" from the run`,
+              `# 2. Place its contents under internal/api/testdata/fuzz/${target}/`,
+              `go test -run='^${target}$' ./internal/api/`,
+              '```',
+              ``,
+              `Once you've fixed the root cause, keep the crashing input in`,
+              `\`testdata/fuzz/${target}/\` so it remains in the regular regression suite.`,
+            ].join('\n');
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+              labels: ['security', 'fuzz'],
+            });
