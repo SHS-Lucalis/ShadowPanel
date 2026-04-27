@@ -16,6 +16,12 @@ type Config struct {
 	HTTPPort   uint16 `env:"HTTP_PORT" envDefault:"8025"`
 	HTTPSPort  uint16 `env:"HTTPS_PORT" envDefault:"443"`
 
+	// HTTPAllowedOrigins, when non-empty, becomes the CORS allow-list
+	// verbatim (must be fully-qualified origins like "https://app.example.com").
+	// When empty, the middleware auto-derives a single origin from HTTPHost,
+	// HTTPPort and TLS.ForceHTTPS.
+	HTTPAllowedOrigins []string `env:"HTTP_ALLOWED_ORIGINS" envDefault:"" envSeparator:","`
+
 	TLS struct {
 		CertFile   string `env:"TLS_CERT_FILE" envDefault:""`
 		KeyFile    string `env:"TLS_KEY_FILE" envDefault:""`

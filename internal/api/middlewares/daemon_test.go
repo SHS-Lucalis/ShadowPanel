@@ -12,16 +12,19 @@ import (
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
+	pkgstrings "github.com/gameap/gameap/pkg/strings"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestDaemonAuthMiddleware_Middleware(t *testing.T) {
-	// Setup test node
+	// Setup test node. The middleware now compares SHA-256 of the presented
+	// X-Auth-Token to the stored value, so the fixture stores the hash.
 	nodeRepo := inmemory.NewNodeRepository()
 	now := time.Now()
 	validToken := "valid-test-token-123"
 	invalidToken := "invalid-token-456"
+	storedToken := pkgstrings.SHA256(validToken)
 
 	testNode := &domain.Node{
 		ID:              1,
@@ -32,7 +35,7 @@ func TestDaemonAuthMiddleware_Middleware(t *testing.T) {
 		GdaemonHost:     "localhost",
 		GdaemonPort:     8080,
 		GdaemonAPIKey:   "test-key",
-		GdaemonAPIToken: new(validToken),
+		GdaemonAPIToken: &storedToken,
 		WorkPath:        "/var/gameap",
 		CreatedAt:       &now,
 		UpdatedAt:       &now,
@@ -127,12 +130,15 @@ func TestDaemonAuthMiddleware_Middleware(t *testing.T) {
 }
 
 func TestDaemonAuthMiddleware_MultipleNodes(t *testing.T) {
-	// Setup multiple nodes with different tokens
+	// Setup multiple nodes with different tokens. Stored values are hashes;
+	// the middleware hashes the presented X-Auth-Token before lookup.
 	nodeRepo := inmemory.NewNodeRepository()
 	now := time.Now()
 
 	node1Token := "token-node-1"
 	node2Token := "token-node-2"
+	node1Hash := pkgstrings.SHA256(node1Token)
+	node2Hash := pkgstrings.SHA256(node2Token)
 
 	node1 := &domain.Node{
 		ID:              1,
@@ -140,7 +146,7 @@ func TestDaemonAuthMiddleware_MultipleNodes(t *testing.T) {
 		OS:              "linux",
 		GdaemonHost:     "node1.example.com",
 		GdaemonPort:     8080,
-		GdaemonAPIToken: new(node1Token),
+		GdaemonAPIToken: &node1Hash,
 		WorkPath:        "/var/gameap",
 		CreatedAt:       &now,
 		UpdatedAt:       &now,
@@ -153,7 +159,7 @@ func TestDaemonAuthMiddleware_MultipleNodes(t *testing.T) {
 		OS:              "windows",
 		GdaemonHost:     "node2.example.com",
 		GdaemonPort:     8081,
-		GdaemonAPIToken: new(node2Token),
+		GdaemonAPIToken: &node2Hash,
 		WorkPath:        "C:\\gameap",
 		CreatedAt:       &now,
 		UpdatedAt:       &now,

@@ -16,7 +16,7 @@ import (
 
 const (
 	DefaultTokenDuration = 24 * time.Hour
-	RememberMeDuration   = 30 * 24 * time.Hour // 30 days
+	RememberMeDuration   = 7 * 24 * time.Hour
 )
 
 type Handler struct {

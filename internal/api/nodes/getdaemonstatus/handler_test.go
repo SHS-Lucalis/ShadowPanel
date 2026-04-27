@@ -121,7 +121,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				assert.Equal(t, uint(1), resp.ID)
 				assert.Equal(t, "Test Node", resp.Name)
-				assert.Equal(t, "test-api-key", resp.APIKey)
+				assert.True(t, resp.HasAPIKey)
 				assert.Equal(t, "grpc", resp.ConnectionType)
 				assert.Equal(t, "3.0.0", resp.Version.Version)
 				assert.Equal(t, "2024-01-15", resp.Version.CompileDate)
@@ -267,7 +267,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 				assert.Equal(t, uint(2), resp.ID)
 				assert.Equal(t, "Test Node 2", resp.Name)
-				assert.Equal(t, "test-api-key-2", resp.APIKey)
+				assert.True(t, resp.HasAPIKey)
 				assert.Equal(t, "legacy", resp.ConnectionType)
 				assert.Equal(t, "2.5.0", resp.Version.Version)
 				assert.Equal(t, "2023-12-01", resp.Version.CompileDate)
@@ -499,7 +499,7 @@ func TestNewDaemonStatusResponse(t *testing.T) {
 			want: daemonStatusResponse{
 				ID:             1,
 				Name:           "Test Node",
-				APIKey:         "api-key-123",
+				HasAPIKey:      true,
 				ConnectionType: "grpc",
 				Version: versionInfo{
 					Version:     "3.1.0",
@@ -532,7 +532,7 @@ func TestNewDaemonStatusResponse(t *testing.T) {
 			want: daemonStatusResponse{
 				ID:             2,
 				Name:           "Node 2",
-				APIKey:         "key-2",
+				HasAPIKey:      true,
 				ConnectionType: "legacy",
 				Version: versionInfo{
 					Version:     "",
@@ -561,7 +561,7 @@ func TestNewDaemonStatusResponse(t *testing.T) {
 			want: daemonStatusResponse{
 				ID:             3,
 				Name:           "Detached",
-				APIKey:         "key-3",
+				HasAPIKey:      true,
 				ConnectionType: "none",
 				Version: versionInfo{
 					Version:     "3.0.0",

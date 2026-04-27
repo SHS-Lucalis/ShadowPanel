@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"context"
+	"crypto/subtle"
 	"net/http"
 	"strconv"
 	"strings"
@@ -30,6 +31,7 @@ var (
 	errUserNotFound             = errors.New("user not found")
 	errUserNotAuthenticated     = errors.New("user not authenticated")
 	errAdminPermissionsRequired = errors.New("admin permissions required")
+	errTokenRevoked             = errors.New("token has been revoked")
 )
 
 type tokenType int
@@ -44,6 +46,7 @@ type AuthMiddleware struct {
 	authService authService
 	userRepo    repositories.UserRepository
 	tokenRepo   repositories.PersonalAccessTokenRepository
+	revocation  auth.TokenRevocation
 	responder   base.Responder
 }
 
@@ -51,12 +54,18 @@ func NewAuthMiddleware(
 	authService authService,
 	userRepo repositories.UserRepository,
 	tokenRepo repositories.PersonalAccessTokenRepository,
+	revocation auth.TokenRevocation,
 	responder base.Responder,
 ) *AuthMiddleware {
+	if revocation == nil {
+		revocation = auth.NoopRevocation{}
+	}
+
 	return &AuthMiddleware{
 		authService: authService,
 		userRepo:    userRepo,
 		tokenRepo:   tokenRepo,
+		revocation:  revocation,
 		responder:   responder,
 	}
 }
@@ -115,6 +124,30 @@ func (m *AuthMiddleware) middleware(next http.Handler, optional bool) http.Handl
 			}
 
 			m.responder.WriteError(r.Context(), w, err)
+
+			return
+		}
+
+		// Revocation is checked after credentials are verified — never reveal
+		// to an unauthenticated caller whether a particular token is on the
+		// denylist (defence against probing the denylist as an oracle).
+		revoked, revErr := m.revocation.IsRevoked(r.Context(), auth.TokenIdentifier(tokenString))
+		if revErr != nil {
+			m.responder.WriteError(r.Context(), w, errors.WithMessage(revErr, "failed to check token revocation"))
+
+			return
+		}
+		if revoked {
+			if optional {
+				next.ServeHTTP(w, r)
+
+				return
+			}
+
+			m.responder.WriteError(r.Context(), w, api.WrapHTTPError(
+				errTokenRevoked,
+				http.StatusUnauthorized,
+			))
 
 			return
 		}
@@ -219,7 +252,7 @@ func (m *AuthMiddleware) processPersonalAccessToken(ctx context.Context, token s
 
 	dbToken := &dbTokens[0]
 
-	if dbToken.Token != pkgstrings.SHA256(tokenPart) {
+	if subtle.ConstantTimeCompare([]byte(dbToken.Token), []byte(pkgstrings.SHA256(tokenPart))) != 1 {
 		return nil, api.WrapHTTPError(
 			errInvalidPAT,
 			http.StatusUnauthorized,

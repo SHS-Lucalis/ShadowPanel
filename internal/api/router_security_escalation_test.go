@@ -283,3 +283,54 @@ func TestRouterSecurity_API5_Escalation_AdminGrantedAccessThenRevoked(t *testing
 func testNameForAdminEndpoint(prefix string, ep adminEndpoint) string {
 	return testNameForEndpoint(prefix, ep.method, ep.path)
 }
+
+// TestRouterSecurity_API3_NodeResponseDoesNotLeakDaemonSecrets covers API3:2023
+// (Broken Object Property Level Authorization). Even an authenticated administrator
+// must not receive the daemon bootstrap key, daemon login/password or daemon API
+// token in routine GET responses on /api/nodes/{id} and /api/nodes/{id}/daemon.
+//
+// Possession of the daemon API key allows minting a fresh daemon API token via
+// /gdaemon_api/get_token (see internal/api/daemonapi/gettoken/handler.go), which
+// in turn grants full daemon control. These fields belong only to a deliberate
+// "reveal credentials" flow with audit logging, not to ordinary list/detail reads.
+func TestRouterSecurity_API3_NodeResponseDoesNotLeakDaemonSecrets(t *testing.T) {
+	env := setupSecurityTest(t)
+	adminToken := issuePASETOToken(t, env, env.fixtures.AdminUser)
+
+	// Sanity: the fixture node holds a known-secret API key + daemon API token so
+	// we can assert their plaintext values are not echoed back.
+	require.NotEmpty(t, env.fixtures.Node1.GdaemonAPIKey, "fixture must set a daemon API key")
+	require.NotNil(t, env.fixtures.Node1.GdaemonAPIToken, "fixture must set a daemon API token")
+	require.NotEmpty(t, *env.fixtures.Node1.GdaemonAPIToken, "fixture must set a non-empty daemon API token")
+
+	apiKey := env.fixtures.Node1.GdaemonAPIKey
+	apiToken := *env.fixtures.Node1.GdaemonAPIToken
+
+	endpoints := []string{
+		"/api/nodes/1",
+		"/api/dedicated_servers/1",
+	}
+
+	forbiddenSubstrings := []string{
+		`"gdaemon_api_key"`,
+		`"gdaemon_password"`,
+		`"gdaemon_login"`,
+		`"gdaemon_api_token"`,
+		apiKey,
+		apiToken,
+	}
+
+	for _, path := range endpoints {
+		t.Run("GET_"+path, func(t *testing.T) {
+			w := doRequest(t, env, http.MethodGet, path, adminToken)
+			require.Equalf(t, http.StatusOK, w.Code,
+				"admin must reach %s; got %d body=%s", path, w.Code, w.Body.String())
+
+			body := w.Body.String()
+			for _, needle := range forbiddenSubstrings {
+				assert.NotContainsf(t, body, needle,
+					"BOPLA: %s response leaked %q to admin; body=%s", path, needle, body)
+			}
+		})
+	}
+}

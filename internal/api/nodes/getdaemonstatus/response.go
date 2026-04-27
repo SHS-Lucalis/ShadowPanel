@@ -22,7 +22,7 @@ type baseInfo struct {
 type daemonStatusResponse struct {
 	ID             uint        `json:"id"`
 	Name           string      `json:"name"`
-	APIKey         string      `json:"api_key"`
+	HasAPIKey      bool        `json:"has_api_key"`
 	ConnectionType string      `json:"connection_type"`
 	Version        versionInfo `json:"version"`
 	BaseInfo       baseInfo    `json:"base_info"`
@@ -36,7 +36,7 @@ func newDaemonStatusResponse(
 	return daemonStatusResponse{
 		ID:             node.ID,
 		Name:           node.Name,
-		APIKey:         node.GdaemonAPIKey,
+		HasAPIKey:      node.GdaemonAPIKey != "",
 		ConnectionType: connectionType,
 		Version: versionInfo{
 			Version:     status.Version,

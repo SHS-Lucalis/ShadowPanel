@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/gameap/gameap/internal/api/auth/login"
+	"github.com/gameap/gameap/internal/api/auth/logout"
 	"github.com/gameap/gameap/internal/api/clientcertificates/deleteclientcertificates"
 	"github.com/gameap/gameap/internal/api/clientcertificates/getclientcertificates"
 	"github.com/gameap/gameap/internal/api/clientcertificates/postclientcertificates"
@@ -251,6 +252,7 @@ func frontendPluginsHandler(c container) http.Handler {
 		c.AuthService(),
 		c.UserService(),
 		c.PersonalAccessTokenRepository(),
+		auth.NewCacheRevocation(c.Cache()),
 		c.Responder(),
 	)
 
@@ -268,6 +270,7 @@ func frontendPluginsStylesHandler(c container) http.Handler {
 		c.AuthService(),
 		c.UserService(),
 		c.PersonalAccessTokenRepository(),
+		auth.NewCacheRevocation(c.Cache()),
 		c.Responder(),
 	)
 
@@ -362,10 +365,21 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 
 		// Auth
 		{
-			Method:           http.MethodPost,
-			Path:             "/api/auth/login",
-			Handler:          login.NewHandler(c.AuthService(), c.UserService(), c.Responder()),
+			Method: http.MethodPost,
+			Path:   "/api/auth/login",
+			Handler: middlewares.NewLoginRateLimitMiddleware(c.Cache(), c.Responder()).Middleware(
+				login.NewHandler(c.AuthService(), c.UserService(), c.Responder()),
+			),
 			AllowGuestAccess: true,
+		},
+		{
+			Method: http.MethodPost,
+			Path:   "/api/auth/logout",
+			Handler: logout.NewHandler(
+				c.AuthService(),
+				auth.NewCacheRevocation(c.Cache()),
+				c.Responder(),
+			),
 		},
 
 		// User
@@ -1684,6 +1698,7 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 		c.AuthService(),
 		c.UserService(),
 		c.PersonalAccessTokenRepository(),
+		auth.NewCacheRevocation(c.Cache()),
 		c.Responder(),
 	)
 

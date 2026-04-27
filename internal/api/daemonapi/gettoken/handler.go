@@ -98,7 +98,12 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	node.GdaemonAPIToken = &token
+	// Persist only the SHA-256 hash; the plaintext is returned to the daemon once
+	// in the response below and must never be retrievable from the database.
+	// Mirrors the Personal Access Token model in
+	// internal/api/tokens/posttoken/handler.go and prevents a DB read from
+	// yielding a usable daemon credential.
+	node.GdaemonAPIToken = new(pkgstrings.SHA256(token))
 	now := time.Now()
 	node.UpdatedAt = &now
 

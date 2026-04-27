@@ -3,13 +3,22 @@ package getservers
 import (
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/gameap/gameap/internal/api/base"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/pkg/errors"
 )
+
+//nolint:gochecknoglobals
+var allowedSortFields = map[string]string{
+	"id":          "id",
+	"name":        "name",
+	"server_ip":   "server_ip",
+	"server_port": "server_port",
+	"game_id":     "game_id",
+	"ds_id":       "ds_id",
+}
 
 type input struct {
 	DSIDs      []uint
@@ -116,45 +125,15 @@ func buildFilter(input *input, userID uint, isAdmin bool) *filters.FindServer {
 
 func buildSorting(input *input) []filters.Sorting {
 	defaultSorting := []filters.Sorting{
-		{
-			Field:     "id",
-			Direction: filters.SortDirectionDesc,
-		},
+		{Field: "id", Direction: filters.SortDirectionDesc},
 	}
 
-	if input.Sort == "" {
+	sort, err := filters.ParseUserSort(input.Sort, allowedSortFields)
+	if err != nil || sort == nil {
 		return defaultSorting
 	}
 
-	var direction filters.SortDirection
-	field := input.Sort
-
-	if strings.HasPrefix(input.Sort, "-") {
-		direction = filters.SortDirectionDesc
-		field = strings.TrimPrefix(input.Sort, "-")
-	} else {
-		direction = filters.SortDirectionAsc
-	}
-
-	validFields := map[string]bool{
-		"id":          true,
-		"name":        true,
-		"server_ip":   true,
-		"server_port": true,
-		"game_id":     true,
-		"ds_id":       true,
-	}
-
-	if !validFields[field] {
-		return defaultSorting
-	}
-
-	return []filters.Sorting{
-		{
-			Field:     field,
-			Direction: direction,
-		},
-	}
+	return []filters.Sorting{*sort}
 }
 
 func buildPagination(input *input) *filters.Pagination {

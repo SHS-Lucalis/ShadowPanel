@@ -2,7 +2,6 @@ package getdaemontasks
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/gameap/gameap/internal/api/base"
 	"github.com/gameap/gameap/internal/filters"
@@ -11,6 +10,15 @@ import (
 	"github.com/gameap/gameap/pkg/auth"
 	"github.com/pkg/errors"
 )
+
+//nolint:gochecknoglobals
+var allowedSortFields = map[string]string{
+	"id":                  "id",
+	"dedicated_server_id": "dedicated_server_id",
+	"server_id":           "server_id",
+	"task":                "task",
+	"status":              "status",
+}
 
 type Handler struct {
 	daemonTasksRepo repositories.DaemonTaskRepository
@@ -110,54 +118,17 @@ func buildFilter(input *input) *filters.FindDaemonTask {
 }
 
 func buildSorting(input *input) []filters.Sorting {
-	// Default sorting
 	defaultSorting := []filters.Sorting{
-		{
-			Field:     "created_at",
-			Direction: filters.SortDirectionDesc,
-		},
-		{
-			Field:     "id",
-			Direction: filters.SortDirectionDesc,
-		},
+		{Field: "created_at", Direction: filters.SortDirectionDesc},
+		{Field: "id", Direction: filters.SortDirectionDesc},
 	}
 
-	// If no sort parameter provided, use default
-	if input.Sort == "" {
+	sort, err := filters.ParseUserSort(input.Sort, allowedSortFields)
+	if err != nil || sort == nil {
 		return defaultSorting
 	}
 
-	// Parse sort parameter
-	var direction filters.SortDirection
-	field := input.Sort
-
-	if strings.HasPrefix(input.Sort, "-") {
-		direction = filters.SortDirectionDesc
-		field = strings.TrimPrefix(input.Sort, "-")
-	} else {
-		direction = filters.SortDirectionAsc
-	}
-
-	// Validate field name - only allow specific fields
-	validFields := map[string]bool{
-		"id":                  true,
-		"dedicated_server_id": true,
-		"server_id":           true,
-		"task":                true,
-		"status":              true,
-	}
-
-	if !validFields[field] {
-		// If invalid field, return default sorting
-		return defaultSorting
-	}
-
-	return []filters.Sorting{
-		{
-			Field:     field,
-			Direction: direction,
-		},
-	}
+	return []filters.Sorting{*sort}
 }
 
 func buildPagination(input *input) *filters.Pagination {

@@ -10,7 +10,8 @@ info:
     The API supports three authentication methods:
 
     ### Bearer Token (JWT/PASETO)
-    Obtained from `POST /api/auth/login`. Valid for 24 hours (or 30 days with `remember_me`).
+    Obtained from `POST /api/auth/login`. Valid for 24 hours (or 7 days with `remember_me`).
+    Tokens can be revoked early via `POST /api/auth/logout`.
     ```
     Authorization: Bearer eyJhbG...
     ```
@@ -304,6 +305,8 @@ paths:
   # Auth
   /api/auth/login:
     $ref: './paths/auth.yaml#/~1api~1auth~1login'
+  /api/auth/logout:
+    $ref: './paths/auth.yaml#/~1api~1auth~1logout'
 
   # User & Profile
   /api/user:

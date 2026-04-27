@@ -11,6 +11,7 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/pkg/api"
+	pkgstrings "github.com/gameap/gameap/pkg/strings"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -193,7 +194,10 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				require.NoError(t, err)
 				require.Len(t, nodes, 1)
 				require.NotNil(t, nodes[0].GdaemonAPIToken)
-				assert.Equal(t, response.Token, *nodes[0].GdaemonAPIToken)
+				assert.NotEqual(t, response.Token, *nodes[0].GdaemonAPIToken,
+					"persisted token must not be the plaintext returned to the daemon")
+				assert.Equal(t, pkgstrings.SHA256(response.Token), *nodes[0].GdaemonAPIToken,
+					"persisted token must equal SHA-256 of the plaintext")
 				assert.NotNil(t, nodes[0].UpdatedAt)
 			}
 		})

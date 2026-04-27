@@ -8,6 +8,7 @@ import (
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
+	pkgstrings "github.com/gameap/gameap/pkg/strings"
 	"github.com/pkg/errors"
 )
 
@@ -38,11 +39,13 @@ func (m *DaemonAuthMiddleware) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Find node by gdaemon_api_token
+		// Daemon tokens are stored as SHA-256 hashes; hash the presented token
+		// before lookup so the database never has to hold the plaintext.
+		hashedToken := pkgstrings.SHA256(authToken)
 		nodes, err := m.nodeRepo.Find(
 			r.Context(),
 			&filters.FindNode{
-				GDaemonAPIToken: &authToken,
+				GDaemonAPIToken: &hashedToken,
 				WithDeleted:     true,
 			},
 			nil,

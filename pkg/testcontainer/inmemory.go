@@ -34,6 +34,7 @@ import (
 	pkgapi "github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
 	"github.com/gameap/gameap/pkg/plugin"
+	pkgstrings "github.com/gameap/gameap/pkg/strings"
 	"github.com/samber/lo"
 )
 
@@ -272,6 +273,9 @@ type TestFixtures struct {
 }
 
 // Node tokens used in security tests for daemon X-Auth-Token authentication.
+// These are the plaintext values daemons present in the X-Auth-Token header.
+// The middleware hashes the presented token with SHA-256 and looks it up in the
+// database, so SetupFixtures stores hash(node*GDaemonAPIToken) on the node row.
 const (
 	Node1GDaemonAPIToken = "test-daemon-token-node1"
 	Node2GDaemonAPIToken = "test-daemon-token-node2"
@@ -310,7 +314,7 @@ func SetupFixtures(ctx context.Context, c *InmemoryContainer) (*TestFixtures, er
 		return nil, fmt.Errorf("failed to set user roles: %w", err)
 	}
 
-	node1Token := Node1GDaemonAPIToken
+	node1Token := pkgstrings.SHA256(Node1GDaemonAPIToken)
 	node1 := &domain.Node{
 		ID:              1,
 		Enabled:         true,
@@ -328,7 +332,7 @@ func SetupFixtures(ctx context.Context, c *InmemoryContainer) (*TestFixtures, er
 		return nil, fmt.Errorf("failed to create node 1: %w", err)
 	}
 
-	node2Token := Node2GDaemonAPIToken
+	node2Token := pkgstrings.SHA256(Node2GDaemonAPIToken)
 	node2 := &domain.Node{
 		ID:              2,
 		Enabled:         true,

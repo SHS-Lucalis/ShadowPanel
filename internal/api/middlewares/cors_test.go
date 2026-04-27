@@ -197,3 +197,88 @@ func TestCORSMiddleware_Middleware_AllowsCredentials(t *testing.T) {
 
 	assert.Equal(t, "true", rec.Header().Get("Access-Control-Allow-Credentials"))
 }
+
+func TestNewCORSMiddleware_HTTPSWhenForceHTTPS(t *testing.T) {
+	cfg := &config.Config{
+		HTTPHost:  "app.example.com",
+		HTTPPort:  8025,
+		HTTPSPort: 443,
+	}
+	cfg.TLS.ForceHTTPS = true
+
+	middleware := NewCORSMiddleware(cfg)
+
+	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	handler := middleware.Middleware(nextHandler)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/test", nil)
+	req.Header.Set("Origin", "https://app.example.com")
+
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+
+	assert.Equal(t, "https://app.example.com", rec.Header().Get("Access-Control-Allow-Origin"),
+		"with ForceHTTPS the auto-derived origin must use https://, not http://")
+}
+
+func TestNewCORSMiddleware_RejectsHTTPOriginWhenForceHTTPS(t *testing.T) {
+	cfg := &config.Config{
+		HTTPHost:  "app.example.com",
+		HTTPSPort: 443,
+	}
+	cfg.TLS.ForceHTTPS = true
+
+	middleware := NewCORSMiddleware(cfg)
+
+	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	handler := middleware.Middleware(nextHandler)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/test", nil)
+	req.Header.Set("Origin", "http://app.example.com")
+
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+
+	// rs/cors omits the Allow-Origin header for un-allowed origins (it does
+	// NOT 4xx the request); the absence of the header is the rejection signal.
+	assert.Empty(t, rec.Header().Get("Access-Control-Allow-Origin"),
+		"http:// origin must not be allowed under ForceHTTPS")
+}
+
+func TestNewCORSMiddleware_ExplicitAllowedOriginsWinsOverAutoDerived(t *testing.T) {
+	cfg := &config.Config{
+		HTTPHost:           "default.local",
+		HTTPPort:           80,
+		HTTPAllowedOrigins: []string{"https://admin.example.com", "https://ops.example.com"},
+	}
+
+	middleware := NewCORSMiddleware(cfg)
+
+	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	handler := middleware.Middleware(nextHandler)
+
+	for _, origin := range []string{"https://admin.example.com", "https://ops.example.com"} {
+		req := httptest.NewRequest(http.MethodGet, "/api/test", nil)
+		req.Header.Set("Origin", origin)
+
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, req)
+
+		assert.Equalf(t, origin, rec.Header().Get("Access-Control-Allow-Origin"),
+			"explicit allow-list entry %s must be honoured", origin)
+	}
+
+	// The auto-derived "http://default.local" must NOT be implicitly added.
+	req := httptest.NewRequest(http.MethodGet, "/api/test", nil)
+	req.Header.Set("Origin", "http://default.local")
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+	assert.Empty(t, rec.Header().Get("Access-Control-Allow-Origin"),
+		"auto-derived default origin must not be merged when an explicit list is provided")
+}

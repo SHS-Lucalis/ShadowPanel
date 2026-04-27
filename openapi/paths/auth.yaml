@@ -181,3 +181,23 @@
           application/json:
             schema:
               $ref: '../schemas/ErrorResponse.yaml'
+
+/api/auth/logout:
+  post:
+    tags:
+      - Auth
+    summary: Logout
+    description: |
+      Revokes the bearer token used to authenticate this request. Subsequent
+      requests presenting the same token return `401 Unauthorized`. The denial
+      entry expires together with the token's natural expiration time.
+    operationId: logout
+    responses:
+      '204':
+        description: Token revoked
+      '401':
+        description: Missing or invalid token
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'

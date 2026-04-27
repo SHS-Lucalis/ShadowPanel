@@ -293,7 +293,10 @@ func TestJWTClaims_ImplementsClaims(t *testing.T) {
 		},
 	}
 
-	var _ Claims = claims
+	// JWTClaims is wrapped via jwtClaimsAdapter to satisfy the local
+	// auth.Claims interface (which exposes expiration as *time.Time, not
+	// *jwt.NumericDate). The adapter is exercised through ValidateToken.
+	var _ Claims = jwtClaimsAdapter{inner: claims}
 
 	subject, err := claims.GetSubject()
 	require.NoError(t, err)

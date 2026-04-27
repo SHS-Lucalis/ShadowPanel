@@ -18,6 +18,30 @@ type JWTClaims struct {
 	jwt.RegisteredClaims
 }
 
+// jwtClaimsAdapter wraps *JWTClaims to satisfy the local auth.Claims interface,
+// which exposes expiration as *time.Time (transport-agnostic) rather than the
+// JWT-specific *jwt.NumericDate.
+type jwtClaimsAdapter struct {
+	inner *JWTClaims
+}
+
+func (a jwtClaimsAdapter) GetSubject() (string, error) {
+	return a.inner.GetSubject()
+}
+
+func (a jwtClaimsAdapter) GetExpirationTime() (*time.Time, error) {
+	exp, err := a.inner.GetExpirationTime()
+	if err != nil {
+		return nil, err //nolint:wrapcheck // surfacing library error verbatim
+	}
+	if exp == nil {
+		return nil, nil
+	}
+	t := exp.Time
+
+	return &t, nil
+}
+
 type JWTService struct {
 	secretKey []byte
 }
@@ -63,7 +87,7 @@ func (j *JWTService) ValidateToken(tokenString string) (Claims, error) {
 	}
 
 	if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
-		return claims, nil
+		return jwtClaimsAdapter{inner: claims}, nil
 	}
 
 	return nil, errors.New("invalid token")

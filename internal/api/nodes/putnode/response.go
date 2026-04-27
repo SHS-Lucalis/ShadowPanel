@@ -20,9 +20,6 @@ type nodeResponse struct {
 	SteamcmdPath        *string    `json:"steamcmd_path"`
 	GdaemonHost         string     `json:"gdaemon_host"`
 	GdaemonPort         int        `json:"gdaemon_port"`
-	GdaemonAPIKey       string     `json:"gdaemon_api_key"`
-	GdaemonLogin        *string    `json:"gdaemon_login"`
-	GdaemonPassword     *string    `json:"gdaemon_password"`
 	GdaemonServerCert   string     `json:"gdaemon_server_cert"`
 	ClientCertificateID uint       `json:"client_certificate_id"`
 	PreferInstallMethod string     `json:"prefer_install_method"`
@@ -60,9 +57,6 @@ func newNodeResponse(node *domain.Node) nodeResponse {
 		SteamcmdPath:        node.SteamcmdPath,
 		GdaemonHost:         node.GdaemonHost,
 		GdaemonPort:         node.GdaemonPort,
-		GdaemonAPIKey:       node.GdaemonAPIKey,
-		GdaemonLogin:        node.GdaemonLogin,
-		GdaemonPassword:     node.GdaemonPassword,
 		GdaemonServerCert:   node.GdaemonServerCert,
 		ClientCertificateID: node.ClientCertificateID,
 		PreferInstallMethod: string(node.PreferInstallMethod),

@@ -25,6 +25,7 @@ import (
 
 	"github.com/gameap/gameap/pkg/testcontainer"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestRouterSecurity_API2_DaemonAPIAuth verifies the X-Auth-Token contract:
@@ -215,6 +216,42 @@ func TestRouterSecurity_API8_NodeCreateRejectsBogusToken(t *testing.T) {
 		"node creation must not succeed with a bogus setup token; body=%s", w.Body.String())
 	assert.NotEqualf(t, http.StatusInternalServerError, w.Code,
 		"node creation must not panic on bogus input; body=%s", w.Body.String())
+}
+
+// TestRouterSecurity_API2_DaemonAPITokenStoredAsHash covers API2:2023 — the
+// stored daemon API token must be opaque (a one-way hash). Mirrors
+// TestRouterSecurity_API2_PATSecretMustBeOpaque for the daemon channel: sending
+// the value as it appears in the database (the hash) must NOT authenticate.
+// Only the original plaintext that was issued via /gdaemon_api/get_token
+// authenticates.
+func TestRouterSecurity_API2_DaemonAPITokenStoredAsHash(t *testing.T) {
+	env := setupSecurityTest(t)
+
+	// What the daemon presents (issued via /gdaemon_api/get_token).
+	plaintext := testcontainer.Node1GDaemonAPIToken
+	// What is actually stored on disk after the H-2 fix; nodes carry the
+	// SHA-256 hash, not the plaintext.
+	storedHash := *env.fixtures.Node1.GdaemonAPIToken
+
+	require.NotEqual(t, plaintext, storedHash,
+		"fixture must store SHA-256 hash, not plaintext, of the daemon token")
+	require.Len(t, storedHash, 64,
+		"stored token must be 64-char hex SHA-256")
+
+	// Plaintext must authenticate.
+	req := httptest.NewRequest(http.MethodGet, "/gdaemon_api/servers", nil)
+	req.Header.Set("X-Auth-Token", plaintext)
+	w := doRequestRaw(t, env, req)
+	assert.NotEqualf(t, http.StatusUnauthorized, w.Code,
+		"daemon plaintext token must authenticate; body=%s", w.Body.String())
+
+	// Sending the stored hash must NOT authenticate. If the middleware
+	// regressed to a plaintext lookup, this would succeed.
+	req = httptest.NewRequest(http.MethodGet, "/gdaemon_api/servers", nil)
+	req.Header.Set("X-Auth-Token", storedHash)
+	w = doRequestRaw(t, env, req)
+	assert.Equalf(t, http.StatusUnauthorized, w.Code,
+		"sending the stored hash must not authenticate; body=%s", w.Body.String())
 }
 
 // sanitize converts a URL path into a stable test name fragment.

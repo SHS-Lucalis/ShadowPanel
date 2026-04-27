@@ -9,6 +9,7 @@ import (
 
 	"github.com/gameap/gameap/internal/config"
 	"github.com/gameap/gameap/migrations/mysql"
+	"github.com/gameap/gameap/migrations/postgres"
 	"github.com/gameap/gameap/migrations/sqlite"
 	"github.com/pkg/errors"
 	"github.com/pressly/goose/v3"
@@ -36,6 +37,7 @@ type migration struct {
 // List of SQLite-specific migrations in Go.
 var sqliteMigrationsList = []migration{
 	{version: 1, upFN: sqlite.Up001, downFN: sqlite.Down001},
+	{version: 7, upFN: sqlite.Up007, downFN: sqlite.Down007},
 }
 
 // SqliteMigrations returns the list of SQLite-specific migrations in Go.
@@ -55,10 +57,12 @@ func SqliteMigrations(_ context.Context, _ container) (goose.Migrations, error) 
 }
 
 // List of Postgres-specific migrations in Go.
-var postgresMigrationsList = []migration{}
+var postgresMigrationsList = []migration{
+	{version: 7, upFN: postgres.Up007, downFN: postgres.Down007},
+}
 
 func PostgresMigrations(_ context.Context, _ container) (goose.Migrations, error) {
-	m := make(goose.Migrations, 0, len(mysqlMigrationsList))
+	m := make(goose.Migrations, 0, len(postgresMigrationsList))
 
 	for _, mig := range postgresMigrationsList {
 		m = append(m,
@@ -75,6 +79,7 @@ func PostgresMigrations(_ context.Context, _ container) (goose.Migrations, error
 // List of MySQL-specific migrations in Go.
 var mysqlMigrationsList = []migration{
 	{version: 1, upFN: mysql.Up001, downFN: mysql.Down001},
+	{version: 7, upFN: mysql.Up007, downFN: mysql.Down007},
 }
 
 func MySQLMigrations(_ context.Context, _ container) (goose.Migrations, error) {

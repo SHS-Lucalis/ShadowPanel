@@ -297,3 +297,60 @@ func TestRouterSecurity_API2_PATSecretMustBeOpaque(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code,
 		"original secret should authenticate; body=%s", w.Body.String())
 }
+
+// TestRouterSecurity_API2_LogoutInvalidatesToken covers OWASP API2:2023 — once
+// the user POSTs /api/auth/logout with a valid token, that exact token must be
+// rejected on subsequent requests even though its `exp` is still in the future.
+func TestRouterSecurity_API2_LogoutInvalidatesToken(t *testing.T) {
+	env := setupSecurityTest(t)
+	token := issuePASETOToken(t, env, env.fixtures.RegularUser)
+
+	// Sanity: the token works before logout.
+	w := doRequest(t, env, http.MethodGet, "/api/user", token)
+	require.Equalf(t, http.StatusOK, w.Code, "fresh token must work; body=%s", w.Body.String())
+
+	// Logout returns 204 No Content.
+	w = doRequest(t, env, http.MethodPost, "/api/auth/logout", token)
+	require.Equalf(t, http.StatusNoContent, w.Code,
+		"logout must succeed; body=%s", w.Body.String())
+
+	// The same token must now be rejected.
+	w = doRequest(t, env, http.MethodGet, "/api/user", token)
+	assert.Equalf(t, http.StatusUnauthorized, w.Code,
+		"revoked token must be rejected on subsequent requests; body=%s", w.Body.String())
+}
+
+// TestRouterSecurity_API2_LogoutRequiresAuth verifies that the logout endpoint
+// itself requires authentication — anonymous callers get 401, not 204.
+func TestRouterSecurity_API2_LogoutRequiresAuth(t *testing.T) {
+	env := setupSecurityTest(t)
+
+	w := doRequest(t, env, http.MethodPost, "/api/auth/logout", "")
+	assert.Equalf(t, http.StatusUnauthorized, w.Code,
+		"logout without a token must return 401; body=%s", w.Body.String())
+}
+
+// TestRouterSecurity_API2_LoginBruteForceProtection covers OWASP API2:2023 and
+// API4:2023 — repeated failed credential checks against /api/auth/login must
+// trip the rate limiter and return 429 Too Many Requests, mitigating CWE-307.
+//
+// The default middleware permits 20 failures per IP and 5 per username within
+// a 15-minute window. We exercise the per-username path because it is tightest
+// and easiest to assert against without adjusting headers.
+func TestRouterSecurity_API2_LoginBruteForceProtection(t *testing.T) {
+	env := setupSecurityTest(t)
+	body := []byte(`{"login":"never-existed","password":"wrong"}`)
+
+	// First 5 failures are simply 401 — the limiter only refuses on the 6th.
+	for i := range 5 {
+		w := doRequestWithBody(t, env, http.MethodPost, "/api/auth/login", "", body)
+		require.Equalf(t, http.StatusUnauthorized, w.Code,
+			"failed login %d should still return 401; body=%s", i+1, w.Body.String())
+	}
+
+	w := doRequestWithBody(t, env, http.MethodPost, "/api/auth/login", "", body)
+	assert.Equalf(t, http.StatusTooManyRequests, w.Code,
+		"6th failed login for the same username must be rate-limited; body=%s", w.Body.String())
+	assert.NotEmptyf(t, w.Header().Get("Retry-After"),
+		"429 response must include a Retry-After header")
+}

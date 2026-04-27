@@ -70,5 +70,24 @@ func (p *PASETOService) ValidateToken(tokenString string) (Claims, error) {
 		return nil, errors.Wrap(err, "failed to parse token")
 	}
 
-	return token, nil
+	return pasetoClaims{token: token}, nil
+}
+
+// pasetoClaims adapts a parsed paseto.Token to the local auth.Claims interface
+// (which exposes both subject and expiration in a transport-agnostic way).
+type pasetoClaims struct {
+	token *paseto.Token
+}
+
+func (c pasetoClaims) GetSubject() (string, error) {
+	return c.token.GetSubject()
+}
+
+func (c pasetoClaims) GetExpirationTime() (*time.Time, error) {
+	exp, err := c.token.GetExpiration()
+	if err != nil {
+		return nil, err //nolint:wrapcheck // surfacing library error verbatim
+	}
+
+	return &exp, nil
 }
