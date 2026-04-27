@@ -151,7 +151,7 @@ func dispatchSamples(ctx context.Context, client clientSink, samples <-chan node
 			if !ok {
 				return
 			}
-			wire := metrics.ToWire(tagNodeID(s.response, s.nodeID), nil)
+			wire := metrics.ToWire(tagNodeID(s.response, s.nodeID), metricsbase.NodePrefixFilter())
 			if wire == nil {
 				continue
 			}

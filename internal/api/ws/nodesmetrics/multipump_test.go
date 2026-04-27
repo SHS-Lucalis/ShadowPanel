@@ -99,6 +99,56 @@ func TestPumpAll_ClosesSubscriptionsOnClientDone(t *testing.T) {
 	}, time.Second, 10*time.Millisecond)
 }
 
+func TestPumpAll_DropsNonNodeSeries(t *testing.T) {
+	ctx, cancel := context.WithCancel(t.Context())
+	defer cancel()
+
+	hub := newFakeHub()
+	sink := newFakeSink()
+
+	pumpAll(ctx, hub, []uint64{10}, sink, silentLogger())
+
+	hub.publish(10, mixedResponse())
+
+	msgs := sink.collect(200 * time.Millisecond)
+
+	var liveWires []*metrics.WireResponse
+	for _, m := range msgs {
+		if m.Type != metricsbase.TypeMetrics {
+			continue
+		}
+		wire, ok := m.Payload.(*metrics.WireResponse)
+		require.True(t, ok, "expected payload to be *metrics.WireResponse")
+		liveWires = append(liveWires, wire)
+	}
+
+	require.Len(t, liveWires, 1)
+	require.Len(t, liveWires[0].Series, 1)
+	assert.Equal(t, "gameap_node_cpu_usage_percent", liveWires[0].Series[0].Name)
+}
+
+func TestPumpAll_AllSeriesFiltered_NoEnvelopeSent(t *testing.T) {
+	ctx, cancel := context.WithCancel(t.Context())
+	defer cancel()
+
+	hub := newFakeHub()
+	sink := newFakeSink()
+
+	pumpAll(ctx, hub, []uint64{10}, sink, silentLogger())
+
+	hub.publish(10, serverOnlyResponse())
+
+	msgs := sink.collect(200 * time.Millisecond)
+
+	var liveCount int
+	for _, m := range msgs {
+		if m.Type == metricsbase.TypeMetrics {
+			liveCount++
+		}
+	}
+	assert.Equal(t, 0, liveCount, "envelopes with no surviving series must be dropped")
+}
+
 func TestPumpAll_HubSubscribeError_SkipsFailingNode(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
 	defer cancel()
@@ -140,6 +190,47 @@ func simpleResponse() *proto.MetricsResponse {
 			Type:   proto.MetricType_METRIC_TYPE_GAUGE,
 			Unit:   proto.MetricUnit_METRIC_UNIT_PERCENT,
 			Points: []*proto.MetricPoint{cpuPoint(0.5)},
+		}},
+	}
+}
+
+func mixedResponse() *proto.MetricsResponse {
+	return &proto.MetricsResponse{
+		Timestamp: timestamppb.New(time.Unix(1700000000, 0)),
+		Series: []*proto.MetricSeries{
+			{
+				Name:   "gameap_node_cpu_usage_percent",
+				Type:   proto.MetricType_METRIC_TYPE_GAUGE,
+				Unit:   proto.MetricUnit_METRIC_UNIT_PERCENT,
+				Points: []*proto.MetricPoint{cpuPoint(0.5)},
+			},
+			{
+				Name:   "gameap_server_memory_limit_bytes",
+				Type:   proto.MetricType_METRIC_TYPE_GAUGE,
+				Unit:   proto.MetricUnit_METRIC_UNIT_BYTES,
+				Labels: map[string]string{"server_id": "27"},
+				Points: []*proto.MetricPoint{cpuPoint(2069725184)},
+			},
+			{
+				Name:   "gameap_server_process_pids",
+				Type:   proto.MetricType_METRIC_TYPE_GAUGE,
+				Unit:   proto.MetricUnit_METRIC_UNIT_COUNT,
+				Labels: map[string]string{"server_id": "27"},
+				Points: []*proto.MetricPoint{cpuPoint(3)},
+			},
+		},
+	}
+}
+
+func serverOnlyResponse() *proto.MetricsResponse {
+	return &proto.MetricsResponse{
+		Timestamp: timestamppb.New(time.Unix(1700000000, 0)),
+		Series: []*proto.MetricSeries{{
+			Name:   "gameap_server_memory_limit_bytes",
+			Type:   proto.MetricType_METRIC_TYPE_GAUGE,
+			Unit:   proto.MetricUnit_METRIC_UNIT_BYTES,
+			Labels: map[string]string{"server_id": "27"},
+			Points: []*proto.MetricPoint{cpuPoint(2069725184)},
 		}},
 	}
 }

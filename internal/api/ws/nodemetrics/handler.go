@@ -96,7 +96,15 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	client := ws.NewClient(ctx, conn, h.hub, nil, h.logger)
 	h.hub.Register(client)
 
-	metricsbase.Pump(ctx, h.metricsHub, uint64(nodeID), nil, client, defaultReplayWindow, h.logger)
+	metricsbase.Pump(
+		ctx,
+		h.metricsHub,
+		uint64(nodeID),
+		metricsbase.NodePrefixFilter(),
+		client,
+		defaultReplayWindow,
+		h.logger,
+	)
 
 	client.Run()
 }
