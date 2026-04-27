@@ -418,3 +418,71 @@ func TestHub_RemoteHeartbeat_AggregatesRefcount(t *testing.T) {
 	defer state.mu.Unlock()
 	assert.Equal(t, 3, state.aggregatedCount)
 }
+
+func TestHub_LiveSample_DropsPayloadOnNodeIDMismatch(t *testing.T) {
+	ps := memory.New()
+	t.Cleanup(func() { _ = ps.Close() })
+
+	registry := &fakeRegistry{instanceID: "a", connectedHere: false, connectedAny: true}
+	waiters := &fakeWaiters{}
+
+	h := newTestHub(t, ps, registry, waiters, Options{})
+
+	const channelNodeID uint64 = 5
+	const spoofedNodeID uint64 = 99
+
+	sub, _, err := h.Subscribe(context.Background(), channelNodeID, 0)
+	require.NoError(t, err)
+	t.Cleanup(sub.Close)
+
+	resp := &proto.MetricsResponse{
+		Timestamp: timestamppb.Now(),
+		Series:    []*proto.MetricSeries{{Name: "spoofed_series"}},
+	}
+	data, err := resp.MarshalVT()
+	require.NoError(t, err)
+
+	channel := channels.BuildRealtimeMetricsChannel(channelNodeID)
+	msg, err := messages.NewMessage(channel, messages.TypeMetricsLive, messages.MetricsLivePayload{
+		NodeID: spoofedNodeID,
+		Data:   data,
+	})
+	require.NoError(t, err)
+
+	require.NoError(t, ps.Publish(context.Background(), channel, msg))
+
+	select {
+	case got := <-sub.Samples():
+		t.Fatalf("expected no delivery on nodeID mismatch, got %v", got)
+	case <-time.After(100 * time.Millisecond):
+	}
+
+	if state := h.lookupState(spoofedNodeID); state != nil {
+		assert.Equal(t, 0, state.ring.Len(), "spoofed nodeID ring must stay empty")
+	}
+}
+
+func TestHub_GetHistory_ClampsWindowToMax(t *testing.T) {
+	ps := memory.New()
+	t.Cleanup(func() { _ = ps.Close() })
+
+	registry := &fakeRegistry{instanceID: "a", connectedHere: true, connectedAny: true}
+	waiters := &fakeWaiters{}
+
+	h := newTestHub(t, ps, registry, waiters, Options{
+		HistoryTimeout: 100 * time.Millisecond,
+	})
+
+	go func() {
+		_, _ = h.GetHistory(context.Background(), 1, 1000*time.Hour)
+	}()
+
+	eventually(t, func() bool {
+		return registry.sentRequest.Load() != nil
+	})
+
+	sent := registry.sentRequest.Load()
+	require.NotNil(t, sent)
+	require.NotNil(t, sent.req.GetHistory())
+	assert.Equal(t, uint32(maxHistoryWindow.Seconds()), sent.req.GetHistory().GetSeconds())
+}

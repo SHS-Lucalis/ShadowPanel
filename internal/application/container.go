@@ -1665,7 +1665,7 @@ func (c *Container) AttachHandler() *handlers.AttachHandler {
 
 func (c *Container) MetricsHandler() *handlers.MetricsHandler {
 	if c.metricsHandler == nil {
-		c.metricsHandler = handlers.NewMetricsHandler(c.PubSub(), slog.Default())
+		c.metricsHandler = handlers.NewMetricsHandler(c.PubSub(), c.ServerRepository(), slog.Default())
 	}
 
 	return c.metricsHandler

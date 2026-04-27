@@ -81,7 +81,10 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.abilityChecker.CheckOrError(
-		ctx, session.User.ID, server.ID, []domain.AbilityName{domain.AbilityNameGameServerCommon},
+		ctx, session.User.ID, server.ID, []domain.AbilityName{
+			domain.AbilityNameGameServerCommon,
+			domain.AbilityNameGameServerMetrics,
+		},
 	); err != nil {
 		h.responder.WriteError(ctx, rw, err)
 
@@ -107,16 +110,17 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	client.Run()
 }
 
-// serverIDFilter passes machine-level series (no server_id label) and
-// per-server series matching the requested server.
+// serverIDFilter passes only series whose server_id label matches the
+// requested server. Series without a server_id label (node-level metrics
+// like CPU/RAM/disk and any other host metrics) are dropped — those
+// belong to the node WS endpoint, not the per-server WS.
 func serverIDFilter(serverID uint) metrics.SeriesFilter {
 	wantedID := strconv.FormatUint(uint64(serverID), 10)
 
 	return func(s *proto.MetricSeries) bool {
-		labels := s.GetLabels()
-		raw, ok := labels["server_id"]
+		raw, ok := s.GetLabels()["server_id"]
 		if !ok {
-			return true
+			return false
 		}
 
 		return raw == wantedID

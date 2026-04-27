@@ -35,6 +35,7 @@ func TestAbilityNameConstants_GameServer(t *testing.T) {
 	assert.Equal(t, AbilityName("game-server-console-send"), AbilityNameGameServerConsoleSend)
 	assert.Equal(t, AbilityName("game-server-rcon-console"), AbilityNameGameServerRconConsole)
 	assert.Equal(t, AbilityName("game-server-rcon-players"), AbilityNameGameServerRconPlayers)
+	assert.Equal(t, AbilityName("game-server-metrics"), AbilityNameGameServerMetrics)
 }
 
 func TestAbilityNameConstants_General(t *testing.T) {
@@ -63,9 +64,10 @@ func TestServersAbilities(t *testing.T) {
 		AbilityNameGameServerConsoleSend,
 		AbilityNameGameServerRconConsole,
 		AbilityNameGameServerRconPlayers,
+		AbilityNameGameServerMetrics,
 	}
 
-	assert.Equal(t, len(expectedAbilities), len(ServersAbilities), "should have 13 server abilities")
+	assert.Equal(t, len(expectedAbilities), len(ServersAbilities), "should have 14 server abilities")
 	assert.Equal(t, expectedAbilities, ServersAbilities)
 
 	for _, ability := range expectedAbilities {

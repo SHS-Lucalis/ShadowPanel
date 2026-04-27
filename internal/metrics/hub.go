@@ -3,6 +3,8 @@ package metrics
 import (
 	"context"
 	"log/slog"
+	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -14,6 +16,29 @@ import (
 	"github.com/gameap/gameap/pkg/proto"
 	"github.com/pkg/errors"
 )
+
+// maxHistoryWindow caps the history-replay window the API will request from
+// daemons. Defense-in-depth: the daemon's ring buffer already bounds what it
+// can return, but we also reject absurd uint32 values up front to avoid DoS
+// from a misbehaving client or future routes.
+const maxHistoryWindow = 24 * time.Hour
+
+// parseRealtimeMetricsNodeID extracts the nodeID encoded in the channel name
+// gameap:realtime:metrics:<nodeID>. We use it to cross-check pubsub payloads
+// against the channel they arrived on — the channel is the trust anchor.
+func parseRealtimeMetricsNodeID(channel string) (uint64, error) {
+	suffix, ok := strings.CutPrefix(channel, channels.RealtimeMetrics)
+	if !ok {
+		return 0, errors.New("channel is not a realtime metrics channel")
+	}
+
+	id, err := strconv.ParseUint(suffix, 10, 64)
+	if err != nil {
+		return 0, errors.Wrap(err, "parse channel node id")
+	}
+
+	return id, nil
+}
 
 // Options configures Hub timings. Zero values are replaced with
 // sensible defaults.
@@ -176,6 +201,9 @@ func (h *hub) Subscribe(
 	if replayWindow <= 0 {
 		replayWindow = h.opts.ReplayWindow
 	}
+	if replayWindow > maxHistoryWindow {
+		replayWindow = maxHistoryWindow
+	}
 
 	state := h.getOrCreateState(nodeID)
 
@@ -232,6 +260,9 @@ func (h *hub) GetHistory(
 	}
 	if window <= 0 {
 		window = h.opts.ReplayWindow
+	}
+	if window > maxHistoryWindow {
+		window = maxHistoryWindow
 	}
 	if !h.registry.IsConnectedAnywhere(nodeID) {
 		return nil, errors.New("daemon is not connected")
@@ -387,6 +418,25 @@ func (h *hub) handleLiveSample(_ context.Context, msg *pubsub.Message) error {
 	payload, err := messages.ParsePayload[messages.MetricsLivePayload](msg)
 	if err != nil {
 		h.logger.Warn("failed to parse metrics live payload", "error", err)
+
+		return nil
+	}
+
+	channelNodeID, err := parseRealtimeMetricsNodeID(msg.Channel)
+	if err != nil {
+		h.logger.Warn("metrics live message on malformed channel",
+			"channel", msg.Channel,
+			"error", err,
+		)
+
+		return nil
+	}
+	if channelNodeID != payload.NodeID {
+		h.logger.Warn("metrics live payload nodeID mismatch with channel",
+			"channel", msg.Channel,
+			"channel_node_id", channelNodeID,
+			"payload_node_id", payload.NodeID,
+		)
 
 		return nil
 	}

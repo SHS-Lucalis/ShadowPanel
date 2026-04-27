@@ -7,10 +7,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/pubsub"
 	"github.com/gameap/gameap/internal/pubsub/channels"
 	"github.com/gameap/gameap/internal/pubsub/memory"
 	"github.com/gameap/gameap/internal/pubsub/messages"
+	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/pkg/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -41,7 +43,7 @@ func TestMetricsHandler_HandleMetricsResponse(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		handler := NewMetricsHandler(ps, slog.Default())
+		handler := NewMetricsHandler(ps, nil, slog.Default())
 		handler.RegisterPollWaiter(requestID, nodeID)
 
 		resp := &proto.MetricsResponse{
@@ -114,7 +116,7 @@ func TestMetricsHandler_HandleMetricsResponse(t *testing.T) {
 			})
 		require.NoError(t, err)
 
-		handler := NewMetricsHandler(ps, slog.Default())
+		handler := NewMetricsHandler(ps, nil, slog.Default())
 		handler.RegisterRemoteWaiter(requestID, nodeID, requesterInstanceID)
 
 		resp := &proto.MetricsResponse{
@@ -158,7 +160,7 @@ func TestMetricsHandler_HandleMetricsResponse(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		handler := NewMetricsHandler(ps, slog.Default())
+		handler := NewMetricsHandler(ps, nil, slog.Default())
 
 		err = handler.HandleMetricsResponse(context.Background(), 99, "unknown", &proto.MetricsResponse{})
 		require.NoError(t, err)
@@ -184,7 +186,7 @@ func TestMetricsHandler_HandleMetricsResponse(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		handler := NewMetricsHandler(ps, slog.Default())
+		handler := NewMetricsHandler(ps, nil, slog.Default())
 		handler.RegisterPollWaiter(requestID, 1)
 		handler.CancelWaiter(requestID)
 
@@ -199,10 +201,126 @@ func TestMetricsHandler_HandleMetricsResponse(t *testing.T) {
 	})
 
 	t.Run("nil_publisher_is_noop", func(t *testing.T) {
-		handler := NewMetricsHandler(nil, slog.Default())
+		handler := NewMetricsHandler(nil, nil, slog.Default())
 		handler.RegisterPollWaiter("x", 1)
 
 		err := handler.HandleMetricsResponse(context.Background(), 1, "x", &proto.MetricsResponse{})
 		assert.NoError(t, err)
+	})
+
+	t.Run("drops_series_for_servers_not_on_this_node", func(t *testing.T) {
+		ps := memory.New()
+		t.Cleanup(func() { _ = ps.Close() })
+
+		const nodeID uint64 = 5
+		const requestID = "label-validation-1"
+
+		serverRepo := inmemory.NewServerRepository()
+		require.NoError(t, serverRepo.Save(context.Background(), &domain.Server{ID: 10, DSID: uint(nodeID)}))
+		require.NoError(t, serverRepo.Save(context.Background(), &domain.Server{ID: 20, DSID: uint(nodeID)}))
+		require.NoError(t, serverRepo.Save(context.Background(), &domain.Server{ID: 99, DSID: 999}))
+
+		var (
+			received   *pubsub.Message
+			receivedMu sync.Mutex
+			done       = make(chan struct{})
+		)
+		err := ps.Subscribe(context.Background(), channels.RealtimeMetricsAll,
+			func(_ context.Context, msg *pubsub.Message) error {
+				receivedMu.Lock()
+				received = msg
+				receivedMu.Unlock()
+				close(done)
+
+				return nil
+			})
+		require.NoError(t, err)
+
+		handler := NewMetricsHandler(ps, serverRepo, slog.Default())
+		handler.RegisterPollWaiter(requestID, nodeID)
+
+		resp := &proto.MetricsResponse{
+			Timestamp: timestamppb.Now(),
+			Series: []*proto.MetricSeries{
+				{Name: "gameap_server_cpu", Labels: map[string]string{"server_id": "10"}},
+				{Name: "gameap_server_cpu", Labels: map[string]string{"server_id": "20"}},
+				{Name: "gameap_server_cpu", Labels: map[string]string{"server_id": "99"}},
+				{Name: "gameap_node_cpu", Labels: map[string]string{"host": "n1"}},
+			},
+		}
+
+		err = handler.HandleMetricsResponse(context.Background(), nodeID, requestID, resp)
+		require.NoError(t, err)
+
+		select {
+		case <-done:
+		case <-time.After(time.Second):
+			t.Fatal("timed out waiting for pubsub delivery")
+		}
+
+		receivedMu.Lock()
+		defer receivedMu.Unlock()
+
+		require.NotNil(t, received)
+		payload, err := messages.ParsePayload[messages.MetricsLivePayload](received)
+		require.NoError(t, err)
+
+		var decoded proto.MetricsResponse
+		require.NoError(t, decoded.UnmarshalVT(payload.Data))
+		require.Len(t, decoded.Series, 3)
+
+		gotIDs := make([]string, 0, len(decoded.Series))
+		gotNoLabel := 0
+		for _, s := range decoded.Series {
+			raw, ok := s.GetLabels()["server_id"]
+			if !ok {
+				gotNoLabel++
+
+				continue
+			}
+			gotIDs = append(gotIDs, raw)
+		}
+		assert.ElementsMatch(t, []string{"10", "20"}, gotIDs)
+		assert.Equal(t, 1, gotNoLabel)
+	})
+
+	t.Run("drops_publish_when_all_series_invalid", func(t *testing.T) {
+		ps := memory.New()
+		t.Cleanup(func() { _ = ps.Close() })
+
+		const nodeID uint64 = 5
+		const requestID = "label-validation-2"
+
+		serverRepo := inmemory.NewServerRepository()
+		require.NoError(t, serverRepo.Save(context.Background(), &domain.Server{ID: 10, DSID: 999}))
+
+		published := make(chan struct{}, 1)
+		err := ps.Subscribe(context.Background(), channels.RealtimeMetricsAll,
+			func(_ context.Context, _ *pubsub.Message) error {
+				published <- struct{}{}
+
+				return nil
+			})
+		require.NoError(t, err)
+
+		handler := NewMetricsHandler(ps, serverRepo, slog.Default())
+		handler.RegisterPollWaiter(requestID, nodeID)
+
+		resp := &proto.MetricsResponse{
+			Timestamp: timestamppb.Now(),
+			Series: []*proto.MetricSeries{
+				{Name: "gameap_server_cpu", Labels: map[string]string{"server_id": "10"}},
+				{Name: "gameap_server_cpu", Labels: map[string]string{"server_id": "11"}},
+			},
+		}
+
+		err = handler.HandleMetricsResponse(context.Background(), nodeID, requestID, resp)
+		require.NoError(t, err)
+
+		select {
+		case <-published:
+			t.Fatal("expected no publish when all series dropped")
+		case <-time.After(50 * time.Millisecond):
+		}
 	})
 }

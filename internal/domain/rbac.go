@@ -21,6 +21,7 @@ const (
 	AbilityNameGameServerConsoleSend AbilityName = "game-server-console-send"
 	AbilityNameGameServerRconConsole AbilityName = "game-server-rcon-console"
 	AbilityNameGameServerRconPlayers AbilityName = "game-server-rcon-players"
+	AbilityNameGameServerMetrics     AbilityName = "game-server-metrics"
 
 	// General.
 	AbilityNameCreate AbilityName = "create"
@@ -50,6 +51,9 @@ var ServersAbilities = []AbilityName{
 	// Rcon
 	AbilityNameGameServerRconConsole,
 	AbilityNameGameServerRconPlayers,
+
+	// Metrics
+	AbilityNameGameServerMetrics,
 }
 
 type Ability struct {
