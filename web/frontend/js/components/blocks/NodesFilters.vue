@@ -14,7 +14,6 @@
 
     <n-radio-group
         :value="statusFilter"
-        size="small"
         @update:value="setStatus"
     >
       <n-radio-button
@@ -31,7 +30,6 @@
 
     <n-radio-group
         :value="osFilter"
-        size="small"
         @update:value="setOs"
     >
       <n-radio-button
