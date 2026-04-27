@@ -332,6 +332,13 @@ func spaHandler(staticFS fs.FS) http.Handler {
 
 //nolint:funlen
 func apiRoutes(c container, router *mux.Router) *mux.Router {
+	nodesSummaryHandler := nodesgetsummary.NewHandler(
+		c.NodeRepository(),
+		c.DaemonStatus(),
+		c.Responder(),
+		c.Cache(),
+	)
+
 	routes := []struct {
 		Method            string
 		Path              string
@@ -1132,24 +1139,16 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 			AdminOnly: true,
 		},
 		{
-			Method: http.MethodGet,
-			Path:   "/api/dedicated_servers/summary",
-			Handler: nodesgetsummary.NewHandler(
-				c.NodeRepository(),
-				c.DaemonStatus(),
-				c.Responder(),
-			),
+			Method:    http.MethodGet,
+			Path:      "/api/dedicated_servers/summary",
+			Handler:   nodesSummaryHandler,
 			AdminOnly: true,
 		},
 		{
 			Method: http.MethodGet,
 			// alias for /api/dedicated_servers/summary
-			Path: "/api/nodes/summary",
-			Handler: nodesgetsummary.NewHandler(
-				c.NodeRepository(),
-				c.DaemonStatus(),
-				c.Responder(),
-			),
+			Path:      "/api/nodes/summary",
+			Handler:   nodesSummaryHandler,
 			AdminOnly: true,
 		},
 		{

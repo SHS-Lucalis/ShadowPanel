@@ -8,16 +8,21 @@ import (
 	"time"
 
 	"github.com/gameap/gameap/internal/api/base"
+	"github.com/gameap/gameap/internal/cache"
 	"github.com/gameap/gameap/internal/daemon"
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
 	"github.com/pkg/errors"
+	"golang.org/x/sync/singleflight"
 )
 
 const (
-	connectTimeout = 500 * time.Millisecond
+	connectTimeout           = 500 * time.Millisecond
+	defaultCacheTTL          = 30 * time.Second
+	backgroundRefreshTimeout = 10 * time.Second
+	cacheKey                 = "nodes:summary"
 )
 
 type statusService interface {
@@ -28,17 +33,30 @@ type Handler struct {
 	nodeRepo      repositories.NodeRepository
 	statusService statusService
 	responder     base.Responder
+	cache         cache.Cache
+
+	cacheTTL                 time.Duration
+	backgroundRefreshTimeout time.Duration
+
+	mu               sync.Mutex
+	refreshScheduled bool
+
+	sf singleflight.Group
 }
 
 func NewHandler(
 	nodeRepo repositories.NodeRepository,
 	statusService statusService,
 	responder base.Responder,
+	c cache.Cache,
 ) *Handler {
 	return &Handler{
-		nodeRepo:      nodeRepo,
-		statusService: statusService,
-		responder:     responder,
+		nodeRepo:                 nodeRepo,
+		statusService:            statusService,
+		responder:                responder,
+		cache:                    c,
+		cacheTTL:                 defaultCacheTTL,
+		backgroundRefreshTimeout: backgroundRefreshTimeout,
 	}
 }
 
@@ -55,16 +73,104 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	nodes, err := h.nodeRepo.FindAll(ctx, nil, nil)
+	summary, err := h.getOrCompute(ctx)
 	if err != nil {
-		h.responder.WriteError(ctx, rw, errors.WithMessage(err, "failed to find nodes"))
+		h.responder.WriteError(ctx, rw, err)
 
 		return
 	}
 
+	h.responder.Write(ctx, rw, summary)
+	h.scheduleRefresh()
+}
+
+func (h *Handler) getOrCompute(ctx context.Context) (summaryResponse, error) {
+	if cached, ok := h.tryGet(ctx); ok {
+		return cached, nil
+	}
+
+	return h.computeAndCache(ctx)
+}
+
+func (h *Handler) tryGet(ctx context.Context) (summaryResponse, bool) {
+	summary, err := cache.GetTyped[summaryResponse](ctx, h.cache, cacheKey)
+	if err != nil {
+		if !errors.Is(err, cache.ErrNotFound) {
+			slog.WarnContext(ctx, "failed to read summary from cache", "error", err)
+		}
+
+		return summaryResponse{}, false
+	}
+
+	return summary, true
+}
+
+func (h *Handler) computeAndCache(ctx context.Context) (summaryResponse, error) {
+	result, err, _ := h.sf.Do(cacheKey, func() (any, error) {
+		return h.computeAndStore(ctx)
+	})
+	if err != nil {
+		return summaryResponse{}, err
+	}
+
+	summary, ok := result.(summaryResponse)
+	if !ok {
+		return summaryResponse{}, errors.New("unexpected singleflight result type")
+	}
+
+	return summary, nil
+}
+
+func (h *Handler) computeAndStore(ctx context.Context) (summaryResponse, error) {
+	nodes, err := h.nodeRepo.FindAll(ctx, nil, nil)
+	if err != nil {
+		return summaryResponse{}, errors.WithMessage(err, "failed to find nodes")
+	}
+
 	summary := h.calculateSummary(ctx, nodes)
 
-	h.responder.Write(ctx, rw, summary)
+	if err := h.cache.Set(ctx, cacheKey, summary, cache.WithExpiration(h.cacheTTL)); err != nil {
+		slog.WarnContext(ctx, "failed to write summary to cache", "error", err)
+	}
+
+	return summary, nil
+}
+
+func (h *Handler) scheduleRefresh() {
+	h.mu.Lock()
+	if h.refreshScheduled {
+		h.mu.Unlock()
+
+		return
+	}
+	h.refreshScheduled = true
+	h.mu.Unlock()
+
+	time.AfterFunc(h.refreshDelay(), h.runScheduledRefresh)
+}
+
+func (h *Handler) refreshDelay() time.Duration {
+	gap := h.cacheTTL - h.backgroundRefreshTimeout
+	if gap <= 0 {
+		return h.cacheTTL / 2
+	}
+
+	return gap * 9 / 10
+}
+
+func (h *Handler) runScheduledRefresh() {
+	defer func() {
+		h.mu.Lock()
+		h.refreshScheduled = false
+		h.mu.Unlock()
+	}()
+
+	ctx, cancel := context.WithTimeout(context.Background(), h.backgroundRefreshTimeout)
+	defer cancel()
+
+	if _, err := h.computeAndCache(ctx); err != nil {
+		slog.WarnContext(ctx, "scheduled summary refresh failed", "error", err)
+	}
 }
 
 func (h *Handler) calculateSummary(ctx context.Context, nodes []domain.Node) summaryResponse {

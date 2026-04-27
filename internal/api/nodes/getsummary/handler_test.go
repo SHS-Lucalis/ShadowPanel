@@ -6,11 +6,15 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
+	"github.com/gameap/gameap/internal/cache"
 	"github.com/gameap/gameap/internal/daemon"
 	"github.com/gameap/gameap/internal/domain"
+	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
@@ -21,6 +25,7 @@ import (
 var errConnectionRefused = errors.New("connection refused")
 var errNotImplemented = errors.New("not implemented")
 var errShouldNotBeCalled = errors.New("should not be called")
+var errSimulatedRepoFailure = errors.New("simulated repo failure")
 
 var testUser = domain.User{
 	ID:    1,
@@ -30,14 +35,35 @@ var testUser = domain.User{
 
 type mockStatusService struct {
 	versionFunc func(ctx context.Context, node *domain.Node) (*daemon.NodeVersion, error)
+	callCount   atomic.Int64
 }
 
 func (m *mockStatusService) Version(ctx context.Context, node *domain.Node) (*daemon.NodeVersion, error) {
+	m.callCount.Add(1)
+
 	if m.versionFunc != nil {
 		return m.versionFunc(ctx, node)
 	}
 
 	return nil, errNotImplemented
+}
+
+type failingNodeRepo struct {
+	*inmemory.NodeRepository
+
+	fail atomic.Bool
+}
+
+func (r *failingNodeRepo) FindAll(
+	ctx context.Context,
+	order []filters.Sorting,
+	pagination *filters.Pagination,
+) ([]domain.Node, error) {
+	if r.fail.Load() {
+		return nil, errSimulatedRepoFailure
+	}
+
+	return r.NodeRepository.FindAll(ctx, order, pagination)
 }
 
 func TestHandler_ServeHTTP(t *testing.T) {
@@ -392,7 +418,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				versionFunc: tt.setupVersionFunc,
 			}
 			responder := api.NewResponder()
-			handler := NewHandler(nodeRepo, mockStatus, responder)
+			handler := NewHandler(nodeRepo, mockStatus, responder, cache.NewInMemory())
 
 			if tt.setupRepo != nil {
 				tt.setupRepo(nodeRepo)
@@ -435,13 +461,17 @@ func TestHandler_NewHandler(t *testing.T) {
 	nodeRepo := inmemory.NewNodeRepository()
 	mockStatus := &mockStatusService{}
 	responder := api.NewResponder()
+	c := cache.NewInMemory()
 
-	handler := NewHandler(nodeRepo, mockStatus, responder)
+	handler := NewHandler(nodeRepo, mockStatus, responder, c)
 
 	require.NotNil(t, handler)
 	assert.Equal(t, nodeRepo, handler.nodeRepo)
 	assert.Equal(t, mockStatus, handler.statusService)
 	assert.Equal(t, responder, handler.responder)
+	assert.Equal(t, c, handler.cache)
+	assert.Equal(t, defaultCacheTTL, handler.cacheTTL)
+	assert.Equal(t, backgroundRefreshTimeout, handler.backgroundRefreshTimeout)
 }
 
 func TestHandler_CalculateSummary(t *testing.T) {
@@ -517,7 +547,7 @@ func TestHandler_CalculateSummary(t *testing.T) {
 				versionFunc: tt.setupVersionFunc,
 			}
 			responder := api.NewResponder()
-			handler := NewHandler(nodeRepo, mockStatus, responder)
+			handler := NewHandler(nodeRepo, mockStatus, responder, cache.NewInMemory())
 
 			got := handler.calculateSummary(context.Background(), tt.nodes)
 
@@ -535,4 +565,175 @@ func TestHandler_CalculateSummary(t *testing.T) {
 			}
 		})
 	}
+}
+
+func newAuthCtx() context.Context {
+	session := &auth.Session{
+		Login: "admin",
+		Email: "admin@example.com",
+		User:  &testUser,
+	}
+
+	return auth.ContextWithSession(context.Background(), session)
+}
+
+func saveTwoEnabledNodes(t *testing.T, repo *inmemory.NodeRepository) {
+	t.Helper()
+
+	now := time.Now()
+	for _, n := range []*domain.Node{
+		{
+			ID: 1, Name: "Node 1", Enabled: true, OS: "linux", Location: "US",
+			GdaemonHost: "127.0.0.1", GdaemonPort: 31717, GdaemonAPIKey: "test-api-key-1",
+			CreatedAt: &now, UpdatedAt: &now,
+		},
+		{
+			ID: 2, Name: "Node 2", Enabled: true, OS: "linux", Location: "EU",
+			GdaemonHost: "127.0.0.2", GdaemonPort: 31717, GdaemonAPIKey: "test-api-key-2",
+			CreatedAt: &now, UpdatedAt: &now,
+		},
+	} {
+		require.NoError(t, repo.Save(context.Background(), n))
+	}
+}
+
+func versionOK(_ context.Context, _ *domain.Node) (*daemon.NodeVersion, error) {
+	return &daemon.NodeVersion{Version: "3.0.0", BuildDate: "2024-01-15"}, nil
+}
+
+func TestHandler_CachesFreshResponse(t *testing.T) {
+	nodeRepo := inmemory.NewNodeRepository()
+	saveTwoEnabledNodes(t, nodeRepo)
+
+	mockStatus := &mockStatusService{versionFunc: versionOK}
+	handler := NewHandler(nodeRepo, mockStatus, api.NewResponder(), cache.NewInMemory())
+	ctx := newAuthCtx()
+
+	for range 3 {
+		req := httptest.NewRequest(http.MethodGet, "/api/nodes/summary", nil).WithContext(ctx)
+		w := httptest.NewRecorder()
+
+		handler.ServeHTTP(w, req)
+
+		require.Equal(t, http.StatusOK, w.Code)
+	}
+
+	assert.Equal(t, int64(2), mockStatus.callCount.Load(),
+		"expected single compute round across sequential requests within refresh window")
+}
+
+func TestHandler_ProactivelyRefreshesBeforeExpiry(t *testing.T) {
+	nodeRepo := inmemory.NewNodeRepository()
+	saveTwoEnabledNodes(t, nodeRepo)
+
+	mockStatus := &mockStatusService{versionFunc: versionOK}
+	c := cache.NewInMemory()
+	handler := NewHandler(nodeRepo, mockStatus, api.NewResponder(), c)
+	handler.cacheTTL = 200 * time.Millisecond
+	handler.backgroundRefreshTimeout = 20 * time.Millisecond
+	ctx := newAuthCtx()
+
+	req := httptest.NewRequest(http.MethodGet, "/api/nodes/summary", nil).WithContext(ctx)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	require.Equal(t, http.StatusOK, w.Code)
+	require.Equal(t, int64(2), mockStatus.callCount.Load())
+
+	assert.Eventually(t, func() bool {
+		return mockStatus.callCount.Load() >= 4
+	}, time.Second, 5*time.Millisecond,
+		"scheduled refresh must fire before the cache TTL expires")
+
+	cached, err := cache.GetTyped[summaryResponse](context.Background(), c, cacheKey)
+	require.NoError(t, err, "cache should still hold data after the proactive refresh")
+	assert.Equal(t, 2, cached.Total)
+	assert.Equal(t, 2, cached.Online)
+}
+
+func TestHandler_ConcurrentColdStartCollapses(t *testing.T) {
+	nodeRepo := inmemory.NewNodeRepository()
+	saveTwoEnabledNodes(t, nodeRepo)
+
+	mockStatus := &mockStatusService{
+		versionFunc: func(_ context.Context, _ *domain.Node) (*daemon.NodeVersion, error) {
+			time.Sleep(20 * time.Millisecond)
+
+			return &daemon.NodeVersion{Version: "3.0.0", BuildDate: "2024-01-15"}, nil
+		},
+	}
+	handler := NewHandler(nodeRepo, mockStatus, api.NewResponder(), cache.NewInMemory())
+	ctx := newAuthCtx()
+
+	const concurrency = 10
+	var wg sync.WaitGroup
+	startGate := make(chan struct{})
+
+	for range concurrency {
+		wg.Go(func() {
+			<-startGate
+
+			req := httptest.NewRequest(http.MethodGet, "/api/nodes/summary", nil).WithContext(ctx)
+			w := httptest.NewRecorder()
+			handler.ServeHTTP(w, req)
+			assert.Equal(t, http.StatusOK, w.Code)
+		})
+	}
+
+	close(startGate)
+	wg.Wait()
+
+	assert.Equal(t, int64(2), mockStatus.callCount.Load(),
+		"singleflight should collapse concurrent cold-start computes into one")
+}
+
+func TestHandler_ScheduledRefreshErrorPreservesCache(t *testing.T) {
+	baseRepo := inmemory.NewNodeRepository()
+	saveTwoEnabledNodes(t, baseRepo)
+	failRepo := &failingNodeRepo{NodeRepository: baseRepo}
+
+	mockStatus := &mockStatusService{versionFunc: versionOK}
+	c := cache.NewInMemory()
+	handler := NewHandler(failRepo, mockStatus, api.NewResponder(), c)
+	ctx := newAuthCtx()
+
+	req := httptest.NewRequest(http.MethodGet, "/api/nodes/summary", nil).WithContext(ctx)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	require.Equal(t, http.StatusOK, w.Code)
+
+	var firstResp summaryResponse
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &firstResp))
+
+	failRepo.fail.Store(true)
+	handler.runScheduledRefresh()
+
+	cached, err := cache.GetTyped[summaryResponse](context.Background(), c, cacheKey)
+	require.NoError(t, err, "cache must remain populated after a failed refresh")
+	assert.Equal(t, firstResp, cached,
+		"failed scheduled refresh must not overwrite the cached response")
+}
+
+func TestHandler_NotAuthenticatedDoesNotConsultCache(t *testing.T) {
+	nodeRepo := inmemory.NewNodeRepository()
+	saveTwoEnabledNodes(t, nodeRepo)
+
+	mockStatus := &mockStatusService{
+		versionFunc: func(_ context.Context, _ *domain.Node) (*daemon.NodeVersion, error) {
+			return nil, errShouldNotBeCalled
+		},
+	}
+	c := cache.NewInMemory()
+	handler := NewHandler(nodeRepo, mockStatus, api.NewResponder(), c)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/nodes/summary", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	assert.Zero(t, mockStatus.callCount.Load(),
+		"Version must not be called when caller is unauthenticated")
+
+	_, err := c.Get(context.Background(), cacheKey)
+	assert.ErrorIs(t, err, cache.ErrNotFound,
+		"cache must not be populated by an unauthenticated request")
 }
