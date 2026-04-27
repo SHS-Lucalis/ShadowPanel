@@ -3,26 +3,21 @@
     tags:
       - Nodes
     summary: List nodes
-    description: Returns a paginated list of nodes (Admin only)
+    description: |
+      Returns a flat array of nodes with abbreviated fields (Admin only).
+      The handler does not implement pagination; daemon credentials and
+      script overrides are intentionally omitted from list items.
+      Use `GET /api/nodes/{id}` for the full Node payload.
     operationId: listNodes
-    parameters:
-      - $ref: '../parameters/QueryPage.yaml'
-      - $ref: '../parameters/QueryPerPage.yaml'
-      - $ref: '../parameters/QuerySort.yaml'
     responses:
       '200':
         description: List of nodes
         content:
           application/json:
             schema:
-              allOf:
-                - $ref: '../schemas/PaginatedResponse.yaml'
-                - type: object
-                  properties:
-                    data:
-                      type: array
-                      items:
-                        $ref: '../schemas/Node.yaml'
+              type: array
+              items:
+                $ref: '../schemas/NodeListItem.yaml'
       '401':
         description: Unauthorized
         content:
@@ -41,26 +36,17 @@
     tags:
       - Nodes
     summary: List dedicated servers (alias)
-    description: Alias for /api/nodes (Admin only)
+    description: Alias for `GET /api/nodes` (Admin only). Same handler, no pagination.
     operationId: listDedicatedServers
-    parameters:
-      - $ref: '../parameters/QueryPage.yaml'
-      - $ref: '../parameters/QueryPerPage.yaml'
-      - $ref: '../parameters/QuerySort.yaml'
     responses:
       '200':
         description: List of nodes
         content:
           application/json:
             schema:
-              allOf:
-                - $ref: '../schemas/PaginatedResponse.yaml'
-                - type: object
-                  properties:
-                    data:
-                      type: array
-                      items:
-                        $ref: '../schemas/Node.yaml'
+              type: array
+              items:
+                $ref: '../schemas/NodeListItem.yaml'
       '401':
         description: Unauthorized
         content:
@@ -135,8 +121,9 @@
     summary: Get node setup data
     description: |
       Returns setup data for adding a new node (Admin only).
-      When gRPC is enabled, returns enrollment token and commands.
-      When gRPC is disabled, returns legacy setup token and link.
+      When gRPC is enabled, returns enrollment commands and connect URL.
+      When gRPC is disabled, only the legacy `link` + `token` fields are
+      meaningful.
     operationId: getNodesSetup
     responses:
       '200':
@@ -144,32 +131,7 @@
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                link:
-                  type: string
-                  description: Setup script URL
-                token:
-                  type: string
-                  description: Setup token or key
-                host:
-                  type: string
-                  description: Panel base URL
-                grpc_enabled:
-                  type: boolean
-                  description: Whether gRPC enrollment is available
-                connect_url:
-                  type: string
-                  description: "gRPC connect URL (grpc://host:port/key), present when grpc_enabled=true"
-                linux_cmd:
-                  type: string
-                  description: Linux curl one-liner command, present when grpc_enabled=true
-                windows_cmd:
-                  type: string
-                  description: Windows gameapctl command, present when grpc_enabled=true
-                setup_link:
-                  type: string
-                  description: Setup script URL for enrollment flow, present when grpc_enabled=true
+              $ref: '../schemas/responses/NodeSetupResponse.yaml'
       '401':
         description: Unauthorized
         content:
@@ -187,21 +149,16 @@
   get:
     tags:
       - Nodes
-    summary: Get daemon setup script (alias)
-    description: Alias for /api/nodes/setup (Admin only)
+    summary: Get node setup data (alias)
+    description: Alias for `GET /api/nodes/setup` (Admin only). Same handler.
     operationId: getDedicatedServersSetup
     responses:
       '200':
-        description: Setup instructions
+        description: Setup data
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                script:
-                  type: string
-                token:
-                  type: string
+              $ref: '../schemas/responses/NodeSetupResponse.yaml'
       '401':
         description: Unauthorized
         content:
@@ -361,12 +318,8 @@
     parameters:
       - $ref: '../parameters/PathNodeId.yaml'
     responses:
-      '200':
-        description: Node deleted
-        content:
-          application/json:
-            schema:
-              $ref: '../schemas/SuccessResponse.yaml'
+      '204':
+        description: Node deleted (no content)
       '401':
         description: Unauthorized
         content:
@@ -459,17 +412,13 @@
     tags:
       - Nodes
     summary: Delete dedicated server (alias)
-    description: Alias for DELETE /api/nodes/{id} (Admin only)
+    description: Alias for `DELETE /api/nodes/{id}` (Admin only)
     operationId: deleteDedicatedServer
     parameters:
       - $ref: '../parameters/PathNodeId.yaml'
     responses:
-      '200':
-        description: Node deleted
-        content:
-          application/json:
-            schema:
-              $ref: '../schemas/SuccessResponse.yaml'
+      '204':
+        description: Node deleted (no content)
       '401':
         description: Unauthorized
         content:
@@ -482,7 +431,9 @@
     tags:
       - Nodes
     summary: Get busy ports
-    description: Returns ports in use on a node (Admin only)
+    description: |
+      Returns ports in use on a node, grouped by IP (Admin only).
+      The keys are IP strings; the values are arrays of integer ports.
     operationId: getNodeBusyPorts
     parameters:
       - name: node
@@ -493,13 +444,19 @@
           type: integer
     responses:
       '200':
-        description: Busy ports
+        description: Busy ports keyed by IP
         content:
           application/json:
             schema:
-              type: array
-              items:
-                type: integer
+              type: object
+              description: Map of IP address → list of ports in use on that IP
+              additionalProperties:
+                type: array
+                items:
+                  type: integer
+              example:
+                "0.0.0.0": [27015, 27016]
+                "192.168.1.10": [25565]
       '401':
         description: Unauthorized
         content:
@@ -518,7 +475,7 @@
     tags:
       - Nodes
     summary: Get busy ports (alias)
-    description: Alias for /api/nodes/{node}/busy_ports (Admin only)
+    description: Alias for `GET /api/nodes/{node}/busy_ports` (Admin only)
     operationId: getDedicatedServerBusyPorts
     parameters:
       - name: node
@@ -529,13 +486,15 @@
           type: integer
     responses:
       '200':
-        description: Busy ports
+        description: Busy ports keyed by IP
         content:
           application/json:
             schema:
-              type: array
-              items:
-                type: integer
+              type: object
+              additionalProperties:
+                type: array
+                items:
+                  type: integer
       '401':
         description: Unauthorized
         content:

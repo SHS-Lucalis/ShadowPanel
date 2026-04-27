@@ -37,15 +37,22 @@
         content:
           application/json:
             schema:
-              $ref: '../schemas/Profile.yaml'
-      '401':
-        description: Unauthorized
+              type: object
+              description: Profile update acknowledgement
+              properties:
+                message:
+                  type: string
+                  example: "Profile updated successfully"
+              required:
+                - message
+      '400':
+        description: Validation error or wrong current password
         content:
           application/json:
             schema:
               $ref: '../schemas/ErrorResponse.yaml'
-      '422':
-        description: Validation error
+      '401':
+        description: Unauthorized
         content:
           application/json:
             schema:

@@ -166,7 +166,7 @@
           curl -s -X POST "https://demo.gameap.com/api/tokens" \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer YOUR_API_KEY" \
-            -d '{"name": "My API Token", "abilities": ["server:list", "server:start", "server:stop"]}' \
+            -d '{"token_name": "My API Token", "abilities": ["server:list", "server:start", "server:stop"]}' \
             -w "\nHTTP Status: %{http_code}\n"
 
       - lang: PHP
@@ -177,8 +177,8 @@
           $apiKey = 'YOUR_API_KEY';
 
           $data = [
-              'name'      => 'My API Token',
-              'abilities' => ['server:list', 'server:start', 'server:stop'],
+              'token_name' => 'My API Token',
+              'abilities'  => ['server:list', 'server:start', 'server:stop'],
           ];
 
           $curl = curl_init();
@@ -221,7 +221,7 @@
           }
 
           // IMPORTANT: Store this token securely, it won't be shown again!
-          echo "Token ID: {$result['id']}\n";
+          // The {id}|{secret} prefix in the token string contains the token ID.
           echo "Token: {$result['token']}\n";
 
       - lang: Go
@@ -244,8 +244,8 @@
               apiKey := "YOUR_API_KEY"
 
               payload := map[string]interface{}{
-                  "name":      "My API Token",
-                  "abilities": []string{"server:list", "server:start", "server:stop"},
+                  "token_name": "My API Token",
+                  "abilities":  []string{"server:list", "server:start", "server:stop"},
               }
 
               body, err := json.Marshal(payload)
@@ -287,7 +287,7 @@
               }
 
               // IMPORTANT: Store this token securely, it won't be shown again!
-              fmt.Printf("Token ID: %.0f\n", result["id"])
+              // The {id}|{secret} prefix in the token string contains the token ID.
               fmt.Printf("Token: %s\n", result["token"])
           }
 
@@ -303,7 +303,7 @@
               'Authorization': `Bearer ${apiKey}`,
             },
             body: JSON.stringify({
-              name: 'My API Token',
+              token_name: 'My API Token',
               abilities: ['server:list', 'server:start', 'server:stop'],
             }),
           });
@@ -316,7 +316,7 @@
           const result = await response.json();
 
           // IMPORTANT: Store this token securely, it won't be shown again!
-          console.log('Token ID:', result.id);
+          // The {id}|{secret} prefix in the token string contains the token ID.
           console.log('Token:', result.token);
     requestBody:
       required: true
@@ -331,26 +331,31 @@
           application/json:
             schema:
               type: object
+              description: Newly issued personal access token. The plain token is shown only once.
               properties:
                 token:
                   type: string
-                  description: Full token string (only shown once)
+                  description: |
+                    Full token string in the form `{id}|{secret}`. Use this value in the
+                    `Authorization: Bearer ...` header. The token ID is encoded in the
+                    prefix; no separate `id` field is returned.
                   example: "1|abc123def456..."
-                id:
-                  type: integer
-                  description: Token ID
-                  example: 1
               required:
                 - token
-                - id
+      '400':
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
       '401':
         description: Unauthorized
         content:
           application/json:
             schema:
               $ref: '../schemas/ErrorResponse.yaml'
-      '422':
-        description: Validation error
+      '403':
+        description: Token sessions cannot create new tokens
         content:
           application/json:
             schema:
@@ -371,14 +376,16 @@
         schema:
           type: integer
     responses:
-      '200':
-        description: Token deleted
+      '204':
+        description: Token deleted (no content)
+      '401':
+        description: Unauthorized
         content:
           application/json:
             schema:
-              $ref: '../schemas/SuccessResponse.yaml'
-      '401':
-        description: Unauthorized
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden (token belongs to a different user)
         content:
           application/json:
             schema:

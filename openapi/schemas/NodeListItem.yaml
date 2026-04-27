@@ -1,0 +1,44 @@
+type: object
+description: |
+  Abbreviated node entry returned by `GET /api/nodes` and
+  `GET /api/dedicated_servers`. The list endpoints intentionally omit
+  daemon credentials and scripts; use `GET /api/nodes/{id}` for the full
+  Node payload.
+properties:
+  id:
+    type: integer
+    description: Node ID
+    example: 1
+  enabled:
+    type: boolean
+    description: Whether node is enabled
+    example: true
+  name:
+    type: string
+    description: Node name
+    example: "Main Server"
+  os:
+    $ref: './common/NodeOS.yaml'
+  location:
+    type: string
+    description: Physical location
+    example: "Frankfurt, DE"
+  provider:
+    type:
+      - string
+      - "null"
+    description: Hosting provider
+    example: "Hetzner"
+  ip:
+    type: array
+    description: List of IP addresses
+    items:
+      type: string
+    example: ["192.168.1.100", "10.0.0.1"]
+required:
+  - id
+  - enabled
+  - name
+  - os
+  - location
+  - ip

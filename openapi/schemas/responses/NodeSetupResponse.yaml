@@ -1,0 +1,36 @@
+type: object
+description: |
+  Node enrollment / setup data returned by `GET /api/nodes/setup`
+  and `GET /api/dedicated_servers/setup` (alias).
+  Both routes share the same handler.
+  When `grpc_enabled=true`, the gRPC enrollment fields (`connect_url`,
+  `linux_cmd`, `windows_cmd`, `setup_link`) are populated; otherwise
+  only the legacy `link` + `token` flow is meaningful.
+properties:
+  link:
+    type: string
+    description: Setup script URL (legacy flow)
+  token:
+    type: string
+    description: Setup token (legacy flow)
+  host:
+    type: string
+    description: Panel base URL
+  grpc_enabled:
+    type: boolean
+    description: Whether gRPC enrollment is available
+  connect_url:
+    type: string
+    description: "gRPC connect URL (grpc://host:port/key); present when grpc_enabled=true"
+  linux_cmd:
+    type: string
+    description: Linux curl one-liner; present when grpc_enabled=true
+  windows_cmd:
+    type: string
+    description: Windows gameapctl command; present when grpc_enabled=true
+  setup_link:
+    type: string
+    description: Setup script URL for the gRPC enrollment flow; present when grpc_enabled=true
+required:
+  - host
+  - grpc_enabled

@@ -11,7 +11,8 @@ properties:
   current_password:
     type: string
     description: Current password (required if changing password)
-  new_password:
+  password:
     type: string
-    description: New password
-    minLength: 6
+    description: New password (min 8 characters; sending it requires current_password)
+    minLength: 8
+    maxLength: 64

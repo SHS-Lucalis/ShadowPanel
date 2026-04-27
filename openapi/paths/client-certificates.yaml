@@ -31,21 +31,52 @@
     tags:
       - ClientCertificates
     summary: Create client certificate
-    description: Creates a new client certificate (Admin only)
+    description: |
+      Uploads a client certificate and matching private key (Admin only).
+      Send as `multipart/form-data` with fields: `certificate` (PEM cert),
+      `private_key` (PEM key), `private_key_pass` (optional). Body limit 10 MiB.
     operationId: createClientCertificate
     requestBody:
-      required: false
+      required: true
       content:
-        application/json:
+        multipart/form-data:
           schema:
-            $ref: '../schemas/requests/CreateClientCertificateRequest.yaml'
+            type: object
+            required:
+              - certificate
+              - private_key
+            properties:
+              certificate:
+                type: string
+                format: binary
+                description: PEM-encoded certificate file
+              private_key:
+                type: string
+                format: binary
+                description: PEM-encoded private key file
+              private_key_pass:
+                type: string
+                description: Optional private key passphrase
     responses:
-      '200':
+      '201':
         description: Certificate created
         content:
           application/json:
             schema:
-              $ref: '../schemas/ClientCertificate.yaml'
+              type: object
+              properties:
+                id:
+                  type: integer
+                  description: ID of the newly created certificate
+                  example: 1
+              required:
+                - id
+      '400':
+        description: Validation or PEM parsing error
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
       '401':
         description: Unauthorized
         content:
@@ -54,12 +85,6 @@
               $ref: '../schemas/ErrorResponse.yaml'
       '403':
         description: Forbidden
-        content:
-          application/json:
-            schema:
-              $ref: '../schemas/ErrorResponse.yaml'
-      '422':
-        description: Validation error
         content:
           application/json:
             schema:
@@ -75,12 +100,8 @@
     parameters:
       - $ref: '../parameters/PathCertificateId.yaml'
     responses:
-      '200':
-        description: Certificate deleted
-        content:
-          application/json:
-            schema:
-              $ref: '../schemas/SuccessResponse.yaml'
+      '204':
+        description: Certificate deleted (no content)
       '401':
         description: Unauthorized
         content:

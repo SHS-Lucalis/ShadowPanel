@@ -54,7 +54,7 @@
           schema:
             $ref: '../schemas/requests/CreateServerTaskRequest.yaml'
     responses:
-      '200':
+      '201':
         description: Task created
         content:
           application/json:
@@ -151,12 +151,8 @@
         schema:
           type: integer
     responses:
-      '200':
-        description: Task deleted
-        content:
-          application/json:
-            schema:
-              $ref: '../schemas/SuccessResponse.yaml'
+      '204':
+        description: Task deleted (no content)
       '401':
         description: Unauthorized
         content:

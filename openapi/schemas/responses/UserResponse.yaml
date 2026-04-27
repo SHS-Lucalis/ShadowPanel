@@ -1,5 +1,7 @@
 type: object
-description: User profile with roles and permissions
+description: |
+  User payload returned by `POST /api/users` and `PUT /api/users/{id}`.
+  Extends the `User` entity with the user's role names.
 properties:
   id:
     type: integer
@@ -8,21 +10,34 @@ properties:
   login:
     type: string
     description: Username
+    maxLength: 255
     example: "admin"
   email:
     type: string
     format: email
     description: Email address
+    maxLength: 255
     example: "admin@example.com"
   name:
     type:
       - string
       - "null"
     description: Display name
+    maxLength: 255
     example: "Administrator"
+  created_at:
+    type:
+      - string
+      - "null"
+    format: date-time
+  updated_at:
+    type:
+      - string
+      - "null"
+    format: date-time
   roles:
     type: array
-    description: User role names
+    description: Role names assigned to the user
     items:
       type: string
     example: ["admin"]

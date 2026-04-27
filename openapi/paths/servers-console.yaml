@@ -57,7 +57,7 @@
               exit(1);
           }
 
-          echo "Console Output:\n{$result['output']}\n";
+          echo "Console Output:\n{$result['console']}\n";
 
       - lang: Go
         source: |
@@ -110,7 +110,7 @@
                   log.Fatalf("Failed to parse JSON: %v", err)
               }
 
-              fmt.Printf("Console Output:\n%s\n", result["output"])
+              fmt.Printf("Console Output:\n%s\n", result["console"])
           }
 
       - lang: NodeJS
@@ -133,7 +133,7 @@
 
           const result = await response.json();
           console.log('Console Output:');
-          console.log(result.output);
+          console.log(result.console);
     parameters:
       - name: server
         in: path

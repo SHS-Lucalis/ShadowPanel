@@ -1,0 +1,21 @@
+type: object
+description: |
+  Server-level permission entry. Returned by
+  `GET /api/users/{id}/servers/{server}/permissions` (with `name`).
+  Sent to `PUT /api/users/{id}/servers/{server}/permissions`
+  (only `permission` and `value`).
+properties:
+  permission:
+    type: string
+    description: Ability machine name (e.g. "console", "rcon", "tasks", "settings")
+    example: "console"
+  value:
+    type: boolean
+    description: Whether the user is granted this ability
+  name:
+    type: string
+    description: Human-readable display name (only present in GET responses)
+    example: "users.console"
+required:
+  - permission
+  - value

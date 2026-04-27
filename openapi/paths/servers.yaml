@@ -482,12 +482,8 @@
     parameters:
       - $ref: '../parameters/PathServerId.yaml'
     responses:
-      '200':
-        description: Server deleted
-        content:
-          application/json:
-            schema:
-              $ref: '../schemas/SuccessResponse.yaml'
+      '204':
+        description: Server deleted (no content)
       '401':
         description: Unauthorized
         content:

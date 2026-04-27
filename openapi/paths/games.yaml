@@ -45,7 +45,7 @@
         content:
           application/json:
             schema:
-              $ref: '../schemas/Game.yaml'
+              $ref: '../schemas/SuccessResponse.yaml'
       '401':
         description: Unauthorized
         content:
@@ -54,6 +54,12 @@
               $ref: '../schemas/ErrorResponse.yaml'
       '403':
         description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '409':
+        description: Game with this code already exists
         content:
           application/json:
             schema:
@@ -276,7 +282,7 @@
         content:
           application/json:
             schema:
-              $ref: '../schemas/Game.yaml'
+              $ref: '../schemas/SuccessResponse.yaml'
       '401':
         description: Unauthorized
         content:

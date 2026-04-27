@@ -35,12 +35,16 @@ GameMod:
   $ref: './GameMod.yaml'
 Node:
   $ref: './Node.yaml'
+NodeListItem:
+  $ref: './NodeListItem.yaml'
 DaemonTask:
   $ref: './DaemonTask.yaml'
 ServerTask:
   $ref: './ServerTask.yaml'
 ServerSetting:
   $ref: './ServerSetting.yaml'
+ServerPermission:
+  $ref: './ServerPermission.yaml'
 ClientCertificate:
   $ref: './ClientCertificate.yaml'
 PersonalAccessToken:
@@ -121,6 +125,10 @@ NodeDaemonStatusResponse:
   $ref: './responses/NodeDaemonStatusResponse.yaml'
 NodesSummaryResponse:
   $ref: './responses/NodesSummaryResponse.yaml'
+NodeSetupResponse:
+  $ref: './responses/NodeSetupResponse.yaml'
+UserResponse:
+  $ref: './responses/UserResponse.yaml'
 ServersSummaryResponse:
   $ref: './responses/ServersSummaryResponse.yaml'
 PublicConfigResponse:

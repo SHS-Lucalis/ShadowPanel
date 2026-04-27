@@ -92,6 +92,61 @@ info:
     `server_id` label, plus machine-level series. Same frame protocol as
     the per-node endpoint.
 
+    ### `/api/ws/tasks/{id}`
+
+    Live status stream for a single daemon task. Used by the task
+    progress drawer in the panel UI. The server emits frames; the
+    client only sends pings.
+
+    Outbound frames (server → client):
+    - `task.status` — payload describes the current task state. Fields
+      include `task_id`, `status` (one of `waiting`, `working`,
+      `success`, `error`, `canceled`), and optionally `server_id` /
+      `progress`.
+    - `task.output` — payload `{ task_id, chunk, is_final }`. Streamed
+      as the task writes stdout/stderr.
+    - `task.complete` — emitted once when the task reaches a terminal
+      state. Payload `{ task_id, status }`. The server may close the
+      socket immediately afterwards.
+
+    ### `/api/ws/servers/{server}/console`
+
+    Bidirectional console stream for a server. Replays the buffered
+    console history on connect, then streams new lines.
+
+    Inbound frames (client → server):
+    - `console.command` — payload `{ command: string }`. Forwarded to
+      the daemon to execute against the server's interactive shell.
+      Requires the `console` ability on the server.
+
+    Outbound frames (server → client):
+    - `console.history` — sent once at connect time. Payload
+      `{ output: string }` with the buffered console contents (may be
+      empty).
+    - `console.output` — payload `{ chunk: string }` (streamed).
+    - `error` — payload `{ message: string }` for authorization, daemon
+      connectivity, or RPC failures. The envelope's top-level `error`
+      field carries the same message. The server may close the socket
+      after sending an `error` frame.
+
+    ### `/api/ws/servers/{server}/attach`
+
+    Interactive PTY session for a server (raw shell attach). Used for
+    server installation flows and operator debugging. Requires the
+    `console` ability on the server (sending input also requires
+    `console.send`).
+
+    Inbound frames (client → server):
+    - `attach.input` — payload `{ data: bytes }`. Bytes sent to the PTY.
+    - `attach.detach` — empty payload. Detaches the client without
+      killing the underlying process.
+
+    Outbound frames (server → client):
+    - `attach.started` — payload `{ session_id, server_id }`. Sent
+      once after the daemon confirms attach.
+    - `attach.output` — payload `{ data: bytes }`. PTY output, streamed.
+    - `error` — same shape as the console endpoint.
+
     ### `MetricsWireResponse` shape
 
     ```json
@@ -417,12 +472,16 @@ paths:
     $ref: './paths/admin-plugins.yaml#/~1api~1admin~1plugins~1upload~1install'
   /api/admin/plugins/loaded:
     $ref: './paths/admin-plugins.yaml#/~1api~1admin~1plugins~1loaded'
+  /api/admin/plugins/{id}:
+    $ref: './paths/admin-plugins.yaml#/~1api~1admin~1plugins~1{id}'
 
   # Daemon Setup
   /gdaemon/setup/{token}:
     $ref: './paths/gdaemon-setup.yaml#/~1gdaemon~1setup~1{token}'
   /gdaemon/create/{token}:
     $ref: './paths/gdaemon-setup.yaml#/~1gdaemon~1create~1{token}'
+  /nodes/setup/{key}:
+    $ref: './paths/nodes-enrollment-script.yaml#/~1nodes~1setup~1{key}'
 
   # Daemon API
   /gdaemon_api/get_token:
@@ -443,3 +502,5 @@ paths:
     $ref: './paths/gdaemon-api-servers-tasks.yaml#/~1gdaemon_api~1servers_tasks'
   /gdaemon_api/servers_tasks/{server_task}:
     $ref: './paths/gdaemon-api-servers-tasks.yaml#/~1gdaemon_api~1servers_tasks~1{server_task}'
+  /gdaemon_api/servers_tasks/{server_task}/fail:
+    $ref: './paths/gdaemon-api-servers-tasks.yaml#/~1gdaemon_api~1servers_tasks~1{server_task}~1fail'

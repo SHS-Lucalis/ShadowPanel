@@ -50,12 +50,18 @@
           schema:
             $ref: '../schemas/requests/CreateUserRequest.yaml'
     responses:
-      '200':
+      '201':
         description: User created
         content:
           application/json:
             schema:
-              $ref: '../schemas/User.yaml'
+              $ref: '../schemas/responses/UserResponse.yaml'
+      '400':
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
       '401':
         description: Unauthorized
         content:
@@ -68,8 +74,14 @@
           application/json:
             schema:
               $ref: '../schemas/ErrorResponse.yaml'
+      '409':
+        description: Login or email already exists
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
       '422':
-        description: Validation error
+        description: Invalid role assignment
         content:
           application/json:
             schema:
@@ -130,7 +142,7 @@
         content:
           application/json:
             schema:
-              $ref: '../schemas/User.yaml'
+              $ref: '../schemas/responses/UserResponse.yaml'
       '401':
         description: Unauthorized
         content:
@@ -165,12 +177,8 @@
     parameters:
       - $ref: '../parameters/PathUserId.yaml'
     responses:
-      '200':
-        description: User deleted
-        content:
-          application/json:
-            schema:
-              $ref: '../schemas/SuccessResponse.yaml'
+      '204':
+        description: User deleted (no content)
       '401':
         description: Unauthorized
         content:
@@ -232,7 +240,10 @@
     tags:
       - Users
     summary: Get user server permissions
-    description: Returns user permissions for a server (Admin only)
+    description: |
+      Returns the user's per-server abilities (built-in plus plugin-provided)
+      as an array (Admin only). Each entry has `permission` (machine name),
+      `value` (granted/denied), and `name` (display label).
     operationId: getUserServerPermissions
     parameters:
       - $ref: '../parameters/PathUserId.yaml'
@@ -248,16 +259,9 @@
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                console:
-                  type: boolean
-                rcon:
-                  type: boolean
-                tasks:
-                  type: boolean
-                settings:
-                  type: boolean
+              type: array
+              items:
+                $ref: '../schemas/ServerPermission.yaml'
       '401':
         description: Unauthorized
         content:
@@ -281,7 +285,11 @@
     tags:
       - Users
     summary: Update user server permissions
-    description: Updates user permissions for a server (Admin only)
+    description: |
+      Updates the user's per-server abilities (Admin only). Body is a
+      non-empty array of `{permission, value}` entries — granted abilities
+      are added, revoked ones are removed. `value` accepts boolean,
+      0/1 integers, and "true"/"false"/"0"/"1" strings.
     operationId: updateUserServerPermissions
     parameters:
       - $ref: '../parameters/PathUserId.yaml'
@@ -296,16 +304,27 @@
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              console:
-                type: boolean
-              rcon:
-                type: boolean
-              tasks:
-                type: boolean
-              settings:
-                type: boolean
+            type: array
+            minItems: 1
+            items:
+              type: object
+              properties:
+                permission:
+                  type: string
+                  description: Ability machine name
+                  example: "console"
+                value:
+                  oneOf:
+                    - type: boolean
+                    - type: string
+                    - type: integer
+                  description: Whether to grant the ability. Accepts true/false, "true"/"false", 0/1, "0"/"1".
+              required:
+                - permission
+                - value
+            example:
+              - { permission: "console", value: true }
+              - { permission: "rcon", value: false }
     responses:
       '200':
         description: Permissions updated

@@ -1,14 +1,32 @@
 type: object
-description: Server setting key-value pair
+description: |
+  Server setting key-value pair as returned by `GET /api/servers/{server}/settings`.
+  Settings come from the game mod template (`type`, `label`) merged with the per-server
+  override (`value`). For the update payload of `PUT /api/servers/{server}/settings`,
+  see `UpdateServerSettingsRequest`.
 properties:
   name:
     type: string
-    description: Setting name
+    description: Setting machine name
     example: "maxplayers"
   value:
-    type: string
-    description: Setting value
+    description: |
+      Setting value. JSON type depends on `type` — string for text/select,
+      number for int/float, boolean for bool, array for multiselect.
     example: "32"
+  type:
+    type: string
+    description: Value type hint for the UI
+    example: "int"
+  label:
+    type: string
+    description: Human-readable label
+    example: "Maximum players"
+  admin_var:
+    type: boolean
+    description: Whether the setting is admin-only (omitted when false)
 required:
   - name
   - value
+  - type
+  - label

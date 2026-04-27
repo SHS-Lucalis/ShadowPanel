@@ -45,7 +45,7 @@
         content:
           application/json:
             schema:
-              $ref: '../schemas/GameMod.yaml'
+              $ref: '../schemas/SuccessResponse.yaml'
       '401':
         description: Unauthorized
         content:

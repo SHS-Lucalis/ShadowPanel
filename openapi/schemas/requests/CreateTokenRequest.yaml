@@ -1,16 +1,20 @@
 type: object
 description: Create personal access token request
 properties:
-  name:
+  token_name:
     type: string
     description: Token name
+    maxLength: 255
     example: "API Integration"
   abilities:
     type: array
     description: Token abilities (permissions)
+    minItems: 1
+    maxItems: 100
+    uniqueItems: true
     items:
       $ref: '../common/PATAbility.yaml'
     example: ["server:list", "server:start", "server:stop"]
 required:
-  - name
+  - token_name
   - abilities

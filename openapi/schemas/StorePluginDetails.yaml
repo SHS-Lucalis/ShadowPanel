@@ -96,14 +96,16 @@ properties:
     description: Installed version (if installed)
     example: "1.1.0"
   has_subscription:
-    type: boolean
-    nullable: true
+    type:
+      - boolean
+      - "null"
     description: Whether the current license has an active subscription for this plugin (only set for plugins with requires_subscription=true)
     example: true
   subscription_expires_at:
-    type: string
+    type:
+      - string
+      - "null"
     format: date-time
-    nullable: true
     description: Subscription expiration date (only set if has_subscription=true)
     example: "2025-12-31T23:59:59Z"
 required:

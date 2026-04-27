@@ -1,0 +1,70 @@
+/nodes/setup/{key}:
+  get:
+    tags:
+      - DaemonSetup
+    summary: Fetch daemon enrollment bash script
+    description: |
+      Public endpoint (no authentication) used by the gRPC enrollment flow.
+      Returns a bash script that downloads `gameapctl` and runs
+      `gameapctl daemon install --connect=<gRPC connect URL>`.
+
+      The script URL is referenced from the `linux_cmd` field of
+      `GET /api/nodes/setup`. Only available when gRPC enrollment is enabled
+      and the supplied `key` matches the configured setup key (see
+      `POST /api/nodes/setup-key`).
+    operationId: getNodeEnrollmentScript
+    security: []
+    parameters:
+      - name: key
+        in: path
+        required: true
+        description: Setup key from `GET /api/nodes/setup-key`
+        schema:
+          type: string
+      - name: config
+        in: query
+        required: false
+        description: Optional config payload passed to gameapctl as `--config=<config>`
+        schema:
+          type: string
+      - name: github
+        in: query
+        required: false
+        description: When `"true"`, install gameapctl from GitHub source (`--github`)
+        schema:
+          type: string
+          enum:
+            - "true"
+            - "false"
+      - name: branch
+        in: query
+        required: false
+        description: GitHub branch (only meaningful with `github=true`)
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Bash setup script
+        content:
+          text/plain:
+            schema:
+              type: string
+              example: "#!/bin/bash\nset -e\n..."
+      '400':
+        description: Invalid `key` parameter
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Setup key does not match or is not configured
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '503':
+        description: Enrollment is not available because gRPC is disabled
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'

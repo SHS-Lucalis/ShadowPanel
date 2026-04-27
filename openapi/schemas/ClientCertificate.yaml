@@ -1,5 +1,8 @@
 type: object
-description: Client certificate entity
+description: |
+  Client certificate entity returned by `GET /api/client_certificates`.
+  `POST /api/client_certificates` returns only `{id}` and HTTP 201; see the
+  inline schema in `paths/client-certificates.yaml`.
 properties:
   id:
     type: integer
@@ -7,32 +10,70 @@ properties:
     example: 1
   fingerprint:
     type: string
-    description: Certificate fingerprint
+    description: SHA-256 certificate fingerprint (uppercase, colon-separated)
     example: "AB:CD:EF:12:34:56:78:90"
-  certificate:
+  expires:
     type: string
-    description: Certificate content (PEM format)
-  private_key:
-    type: string
-    description: Private key content (PEM format)
-  private_key_pass:
-    type:
-      - string
-      - "null"
-    description: Private key password
-  created_at:
-    type:
-      - string
-      - "null"
     format: date-time
-    description: Creation timestamp
-  updated_at:
-    type:
-      - string
-      - "null"
-    format: date-time
-    description: Last update timestamp
+    description: Certificate NotAfter timestamp
+  info:
+    type: object
+    description: Parsed X.509 certificate info
+    properties:
+      expires:
+        type: string
+        format: date-time
+      signature_type:
+        type: string
+        description: Signature algorithm name
+        example: "SHA256-RSA"
+      country:
+        type: string
+      state:
+        type: string
+      locality:
+        type: string
+      organization:
+        type: string
+      organizational_unit:
+        type: string
+      common_name:
+        type: string
+      email:
+        type: string
+      issuer_country:
+        type: string
+      issuer_state:
+        type: string
+      issuer_locality:
+        type: string
+      issuer_organization:
+        type: string
+      issuer_organizational_unit:
+        type: string
+      issuer_common_name:
+        type: string
+      issuer_email:
+        type: string
+    required:
+      - expires
+      - signature_type
+      - country
+      - state
+      - locality
+      - organization
+      - organizational_unit
+      - common_name
+      - email
+      - issuer_country
+      - issuer_state
+      - issuer_locality
+      - issuer_organization
+      - issuer_organizational_unit
+      - issuer_common_name
+      - issuer_email
 required:
   - id
   - fingerprint
-  - certificate
+  - expires
+  - info

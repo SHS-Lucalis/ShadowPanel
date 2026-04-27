@@ -64,11 +64,6 @@ properties:
   gdaemon_api_key:
     type: string
     description: GDaemon API key
-  gdaemon_api_token:
-    type:
-      - string
-      - "null"
-    description: GDaemon API token
   gdaemon_login:
     type:
       - string
@@ -170,6 +165,12 @@ properties:
       - "null"
     format: date-time
     description: Last update timestamp
+  deleted_at:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: Soft-delete timestamp (null when node is active)
 required:
   - id
   - name
