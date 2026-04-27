@@ -16,10 +16,10 @@ type RBACRepository struct {
 	assignedRoles    map[uint]*domain.AssignedRole
 	abilities        map[uint]*domain.Ability
 	permissions      map[uint]*domain.Permission
-	nextRoleID       uint32
-	nextAssignedID   uint32
-	nextAbilityID    uint32
-	nextPermissionID uint32
+	nextRoleID       atomic.Uint32
+	nextAssignedID   atomic.Uint32
+	nextAbilityID    atomic.Uint32
+	nextPermissionID atomic.Uint32
 }
 
 func NewRBACRepository() *RBACRepository {
@@ -107,7 +107,7 @@ func (r *RBACRepository) SaveRole(_ context.Context, role *domain.Role) error {
 	defer r.mu.Unlock()
 
 	if role.ID == 0 {
-		role.ID = uint(atomic.AddUint32(&r.nextRoleID, 1))
+		role.ID = uint(r.nextRoleID.Add(1))
 	}
 
 	r.roles[role.ID] = &domain.Role{
@@ -128,7 +128,7 @@ func (r *RBACRepository) SaveAssignedRole(_ context.Context, assignedRole *domai
 	defer r.mu.Unlock()
 
 	if assignedRole.ID == 0 {
-		assignedRole.ID = uint(atomic.AddUint32(&r.nextAssignedID, 1))
+		assignedRole.ID = uint(r.nextAssignedID.Add(1))
 	}
 
 	r.assignedRoles[assignedRole.ID] = &domain.AssignedRole{
@@ -167,7 +167,7 @@ func (r *RBACRepository) SaveAbility(_ context.Context, ability *domain.Ability)
 	defer r.mu.Unlock()
 
 	if ability.ID == 0 {
-		ability.ID = uint(atomic.AddUint32(&r.nextAbilityID, 1))
+		ability.ID = uint(r.nextAbilityID.Add(1))
 	}
 
 	r.abilities[ability.ID] = &domain.Ability{
@@ -191,7 +191,7 @@ func (r *RBACRepository) SavePermission(_ context.Context, permission *domain.Pe
 	defer r.mu.Unlock()
 
 	if permission.ID == 0 {
-		permission.ID = uint(atomic.AddUint32(&r.nextPermissionID, 1))
+		permission.ID = uint(r.nextPermissionID.Add(1))
 	}
 
 	r.permissions[permission.ID] = &domain.Permission{
@@ -248,7 +248,7 @@ func (r *RBACRepository) AssignRolesForEntity(
 
 		if !exists {
 			assignedRole := &domain.AssignedRole{
-				ID:               uint(atomic.AddUint32(&r.nextAssignedID, 1)),
+				ID:               uint(r.nextAssignedID.Add(1)),
 				RoleID:           role.ID,
 				EntityID:         entityID,
 				EntityType:       entityType,
@@ -359,7 +359,7 @@ func (r *RBACRepository) applyAbilities(
 	// Step 3: Create permissions
 	for _, abilityID := range abilityIDs {
 		permission := &domain.Permission{
-			ID:         uint(atomic.AddUint32(&r.nextPermissionID, 1)),
+			ID:         uint(r.nextPermissionID.Add(1)),
 			AbilityID:  abilityID,
 			EntityID:   &entityID,
 			EntityType: &entityType,
@@ -383,7 +383,7 @@ func (r *RBACRepository) saveOrGetAbility(ability *domain.Ability) uint {
 
 	// Create new ability
 	newAbility := &domain.Ability{
-		ID:         uint(atomic.AddUint32(&r.nextAbilityID, 1)),
+		ID:         uint(r.nextAbilityID.Add(1)),
 		Name:       ability.Name,
 		Title:      ability.Title,
 		EntityID:   ability.EntityID,

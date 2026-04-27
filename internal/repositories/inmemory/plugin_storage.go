@@ -16,7 +16,7 @@ import (
 type PluginStorageRepository struct {
 	mu      sync.RWMutex
 	entries map[uint64]*domain.PluginStorageEntry
-	nextID  uint64
+	nextID  atomic.Uint64
 
 	pluginIDIndex map[uint64]map[uint64]struct{}
 	keyIndex      map[string]map[uint64]struct{}
@@ -112,7 +112,7 @@ func (r *PluginStorageRepository) resolveEntryID(entry *domain.PluginStorageEntr
 		return
 	}
 
-	entry.ID = atomic.AddUint64(&r.nextID, 1)
+	entry.ID = r.nextID.Add(1)
 	entry.CreatedAt = now
 }
 

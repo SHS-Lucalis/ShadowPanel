@@ -15,7 +15,7 @@ import (
 type ServerSettingRepository struct {
 	mu       sync.RWMutex
 	settings map[uint]*domain.ServerSetting
-	nextID   uint32
+	nextID   atomic.Uint32
 
 	// Hash indexes for efficient filtering
 	serverIDIndex map[uint]map[uint]struct{}   // serverID -> settingIDs
@@ -68,7 +68,7 @@ func (r *ServerSettingRepository) Save(_ context.Context, setting *domain.Server
 			r.removeFromIndexes(oldSetting)
 		}
 	} else {
-		setting.ID = uint(atomic.AddUint32(&r.nextID, 1))
+		setting.ID = uint(r.nextID.Add(1))
 	}
 
 	// Save setting

@@ -20,7 +20,7 @@ type ServerRepository struct {
 	mu          sync.RWMutex
 	servers     map[uint]*domain.Server
 	userServers map[uint]map[uint]struct{} // userID -> serverID -> exists
-	nextID      uint32
+	nextID      atomic.Uint32
 
 	// Hash indexes for efficient filtering
 	uuidIndex      map[uuid.UUID]map[uint]struct{} // uuid -> serverIDs
@@ -273,7 +273,7 @@ func (r *ServerRepository) Save(_ context.Context, server *domain.Server) error 
 			r.removeFromIndexes(oldServer)
 		}
 	} else {
-		server.ID = uint(atomic.AddUint32(&r.nextID, 1))
+		server.ID = uint(r.nextID.Add(1))
 	}
 
 	// Save server
@@ -333,7 +333,7 @@ func (r *ServerRepository) SaveBulk(_ context.Context, servers []*domain.Server)
 				r.removeFromIndexes(oldServer)
 			}
 		} else {
-			server.ID = uint(atomic.AddUint32(&r.nextID, 1))
+			server.ID = uint(r.nextID.Add(1))
 		}
 
 		// Save server

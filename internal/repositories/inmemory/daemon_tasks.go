@@ -16,7 +16,7 @@ import (
 type DaemonTaskRepository struct {
 	mu     sync.RWMutex
 	tasks  map[uint]*domain.DaemonTask
-	nextID uint32
+	nextID atomic.Uint32
 
 	dedicatedServerIDIndex map[uint]map[uint]struct{}                    // dedicatedServerID -> taskIDs
 	serverIDIndex          map[uint]map[uint]struct{}                    // serverID -> taskIDs
@@ -119,7 +119,7 @@ func (r *DaemonTaskRepository) Save(_ context.Context, task *domain.DaemonTask) 
 			}
 		}
 	} else {
-		task.ID = uint(atomic.AddUint32(&r.nextID, 1))
+		task.ID = uint(r.nextID.Add(1))
 	}
 
 	output := task.Output

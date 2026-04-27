@@ -17,7 +17,7 @@ import (
 type ServerTaskRepository struct {
 	mu     sync.RWMutex
 	tasks  map[uint]*domain.ServerTask
-	nextID uint32
+	nextID atomic.Uint32
 
 	// Hash indexes for efficient filtering
 	serverIDIndex map[uint]map[uint]struct{}                     // serverID -> taskIDs
@@ -95,7 +95,7 @@ func (r *ServerTaskRepository) Save(_ context.Context, task *domain.ServerTask) 
 			r.removeFromIndexes(oldTask)
 		}
 	} else {
-		task.ID = uint(atomic.AddUint32(&r.nextID, 1))
+		task.ID = uint(r.nextID.Add(1))
 	}
 
 	r.tasks[task.ID] = &domain.ServerTask{

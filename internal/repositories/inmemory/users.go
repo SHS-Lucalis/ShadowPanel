@@ -16,7 +16,7 @@ import (
 type UserRepository struct {
 	mu     sync.RWMutex
 	users  map[uint]*domain.User
-	nextID uint32
+	nextID atomic.Uint32
 }
 
 func NewUserRepository() *UserRepository {
@@ -102,7 +102,7 @@ func (r *UserRepository) Save(_ context.Context, user *domain.User) error {
 	}
 
 	if user.ID == 0 {
-		user.ID = uint(atomic.AddUint32(&r.nextID, 1))
+		user.ID = uint(r.nextID.Add(1))
 	}
 
 	r.users[user.ID] = &domain.User{

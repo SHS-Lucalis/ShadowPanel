@@ -15,7 +15,7 @@ import (
 type ServerTaskFailRepository struct {
 	mu     sync.RWMutex
 	fails  map[uint]*domain.ServerTaskFail
-	nextID uint32
+	nextID atomic.Uint32
 
 	// Hash indexes for efficient filtering
 	serverTaskIDIndex map[uint]map[uint]struct{} // serverTaskID -> failIDs
@@ -84,7 +84,7 @@ func (r *ServerTaskFailRepository) Save(_ context.Context, fail *domain.ServerTa
 			r.removeFromIndexes(oldFail)
 		}
 	} else {
-		fail.ID = uint(atomic.AddUint32(&r.nextID, 1))
+		fail.ID = uint(r.nextID.Add(1))
 	}
 
 	r.fails[fail.ID] = &domain.ServerTaskFail{

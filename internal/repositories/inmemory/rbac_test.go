@@ -2,7 +2,6 @@ package inmemory
 
 import (
 	"context"
-	"sync/atomic"
 	"testing"
 
 	"github.com/gameap/gameap/internal/domain"
@@ -19,9 +18,8 @@ func TestRBACRepository(t *testing.T) {
 			createRoleFunc := func(_ context.Context, t *testing.T, name string) domain.Role {
 				t.Helper()
 
-				roleID := atomic.AddUint32(&repo.nextRoleID, 1)
 				role := domain.Role{
-					ID:    uint(roleID),
+					ID:    uint(repo.nextRoleID.Add(1)),
 					Name:  name,
 					Title: new(name + " Title"),
 					Level: new(uint(1)),
@@ -38,8 +36,7 @@ func TestRBACRepository(t *testing.T) {
 			createAbilityFunc := func(_ context.Context, t *testing.T, ability domain.Ability) uint {
 				t.Helper()
 
-				abilityID := atomic.AddUint32(&repo.nextAbilityID, 1)
-				ability.ID = uint(abilityID)
+				ability.ID = uint(repo.nextAbilityID.Add(1))
 
 				repo.mu.Lock()
 				repo.abilities[ability.ID] = &ability

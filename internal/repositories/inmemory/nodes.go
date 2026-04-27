@@ -16,7 +16,7 @@ import (
 type NodeRepository struct {
 	mu      sync.RWMutex
 	nodes   map[uint]*domain.Node
-	nextID  uint32
+	nextID  atomic.Uint32
 	idIndex map[uint]map[uint]struct{} // id -> nodeIDs
 }
 
@@ -93,7 +93,7 @@ func (r *NodeRepository) Save(_ context.Context, node *domain.Node) error {
 			r.removeFromIndexes(oldNode)
 		}
 	} else {
-		node.ID = uint(atomic.AddUint32(&r.nextID, 1))
+		node.ID = uint(r.nextID.Add(1))
 	}
 
 	// Save node (deep copy to prevent external modifications)

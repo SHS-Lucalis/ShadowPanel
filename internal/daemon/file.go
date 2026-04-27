@@ -192,7 +192,7 @@ func (s *FileService) DownloadStream(
 
 func (s *FileService) downloadStreamLocal(ctx context.Context, nodeID uint64, path string) (io.ReadCloser, error) {
 	if !s.registry.HasCapability(nodeID, capabilityFileTransfer) {
-		return s.downloadStreamLocalChunked(ctx, nodeID, path)
+		return s.downloadStreamLocalChunked(ctx, nodeID, path), nil
 	}
 
 	transferID := idgen.New()
@@ -277,7 +277,7 @@ func (s *FileService) downloadStreamLocal(ctx context.Context, nodeID uint64, pa
 
 func (s *FileService) downloadStreamLocalChunked(
 	ctx context.Context, nodeID uint64, path string,
-) (io.ReadCloser, error) {
+) io.ReadCloser {
 	pr, pw := io.Pipe()
 
 	go func() {
@@ -323,7 +323,7 @@ func (s *FileService) downloadStreamLocalChunked(
 		}
 	}()
 
-	return pr, nil
+	return pr
 }
 
 func (s *FileService) downloadStreamRemote(ctx context.Context, nodeID uint64, path string) (io.ReadCloser, error) {

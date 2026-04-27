@@ -160,7 +160,7 @@ import (
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
 	"github.com/gameap/gameap/pkg/plugin"
-	webstatic "github.com/gameap/gameap/web/static"
+	webstatic "github.com/gameap/gameap/web/static" //nolint:typecheck,nolintlint // for embedding static files
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )

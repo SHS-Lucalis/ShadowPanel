@@ -14,7 +14,7 @@ import (
 type ClientCertificateRepository struct {
 	mu           sync.RWMutex
 	certificates map[uint]*domain.ClientCertificate
-	nextID       uint32
+	nextID       atomic.Uint32
 	idIndex      map[uint]map[uint]struct{} // id -> certificateIDs
 }
 
@@ -81,7 +81,7 @@ func (r *ClientCertificateRepository) Save(_ context.Context, cert *domain.Clien
 			r.removeFromIndexes(oldCert)
 		}
 	} else {
-		cert.ID = uint(atomic.AddUint32(&r.nextID, 1))
+		cert.ID = uint(r.nextID.Add(1))
 	}
 
 	// Save certificate (deep copy to prevent external modifications)

@@ -17,7 +17,7 @@ import (
 type PersonalAccessTokenRepository struct {
 	mu     sync.RWMutex
 	tokens map[uint]*domain.PersonalAccessToken
-	nextID uint32
+	nextID atomic.Uint32
 }
 
 func NewPersonalAccessTokenRepository() *PersonalAccessTokenRepository {
@@ -130,7 +130,7 @@ func (r *PersonalAccessTokenRepository) UpdateLastUsedAt(
 
 func (r *PersonalAccessTokenRepository) create(token *domain.PersonalAccessToken) {
 	if token.ID == 0 {
-		token.ID = uint(atomic.AddUint32(&r.nextID, 1))
+		token.ID = uint(r.nextID.Add(1))
 	}
 
 	r.tokens[token.ID] = &domain.PersonalAccessToken{
