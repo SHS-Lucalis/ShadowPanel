@@ -377,11 +377,11 @@ func (h *hub) gatherReplay(
 	entries := state.ring.Snapshot(cutoff)
 
 	if h.replayCoversWindow(entries, window) {
-		return entries
+		return mergedReplay(entries)
 	}
 
 	if !h.registry.IsConnectedAnywhere(state.nodeID) {
-		return entries
+		return mergedReplay(entries)
 	}
 
 	resp, err := h.GetHistory(ctx, state.nodeID, window)
@@ -391,16 +391,28 @@ func (h *hub) gatherReplay(
 			"error", err,
 		)
 
-		return entries
+		return mergedReplay(entries)
 	}
 
 	if resp == nil {
-		return entries
+		return mergedReplay(entries)
 	}
 
 	state.ring.Append(resp)
 
 	return []*proto.MetricsResponse{resp}
+}
+
+// mergedReplay collapses per-tick ring entries into a single series-grouped
+// response. Returns nil for the empty case so callers can skip sending an
+// empty replay envelope.
+func mergedReplay(entries []*proto.MetricsResponse) []*proto.MetricsResponse {
+	merged := mergeResponses(entries)
+	if merged == nil {
+		return nil
+	}
+
+	return []*proto.MetricsResponse{merged}
 }
 
 func (h *hub) replayCoversWindow(entries []*proto.MetricsResponse, window time.Duration) bool {
