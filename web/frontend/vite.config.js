@@ -2,8 +2,16 @@ import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue'
 import { viteCommonjs } from '@originjs/vite-plugin-commonjs'
 import { resolve } from 'path'
+import { closeSync, openSync } from 'fs'
 import Components from 'unplugin-vue-components/vite'
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
+
+const keepGitkeep = () => ({
+    name: 'keep-gitkeep',
+    closeBundle() {
+        closeSync(openSync(resolve(__dirname, '../static/dist/.gitkeep'), 'w'))
+    },
+})
 
 export default defineConfig({
     plugins: [
@@ -13,6 +21,7 @@ export default defineConfig({
             resolvers: [NaiveUiResolver()],
             dts: false,
         }),
+        keepGitkeep(),
     ],
     base: '/',
     publicDir: 'public',

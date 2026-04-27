@@ -153,19 +153,59 @@ info:
     {
       "timestamp": "2026-04-27T15:30:45.123Z",
       "common_labels": { "node_id": "1" },
-      "series": [{
-        "name": "gameap_node_cpu_usage_percent",
-        "type": "gauge",
-        "unit": "percent",
-        "labels": {},
-        "points": [{
-          "timestamp": "2026-04-27T15:30:45.123Z",
-          "value": "47.2"
-        }]
-      }],
+      "series": [
+        {
+          "name": "gameap_node_cpu_usage_percent",
+          "type": "gauge",
+          "unit": "percent",
+          "labels": {},
+          "points": [{
+            "timestamp": "2026-04-27T15:30:45.123Z",
+            "value": "47.2"
+          }]
+        },
+        {
+          "name": "gameap_node_network_receive_bytes_total",
+          "type": "counter",
+          "unit": "bytes",
+          "labels": { "interface": "eth0" },
+          "points": [{
+            "timestamp": "2026-04-27T15:30:45.123Z",
+            "value": "1623771160"
+          }]
+        },
+        {
+          "name": "gameap_node_disk_usage_percent",
+          "type": "gauge",
+          "unit": "percent",
+          "labels": { "mount": "/" },
+          "points": [{
+            "timestamp": "2026-04-27T15:30:45.123Z",
+            "value": "6.13"
+          }]
+        }
+      ],
       "actual_window_seconds": 0
     }
     ```
+
+    Series with the same `name` may repeat with different `labels` (e.g.
+    one `gameap_node_network_receive_bytes_total` per interface,
+    one `gameap_node_disk_usage_percent` per mount). Currently emitted
+    metric names include:
+    `gameap_node_cpu_usage_percent`,
+    `gameap_node_memory_usage_percent`,
+    `gameap_node_memory_usage_bytes`,
+    `gameap_node_memory_total_bytes`,
+    `gameap_node_swap_usage_bytes`,
+    `gameap_node_swap_total_bytes`,
+    `gameap_node_disk_usage_percent` (label `mount`),
+    `gameap_node_disk_usage_bytes` (label `mount`),
+    `gameap_node_disk_total_bytes` (label `mount`),
+    `gameap_node_network_receive_bytes_total` (label `interface`),
+    `gameap_node_network_transmit_bytes_total` (label `interface`),
+    `gameap_node_load1`, `gameap_node_load5`, `gameap_node_load15`,
+    `gameap_node_uptime_seconds_total`.
 
     See `schemas/responses/MetricsWireResponse.yaml` for the JSON schema.
   contact:

@@ -672,7 +672,12 @@
     "statistics_out": "исх.",
     "statistics_limit": "лимит",
     "statistics_error": "Не удалось получить метрики",
-    "statistics_no_data": "Метрики ещё недоступны"
+    "statistics_no_data": "Метрики ещё недоступны",
+    "statistics_network_receive": "Сеть: входящий трафик",
+    "statistics_network_transmit": "Сеть: исходящий трафик",
+    "statistics_disk_usage": "Использование диска",
+    "statistics_load_average": "Средняя нагрузка",
+    "statistics_all": "все"
   },
   "servers_tasks": {
     "tasks_title": "Задания",

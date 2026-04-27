@@ -14,27 +14,96 @@
     </div>
 
     <div v-if="hasAnyData" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <GCard :title="trans('servers.statistics_cpu')" class="mb-3">
+      <GCard
+          v-if="diskMounts.length"
+          :title="trans('servers.statistics_disk_usage')"
+          class="mb-3 md:col-span-2"
+      >
+        <DiskUsageList :mounts="diskMounts" />
+      </GCard>
+
+      <GCard
+          v-if="cpuSeries.length"
+          :title="trans('servers.statistics_cpu')"
+          class="mb-3"
+      >
         <v-chart class="h-56 lg:h-64 w-full" :option="cpuOption" :update-options="updateOptions" autoresize />
       </GCard>
 
-      <GCard :title="trans('servers.statistics_memory')" class="mb-3">
+      <GCard
+          v-if="memoryBytesSeries.length"
+          :title="trans('servers.statistics_memory')"
+          class="mb-3"
+      >
         <v-chart class="h-56 lg:h-64 w-full" :option="memoryOption" :update-options="updateOptions" autoresize />
       </GCard>
 
-      <GCard :title="trans('servers.statistics_disk_io')" class="mb-3">
-        <v-chart class="h-56 lg:h-64 w-full" :option="diskOption" :update-options="updateOptions" autoresize />
+      <GCard
+          v-if="hasLoadData"
+          :title="trans('servers.statistics_load_average')"
+          class="mb-3"
+      >
+        <v-chart
+            class="h-56 lg:h-64 w-full"
+            :option="loadOption"
+            :update-options="updateOptions"
+            autoresize
+            @legendselectchanged="(p) => onLegendSelectChanged('load', p)"
+        />
       </GCard>
 
-      <GCard :title="trans('servers.statistics_network_io')" class="mb-3">
-        <v-chart class="h-56 lg:h-64 w-full" :option="networkOption" :update-options="updateOptions" autoresize />
+      <GCard
+          v-if="hasDiskIOData"
+          :title="trans('servers.statistics_disk_io')"
+          class="mb-3"
+      >
+        <v-chart
+            class="h-56 lg:h-64 w-full"
+            :option="diskOption"
+            :update-options="updateOptions"
+            autoresize
+            @legendselectchanged="(p) => onLegendSelectChanged('disk', p)"
+        />
       </GCard>
+
+      <div
+          v-if="networkInSeries.length || networkOutSeries.length"
+          class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4"
+      >
+        <GCard
+            v-if="networkInSeries.length"
+            :title="trans('servers.statistics_network_receive')"
+            class="mb-0"
+        >
+          <v-chart
+              class="h-56 lg:h-64 w-full"
+              :option="networkInOption"
+              :update-options="updateOptions"
+              autoresize
+              @legendselectchanged="(p) => onLegendSelectChanged('networkIn', p)"
+          />
+        </GCard>
+
+        <GCard
+            v-if="networkOutSeries.length"
+            :title="trans('servers.statistics_network_transmit')"
+            class="mb-0"
+        >
+          <v-chart
+              class="h-56 lg:h-64 w-full"
+              :option="networkOutOption"
+              :update-options="updateOptions"
+              autoresize
+              @legendselectchanged="(p) => onLegendSelectChanged('networkOut', p)"
+          />
+        </GCard>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { LineChart } from 'echarts/charts'
@@ -49,6 +118,7 @@ import { NAlert } from 'naive-ui'
 import { Loading, GCard } from '@gameap/ui'
 import { useNodeMetricsWebSocket } from '@/composables/useNodeMetricsWebSocket'
 import { trans } from '@/i18n/i18n'
+import DiskUsageList from '@/components/blocks/DiskUsageList.vue'
 
 use([
     CanvasRenderer,
@@ -68,7 +138,36 @@ const PALETTE_CYAN = '#22d3ee'
 const PALETTE_MAGENTA = '#e879f9'
 const PALETTE_DANGER = '#ef4444'
 
+const PALETTE_MULTI = [
+    '#22d3ee',
+    '#84cc16',
+    '#e879f9',
+    '#f59e0b',
+    '#ef4444',
+    '#a78bfa',
+    '#0ea5e9',
+    '#facc15',
+    '#10b981',
+    '#fb7185',
+]
+
 const updateOptions = { replaceMerge: ['series'] }
+
+const legendSelections = ref({})
+
+function onLegendSelectChanged(chartKey, params) {
+    legendSelections.value = {
+        ...legendSelections.value,
+        [chartKey]: { ...params.selected },
+    }
+}
+
+function applyLegendSelection(opt, chartKey) {
+    const sel = legendSelections.value[chartKey]
+    if (sel && opt.legend && opt.legend.show !== false) {
+        opt.legend = { ...opt.legend, selected: sel }
+    }
+}
 
 const {
     errorMessage,
@@ -76,9 +175,46 @@ const {
     memoryBytesSeries,
     diskReadSeries,
     diskWriteSeries,
+    diskUsageBytesSeries,
+    diskUsagePercentSeries,
+    diskTotalBytesSeries,
     networkInSeries,
     networkOutSeries,
+    load1Series,
+    load5Series,
+    load15Series,
 } = useNodeMetricsWebSocket(() => Number(props.nodeId))
+
+const hasLoadData = computed(() =>
+    load1Series.value.length > 0
+    || load5Series.value.length > 0
+    || load15Series.value.length > 0,
+)
+
+const hasDiskIOData = computed(() =>
+    diskReadSeries.value.length > 0
+    || diskWriteSeries.value.length > 0,
+)
+
+const diskMounts = computed(() => {
+    const map = new Map()
+    const upsert = (mount, patch) => {
+        const cur = map.get(mount) || { mount }
+        map.set(mount, { ...cur, ...patch })
+    }
+    const lastVal = (s) => (s.points.length ? s.points[s.points.length - 1].v : null)
+
+    for (const s of diskUsagePercentSeries.value) {
+        upsert(s.labels?.mount || '/', { percent: lastVal(s) })
+    }
+    for (const s of diskUsageBytesSeries.value) {
+        upsert(s.labels?.mount || '/', { used: lastVal(s) })
+    }
+    for (const s of diskTotalBytesSeries.value) {
+        upsert(s.labels?.mount || '/', { total: lastVal(s) })
+    }
+    return Array.from(map.values()).sort((a, b) => a.mount.localeCompare(b.mount))
+})
 
 const hasAnyData = computed(() => {
     return (
@@ -88,6 +224,8 @@ const hasAnyData = computed(() => {
         || diskWriteSeries.value.length > 0
         || networkInSeries.value.length > 0
         || networkOutSeries.value.length > 0
+        || hasLoadData.value
+        || diskMounts.value.length > 0
     )
 })
 
@@ -112,8 +250,17 @@ function formatBitrate(v) {
     return `${formatBytes(v)}/s`
 }
 
+function formatLoad(v) {
+    if (v == null || Number.isNaN(v)) return ''
+    return Number(v).toFixed(2)
+}
+
 function pointsToData(points) {
     return points.map(p => [p.ts, p.v])
+}
+
+function interfaceLabel(s) {
+    return s.labels?.interface || trans('servers.statistics_all')
 }
 
 function baseOption({ yMax = null, yFormatter, palette, showLegend = false }) {
@@ -194,23 +341,56 @@ const diskOption = computed(() => {
         seriesList.push(makeLineSeries(trans('servers.statistics_write'), s.points))
     }
     opt.series = seriesList
+    applyLegendSelection(opt, 'disk')
     return opt
 })
 
-const networkOption = computed(() => {
+const networkInOption = computed(() => {
     const opt = baseOption({
         yFormatter: formatBitrate,
-        palette: [PALETTE_CYAN, PALETTE_DANGER],
+        palette: PALETTE_MULTI,
+        showLegend: true,
+    })
+    opt.series = networkInSeries.value
+        .slice()
+        .sort((a, b) => interfaceLabel(a).localeCompare(interfaceLabel(b)))
+        .map(s => makeLineSeries(interfaceLabel(s), s.points))
+    applyLegendSelection(opt, 'networkIn')
+    return opt
+})
+
+const networkOutOption = computed(() => {
+    const opt = baseOption({
+        yFormatter: formatBitrate,
+        palette: PALETTE_MULTI,
+        showLegend: true,
+    })
+    opt.series = networkOutSeries.value
+        .slice()
+        .sort((a, b) => interfaceLabel(a).localeCompare(interfaceLabel(b)))
+        .map(s => makeLineSeries(interfaceLabel(s), s.points))
+    applyLegendSelection(opt, 'networkOut')
+    return opt
+})
+
+const loadOption = computed(() => {
+    const opt = baseOption({
+        yFormatter: formatLoad,
+        palette: [PALETTE_LIME, PALETTE_CYAN, PALETTE_MAGENTA, PALETTE_DANGER],
         showLegend: true,
     })
     const seriesList = []
-    for (const s of networkInSeries.value) {
-        seriesList.push(makeLineSeries(trans('servers.statistics_in'), s.points))
+    for (const s of load1Series.value) {
+        seriesList.push(makeLineSeries('1m', s.points))
     }
-    for (const s of networkOutSeries.value) {
-        seriesList.push(makeLineSeries(trans('servers.statistics_out'), s.points))
+    for (const s of load5Series.value) {
+        seriesList.push(makeLineSeries('5m', s.points))
+    }
+    for (const s of load15Series.value) {
+        seriesList.push(makeLineSeries('15m', s.points))
     }
     opt.series = seriesList
+    applyLegendSelection(opt, 'load')
     return opt
 })
 </script>

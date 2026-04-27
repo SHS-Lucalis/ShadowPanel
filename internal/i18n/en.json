@@ -671,7 +671,12 @@
     "statistics_out": "out",
     "statistics_limit": "limit",
     "statistics_error": "Failed to fetch metrics",
-    "statistics_no_data": "No metrics available yet"
+    "statistics_no_data": "No metrics available yet",
+    "statistics_network_receive": "Network Receive",
+    "statistics_network_transmit": "Network Transmit",
+    "statistics_disk_usage": "Disk usage",
+    "statistics_load_average": "Load average",
+    "statistics_all": "all"
   },
   "servers_tasks": {
     "tasks_title": "Tasks",

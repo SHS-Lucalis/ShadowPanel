@@ -51,7 +51,8 @@ export function useNodesMetricsWebSocket() {
         if (!nodeID) return
 
         const map = snapshots.value
-        const snap = map.get(nodeID) || emptySnapshot()
+        const prev = map.get(nodeID)
+        const snap = prev ? { ...prev } : emptySnapshot()
 
         for (const s of env.series) {
             if (!s || !Array.isArray(s.points) || s.points.length === 0) continue

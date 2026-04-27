@@ -134,8 +134,14 @@ export function useNodeMetricsWebSocket(nodeId) {
     const memoryTotalSeries = computed(() => pickByName('gameap_node_memory_total_bytes'))
     const diskReadSeries = computed(() => pickByName('gameap_node_disk_read_bytes_total'))
     const diskWriteSeries = computed(() => pickByName('gameap_node_disk_write_bytes_total'))
+    const diskUsageBytesSeries = computed(() => pickByName('gameap_node_disk_usage_bytes'))
+    const diskUsagePercentSeries = computed(() => pickByName('gameap_node_disk_usage_percent'))
+    const diskTotalBytesSeries = computed(() => pickByName('gameap_node_disk_total_bytes'))
     const networkInSeries = computed(() => pickByName('gameap_node_network_receive_bytes_total'))
     const networkOutSeries = computed(() => pickByName('gameap_node_network_transmit_bytes_total'))
+    const load1Series = computed(() => pickByName('gameap_node_load1'))
+    const load5Series = computed(() => pickByName('gameap_node_load5'))
+    const load15Series = computed(() => pickByName('gameap_node_load15'))
 
     return {
         status: ws.status,
@@ -147,8 +153,14 @@ export function useNodeMetricsWebSocket(nodeId) {
         memoryTotalSeries,
         diskReadSeries,
         diskWriteSeries,
+        diskUsageBytesSeries,
+        diskUsagePercentSeries,
+        diskTotalBytesSeries,
         networkInSeries,
         networkOutSeries,
+        load1Series,
+        load5Series,
+        load15Series,
         close: ws.close,
     }
 }
