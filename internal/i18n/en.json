@@ -651,7 +651,19 @@
     "select_server": "Select server",
     "server_already_added": "Server already added",
     "metadata": "Metadata",
-    "additional_settings": "Additional Settings"
+    "additional_settings": "Additional Settings",
+    "statistics": "Statistics",
+    "statistics_cpu": "CPU usage",
+    "statistics_memory": "Memory",
+    "statistics_disk_io": "Disk I/O",
+    "statistics_network_io": "Network I/O",
+    "statistics_read": "read",
+    "statistics_write": "write",
+    "statistics_in": "in",
+    "statistics_out": "out",
+    "statistics_limit": "limit",
+    "statistics_error": "Failed to fetch metrics",
+    "statistics_no_data": "No metrics available yet"
   },
   "servers_tasks": {
     "tasks_title": "Tasks",

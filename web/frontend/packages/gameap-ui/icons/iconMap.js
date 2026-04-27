@@ -89,6 +89,7 @@ export const defaultIconMap = {
   "memory": "fa-solid fa-memory",
   "cpu": "fa-solid fa-microchip",
   "microchip": "fa-solid fa-microchip",
+  "metrics": "fa-solid fa-chart-area",
 
   // ===== User/Auth Icons =====
   "user": "fa-solid fa-user",

@@ -47,7 +47,7 @@
 </template>
 
 <script setup>
-import {computed, onMounted, watch} from "vue"
+import {computed, onMounted, provide, watch} from "vue"
 import {
   NConfigProvider,
   NDialogProvider,
@@ -57,6 +57,7 @@ import {
   ruRU,
   enUS,
 } from "naive-ui"
+import {THEME_KEY} from "vue-echarts"
 import MainNavbar from "./components/MainNavbar.vue"
 import GuestNavbar from "./components/GuestNavbar.vue"
 import MainSidebar from "./components/MainSidebar.vue"
@@ -184,6 +185,8 @@ const naiveTheme = computed(() => {
 const naiveThemeOverrides = computed(() => {
   return uiSettingsStore.currentTheme === 'dark' ? darkThemeOverrides : lightThemeOverrides
 })
+
+provide(THEME_KEY, computed(() => uiSettingsStore.currentTheme === 'dark' ? 'dark' : 'default'))
 
 const onAnyStoreAction = ({
   name, // name of the action

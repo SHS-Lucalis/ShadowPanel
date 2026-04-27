@@ -138,6 +138,15 @@
 
     </n-tab-pane>
 
+    <n-tab-pane name="statistics" v-if="serverStore.abilities['game-server-common'] && serverOnline">
+      <template #tab>
+        <GIcon name="metrics" class="mr-1" />
+        {{ trans('servers.statistics') }}
+      </template>
+
+      <ServerStatistics :server-id="serverId" />
+    </n-tab-pane>
+
     <n-tab-pane name="rcon" v-if="rconTabPossible">
       <template #tab>
         <GIcon name="rcon" class="mr-1" />
@@ -285,6 +294,10 @@ const ServerConsole = defineAsyncComponent(() =>
 
 const ServerSettings = defineAsyncComponent(() =>
     import('./servertabs/ServerSettings.vue' /* webpackChunkName: "components/server" */)
+)
+
+const ServerStatistics = defineAsyncComponent(() =>
+    import('./servertabs/ServerStatistics.vue' /* webpackChunkName: "components/server" */)
 )
 
 const RconPlayers = defineAsyncComponent(() =>
@@ -441,6 +454,7 @@ function tabNameToHash(tabName) {
 
 function getAvailableTabNames() {
   const tabs = ['control']
+  if (serverStore.abilities['game-server-common'] && serverOnline.value) tabs.push('statistics')
   if (rconTabPossible.value) tabs.push('rcon')
   if (serverStore.canManageFiles) tabs.push('files')
   if (serverStore.canManageTasks) tabs.push('schedules')

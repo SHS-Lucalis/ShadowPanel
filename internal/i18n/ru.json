@@ -652,7 +652,19 @@
     "select_server": "Выберите сервер",
     "server_already_added": "Сервер уже добавлен",
     "metadata": "Метаданные",
-    "additional_settings": "Дополнительные настройки"
+    "additional_settings": "Дополнительные настройки",
+    "statistics": "Статистика",
+    "statistics_cpu": "Загрузка CPU",
+    "statistics_memory": "Память",
+    "statistics_disk_io": "Диск I/O",
+    "statistics_network_io": "Сеть I/O",
+    "statistics_read": "чтение",
+    "statistics_write": "запись",
+    "statistics_in": "вх.",
+    "statistics_out": "исх.",
+    "statistics_limit": "лимит",
+    "statistics_error": "Не удалось получить метрики",
+    "statistics_no_data": "Метрики ещё недоступны"
   },
   "servers_tasks": {
     "tasks_title": "Задания",
