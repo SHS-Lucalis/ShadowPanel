@@ -51,15 +51,18 @@ jobs:
           --health-timeout=5s
           --health-retries=3
 
-      minio:
-        image: minio/minio:edge-cicd
+      rustfs:
+        image: rustfs/rustfs:latest
         env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin
+          RUSTFS_ACCESS_KEY: rustfsadmin
+          RUSTFS_SECRET_KEY: rustfsadmin
+          RUSTFS_VOLUMES: /data
+          RUSTFS_ADDRESS: 0.0.0.0:9000
+          RUSTFS_CONSOLE_ENABLE: "false"
         ports:
           - 9000:9000
         options: >-
-          --health-cmd="curl -f http://localhost:9000/minio/health/live"
+          --health-cmd="curl -f http://localhost:9000/health"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
@@ -96,19 +99,20 @@ jobs:
             sleep 2
           done
 
-      - name: Setup MinIO bucket
+      - name: Setup S3 bucket
+        env:
+          AWS_ACCESS_KEY_ID: rustfsadmin
+          AWS_SECRET_ACCESS_KEY: rustfsadmin
+          AWS_DEFAULT_REGION: us-east-1
         run: |
-          curl -O https://dl.min.io/client/mc/release/linux-amd64/mc
-          chmod +x mc
-          ./mc alias set myminio http://127.0.0.1:9000 minioadmin minioadmin
-          ./mc mb myminio/test-bucket
+          aws --endpoint-url http://127.0.0.1:9000 s3 mb s3://test-bucket
 
       - name: Unit Tests
         env:
           TEST_MYSQL_DSN: 'root:testpassword@tcp(127.0.0.1:3306)/gameap?parseTime=true'
           TEST_POSTGRES_DSN: 'host=127.0.0.1 port=5432 user=postgres password=testpassword dbname=gameap sslmode=disable'
           TEST_REDIS_ADDR: '127.0.0.1:6379'
-          TEST_S3_DSN: 's3://minioadmin:minioadmin@127.0.0.1:9000/test-bucket?ssl=false'
+          TEST_S3_DSN: 's3://rustfsadmin:rustfsadmin@127.0.0.1:9000/test-bucket?ssl=false'
         run: |
           go test -race -v \
             $(go list ./... | \

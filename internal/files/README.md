@@ -7,7 +7,7 @@ File storage abstraction layer with pluggable implementations.
 | Type | Description |
 |------|-------------|
 | `LocalFileManager` | Local filesystem storage using sandboxed `os.Root` |
-| `S3FileManager` | S3/MinIO compatible object storage |
+| `S3FileManager` | S3-compatible object storage (AWS S3, RustFS, etc.) |
 | `InMemoryFileManager` | In-memory storage for testing |
 | `MockFileManager` | Manual mock for unit tests |
 
@@ -44,8 +44,8 @@ s3://ACCESS_KEY:SECRET_KEY@ENDPOINT/BUCKET?ssl=true|false
 # AWS S3
 TEST_S3_DSN="s3://AKIAIOSFODNN7EXAMPLE:wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY@s3.us-east-1.amazonaws.com/my-bucket?ssl=true"
 
-# MinIO (local)
-TEST_S3_DSN="s3://minioadmin:minioadmin@localhost:9000/test-bucket?ssl=false"
+# RustFS (local)
+TEST_S3_DSN="s3://rustfsadmin:rustfsadmin@localhost:9000/test-bucket?ssl=false"
 
 # Run with S3 tests
 TEST_S3_DSN="s3://user:pass@localhost:9000/bucket?ssl=false" go test ./internal/files/...
