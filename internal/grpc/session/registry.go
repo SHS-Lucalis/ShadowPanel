@@ -632,6 +632,37 @@ func (r *Registry) SessionCount() int {
 	return len(r.localSessions)
 }
 
+// CloseAllSessions cancels every local session's context. Used during
+// graceful shutdown to unblock gateway.Connect handlers that are stuck
+// waiting on Recv after BroadcastShutdown.
+func (r *Registry) CloseAllSessions() {
+	r.mu.RLock()
+	sessions := make([]*Session, 0, len(r.localSessions))
+	for _, s := range r.localSessions {
+		sessions = append(sessions, s)
+	}
+	r.mu.RUnlock()
+
+	for _, s := range sessions {
+		s.Cancel()
+	}
+}
+
+// WaitSessionsClosed blocks until every local session has been
+// unregistered, or until the timeout elapses. Returns true if all
+// sessions closed cleanly, false on deadline.
+func (r *Registry) WaitSessionsClosed(timeout time.Duration) bool {
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		if r.SessionCount() == 0 {
+			return true
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	return r.SessionCount() == 0
+}
+
 func extractNodeIDFromChannel(channel string) (uint64, error) {
 	prefix := channels.DaemonTaskDispatch
 	if !strings.HasPrefix(channel, prefix) {

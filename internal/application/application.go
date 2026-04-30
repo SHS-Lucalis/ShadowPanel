@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"syscall"
 
 	"github.com/gameap/gameap/internal/application/defaults"
 	"github.com/gameap/gameap/internal/config"
@@ -60,8 +61,8 @@ func Run(runParams RunParams) {
 
 	slog.SetLogLoggerLevel(logLevel)
 
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -72,13 +73,15 @@ func Run(runParams RunParams) {
 	container := NewContainer(cfg)
 	container.SetContext(ctx, cancel)
 
+	shutdownDone := make(chan struct{})
 	go func() {
-		oscall := <-c
+		defer close(shutdownDone)
+
+		oscall := <-sigCh
 
 		slog.Info("Got signal: " + oscall.String())
 
-		err = container.Shutdown()
-		if err != nil {
+		if err := container.Shutdown(); err != nil {
 			slog.ErrorContext(
 				ctx,
 				"Failed to shutdown container",
@@ -154,6 +157,8 @@ func Run(runParams RunParams) {
 		)
 		runHTTPOnly(ctx, cfg, container)
 	}
+
+	<-shutdownDone
 }
 
 func runHTTPOnly(ctx context.Context, cfg *config.Config, container *Container) {

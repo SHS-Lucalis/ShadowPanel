@@ -85,6 +85,12 @@ const (
 )
 
 const (
+	sessionDrainTimeout = 2 * time.Second
+	httpShutdownTimeout = 10 * time.Second
+	grpcGraceTimeout    = 5 * time.Second
+)
+
+const (
 	httpServerWriteTimeout = 30 * time.Second
 	httpServerReadTimeout  = 15 * time.Second
 	httpServerIdleTimeout  = 60 * time.Second
@@ -208,12 +214,23 @@ func (c *Container) Shutdown() error {
 			"server shutting down",
 			30*time.Second,
 		)
-		time.Sleep(time.Second)
+	}
+
+	c.shutdownHTTPServers()
+
+	if c.sessionRegistry != nil {
+		c.sessionRegistry.WaitSessionsClosed(sessionDrainTimeout)
 	}
 
 	if c.cancel != nil {
 		c.cancel()
 	}
+
+	if c.sessionRegistry != nil {
+		c.sessionRegistry.CloseAllSessions()
+	}
+
+	c.shutdownGRPCServer()
 
 	for _, fn := range c.shotdownFuncs {
 		if err := fn(); err != nil {
@@ -234,6 +251,47 @@ func (c *Container) Shutdown() error {
 	}
 
 	return nil
+}
+
+func (c *Container) shutdownHTTPServers() {
+	if c.httpServer != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), httpShutdownTimeout)
+		if err := c.httpServer.Shutdown(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			slog.Error("http server shutdown error", slog.String("error", err.Error()))
+		} else {
+			slog.Info("http server shutdown succeeded")
+		}
+		cancel()
+	}
+
+	if c.httpsServer != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), httpShutdownTimeout)
+		if err := c.httpsServer.Shutdown(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			slog.Error("https server shutdown error", slog.String("error", err.Error()))
+		} else {
+			slog.Info("https server shutdown succeeded")
+		}
+		cancel()
+	}
+}
+
+func (c *Container) shutdownGRPCServer() {
+	if c.grpcServer == nil {
+		return
+	}
+
+	done := make(chan struct{})
+	go func() {
+		c.grpcServer.GracefulStop()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(grpcGraceTimeout):
+		slog.Warn("gRPC server force stop due to timeout")
+		c.grpcServer.Stop()
+	}
 }
 
 func (c *Container) appendShutdownFunc(fn func() error) {
@@ -408,16 +466,6 @@ func (c *Container) createServerRepository() repositories.ServerRepository {
 func (c *Container) HTTPServer() *http.Server {
 	if c.httpServer == nil {
 		c.httpServer = c.createHTTPServer()
-
-		c.appendShutdownFunc(func() error {
-			err := c.httpServer.Shutdown(c.context)
-
-			if err == nil {
-				slog.InfoContext(c.context, "http server shutdown succeeded")
-			}
-
-			return err
-		})
 	}
 
 	return c.httpServer
@@ -442,16 +490,6 @@ func (c *Container) createHTTPServer() *http.Server {
 func (c *Container) HTTPSServer() *http.Server {
 	if c.httpsServer == nil {
 		c.httpsServer = c.createHTTPSServer()
-
-		c.appendShutdownFunc(func() error {
-			err := c.httpsServer.Shutdown(c.context)
-
-			if err == nil {
-				slog.InfoContext(c.context, "https server shutdown succeeded")
-			}
-
-			return err
-		})
 	}
 
 	return c.httpsServer
@@ -1709,6 +1747,7 @@ func (c *Container) GatewayService() *gateway.Service {
 			c.EnrollmentService(),
 			slog.Default(),
 		)
+		c.gatewayService.SetShutdownContext(c.context)
 	}
 
 	return c.gatewayService
@@ -1784,22 +1823,6 @@ func (c *Container) GRPCServer() (*grpc.Server, error) {
 				Logger:              slog.Default(),
 			},
 		)
-
-		c.appendShutdownFunc(func() error {
-			done := make(chan struct{})
-			go func() {
-				c.grpcServer.GracefulStop()
-				close(done)
-			}()
-			select {
-			case <-done:
-			case <-time.After(10 * time.Second):
-				slog.Warn("gRPC server force stop due to timeout")
-				c.grpcServer.Stop()
-			}
-
-			return nil
-		})
 	}
 
 	return c.grpcServer, nil

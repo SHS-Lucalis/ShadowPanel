@@ -43,6 +43,7 @@ type Service struct {
 	attachHandler     AttachHandler
 	metricsHandler    MetricsHandler
 	enrollmentSvc     *enrollment.Service
+	shutdownCtx       context.Context
 }
 
 type APIKeyVerifier interface {
@@ -114,8 +115,19 @@ func NewService(
 		attachHandler:     attachHandler,
 		metricsHandler:    metricsHandler,
 		enrollmentSvc:     enrollmentSvc,
+		shutdownCtx:       context.Background(),
 		logger:            logger,
 	}
+}
+
+// SetShutdownContext wires an application-wide context whose cancellation
+// must propagate to every active session. It is called once during
+// container bootstrap before the gRPC server starts accepting daemons.
+func (s *Service) SetShutdownContext(ctx context.Context) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	s.shutdownCtx = ctx
 }
 
 func (s *Service) Connect(stream proto.DaemonGateway_ConnectServer) error {
@@ -135,7 +147,15 @@ func (s *Service) Connect(stream proto.DaemonGateway_ConnectServer) error {
 		return err
 	}
 
-	sessionCtx, cancel := context.WithCancel(ctx)
+	sessionCtx, cancel := context.WithCancel(stream.Context())
+	go func() {
+		select {
+		case <-s.shutdownCtx.Done():
+			cancel()
+		case <-sessionCtx.Done():
+		}
+	}()
+
 	sess := session.NewSession(
 		reg.NodeId,
 		stream,
@@ -312,31 +332,53 @@ func (s *Service) buildRegisterAck(ctx context.Context, reg *proto.RegisterReque
 }
 
 func (s *Service) handleMessages(ctx context.Context, sess *session.Session) error {
+	type recvResult struct {
+		msg *proto.DaemonMessage
+		err error
+	}
+
+	recvCh := make(chan recvResult, 1)
+	go func() {
+		defer close(recvCh)
+		for {
+			msg, err := sess.Stream.Recv()
+			select {
+			case recvCh <- recvResult{msg: msg, err: err}:
+			case <-ctx.Done():
+				return
+			}
+			if err != nil {
+				return
+			}
+		}
+	}()
+
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
-		default:
-		}
-
-		msg, err := sess.Stream.Recv()
-		if err != nil {
-			if errors.Is(err, io.EOF) || errors.Is(err, context.Canceled) {
+		case r, ok := <-recvCh:
+			if !ok {
 				return nil
 			}
-			s.logger.Error("failed to receive message",
-				"node_id", sess.NodeID,
-				"error", err,
-			)
+			if r.err != nil {
+				if errors.Is(r.err, io.EOF) || errors.Is(r.err, context.Canceled) {
+					return nil
+				}
+				s.logger.Error("failed to receive message",
+					"node_id", sess.NodeID,
+					"error", r.err,
+				)
 
-			return err
-		}
+				return r.err
+			}
 
-		if err := s.processMessage(ctx, sess, msg); err != nil {
-			s.logger.Error("failed to process message",
-				"node_id", sess.NodeID,
-				"error", err,
-			)
+			if err := s.processMessage(ctx, sess, r.msg); err != nil {
+				s.logger.Error("failed to process message",
+					"node_id", sess.NodeID,
+					"error", err,
+				)
+			}
 		}
 	}
 }
