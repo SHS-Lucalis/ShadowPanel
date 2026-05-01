@@ -24,8 +24,13 @@ import (
 )
 
 const (
-	defaultChunkSize     = 64 * 1024
-	chunkReceiveTimeout  = 60 * time.Second
+	defaultChunkSize    = 64 * 1024
+	chunkReceiveTimeout = 60 * time.Second
+	// TODO: enforce transferMaxAge in cleanupStaleTransfers. Currently unused —
+	// requires extending files.StreamFileManager with a Stat / mtime API so the
+	// cleanup worker can distinguish recent abandoned transfers from old ones.
+	// Today cleanup only skips transfers present in the in-memory activeTransfers
+	// map; anything else gets removed regardless of age.
 	transferMaxAge       = 24 * time.Hour
 	transferPrefix       = "transfers/"
 	sentinelWriteRetries = 3
@@ -467,6 +472,7 @@ func (s *Service) cleanupStaleTransfers(ctx context.Context) error {
 	}
 
 	seen := make(map[string]bool)
+	cleaned := 0
 
 	for _, entry := range entries {
 		select {
@@ -475,21 +481,43 @@ func (s *Service) cleanupStaleTransfers(ctx context.Context) error {
 		default:
 		}
 
-		transferID := strings.SplitN(entry, "/", 2)[0]
+		transferID := transferIDFromListEntry(entry)
 		if transferID == "" || seen[transferID] {
 			continue
 		}
 		seen[transferID] = true
 
+		s.mu.RLock()
+		_, inFlight := s.activeTransfers[transferID]
+		s.mu.RUnlock()
+		if inFlight {
+			continue
+		}
+
 		prefix := transferPrefix + transferID + "/"
 		if err := s.storage.DeleteByPrefix(ctx, prefix); err != nil {
 			s.logger.Warn("failed to cleanup transfer", "transfer_id", transferID, "error", err)
+
+			continue
 		}
+		cleaned++
 	}
 
-	if len(seen) > 0 {
-		s.logger.Info("cleaned up stale transfers", "count", len(seen))
+	if cleaned > 0 {
+		s.logger.Info("cleaned up stale transfers", "count", cleaned)
 	}
 
 	return nil
+}
+
+// transferIDFromListEntry extracts the transfer id from a List() entry,
+// tolerating any of the three storage backend conventions:
+//   - LocalFileManager: "<id>" (basename, non-recursive listing)
+//   - S3FileManager:    "<id>/" (relative key with trailing slash)
+//   - InMemoryFileManager: "transfers/<id>/parts/000000" (full recursive path)
+func transferIDFromListEntry(entry string) string {
+	rel := strings.TrimPrefix(entry, transferPrefix)
+	id, _, _ := strings.Cut(rel, "/")
+
+	return id
 }

@@ -956,3 +956,145 @@ func TestService_WaitForCompletion_returns_immediately_when_idle(t *testing.T) {
 		t.Fatal("WaitForCompletion must return immediately when there are no active transfers")
 	}
 }
+
+func TestTransferIDFromListEntry(t *testing.T) {
+	tests := []struct {
+		name  string
+		entry string
+		want  string
+	}{
+		{
+			name:  "local_backend_basename_only",
+			entry: "abc123",
+			want:  "abc123",
+		},
+		{
+			name:  "s3_backend_relative_with_trailing_slash",
+			entry: "abc123/",
+			want:  "abc123",
+		},
+		{
+			name:  "s3_backend_relative_nested",
+			entry: "abc123/parts/000000",
+			want:  "abc123",
+		},
+		{
+			name:  "inmemory_backend_full_recursive_path",
+			entry: "transfers/abc123/parts/000000",
+			want:  "abc123",
+		},
+		{
+			name:  "inmemory_backend_done_sentinel",
+			entry: "transfers/abc123/done",
+			want:  "abc123",
+		},
+		{
+			name:  "empty_entry",
+			entry: "",
+			want:  "",
+		},
+		{
+			name:  "prefix_only",
+			entry: "transfers/",
+			want:  "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, transferIDFromListEntry(tt.entry))
+		})
+	}
+}
+
+func TestService_cleanupStaleTransfers_deletes_completed_transfer_files(t *testing.T) {
+	// ARRANGE
+	ts := newTestService(t)
+	ctx := context.Background()
+	const completedID = "completed-xyz"
+
+	require.NoError(t, ts.storage.Write(ctx, transfers.TransferPartPath(completedID, 0), []byte("data")))
+	require.NoError(t, ts.storage.Write(ctx, transfers.TransferDonePath(completedID), []byte(`{"success":true}`)))
+
+	// ACT
+	require.NoError(t, ts.svc.cleanupStaleTransfers(ctx))
+
+	// ASSERT
+	assert.False(t, ts.storage.Exists(ctx, transfers.TransferPartPath(completedID, 0)),
+		"part file must be removed for completed transfer")
+	assert.False(t, ts.storage.Exists(ctx, transfers.TransferDonePath(completedID)),
+		"done sentinel must be removed for completed transfer")
+}
+
+func TestService_cleanupStaleTransfers_preserves_in_flight_transfer(t *testing.T) {
+	// ARRANGE
+	ts := newTestService(t)
+	ctx := context.Background()
+	const inFlightID = "active-pqr"
+	const completedID = "completed-stu"
+
+	require.NoError(t, ts.storage.Write(ctx, transfers.TransferPartPath(inFlightID, 0), []byte("active-data")))
+	require.NoError(t, ts.storage.Write(ctx, transfers.TransferPartPath(completedID, 0), []byte("done-data")))
+
+	ts.svc.registerTransfer(inFlightID, "/dest/active.bin", 100, func() {})
+	t.Cleanup(func() { ts.svc.unregisterTransfer(inFlightID) })
+
+	// ACT
+	require.NoError(t, ts.svc.cleanupStaleTransfers(ctx))
+
+	// ASSERT
+	assert.True(t, ts.storage.Exists(ctx, transfers.TransferPartPath(inFlightID, 0)),
+		"in-flight transfer files must NOT be removed")
+	assert.False(t, ts.storage.Exists(ctx, transfers.TransferPartPath(completedID, 0)),
+		"non-active transfer files must be removed")
+}
+
+func TestService_cleanupStaleTransfers_dedupes_multiple_entries_per_transfer(t *testing.T) {
+	// ARRANGE
+	ts := newTestService(t)
+	ctx := context.Background()
+	const transferID = "multi-part"
+
+	require.NoError(t, ts.storage.Write(ctx, transfers.TransferPartPath(transferID, 0), []byte("p0")))
+	require.NoError(t, ts.storage.Write(ctx, transfers.TransferPartPath(transferID, 1), []byte("p1")))
+	require.NoError(t, ts.storage.Write(ctx, transfers.TransferPartPath(transferID, 2), []byte("p2")))
+	require.NoError(t, ts.storage.Write(ctx, transfers.TransferDonePath(transferID), []byte(`{}`)))
+
+	// ACT
+	require.NoError(t, ts.svc.cleanupStaleTransfers(ctx))
+
+	// ASSERT
+	for partNum := range 3 {
+		assert.False(t, ts.storage.Exists(ctx, transfers.TransferPartPath(transferID, partNum)),
+			"part %d must be removed", partNum)
+	}
+	assert.False(t, ts.storage.Exists(ctx, transfers.TransferDonePath(transferID)))
+}
+
+func TestService_cleanupStaleTransfers_empty_storage_is_noop(t *testing.T) {
+	// ARRANGE
+	ts := newTestService(t)
+
+	// ACT + ASSERT
+	require.NoError(t, ts.svc.cleanupStaleTransfers(context.Background()))
+}
+
+func TestService_cleanupStaleTransfers_canceled_context_returns_ctx_err(t *testing.T) {
+	// ARRANGE
+	ts := newTestService(t)
+	ctx := context.Background()
+
+	for i := range 5 {
+		require.NoError(t, ts.storage.Write(ctx, transfers.TransferPartPath("tid-"+string(rune('a'+i)), 0), []byte("x")))
+	}
+
+	canceled, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	// ACT
+	err := ts.svc.cleanupStaleTransfers(canceled)
+
+	// ASSERT
+	require.Error(t, err)
+	assert.ErrorIs(t, err, context.Canceled)
+}
