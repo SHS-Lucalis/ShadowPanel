@@ -7,14 +7,13 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/grpc/gateway"
-	"github.com/gameap/gameap/internal/grpc/session"
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/pkg/idgen"
 	"github.com/gameap/gameap/pkg/proto"
 )
 
 type Pusher struct {
-	registry          *session.Registry
+	registry          taskSender
 	serverRepo        repositories.ServerRepository
 	serverSettingRepo repositories.ServerSettingRepository
 	gameRepo          repositories.GameRepository
@@ -24,7 +23,7 @@ type Pusher struct {
 }
 
 func NewPusher(
-	registry *session.Registry,
+	registry taskSender,
 	serverRepo repositories.ServerRepository,
 	serverSettingRepo repositories.ServerSettingRepository,
 	gameRepo repositories.GameRepository,
