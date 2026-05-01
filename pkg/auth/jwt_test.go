@@ -173,6 +173,59 @@ func TestJWTService_ValidateToken(t *testing.T) {
 		assert.Error(t, err)
 		assert.Nil(t, claims)
 	})
+
+	t.Run("token_without_exp_field", func(t *testing.T) {
+		// ARRANGE
+		// jwt/v5 by default treats `exp` as optional, so a token without it
+		// should still validate. This pins that behavior so that toggling
+		// jwt.WithExpirationRequired() in production is detected here.
+		noExpClaims := JWTClaims{
+			RegisteredClaims: jwt.RegisteredClaims{
+				ID:       "no-exp-id",
+				Subject:  "user:login:no-exp",
+				IssuedAt: jwt.NewNumericDate(time.Now()),
+				Issuer:   "gameap-api",
+			},
+		}
+
+		token := jwt.NewWithClaims(jwt.SigningMethodHS384, noExpClaims)
+		tokenString, err := token.SignedString(secretKey)
+		require.NoError(t, err)
+
+		// ACT
+		claims, err := service.ValidateToken(tokenString)
+
+		// ASSERT
+		require.NoError(t, err, "tokens without exp must validate under jwt/v5 defaults")
+		require.NotNil(t, claims)
+
+		subject, err := claims.GetSubject()
+		require.NoError(t, err)
+		assert.Equal(t, "user:login:no-exp", subject)
+
+		exp, err := claims.GetExpirationTime()
+		require.NoError(t, err, "missing exp must not produce an error from the adapter")
+		assert.Nil(t, exp, "missing exp must surface as a nil pointer through the adapter")
+	})
+
+	t.Run("GetExpirationTime_via_adapter_returns_time", func(t *testing.T) {
+		// ARRANGE
+		token, err := service.GenerateTokenForUser(user, time.Hour)
+		require.NoError(t, err)
+
+		claims, err := service.ValidateToken(token)
+		require.NoError(t, err)
+		require.NotNil(t, claims)
+
+		// ACT
+		exp, err := claims.GetExpirationTime()
+
+		// ASSERT
+		require.NoError(t, err)
+		require.NotNil(t, exp, "JWT generated with a 1h duration must expose a non-nil expiration")
+		assert.WithinDuration(t, time.Now().Add(time.Hour), *exp, time.Minute,
+			"adapter must surface the JWT exp claim as a *time.Time")
+	})
 }
 
 func TestJWTService_TokenClaims(t *testing.T) {
