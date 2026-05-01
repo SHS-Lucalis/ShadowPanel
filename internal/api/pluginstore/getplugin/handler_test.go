@@ -1,22 +1,32 @@
 package getplugin_test
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/gameap/gameap/internal/api/pluginstore/getplugin"
 	"github.com/gameap/gameap/internal/cache"
+	"github.com/gameap/gameap/internal/domain"
+	"github.com/gameap/gameap/internal/filters"
+	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/internal/services/pluginstore"
 	"github.com/gameap/gameap/pkg/api"
+	pkgplugin "github.com/gameap/gameap/pkg/plugin"
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+var errFindFailed = errors.New("find failed")
 
 func TestGetPlugin(t *testing.T) {
 	storeResp := pluginstore.PluginDetails{
@@ -112,4 +122,242 @@ func TestGetPlugin(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetPlugin_cache_hit_avoids_second_upstream_call(t *testing.T) {
+	// ARRANGE
+	storeResp := pluginstore.PluginDetails{
+		ID:            "hexeditor4jm2",
+		Name:          "HEX Editor",
+		LatestVersion: "1.0.0",
+		Author:        pluginstore.Author{ID: 2, Username: "GameAP"},
+		Category:      pluginstore.Category{ID: 3, Slug: "files", Name: "Files"},
+	}
+
+	var pluginCalls atomic.Int32
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/plugins/") {
+			pluginCalls.Add(1)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(storeResp)
+	}))
+	defer mockServer.Close()
+
+	storeService := pluginstore.NewService(mockServer.URL, "", cache.NewInMemory())
+	pluginRepo := inmemory.NewPluginRepository()
+	h := getplugin.NewHandler(storeService, pluginRepo, api.NewResponder())
+
+	doRequest := func() *httptest.ResponseRecorder {
+		req := httptest.NewRequest(http.MethodGet, "/api/admin/plugins/store/plugins/hexeditor4jm2", nil)
+		req = mux.SetURLVars(req, map[string]string{"id": "hexeditor4jm2"})
+		recorder := httptest.NewRecorder()
+		h.ServeHTTP(recorder, req)
+
+		return recorder
+	}
+
+	// ACT
+	first := doRequest()
+	second := doRequest()
+
+	// ASSERT
+	assert.Equal(t, http.StatusOK, first.Code, "first request must succeed")
+	assert.Equal(t, http.StatusOK, second.Code, "second request must succeed")
+	assert.Equal(t, int32(1), pluginCalls.Load(), "second request must be served from cache, upstream hit only once")
+	assert.JSONEq(t, first.Body.String(), second.Body.String(), "cached response must match the original")
+}
+
+func TestGetPlugin_plugin_repo_find_error_is_swallowed(t *testing.T) {
+	// ARRANGE
+	storeResp := pluginstore.PluginDetails{
+		ID:            "hexeditor4jm2",
+		Name:          "HEX Editor",
+		LatestVersion: "1.0.0",
+		Author:        pluginstore.Author{ID: 2, Username: "GameAP"},
+		Category:      pluginstore.Category{ID: 3, Slug: "files", Name: "Files"},
+	}
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(storeResp)
+	}))
+	defer mockServer.Close()
+
+	storeService := pluginstore.NewService(mockServer.URL, "", cache.NewInMemory())
+	pluginRepo := &errPluginRepo{PluginRepository: inmemory.NewPluginRepository(), findErr: errFindFailed}
+	h := getplugin.NewHandler(storeService, pluginRepo, api.NewResponder())
+
+	req := httptest.NewRequest(http.MethodGet, "/api/admin/plugins/store/plugins/hexeditor4jm2", nil)
+	req = mux.SetURLVars(req, map[string]string{"id": "hexeditor4jm2"})
+	recorder := httptest.NewRecorder()
+
+	// ACT
+	h.ServeHTTP(recorder, req)
+
+	// ASSERT
+	require.Equal(t, http.StatusOK, recorder.Code, "repo error must not break the upstream response")
+
+	var resp map[string]any
+	require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp))
+	assert.Equal(t, "hexeditor4jm2", resp["id"])
+	assert.Equal(t, false, resp["installed"], "repo error must yield installed=false")
+	_, hasInstalledVersion := resp["installed_version"]
+	assert.False(t, hasInstalledVersion, "installed_version must be omitted when repo lookup fails")
+}
+
+func TestGetPlugin_license_validation_error_is_swallowed(t *testing.T) {
+	// ARRANGE
+	storeResp := pluginstore.PluginDetails{
+		ID:                   "hexeditor4jm2",
+		Name:                 "HEX Editor",
+		LatestVersion:        "1.0.0",
+		RequiresSubscription: true,
+		Author:               pluginstore.Author{ID: 2, Username: "GameAP"},
+		Category:             pluginstore.Category{ID: 3, Slug: "files", Name: "Files"},
+	}
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case strings.HasPrefix(r.URL.Path, "/plugins/"):
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			_ = json.NewEncoder(w).Encode(storeResp)
+		case r.URL.Path == "/licenses/validate":
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer mockServer.Close()
+
+	storeService := pluginstore.NewService(mockServer.URL, "test-license-key", cache.NewInMemory())
+	pluginRepo := inmemory.NewPluginRepository()
+	h := getplugin.NewHandler(storeService, pluginRepo, api.NewResponder())
+
+	req := httptest.NewRequest(http.MethodGet, "/api/admin/plugins/store/plugins/hexeditor4jm2", nil)
+	req = mux.SetURLVars(req, map[string]string{"id": "hexeditor4jm2"})
+	recorder := httptest.NewRecorder()
+
+	// ACT
+	h.ServeHTTP(recorder, req)
+
+	// ASSERT
+	require.Equal(t, http.StatusOK, recorder.Code, "license validation error must not fail the request")
+
+	var resp map[string]any
+	require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp))
+	assert.Equal(t, "hexeditor4jm2", resp["id"])
+	assert.Equal(t, true, resp["requires_subscription"])
+	_, hasSubField := resp["has_subscription"]
+	assert.False(t, hasSubField, "has_subscription must be absent when license validation fails")
+}
+
+func TestGetPlugin_installed_plugin_response_contains_version(t *testing.T) {
+	// ARRANGE
+	storeResp := pluginstore.PluginDetails{
+		ID:            "hexeditor4jm2",
+		Name:          "HEX Editor",
+		LatestVersion: "2.0.0",
+		Author:        pluginstore.Author{ID: 2, Username: "GameAP"},
+		Category:      pluginstore.Category{ID: 3, Slug: "files", Name: "Files"},
+	}
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(storeResp)
+	}))
+	defer mockServer.Close()
+
+	storeService := pluginstore.NewService(mockServer.URL, "", cache.NewInMemory())
+	pluginRepo := inmemory.NewPluginRepository()
+	require.NoError(t, pluginRepo.Save(t.Context(), &domain.Plugin{
+		ID:      pkgplugin.ParsePluginID("hexeditor4jm2"),
+		Name:    "HEX Editor",
+		Version: "1.2.3",
+		Status:  domain.PluginStatusActive,
+	}))
+	h := getplugin.NewHandler(storeService, pluginRepo, api.NewResponder())
+
+	req := httptest.NewRequest(http.MethodGet, "/api/admin/plugins/store/plugins/hexeditor4jm2", nil)
+	req = mux.SetURLVars(req, map[string]string{"id": "hexeditor4jm2"})
+	recorder := httptest.NewRecorder()
+
+	// ACT
+	h.ServeHTTP(recorder, req)
+
+	// ASSERT
+	require.Equal(t, http.StatusOK, recorder.Code)
+
+	var resp map[string]any
+	require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp))
+	assert.Equal(t, true, resp["installed"], "installed flag must reflect repo state")
+	assert.Equal(t, "1.2.3", resp["installed_version"], "installed_version must come from local repo, not store")
+	assert.Equal(t, "2.0.0", resp["latest_version"], "latest_version must come from store, not repo")
+}
+
+func TestGetPlugin_subscription_info_populated_from_valid_license(t *testing.T) {
+	// ARRANGE
+	expiresAt := lo.Must(time.Parse(time.RFC3339, "2027-12-31T23:59:59Z"))
+	storeResp := pluginstore.PluginDetails{
+		ID:                   "hexeditor4jm2",
+		Name:                 "HEX Editor",
+		LatestVersion:        "1.0.0",
+		RequiresSubscription: true,
+		Author:               pluginstore.Author{ID: 2, Username: "GameAP"},
+		Category:             pluginstore.Category{ID: 3, Slug: "files", Name: "Files"},
+	}
+	licenseResp := pluginstore.LicenseValidation{
+		Valid: true,
+		Subscriptions: []pluginstore.LicenseSubscription{
+			{PluginID: "hexeditor4jm2", PluginName: "HEX Editor", ExpiresAt: expiresAt},
+		},
+	}
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		switch {
+		case strings.HasPrefix(r.URL.Path, "/plugins/"):
+			_ = json.NewEncoder(w).Encode(storeResp)
+		case r.URL.Path == "/licenses/validate":
+			_ = json.NewEncoder(w).Encode(licenseResp)
+		}
+	}))
+	defer mockServer.Close()
+
+	storeService := pluginstore.NewService(mockServer.URL, "test-license-key", cache.NewInMemory())
+	pluginRepo := inmemory.NewPluginRepository()
+	h := getplugin.NewHandler(storeService, pluginRepo, api.NewResponder())
+
+	req := httptest.NewRequest(http.MethodGet, "/api/admin/plugins/store/plugins/hexeditor4jm2", nil)
+	req = mux.SetURLVars(req, map[string]string{"id": "hexeditor4jm2"})
+	recorder := httptest.NewRecorder()
+
+	// ACT
+	h.ServeHTTP(recorder, req)
+
+	// ASSERT
+	require.Equal(t, http.StatusOK, recorder.Code)
+
+	var resp map[string]any
+	require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp))
+	assert.Equal(t, true, resp["has_subscription"], "has_subscription must reflect valid license with matching plugin")
+	require.Contains(t, resp, "subscription_expires_at")
+	assert.Equal(t, "2027-12-31T23:59:59Z", resp["subscription_expires_at"])
+}
+
+type errPluginRepo struct {
+	repositories.PluginRepository
+
+	findErr error
+}
+
+func (r *errPluginRepo) Find(
+	_ context.Context,
+	_ *filters.FindPlugin,
+	_ []filters.Sorting,
+	_ *filters.Pagination,
+) ([]domain.Plugin, error) {
+	return nil, r.findErr
 }

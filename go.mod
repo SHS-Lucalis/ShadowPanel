@@ -4,6 +4,7 @@ go 1.26
 
 require (
 	aidanwoods.dev/go-paseto v1.6.0
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/avito-tech/go-transaction-manager/drivers/sql/v2 v2.0.2
 	github.com/avito-tech/go-transaction-manager/trm/v2 v2.0.2
