@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
 	"testing"
 	"time"
 
@@ -172,6 +174,30 @@ func TestJWTService_ValidateToken(t *testing.T) {
 		claims, err := service.ValidateToken(noneToken)
 		assert.Error(t, err)
 		assert.Nil(t, claims)
+	})
+
+	t.Run("token_with_rsa_algorithm_rejected", func(t *testing.T) {
+		rsaClaims := JWTClaims{
+			RegisteredClaims: jwt.RegisteredClaims{
+				ID:        "rsa-id",
+				Subject:   "user:login:testuser",
+				ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
+				IssuedAt:  jwt.NewNumericDate(time.Now()),
+				Issuer:    "gameap-api",
+			},
+		}
+
+		privKey, err := rsa.GenerateKey(rand.Reader, 2048)
+		require.NoError(t, err)
+
+		token := jwt.NewWithClaims(jwt.SigningMethodRS256, rsaClaims)
+		tokenString, err := token.SignedString(privKey)
+		require.NoError(t, err)
+
+		claims, err := service.ValidateToken(tokenString)
+		require.Error(t, err)
+		assert.Nil(t, claims)
+		assert.Contains(t, err.Error(), "unexpected signing method")
 	})
 
 	t.Run("token_without_exp_field", func(t *testing.T) {

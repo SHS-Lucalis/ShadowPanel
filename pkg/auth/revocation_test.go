@@ -56,7 +56,7 @@ func TestTokenIdentifier(t *testing.T) {
 
 			// ASSERT
 			assert.Equal(t, first, second, "identifier must be stable for the same input")
-			assert.Len(t, first, tt.wantLen, "identifier must be 64 hex chars (sha256)")
+			require.Len(t, first, tt.wantLen, "identifier must be 64 hex chars (sha256)")
 			if tt.want != "" {
 				assert.Equal(t, tt.want, first, "identifier must equal sha256 hex digest")
 			}

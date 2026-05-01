@@ -240,11 +240,14 @@ func (r *fakeServerRepo) UpdateServerStatuses(
 type fakeServerSettingRepo struct {
 	findResult []domain.ServerSetting
 	findErr    error
+	findFilter *filters.FindServerSetting
 }
 
 func (r *fakeServerSettingRepo) Find(
-	_ context.Context, _ *filters.FindServerSetting, _ []filters.Sorting, _ *filters.Pagination,
+	_ context.Context, filter *filters.FindServerSetting, _ []filters.Sorting, _ *filters.Pagination,
 ) ([]domain.ServerSetting, error) {
+	r.findFilter = filter
+
 	return r.findResult, r.findErr
 }
 
@@ -276,6 +279,7 @@ func (r *fakeGameRepo) Delete(_ context.Context, _ string) error     { return ni
 type fakeGameModRepo struct {
 	findResult []domain.GameMod
 	findErr    error
+	findFilter *filters.FindGameMod
 }
 
 func (r *fakeGameModRepo) FindAll(
@@ -285,8 +289,10 @@ func (r *fakeGameModRepo) FindAll(
 }
 
 func (r *fakeGameModRepo) Find(
-	_ context.Context, _ *filters.FindGameMod, _ []filters.Sorting, _ *filters.Pagination,
+	_ context.Context, filter *filters.FindGameMod, _ []filters.Sorting, _ *filters.Pagination,
 ) ([]domain.GameMod, error) {
+	r.findFilter = filter
+
 	return r.findResult, r.findErr
 }
 
@@ -297,6 +303,7 @@ func (r *fakeGameModRepo) Delete(_ context.Context, _ uint) error          { ret
 type fakeNodeRepo struct {
 	findResult []domain.Node
 	findErr    error
+	findFilter *filters.FindNode
 }
 
 func (r *fakeNodeRepo) FindAll(
@@ -306,8 +313,10 @@ func (r *fakeNodeRepo) FindAll(
 }
 
 func (r *fakeNodeRepo) Find(
-	_ context.Context, _ *filters.FindNode, _ []filters.Sorting, _ *filters.Pagination,
+	_ context.Context, filter *filters.FindNode, _ []filters.Sorting, _ *filters.Pagination,
 ) ([]domain.Node, error) {
+	r.findFilter = filter
+
 	return r.findResult, r.findErr
 }
 
@@ -910,6 +919,42 @@ func TestCancelTask_TaskNotFoundReturnsError(t *testing.T) {
 	assert.Contains(t, err.Error(), "task not found", "missing task must surface 'task not found'")
 }
 
+func TestCancelTask_FindErrorPropagates(t *testing.T) {
+	// ARRANGE
+	h := newTestDispatcher(t)
+	defer h.cleanup()
+
+	h.repos.daemonTask.findErr = errTestRepoFind
+
+	// ACT
+	err := h.dispatcher.CancelTask(context.Background(), 777, "no-op")
+
+	// ASSERT
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "find task", "repo find errors must wrap with 'find task'")
+}
+
+func TestCancelTask_SaveErrorPropagates(t *testing.T) {
+	// ARRANGE
+	h := newTestDispatcher(t)
+	defer h.cleanup()
+
+	const taskID uint64 = 81
+	h.repos.daemonTask.findResult = []domain.DaemonTask{{
+		ID:                uint(taskID),
+		DedicatedServerID: 1,
+		Status:            domain.DaemonTaskStatusWorking,
+	}}
+	h.repos.daemonTask.saveErr = errTestRepoSave
+
+	// ACT
+	err := h.dispatcher.CancelTask(context.Background(), taskID, "stop now")
+
+	// ASSERT
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "update task status", "save errors must wrap with 'update task status'")
+}
+
 func TestCancelTask_StreamSendFailureDoesNotAbort(t *testing.T) {
 	// ARRANGE
 	h := newTestDispatcher(t)
@@ -1006,6 +1051,48 @@ func TestDispatch_LoadsServerAndSendsConfigUpdate(t *testing.T) {
 	}
 	assert.True(t, hasConfigUpdate, "the daemon should receive a ServerConfigUpdate before the task")
 	assert.True(t, hasTask, "the daemon should also receive the task itself")
+}
+
+func TestDispatch_ServerConfigLookupFilters(t *testing.T) {
+	// ARRANGE
+	h := newTestDispatcher(t)
+	defer h.cleanup()
+
+	const serverID uint = 301
+	const nodeID uint = 41
+
+	h.repos.server.findResult = []domain.Server{{
+		ID:        serverID,
+		DSID:      nodeID,
+		GameModID: 55,
+	}}
+
+	sid := serverID
+	task := &domain.DaemonTask{
+		ID:                901,
+		DedicatedServerID: nodeID,
+		ServerID:          &sid,
+		Task:              domain.DaemonTaskTypeServerStart,
+		Status:            domain.DaemonTaskStatusWaiting,
+	}
+
+	// ACT
+	err := h.dispatcher.Dispatch(context.Background(), task)
+
+	// ASSERT
+	require.NoError(t, err)
+	require.NotNil(t, h.repos.server.findFilter, "server lookup must be executed")
+	assert.Equal(t, []uint{serverID}, h.repos.server.findFilter.IDs, "server lookup must filter by task.ServerID")
+
+	require.NotNil(t, h.repos.gameMod.findFilter, "game mod lookup must be executed")
+	assert.Equal(t, []uint{55}, h.repos.gameMod.findFilter.IDs, "game mod lookup must filter by server.GameModID")
+
+	require.NotNil(t, h.repos.node.findFilter, "node lookup must be executed")
+	assert.Equal(t, []uint{nodeID}, h.repos.node.findFilter.IDs, "node lookup must filter by server.DSID")
+
+	require.NotNil(t, h.repos.serverSetting.findFilter, "server setting lookup must be executed")
+	assert.Equal(t, []uint{serverID}, h.repos.serverSetting.findFilter.ServerIDs,
+		"server setting lookup must filter by task.ServerID")
 }
 
 func TestPublishTaskStatus_NilPublisher_NoOp(t *testing.T) {

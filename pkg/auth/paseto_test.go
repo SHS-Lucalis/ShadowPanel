@@ -15,27 +15,23 @@ func TestNewPASETOService(t *testing.T) {
 	tests := []struct {
 		name      string
 		secretKey []byte
-		wantErr   bool
+		wantError string
 	}{
 		{
 			name:      "exact_32_bytes_key",
 			secretKey: []byte("12345678901234567890123456789012"),
-			wantErr:   false,
 		},
 		{
 			name:      "short_key_padded",
 			secretKey: []byte("shortkey"),
-			wantErr:   false,
 		},
 		{
 			name:      "long_key_trimmed",
 			secretKey: []byte("12345678901234567890123456789012345678901234567890"),
-			wantErr:   false,
 		},
 		{
 			name:      "empty_key_padded",
 			secretKey: []byte{},
-			wantErr:   false,
 		},
 	}
 
@@ -43,8 +39,9 @@ func TestNewPASETOService(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			service, err := NewPASETOService(tt.secretKey)
 
-			if tt.wantErr {
+			if tt.wantError != "" {
 				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantError)
 
 				return
 			}

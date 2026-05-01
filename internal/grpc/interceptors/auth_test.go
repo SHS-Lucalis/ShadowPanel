@@ -78,18 +78,24 @@ func ctxWithNonTLSPeer() context.Context {
 }
 
 type fakeNodeRepo struct {
-	nodes []domain.Node
-	err   error
-	calls int
+	nodes              []domain.Node
+	err                error
+	calls              int
+	lastFindNodeFilter *filters.FindNode
 }
 
 func (f *fakeNodeRepo) Find(
 	_ context.Context,
-	_ *filters.FindNode,
+	find *filters.FindNode,
 	_ []filters.Sorting,
 	_ *filters.Pagination,
 ) ([]domain.Node, error) {
 	f.calls++
+	if find != nil {
+		filterCopy := *find
+		filterCopy.IDs = append([]uint(nil), find.IDs...)
+		f.lastFindNodeFilter = &filterCopy
+	}
 
 	return f.nodes, f.err
 }
@@ -135,6 +141,7 @@ func TestAuthInterceptor_UnaryServerInterceptor(t *testing.T) {
 		wantResp      any
 		wantError     string
 		wantRepoCalls int
+		wantFindIDs   []uint
 	}{
 		{
 			name:          "enroll_method_bypasses_auth",
@@ -212,6 +219,24 @@ func TestAuthInterceptor_UnaryServerInterceptor(t *testing.T) {
 			wantError:   "invalid node ID format",
 		},
 		{
+			name:        "apikey_with_empty_node_id_returns_invalid_argument",
+			setupRepo:   func() *fakeNodeRepo { return &fakeNodeRepo{} },
+			ctx:         ctxWithMD("x-api-key", "abc", "x-node-id", ""),
+			info:        info,
+			requireMTLS: false,
+			wantCode:    codes.InvalidArgument,
+			wantError:   "invalid node ID format",
+		},
+		{
+			name:        "apikey_with_overflow_node_id_returns_invalid_argument",
+			setupRepo:   func() *fakeNodeRepo { return &fakeNodeRepo{} },
+			ctx:         ctxWithMD("x-api-key", "abc", "x-node-id", "18446744073709551616"),
+			info:        info,
+			requireMTLS: false,
+			wantCode:    codes.InvalidArgument,
+			wantError:   "invalid node ID format",
+		},
+		{
 			name:          "apikey_node_not_found_returns_not_found",
 			setupRepo:     func() *fakeNodeRepo { return &fakeNodeRepo{nodes: nil} },
 			ctx:           ctxWithMD("x-api-key", "abc", "x-node-id", "1"),
@@ -220,6 +245,7 @@ func TestAuthInterceptor_UnaryServerInterceptor(t *testing.T) {
 			wantCode:      codes.NotFound,
 			wantError:     "node not found",
 			wantRepoCalls: 1,
+			wantFindIDs:   []uint{1},
 		},
 		{
 			name: "apikey_node_disabled_returns_permission_denied",
@@ -234,6 +260,7 @@ func TestAuthInterceptor_UnaryServerInterceptor(t *testing.T) {
 			wantCode:      codes.PermissionDenied,
 			wantError:     "node is disabled",
 			wantRepoCalls: 1,
+			wantFindIDs:   []uint{1},
 		},
 		{
 			name: "apikey_mismatch_returns_unauthenticated",
@@ -248,6 +275,7 @@ func TestAuthInterceptor_UnaryServerInterceptor(t *testing.T) {
 			wantCode:      codes.Unauthenticated,
 			wantError:     "invalid API key",
 			wantRepoCalls: 1,
+			wantFindIDs:   []uint{1},
 		},
 		{
 			name: "apikey_repo_error_returns_internal",
@@ -260,6 +288,7 @@ func TestAuthInterceptor_UnaryServerInterceptor(t *testing.T) {
 			wantCode:      codes.Internal,
 			wantError:     "failed to verify node",
 			wantRepoCalls: 1,
+			wantFindIDs:   []uint{1},
 		},
 	}
 
@@ -283,6 +312,14 @@ func TestAuthInterceptor_UnaryServerInterceptor(t *testing.T) {
 				assert.Equal(t, tt.wantResp, resp, "handler response mismatch")
 			}
 			assert.Equal(t, tt.wantRepoCalls, repo.calls, "repo Find call count mismatch")
+			if tt.wantRepoCalls == 0 {
+				assert.Nil(t, repo.lastFindNodeFilter, "repo filter must stay nil when Find is not called")
+			} else {
+				require.NotNil(t, repo.lastFindNodeFilter)
+				if tt.wantFindIDs != nil {
+					assert.Equal(t, tt.wantFindIDs, repo.lastFindNodeFilter.IDs)
+				}
+			}
 		})
 	}
 }
@@ -329,10 +366,6 @@ func (s *stubStream) Context() context.Context { return s.ctx }
 func TestAuthInterceptor_StreamServerInterceptor(t *testing.T) {
 	cert := makeSelfSignedCert(t, "test-client")
 
-	streamHandler := func(_ any, _ grpc.ServerStream) error {
-		return nil
-	}
-
 	info := &grpc.StreamServerInfo{FullMethod: "/gameap.DaemonGateway/SomeStream"}
 
 	tests := []struct {
@@ -341,12 +374,14 @@ func TestAuthInterceptor_StreamServerInterceptor(t *testing.T) {
 		requireMTLS bool
 		wantCode    codes.Code
 		wantError   string
+		wantHandled bool
 	}{
 		{
 			name:        "stream_no_mtls_required_passes",
 			ctx:         context.Background(),
 			requireMTLS: false,
 			wantCode:    codes.OK,
+			wantHandled: true,
 		},
 		{
 			name:        "stream_mtls_required_no_peer_returns_unauthenticated",
@@ -354,12 +389,14 @@ func TestAuthInterceptor_StreamServerInterceptor(t *testing.T) {
 			requireMTLS: true,
 			wantCode:    codes.Unauthenticated,
 			wantError:   "no peer information",
+			wantHandled: false,
 		},
 		{
 			name:        "stream_mtls_required_with_cert_passes",
 			ctx:         ctxWithMTLSCert(cert),
 			requireMTLS: true,
 			wantCode:    codes.OK,
+			wantHandled: true,
 		},
 	}
 
@@ -368,6 +405,12 @@ func TestAuthInterceptor_StreamServerInterceptor(t *testing.T) {
 			// ARRANGE
 			interceptor := NewAuthInterceptor(&fakeNodeRepo{}, tt.requireMTLS, discardLogger())
 			ss := &stubStream{ctx: tt.ctx}
+			handled := false
+			streamHandler := func(_ any, _ grpc.ServerStream) error {
+				handled = true
+
+				return nil
+			}
 
 			// ACT
 			err := interceptor.StreamServerInterceptor()(nil, ss, info, streamHandler)
@@ -380,6 +423,7 @@ func TestAuthInterceptor_StreamServerInterceptor(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 			}
+			assert.Equal(t, tt.wantHandled, handled, "stream handler invocation mismatch")
 		})
 	}
 }

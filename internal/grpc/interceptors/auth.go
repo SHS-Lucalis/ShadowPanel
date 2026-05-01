@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/subtle"
 	"log/slog"
+	"strconv"
 	"time"
 
 	"github.com/gameap/gameap/internal/domain"
@@ -151,13 +152,9 @@ func (ai *AuthInterceptor) extractAndVerifyAPIKey(ctx context.Context) (uint64, 
 		return 0, status.Error(codes.InvalidArgument, "node ID required with API key")
 	}
 
-	var nodeID uint64
-	for _, c := range nodeIDs[0] {
-		if c >= '0' && c <= '9' {
-			nodeID = nodeID*10 + uint64(c-'0')
-		} else {
-			return 0, status.Error(codes.InvalidArgument, "invalid node ID format")
-		}
+	nodeID, err := strconv.ParseUint(nodeIDs[0], 10, 64)
+	if err != nil {
+		return 0, status.Error(codes.InvalidArgument, "invalid node ID format")
 	}
 
 	nodes, err := ai.nodeRepo.Find(ctx, &filters.FindNode{IDs: []uint{uint(nodeID)}}, nil, nil)
