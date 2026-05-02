@@ -131,6 +131,100 @@ func (h *TaskHandler) GetPendingTasks(ctx context.Context, nodeID uint64) ([]*pr
 	return protoTasks, nil
 }
 
+// AbandonedTaskMessage is appended to a task's output when the panel marks it
+// as error because the owning daemon dropped it (restart, crash, or extended
+// disconnect). Exposed so callers and tests can match the exact wording.
+const AbandonedTaskMessage = "Daemon was restarted before task could complete"
+
+// ReconcileWorkingTasks transitions abandoned `working` tasks for nodeID to
+// `error`. A task is considered abandoned if its ID is not in inFlightIDs —
+// i.e. the daemon does not currently hold it in its in-memory queue.
+//
+// Pass inFlightIDs == nil to mark every working task for the node as error;
+// this is what the periodic sweep (taskreaper) does for nodes that have not
+// reconnected.
+//
+// reason is recorded in logs (e.g. "daemon_restart", "stale_sweep") to
+// distinguish the trigger when reading audit logs. Returns the number of
+// tasks transitioned.
+func (h *TaskHandler) ReconcileWorkingTasks(
+	ctx context.Context, nodeID uint64, inFlightIDs []uint64, reason string,
+) (int, error) {
+	tasks, err := h.daemonTaskRepo.Find(ctx, &filters.FindDaemonTask{
+		DedicatedServerIDs: []uint{uint(nodeID)},
+		Statuses:           []domain.DaemonTaskStatus{domain.DaemonTaskStatusWorking},
+	}, nil, nil)
+	if err != nil {
+		return 0, errors.Wrap(err, "find working tasks")
+	}
+
+	if len(tasks) == 0 {
+		return 0, nil
+	}
+
+	inFlight := make(map[uint64]struct{}, len(inFlightIDs))
+	for _, id := range inFlightIDs {
+		inFlight[id] = struct{}{}
+	}
+
+	marked := 0
+	for i := range tasks {
+		task := &tasks[i]
+		if _, ok := inFlight[uint64(task.ID)]; ok {
+			continue
+		}
+
+		if err := h.markTaskAbandoned(ctx, task, reason); err != nil {
+			h.logger.Warn("failed to mark working task as abandoned",
+				"task_id", task.ID,
+				"node_id", nodeID,
+				"reason", reason,
+				"error", err,
+			)
+
+			continue
+		}
+
+		marked++
+	}
+
+	if marked > 0 {
+		h.logger.Info("reconciled working tasks",
+			"node_id", nodeID,
+			"reason", reason,
+			"marked_error", marked,
+			"in_flight", len(inFlightIDs),
+		)
+	}
+
+	return marked, nil
+}
+
+func (h *TaskHandler) markTaskAbandoned(ctx context.Context, task *domain.DaemonTask, reason string) error {
+	if err := h.daemonTaskRepo.AppendOutput(ctx, task.ID, AbandonedTaskMessage); err != nil {
+		return errors.WithMessage(err, "append abandoned output")
+	}
+
+	task.Status = domain.DaemonTaskStatusError
+	task.Output = nil
+	if err := h.daemonTaskRepo.Save(ctx, task); err != nil {
+		return errors.WithMessage(err, "save task error status")
+	}
+
+	h.updateServerInstalledStatus(ctx, task)
+
+	h.publishTaskStatus(ctx, uint64(task.ID), string(task.Status), task.DedicatedServerID, AbandonedTaskMessage)
+	h.publishTaskComplete(ctx, uint64(task.ID), string(task.Status), task.DedicatedServerID)
+
+	h.logger.Info("working task marked as error",
+		"task_id", task.ID,
+		"node_id", task.DedicatedServerID,
+		"reason", reason,
+	)
+
+	return nil
+}
+
 func (h *TaskHandler) publishTaskStatus(
 	ctx context.Context, taskID uint64, status string, serverID uint, message string,
 ) {

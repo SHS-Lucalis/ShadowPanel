@@ -25,6 +25,11 @@ const (
 	smallFileThreshold       = 1 * 1024 * 1024
 )
 
+// ReconcileReasonDaemonRestart marks tasks reconciled at daemon (re)connect:
+// the daemon dropped them between sessions (crash, kill, restart) and they
+// will not resume.
+const ReconcileReasonDaemonRestart = "daemon_restart"
+
 type Service struct {
 	proto.UnimplementedDaemonGatewayServer
 
@@ -54,6 +59,7 @@ type TaskHandler interface {
 	HandleTaskStatusUpdate(ctx context.Context, nodeID uint64, update *proto.TaskStatusUpdate) error
 	HandleTaskOutput(ctx context.Context, nodeID uint64, output *proto.TaskOutput) error
 	GetPendingTasks(ctx context.Context, nodeID uint64) ([]*proto.DaemonTask, error)
+	ReconcileWorkingTasks(ctx context.Context, nodeID uint64, inFlightIDs []uint64, reason string) (int, error)
 }
 
 type CommandHandler interface {
@@ -147,6 +153,8 @@ func (s *Service) Connect(stream proto.DaemonGateway_ConnectServer) error {
 		return err
 	}
 
+	s.reconcileAbandonedTasks(ctx, reg)
+
 	sessionCtx, cancel := context.WithCancel(stream.Context())
 	go func() {
 		select {
@@ -200,6 +208,32 @@ func (s *Service) Connect(stream proto.DaemonGateway_ConnectServer) error {
 	)
 
 	return s.handleMessages(sessionCtx, sess)
+}
+
+// reconcileAbandonedTasks flips any task this node left in `working` to
+// `error` if the freshly-connected daemon does not list it in InFlightTasks.
+// The daemon is the source of truth about what it currently holds; anything
+// missing from that list cannot resume and must be surfaced as failed so the
+// operator can retry. Reconciliation failures are logged and never block
+// registration.
+func (s *Service) reconcileAbandonedTasks(ctx context.Context, reg *proto.RegisterRequest) {
+	if s.taskHandler == nil {
+		return
+	}
+
+	inFlightIDs := make([]uint64, 0, len(reg.InFlightTasks))
+	for _, t := range reg.InFlightTasks {
+		inFlightIDs = append(inFlightIDs, t.TaskId)
+	}
+
+	if _, err := s.taskHandler.ReconcileWorkingTasks(
+		ctx, reg.NodeId, inFlightIDs, ReconcileReasonDaemonRestart,
+	); err != nil {
+		s.logger.Warn("failed to reconcile working tasks on register",
+			"node_id", reg.NodeId,
+			"error", err,
+		)
+	}
 }
 
 func (s *Service) validateAuth(ctx context.Context, reg *proto.RegisterRequest) error {

@@ -187,6 +187,15 @@ type fakeTaskHandler struct {
 	pendingTasks    []*proto.DaemonTask
 	pendingErr      error
 	statusUpdateErr error
+	reconcileCalls  []reconcileCall
+	reconcileMarked int
+	reconcileErr    error
+}
+
+type reconcileCall struct {
+	nodeID      uint64
+	inFlightIDs []uint64
+	reason      string
 }
 
 func (f *fakeTaskHandler) HandleTaskStatusUpdate(_ context.Context, _ uint64, update *proto.TaskStatusUpdate) error {
@@ -207,6 +216,27 @@ func (f *fakeTaskHandler) HandleTaskOutput(_ context.Context, _ uint64, output *
 
 func (f *fakeTaskHandler) GetPendingTasks(_ context.Context, _ uint64) ([]*proto.DaemonTask, error) {
 	return f.pendingTasks, f.pendingErr
+}
+
+func (f *fakeTaskHandler) ReconcileWorkingTasks(
+	_ context.Context, nodeID uint64, inFlightIDs []uint64, reason string,
+) (int, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.reconcileCalls = append(f.reconcileCalls, reconcileCall{
+		nodeID:      nodeID,
+		inFlightIDs: inFlightIDs,
+		reason:      reason,
+	})
+
+	return f.reconcileMarked, f.reconcileErr
+}
+
+func (f *fakeTaskHandler) ReconcileCalls() []reconcileCall {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	return slices.Clone(f.reconcileCalls)
 }
 
 func (f *fakeTaskHandler) StatusUpdates() []*proto.TaskStatusUpdate {

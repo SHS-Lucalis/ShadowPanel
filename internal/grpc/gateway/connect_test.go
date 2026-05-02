@@ -243,6 +243,83 @@ func TestService_Connect_eofAfterRegisterClosesGracefully(t *testing.T) {
 	require.NoError(t, err, "EOF after register must be a clean shutdown")
 }
 
+func TestService_Connect_reconcilesAbandonedTasksOnRegister(t *testing.T) {
+	t.Run("forwards_in_flight_task_ids_with_daemon_restart_reason", func(t *testing.T) {
+		// ARRANGE
+		svc, deps := newServiceWithDeps(t)
+		setupAuthorizedNode(t, deps, "k")
+
+		stream := newStubConnectServer(context.Background())
+		stream.PushMessage(&proto.DaemonMessage{
+			Payload: &proto.DaemonMessage_Register{
+				Register: &proto.RegisterRequest{
+					NodeId: 1, ApiKey: "k",
+					InFlightTasks: []*proto.InFlightTask{
+						{TaskId: 11},
+						{TaskId: 22},
+					},
+				},
+			},
+		})
+		stream.CloseRecv()
+
+		// ACT
+		require.NoError(t, svc.Connect(stream))
+
+		// ASSERT
+		calls := deps.taskHandler.ReconcileCalls()
+		require.Len(t, calls, 1)
+		assert.Equal(t, uint64(1), calls[0].nodeID)
+		assert.Equal(t, []uint64{11, 22}, calls[0].inFlightIDs)
+		assert.Equal(t, ReconcileReasonDaemonRestart, calls[0].reason)
+	})
+
+	t.Run("empty_in_flight_passes_empty_slice", func(t *testing.T) {
+		// ARRANGE
+		svc, deps := newServiceWithDeps(t)
+		setupAuthorizedNode(t, deps, "k")
+
+		stream := newStubConnectServer(context.Background())
+		stream.PushMessage(&proto.DaemonMessage{
+			Payload: &proto.DaemonMessage_Register{
+				Register: &proto.RegisterRequest{NodeId: 1, ApiKey: "k"},
+			},
+		})
+		stream.CloseRecv()
+
+		// ACT
+		require.NoError(t, svc.Connect(stream))
+
+		// ASSERT
+		calls := deps.taskHandler.ReconcileCalls()
+		require.Len(t, calls, 1)
+		assert.Empty(t, calls[0].inFlightIDs)
+	})
+
+	t.Run("reconcile_error_does_not_fail_registration", func(t *testing.T) {
+		// ARRANGE
+		svc, deps := newServiceWithDeps(t)
+		setupAuthorizedNode(t, deps, "k")
+		deps.taskHandler.reconcileErr = assert.AnError
+
+		stream := newStubConnectServer(context.Background())
+		stream.PushMessage(&proto.DaemonMessage{
+			Payload: &proto.DaemonMessage_Register{
+				Register: &proto.RegisterRequest{NodeId: 1, ApiKey: "k"},
+			},
+		})
+		stream.CloseRecv()
+
+		// ACT
+		err := svc.Connect(stream)
+
+		// ASSERT
+		require.NoError(t, err, "reconciliation failure must not block register")
+		require.Len(t, stream.Sent(), 1, "RegisterAck must still be sent")
+		assert.True(t, stream.Sent()[0].GetRegisterAck().Success)
+	})
+}
+
 func TestService_Connect_shutdownContextCancelsSession(t *testing.T) {
 	// ARRANGE
 	svc, deps := newServiceWithDeps(t)

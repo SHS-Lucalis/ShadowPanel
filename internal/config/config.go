@@ -3,6 +3,7 @@ package config
 import (
 	"crypto/tls"
 	"strings"
+	"time"
 
 	"github.com/caarlos0/env/v11"
 	"github.com/gameap/gameap/internal/application/defaults"
@@ -149,6 +150,11 @@ type Config struct {
 	}
 
 	DaemonSetupKey string `env:"DAEMON_SETUP_KEY" envDefault:""`
+
+	TaskReaper struct {
+		Interval       time.Duration `env:"TASK_REAPER_INTERVAL" envDefault:"1m"`
+		StaleThreshold time.Duration `env:"TASK_REAPER_STALE_THRESHOLD" envDefault:"10m"`
+	}
 }
 
 func LoadConfig() (*Config, error) {
