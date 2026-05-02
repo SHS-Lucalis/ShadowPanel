@@ -1,0 +1,17 @@
+# avito-tech/go-mutesting configuration for informational mutation testing.
+# https://github.com/avito-tech/go-mutesting
+
+skip_without_test: true
+skip_with_build_tags: true
+json_output: true
+html_output: false
+exclude_dirs:
+  - internal/gen
+  - pkg/proto
+  - pkg/plugin/proto
+  - pkg/plugin/sdk
+  - pkg/plugin/examples
+  - migrations
+  - test
+  - pkg/testcontainer
+  - mocks
