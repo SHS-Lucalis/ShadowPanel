@@ -75,43 +75,68 @@ jobs:
           PACKAGES: ${{ github.event.inputs.packages || env.DEFAULT_PACKAGES }}
         run: |
           set +e
-          # shellcheck disable=SC2086
-          # PACKAGES intentionally unquoted: it's a space-separated list of
-          # Go package globs that must split into multiple arguments.
-          gremlins unleash \
-            --threshold-efficacy=0 \
-            --threshold-mcover=0 \
-            --output=gremlins-report.json \
-            --workers=4 \
-            $PACKAGES
+          mkdir -p gremlins-reports
+          # gremlins unleash takes a single path argument, so we loop over
+          # the space-separated PACKAGES list and write one report per pkg.
+          for pkg in $PACKAGES; do
+            safe=$(echo "$pkg" | tr '/.' '__')
+            echo "::group::gremlins $pkg"
+            gremlins unleash \
+              --threshold-efficacy=0 \
+              --threshold-mcover=0 \
+              --output="gremlins-reports/gremlins-${safe}.json" \
+              --workers=4 \
+              "$pkg"
+            echo "::endgroup::"
+          done
           exit 0
 
-      - name: Upload gremlins report
+      - name: Upload gremlins reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gremlins-report
-          path: gremlins-report.json
+          name: gremlins-reports
+          path: gremlins-reports/
           if-no-files-found: warn
           retention-days: 30
 
       - name: Print gremlins summary
         if: always()
         run: |
-          if [ -f gremlins-report.json ]; then
-            echo "=== Gremlins Mutation Score ==="
-            jq -r '
-              "Killed:      \(.killed // 0)",
-              "Lived:       \(.lived // 0)",
-              "Not Covered: \(.notCovered // 0)",
-              "Timed out:   \(.timedOut // 0)",
-              "Not viable:  \(.notViable // 0)",
-              "Efficacy:    \(((.efficacy // 0) * 100) | floor)%",
-              "M-cover:     \(((.mutantsCoverage // 0) * 100) | floor)%"
-            ' gremlins-report.json || cat gremlins-report.json
-          else
-            echo "gremlins-report.json not produced"
+          shopt -s nullglob
+          reports=(gremlins-reports/*.json)
+          if [ ${#reports[@]} -eq 0 ]; then
+            echo "No gremlins reports produced"
+            exit 0
           fi
+          echo "=== Gremlins Mutation Score (per package) ==="
+          for r in "${reports[@]}"; do
+            echo "--- $(basename "$r") ---"
+            jq -r '
+              "  Killed:      \(.killed // 0)",
+              "  Lived:       \(.lived // 0)",
+              "  Not Covered: \(.notCovered // 0)",
+              "  Timed out:   \(.timedOut // 0)",
+              "  Not viable:  \(.notViable // 0)",
+              "  Efficacy:    \(((.efficacy // 0) * 100) | floor)%",
+              "  M-cover:     \(((.mutantsCoverage // 0) * 100) | floor)%"
+            ' "$r" 2>/dev/null || cat "$r"
+          done
+          echo "=== Gremlins Mutation Score (totals) ==="
+          jq -s -r '
+            (reduce .[] as $r ({killed:0,lived:0,notCovered:0,timedOut:0,notViable:0};
+              .killed += ($r.killed // 0) |
+              .lived += ($r.lived // 0) |
+              .notCovered += ($r.notCovered // 0) |
+              .timedOut += ($r.timedOut // 0) |
+              .notViable += ($r.notViable // 0)
+            )) as $t |
+            "Killed:      \($t.killed)",
+            "Lived:       \($t.lived)",
+            "Not Covered: \($t.notCovered)",
+            "Timed out:   \($t.timedOut)",
+            "Not viable:  \($t.notViable)"
+          ' "${reports[@]}"
 
   go-mutesting:
     name: go-mutesting
@@ -149,21 +174,27 @@ jobs:
         run: |
           set +e
           mkdir -p mutation-reports
-          # shellcheck disable=SC2086
-          # PACKAGES intentionally unquoted: see gremlins job.
-          go-mutesting \
-            --config=.go-mutesting.yaml \
-            $PACKAGES 2>&1 | tee mutation-reports/go-mutesting.log
-          if [ -f report.json ]; then
-            cp report.json mutation-reports/go-mutesting-report.json
-          fi
+          # Loop per package — go-mutesting writes report.json into cwd, so
+          # we move it after each run to keep all reports.
+          for pkg in $PACKAGES; do
+            safe=$(echo "$pkg" | tr '/.' '__')
+            echo "::group::go-mutesting $pkg"
+            rm -f report.json
+            go-mutesting \
+              --config=.go-mutesting.yaml \
+              "$pkg" 2>&1 | tee "mutation-reports/go-mutesting-${safe}.log"
+            if [ -f report.json ]; then
+              mv report.json "mutation-reports/go-mutesting-${safe}.json"
+            fi
+            echo "::endgroup::"
+          done
           exit 0
 
-      - name: Upload go-mutesting report
+      - name: Upload go-mutesting reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: go-mutesting-report
+          name: go-mutesting-reports
           path: mutation-reports/
           if-no-files-found: warn
           retention-days: 30
@@ -171,15 +202,19 @@ jobs:
       - name: Print go-mutesting summary
         if: always()
         run: |
-          REPORT="mutation-reports/go-mutesting-report.json"
-          if [ -f "$REPORT" ]; then
-            echo "=== go-mutesting Score ==="
-            jq -r '
-              "Total:  \(.stats.total // 0)",
-              "Killed: \(.stats.killed // 0)",
-              "Alive:  \(.stats.alive // 0)",
-              "Score:  \(.stats.score // 0)"
-            ' "$REPORT" || cat "$REPORT"
-          else
-            echo "go-mutesting report.json not produced"
+          shopt -s nullglob
+          reports=(mutation-reports/go-mutesting-*.json)
+          if [ ${#reports[@]} -eq 0 ]; then
+            echo "No go-mutesting reports produced; см. mutation-reports/*.log"
+            exit 0
           fi
+          echo "=== go-mutesting Score (per package) ==="
+          for r in "${reports[@]}"; do
+            echo "--- $(basename "$r") ---"
+            jq -r '
+              "  Total:  \(.stats.total // 0)",
+              "  Killed: \(.stats.killed // 0)",
+              "  Alive:  \(.stats.alive // 0)",
+              "  Score:  \(.stats.score // 0)"
+            ' "$r" 2>/dev/null || cat "$r"
+          done
