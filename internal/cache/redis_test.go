@@ -1,3 +1,5 @@
+// Redis error-injection tests are not implemented because miniredis is not in go.mod; adding it would require a new dependency.
+
 package cache_test
 
 import (

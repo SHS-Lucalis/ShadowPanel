@@ -12,13 +12,20 @@ import (
 
 // mockPluginService implements proto.PluginService for testing.
 type mockPluginService struct {
-	shutdownFunc func(ctx context.Context, req *proto.ShutdownRequest) (*proto.ShutdownResponse, error)
+	infoFunc                func(ctx context.Context, req *proto.GetInfoRequest) (*proto.PluginInfo, error)
+	shutdownFunc            func(ctx context.Context, req *proto.ShutdownRequest) (*proto.ShutdownResponse, error)
+	handleEventFunc         func(ctx context.Context, event *proto.Event) (*proto.EventResult, error)
+	getSubscribedEventsFunc func(ctx context.Context, req *proto.GetSubscribedEventsRequest) (*proto.GetSubscribedEventsResponse, error)
 }
 
 func (m *mockPluginService) GetInfo(
-	_ context.Context,
-	_ *proto.GetInfoRequest,
+	ctx context.Context,
+	req *proto.GetInfoRequest,
 ) (*proto.PluginInfo, error) {
+	if m.infoFunc != nil {
+		return m.infoFunc(ctx, req)
+	}
+
 	return &proto.PluginInfo{Id: "test-plugin"}, nil
 }
 
@@ -41,16 +48,24 @@ func (m *mockPluginService) Shutdown(
 }
 
 func (m *mockPluginService) HandleEvent(
-	_ context.Context,
-	_ *proto.Event,
+	ctx context.Context,
+	event *proto.Event,
 ) (*proto.EventResult, error) {
+	if m.handleEventFunc != nil {
+		return m.handleEventFunc(ctx, event)
+	}
+
 	return &proto.EventResult{}, nil
 }
 
 func (m *mockPluginService) GetSubscribedEvents(
-	_ context.Context,
-	_ *proto.GetSubscribedEventsRequest,
+	ctx context.Context,
+	req *proto.GetSubscribedEventsRequest,
 ) (*proto.GetSubscribedEventsResponse, error) {
+	if m.getSubscribedEventsFunc != nil {
+		return m.getSubscribedEventsFunc(ctx, req)
+	}
+
 	return &proto.GetSubscribedEventsResponse{}, nil
 }
 
