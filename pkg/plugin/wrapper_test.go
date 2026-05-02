@@ -1,9 +1,11 @@
 package plugin
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
-	"os"
-	"path/filepath"
+	_ "embed"
+	"io"
 	"sync"
 	"testing"
 
@@ -13,10 +15,29 @@ import (
 	"github.com/gameap/gameap/pkg/plugin/sdk/log"
 	"github.com/gameap/gameap/pkg/plugin/sdk/servers"
 	domainproto "github.com/gameap/gameap/pkg/proto"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tetratelabs/wazero"
 )
+
+//go:embed testdata/server-logger.wasm.gz
+var serverLoggerWASMGz []byte
+
+func decompressServerLoggerWASM() ([]byte, error) {
+	gr, err := gzip.NewReader(bytes.NewReader(serverLoggerWASMGz))
+	if err != nil {
+		return nil, errors.Wrap(err, "open gzip reader for embedded server-logger wasm")
+	}
+	defer func() { _ = gr.Close() }()
+
+	wasm, err := io.ReadAll(gr)
+	if err != nil {
+		return nil, errors.Wrap(err, "decompress embedded server-logger wasm")
+	}
+
+	return wasm, nil
+}
 
 // stubLogService satisfies log.LogService; the WASM plugin calls Log to emit log lines.
 type stubLogService struct {
@@ -98,9 +119,11 @@ func (f hostLibFunc) Instantiate(ctx context.Context, r wazero.Runtime) error {
 	return f(ctx, r)
 }
 
-// Shared plugin instance — Manager.Load takes 30+ seconds because of WASM
-// compilation, and the wrapper API is read-only/idempotent for these tests.
-// Each test queries the same loaded plugin without observable cross-test interference.
+// Shared plugin instance — Manager.Load is expensive because of WASM compilation,
+// and the wrapper API is read-only/idempotent for these tests. Each test queries
+// the same loaded plugin without observable cross-test interference. The WASM
+// itself is embedded (gzipped) under testdata/, so tests do not depend on the
+// example artifact being present on disk at runtime.
 var (
 	sharedPluginOnce sync.Once
 	sharedManager    *Manager
@@ -112,8 +135,7 @@ func loadSharedServerLoggerWASM(t *testing.T) *LoadedPlugin {
 	t.Helper()
 
 	sharedPluginOnce.Do(func() {
-		wasmPath := filepath.Join("examples", "server-logger", "server-logger.wasm")
-		wasmBytes, err := os.ReadFile(wasmPath)
+		wasmBytes, err := decompressServerLoggerWASM()
 		if err != nil {
 			errSharedLoad = err
 
@@ -142,7 +164,7 @@ func loadSharedServerLoggerWASM(t *testing.T) *LoadedPlugin {
 		)
 	})
 
-	require.NoError(t, errSharedLoad, "Manager.Load must succeed for the example WASM artifact")
+	require.NoError(t, errSharedLoad, "Manager.Load must succeed for the embedded WASM artifact")
 	require.NotNil(t, sharedPlugin)
 
 	return sharedPlugin

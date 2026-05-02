@@ -32,6 +32,22 @@ GOOS=wasip1 GOARCH=wasm go build -o server-logger.wasm -buildmode=c-shared .
 
 Use the standard Go compiler if TinyGo doesn't support your Go version.
 
+## Refreshing the test fixture
+
+The `pkg/plugin` test suite loads this plugin from an embedded gzipped copy under
+`pkg/plugin/testdata/server-logger.wasm.gz` so tests do not depend on a freshly
+built artifact at runtime. After changing the example, regenerate the fixture:
+
+```bash
+cd pkg/plugin/examples/server-logger
+npm --prefix frontend install && npm --prefix frontend run build
+GOOS=wasip1 GOARCH=wasm go build -o server-logger.wasm -buildmode=c-shared .
+gzip -9 -c server-logger.wasm > ../../testdata/server-logger.wasm.gz
+```
+
+Commit the updated `pkg/plugin/testdata/server-logger.wasm.gz` together with
+your code change.
+
 ## HTTP API Endpoints
 
 - `GET /status` - Get plugin status (no auth required)
