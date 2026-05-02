@@ -10,6 +10,7 @@ export const useMessagesStore = defineStore('fm-messages', () => {
     const progressLabel = ref('')
     const loadingCount = ref(0)
     const errors = ref([])
+    const uploadProgress = ref({ files: [] })
 
     // Getters
     const loading = computed(() => loadingCount.value > 0)
@@ -35,6 +36,40 @@ export const useMessagesStore = defineStore('fm-messages', () => {
     function clearProgress() {
         actionProgress.value = 0
         progressLabel.value = ''
+    }
+
+    function initUploadProgress(files) {
+        uploadProgress.value = {
+            files: files.map((f) => ({
+                name: f.name,
+                size: f.size,
+                phase: 'pending',
+                loaded: 0,
+                error: null,
+            })),
+        }
+    }
+
+    function setFilePhase({ index, phase }) {
+        const file = uploadProgress.value.files[index]
+        if (file) file.phase = phase
+    }
+
+    function setFileProgress({ index, loaded }) {
+        const file = uploadProgress.value.files[index]
+        if (file) file.loaded = loaded
+    }
+
+    function setFileError({ index, error }) {
+        const file = uploadProgress.value.files[index]
+        if (file) {
+            file.phase = 'error'
+            file.error = error
+        }
+    }
+
+    function clearUploadProgress() {
+        uploadProgress.value = { files: [] }
     }
 
     function addLoading() {
@@ -64,6 +99,7 @@ export const useMessagesStore = defineStore('fm-messages', () => {
         progressLabel,
         loadingCount,
         errors,
+        uploadProgress,
         // Getters
         loading,
         // Actions
@@ -76,5 +112,10 @@ export const useMessagesStore = defineStore('fm-messages', () => {
         clearLoading,
         setError,
         clearErrors,
+        initUploadProgress,
+        setFilePhase,
+        setFileProgress,
+        setFileError,
+        clearUploadProgress,
     }
 })

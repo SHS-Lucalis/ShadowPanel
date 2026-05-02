@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed, reactive } from 'vue'
 import GET from '../http/get.js'
 import POST from '../http/post.js'
+import { uploadFileChunked } from '../http/upload-session.js'
 import { useSettingsStore } from './useSettingsStore.js'
 import { useMessagesStore } from './useMessagesStore.js'
 import { useModalStore } from './useModalStore.js'
@@ -491,36 +492,55 @@ export const useFileManagerStore = defineStore('fm', () => {
         return response
     }
 
-    async function upload({ files, overwrite }) {
+    async function upload({ files }) {
         const messages = useMessagesStore()
         const currentDirectory = selectedDirectory.value
+        const fileList = Array.from(files)
 
-        const data = new FormData()
-        data.append('disk', selectedDisk.value)
-        data.append('path', currentDirectory || '')
-        data.append('overwrite', overwrite)
-        for (let i = 0; i < files.length; i += 1) {
-            data.append('files[]', files[i])
+        messages.initUploadProgress(fileList.map((f) => ({ name: f.name, size: f.size })))
+
+        const totalBytes = fileList.reduce((sum, f) => sum + f.size, 0)
+        const fileBaseLoaded = new Array(fileList.length).fill(0)
+
+        const reportAggregate = (index, loaded) => {
+            const before = fileBaseLoaded.slice(0, index).reduce((s, v) => s + v, 0)
+            const overall = totalBytes > 0 ? Math.round(((before + loaded) * 100) / totalBytes) : 0
+            messages.setProgress(Math.min(overall, 100))
         }
 
-        const config = {
-            onUploadProgress(progressEvent) {
-                const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-                messages.setProgress(progress)
-            },
-        }
-
+        let hadError = false
         try {
-            const response = await POST.upload(data, config)
-            messages.clearProgress()
-
-            if (response.data.result.status === 'success' && currentDirectory === selectedDirectory.value) {
-                refreshManagers()
+            for (let i = 0; i < fileList.length; i += 1) {
+                const file = fileList[i]
+                try {
+                    // eslint-disable-next-line no-await-in-loop
+                    await uploadFileChunked(file, {
+                        path: currentDirectory || '',
+                        onPhase: (phase) => messages.setFilePhase({ index: i, phase }),
+                        onProgress: ({ phase, loaded }) => {
+                            messages.setFileProgress({ index: i, loaded })
+                            if (phase === 'uploading') reportAggregate(i, loaded)
+                        },
+                    })
+                    fileBaseLoaded[i] = file.size
+                    messages.setFilePhase({ index: i, phase: 'done' })
+                    reportAggregate(i, 0)
+                } catch (e) {
+                    hadError = true
+                    messages.setFileError({ index: i, error: e.code || 'unknown' })
+                }
             }
-            return response
-        } catch (error) {
-            messages.clearProgress()
-            throw error
+
+            if (currentDirectory === selectedDirectory.value) {
+                await refreshManagers()
+            }
+
+            return { data: { result: { status: hadError ? 'warning' : 'success' } } }
+        } finally {
+            setTimeout(() => {
+                messages.clearProgress()
+                messages.clearUploadProgress()
+            }, 1500)
         }
     }
 

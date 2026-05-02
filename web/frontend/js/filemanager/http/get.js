@@ -121,4 +121,13 @@ export default {
             ...config,
         });
     },
+
+    /**
+     * Chunked upload session status
+     * @param uploadId
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    uploadSessionStatus(uploadId) {
+        return HTTP.get(`upload/sessions/${uploadId}`);
+    },
 };
