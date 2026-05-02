@@ -33,13 +33,13 @@ GameAP can be installed on the following operating systems:
 
 GameAP follows a three-tier architecture consisting of the web panel, daemon agents, and game servers.
 
-Administrators interact with GameAP through a browser via HTTP/HTTPS. 
-The panel provides a web UI and a REST API, and stores its data in a database, which can be either PostgreSQL, MySQL, or SQLite, depending on the deployment.
+Administrators interact with GameAP through a browser via HTTP/HTTPS.
+The panel provides a web UI, a REST API, and a WebSocket endpoint for real-time events (task output, console streams, server metrics), and stores its data in a database, which can be either PostgreSQL, MySQL, or SQLite, depending on the deployment.
 
 ![](docs/gameap_architecture.svg)
 
-Each GameAP instance can communicate with one or more nodes where game servers are hosted. 
-On every node, a lightweight agent called GameAP Daemon runs alongside the game servers. 
+Each GameAP instance talks to one or more nodes over a gRPC bidirectional stream (secured with TLS / mTLS). The daemon opens a single long-lived connection to the panel, used for both control commands (task dispatch, console input, file operations) and upstream events (heartbeats, task status, server status, metrics).
+On every node, a lightweight agent called GameAP Daemon runs alongside the game servers.
 The daemon is responsible for controlling game server processes (starting, stopping, monitoring, and configuring them).
 It supports Windows, Linux, and macOS and offers a wide range of configuration options.
 
