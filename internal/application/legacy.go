@@ -12,6 +12,11 @@ import (
 	"github.com/samber/lo"
 )
 
+const (
+	legacyCacheDriverFile   = "file"
+	legacyCacheDriverMemory = "memory"
+)
+
 func loadLegacyEnv(legacyEnvFilePath string) error {
 	legacyEnvPath := lo.CoalesceOrEmpty(os.Getenv("LEGACY_ENV_PATH"), legacyEnvFilePath)
 	if legacyEnvPath == "" {
@@ -98,8 +103,8 @@ func convertLegacyEnvToCurrentEnv(legacyVars map[string]string) {
 	}
 
 	if cacheDriver, ok := legacyVars["CACHE_DRIVER"]; ok && cacheDriver != "" {
-		if cacheDriver == "file" {
-			cacheDriver = "memory"
+		if cacheDriver == legacyCacheDriverFile {
+			cacheDriver = legacyCacheDriverMemory
 		}
 		setEnvIfNotExists("CACHE_DRIVER", cacheDriver)
 	}
