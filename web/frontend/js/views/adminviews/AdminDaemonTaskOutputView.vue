@@ -3,6 +3,12 @@
 
   <Loading v-if="loading"></Loading>
   <div :class="loading ? 'hidden' : ''">
+    <div v-if="canCancel" class="mb-3">
+      <GButton color="red" size="middle" @click="onCancelClick">
+        {{ trans('gdaemon_tasks.cancel') }}
+      </GButton>
+    </div>
+
     <GTable>
       <tbody>
       <tr>
@@ -43,9 +49,10 @@
 
 <script setup>
 import { GBreadcrumbs, GStatusBadge, Loading, GTable } from "@gameap/ui"
+import GButton from "@/components/GButton.vue"
 import {computed, onMounted} from "vue"
 import {trans} from "../../i18n/i18n"
-import {errorNotification} from "../../parts/dialogs"
+import {confirm, errorNotification, notification} from "../../parts/dialogs"
 import {useRoute} from "vue-router"
 import {storeToRefs} from "pinia"
 import {useDaemonTaskStore} from "../../store/daemonTask"
@@ -76,6 +83,21 @@ const breadcrumbs = computed(() => {
 const {loading, task} = storeToRefs(daemonTaskStore)
 
 const displayStatus = computed(() => taskStatus.value || task.value.status)
+const canCancel = computed(() => displayStatus.value === 'waiting')
+
+const onCancelClick = () => {
+  confirm(trans('main.confirm_message'), async () => {
+    try {
+      await daemonTaskStore.cancelTask()
+      notification({
+        type: 'success',
+        content: trans('gdaemon_tasks.canceled_success_msg'),
+      })
+    } catch (error) {
+      errorNotification(error)
+    }
+  })
+}
 
 onMounted(() => {
   daemonTaskStore.setTaskId(route.params.id)

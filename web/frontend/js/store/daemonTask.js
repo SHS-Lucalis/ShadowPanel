@@ -30,6 +30,14 @@ export const useDaemonTaskStore = defineStore('daemonTask', {
                     this.apiProcesses--
                 }
             }
+        },
+        async cancelTask() {
+            this.apiProcesses++
+            try {
+                await axios.post('/api/gdaemon_tasks/' + this.taskId + '/cancel')
+            } finally {
+                this.apiProcesses--
+            }
         }
     },
 })

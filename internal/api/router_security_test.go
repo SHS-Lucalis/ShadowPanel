@@ -377,6 +377,18 @@ func TestRouterSecurity_UserAccess(t *testing.T) {
 			expectedStatusCode: http.StatusOK,
 		},
 		{
+			name:               "regular_user_cannot_cancel_gdaemon_task",
+			request:            "POST /api/gdaemon_tasks/1/cancel",
+			isAdmin:            false,
+			expectedStatusCode: http.StatusForbidden,
+		},
+		{
+			name:               "admin_can_reach_gdaemon_task_cancel_endpoint",
+			request:            "POST /api/gdaemon_tasks/1/cancel",
+			isAdmin:            true,
+			expectedStatusCode: http.StatusNotFound,
+		},
+		{
 			name:               "regular_user_cannot_access_client_certificates",
 			request:            "GET /api/client_certificates",
 			isAdmin:            false,

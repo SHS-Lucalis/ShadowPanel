@@ -109,3 +109,50 @@
           application/json:
             schema:
               $ref: '../schemas/ErrorResponse.yaml'
+
+/api/gdaemon_tasks/{id}/cancel:
+  post:
+    tags:
+      - DaemonTasks
+    summary: Cancel waiting daemon task
+    description: |
+      Cancels a daemon task that is currently in `waiting` status (Admin only).
+      Returns 422 if the task is in any other status.
+    operationId: cancelDaemonTask
+    parameters:
+      - $ref: '../parameters/PathDaemonTaskId.yaml'
+    responses:
+      '200':
+        description: Task canceled
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: success
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Task not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '422':
+        description: Task cannot be canceled (not in waiting status)
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'

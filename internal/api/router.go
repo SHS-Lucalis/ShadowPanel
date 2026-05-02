@@ -28,6 +28,7 @@ import (
 	daemonapiappendoutput "github.com/gameap/gameap/internal/api/daemonapi/tasks/appendoutput"
 	daemonapitasks "github.com/gameap/gameap/internal/api/daemonapi/tasks/gettask"
 	daemonapiupdatetask "github.com/gameap/gameap/internal/api/daemonapi/tasks/updatetask"
+	"github.com/gameap/gameap/internal/api/daemontasks/canceldaemontask"
 	"github.com/gameap/gameap/internal/api/daemontasks/getdaemontask"
 	"github.com/gameap/gameap/internal/api/daemontasks/getdaemontasks"
 	"github.com/gameap/gameap/internal/api/filemanager/content"
@@ -1416,6 +1417,16 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 				c.RBAC(),
 				c.Responder(),
 				true,
+			),
+			AdminOnly: true,
+		},
+		{
+			Method: http.MethodPost,
+			Path:   "/api/gdaemon_tasks/{id}/cancel",
+			Handler: canceldaemontask.NewHandler(
+				c.DaemonTaskRepository(),
+				c.PubSub(),
+				c.Responder(),
 			),
 			AdminOnly: true,
 		},

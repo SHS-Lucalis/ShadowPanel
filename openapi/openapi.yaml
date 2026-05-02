@@ -485,6 +485,8 @@ paths:
     $ref: './paths/daemon-tasks.yaml#/~1api~1gdaemon_tasks~1{id}'
   /api/gdaemon_tasks/{id}/output:
     $ref: './paths/daemon-tasks.yaml#/~1api~1gdaemon_tasks~1{id}~1output'
+  /api/gdaemon_tasks/{id}/cancel:
+    $ref: './paths/daemon-tasks.yaml#/~1api~1gdaemon_tasks~1{id}~1cancel'
 
   # Client Certificates (Admin)
   /api/client_certificates:
