@@ -32,6 +32,7 @@ type fakeDaemon struct {
 	mu        sync.Mutex
 	calls     []daemonCall
 	returnErr error
+	block     bool
 }
 
 type daemonCall struct {
@@ -43,11 +44,17 @@ type daemonCall struct {
 }
 
 func (f *fakeDaemon) UploadStreamPrepared(
-	_ context.Context,
+	ctx context.Context,
 	node *domain.Node,
 	fullPath, transferID, checksum string,
 	totalSize uint64,
 ) error {
+	if f.block {
+		<-ctx.Done()
+
+		return ctx.Err()
+	}
+
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.calls = append(f.calls, daemonCall{
@@ -70,9 +77,10 @@ const (
 
 func defaultConfig() upload.Config {
 	return upload.Config{
-		ChunkSize:  4,
-		SessionTTL: time.Hour,
-		MaxChunks:  1000,
+		ChunkSize:             4,
+		SessionTTL:            time.Hour,
+		MaxChunks:             1000,
+		DaemonDispatchTimeout: time.Second,
 	}
 }
 
@@ -116,6 +124,77 @@ func sha256Hex(t *testing.T, data []byte) string {
 
 func makeNode() *domain.Node {
 	return &domain.Node{ID: testNodeID, WorkPath: "/srv/gameap"}
+}
+
+// TestService_Complete_LocalStorage exercises the upload service against a real
+// LocalFileManager. Regression coverage for a bug where Storage.List returns
+// bare filenames on Local/S3 (e.g. "000000") but indexFromChunkPath only
+// accepted full paths ("transfers/<id>/chunks/000000"), so receivedChunks was
+// always empty and Complete unconditionally returned ErrIncompleteUpload. The
+// in-memory tests miss this because InMemoryFileManager.List returns full
+// recursive keys.
+func TestService_Complete_LocalStorage(t *testing.T) {
+	payload := []byte("0123456789")
+	checksum := sha256Hex(t, payload)
+
+	storage := files.NewLocalFileManager(t.TempDir())
+	daemon := &fakeDaemon{}
+	clock := &fakeClock{now: time.Date(2026, 5, 1, 12, 0, 0, 0, time.UTC)}
+	svc := upload.NewService(storage, daemon, clock, nil, defaultConfig())
+
+	sess, err := svc.Create(context.Background(), upload.CreateParams{
+		ServerID:         testServerID,
+		NodeID:           testNodeID,
+		UserID:           testUserID,
+		FullPath:         testFullPath,
+		TotalSize:        uint64(len(payload)),
+		ExpectedChecksum: checksum,
+	})
+	require.NoError(t, err)
+
+	require.NoError(t, svc.WriteChunk(context.Background(), sess.UploadID, testUserID, 0, bytes.NewReader(payload[0:4])))
+	require.NoError(t, svc.WriteChunk(context.Background(), sess.UploadID, testUserID, 1, bytes.NewReader(payload[4:8])))
+	require.NoError(t, svc.WriteChunk(context.Background(), sess.UploadID, testUserID, 2, bytes.NewReader(payload[8:10])))
+
+	require.NoError(t, svc.Complete(context.Background(), sess.UploadID, testUserID, makeNode()))
+
+	require.Len(t, daemon.calls, 1)
+	assert.Equal(t, sess.UploadID, daemon.calls[0].transferID)
+	assert.Equal(t, checksum, daemon.calls[0].checksum)
+}
+
+// TestService_Status_LocalStorage covers GET /sessions/{id} on Local storage.
+// Same root cause as Complete_LocalStorage: receivedChunks must accept bare
+// filenames produced by LocalFileManager.List. Without the fix, the response
+// reports zero received_chunks and a full missing list, defeating client-side
+// resume.
+func TestService_Status_LocalStorage(t *testing.T) {
+	payload := []byte("0123456789")
+	checksum := sha256Hex(t, payload)
+
+	storage := files.NewLocalFileManager(t.TempDir())
+	daemon := &fakeDaemon{}
+	clock := &fakeClock{now: time.Date(2026, 5, 1, 12, 0, 0, 0, time.UTC)}
+	svc := upload.NewService(storage, daemon, clock, nil, defaultConfig())
+
+	sess, err := svc.Create(context.Background(), upload.CreateParams{
+		ServerID:         testServerID,
+		NodeID:           testNodeID,
+		UserID:           testUserID,
+		FullPath:         testFullPath,
+		TotalSize:        uint64(len(payload)),
+		ExpectedChecksum: checksum,
+	})
+	require.NoError(t, err)
+
+	require.NoError(t, svc.WriteChunk(context.Background(), sess.UploadID, testUserID, 0, bytes.NewReader(payload[0:4])))
+	require.NoError(t, svc.WriteChunk(context.Background(), sess.UploadID, testUserID, 2, bytes.NewReader(payload[8:10])))
+
+	status, err := svc.Status(context.Background(), sess.UploadID, testUserID)
+	require.NoError(t, err)
+	assert.Equal(t, []uint{0, 2}, status.ReceivedChunks)
+	assert.Equal(t, []uint{1}, status.MissingChunks)
+	assert.False(t, status.Completed)
 }
 
 func TestService_Create(t *testing.T) {
@@ -654,6 +733,26 @@ func TestService_Complete(t *testing.T) {
 		// ASSERT
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "fake daemon down")
+		assert.False(t, storage.Exists(context.Background(), "transfers/"+uploadID+"/done"))
+		assert.False(t, storage.Exists(context.Background(), "transfers/"+uploadID+"/data"))
+		assert.True(t, storage.Exists(context.Background(), "transfers/"+uploadID+"/chunks/000000"))
+	})
+
+	t.Run("returns_when_daemon_dispatch_times_out", func(t *testing.T) {
+		// ARRANGE
+		cfg := defaultConfig()
+		cfg.DaemonDispatchTimeout = 20 * time.Millisecond
+		svc, storage, daemon, _ := newTestSetupWithConfig(t, cfg)
+		daemon.block = true
+		uploadID := uploadAllChunks(t, svc, payload, checksum)
+
+		// ACT
+		err := svc.Complete(context.Background(), uploadID, testUserID, makeNode())
+
+		// ASSERT
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "dispatch upload to daemon")
+		assert.Contains(t, err.Error(), context.DeadlineExceeded.Error())
 		assert.False(t, storage.Exists(context.Background(), "transfers/"+uploadID+"/done"))
 		assert.False(t, storage.Exists(context.Background(), "transfers/"+uploadID+"/data"))
 		assert.True(t, storage.Exists(context.Background(), "transfers/"+uploadID+"/chunks/000000"))

@@ -81,6 +81,7 @@ type Config struct {
 			ChunkSize       ByteSize      `env:"FILES_UPLOAD_CHUNK_SIZE" envDefault:"8M"`
 			SessionTTL      time.Duration `env:"FILES_UPLOAD_SESSION_TTL" envDefault:"24h"`
 			MaxChunks       uint          `env:"FILES_UPLOAD_MAX_CHUNKS" envDefault:"100000"`
+			DispatchTimeout time.Duration `env:"FILES_UPLOAD_DISPATCH_TIMEOUT" envDefault:"2m"`
 			JanitorInterval time.Duration `env:"FILES_UPLOAD_JANITOR_INTERVAL" envDefault:"12h"`
 		}
 	}

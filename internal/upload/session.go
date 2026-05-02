@@ -68,12 +68,17 @@ func chunkPath(uploadID string, index uint) string {
 	return chunksPrefix(uploadID) + fmt.Sprintf(chunkIndexPattern, index)
 }
 
+// indexFromChunkPath extracts the chunk index from a Storage.List entry.
+// Accepts all three storage formats:
+//   - LocalFileManager: bare filename ("000000")
+//   - S3FileManager:    relative key, optionally with trailing slash ("000000" / "000000/")
+//   - InMemoryFileManager: full recursive path ("transfers/<id>/chunks/000000")
+//
+// Anything that does not unambiguously map to a chunk under the given upload
+// ID returns (0, false).
 func indexFromChunkPath(uploadID, path string) (uint, bool) {
 	prefix := chunksPrefix(uploadID)
-	if !strings.HasPrefix(path, prefix) {
-		return 0, false
-	}
-	tail := strings.TrimPrefix(path, prefix)
+	tail := strings.TrimSuffix(strings.TrimPrefix(path, prefix), "/")
 	if tail == "" || strings.Contains(tail, "/") {
 		return 0, false
 	}

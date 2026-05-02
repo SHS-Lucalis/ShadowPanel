@@ -132,15 +132,25 @@ func (j *Janitor) maybeRemove(ctx context.Context, uploadID string) {
 // uploadIDFromPath extracts the {uploadID} segment from any object path under
 // "transfers/", e.g. "transfers/abc/chunks/000000" → "abc". Returns false for
 // anything that does not match the layout so the sweep can skip it cleanly.
+// uploadIDFromPath extracts the upload ID from a Storage.List entry produced
+// by listing transferPrefix. Accepts all three storage formats:
+//   - LocalFileManager: bare directory name ("<id>")
+//   - S3FileManager:    relative key, optionally with trailing slash ("<id>/")
+//   - InMemoryFileManager: full recursive path ("transfers/<id>/upload.json")
 func uploadIDFromPath(path string) (string, bool) {
-	if !strings.HasPrefix(path, transferPrefix) {
-		return "", false
+	if rest, hasPrefix := strings.CutPrefix(path, transferPrefix); hasPrefix {
+		slash := strings.Index(rest, "/")
+		if slash <= 0 {
+			return "", false
+		}
+
+		return rest[:slash], true
 	}
-	rest := strings.TrimPrefix(path, transferPrefix)
-	slash := strings.Index(rest, "/")
-	if slash <= 0 {
+
+	rest := strings.TrimSuffix(path, "/")
+	if rest == "" || strings.Contains(rest, "/") {
 		return "", false
 	}
 
-	return rest[:slash], true
+	return rest, true
 }

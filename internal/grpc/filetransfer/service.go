@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"hash"
 	"io"
 	"log/slog"
 	"strings"
@@ -278,10 +279,16 @@ func (s *Service) DownloadFile(
 	}
 	defer func() { _ = reader.Close() }()
 
-	hasher := sha256.New()
+	hasher, err := s.newDownloadHasher(stream.Context(), storagePath, req)
+	if err != nil {
+		return err
+	}
+
 	buf := make([]byte, defaultChunkSize)
 	offset := req.Offset
 	var totalSent int64
+	finalSent := false
+	finalChecksum := ""
 
 	for {
 		select {
@@ -303,10 +310,14 @@ func (s *Service) DownloadFile(
 
 			if isFinal {
 				chunk.ChecksumSha256 = hex.EncodeToString(hasher.Sum(nil))
+				finalChecksum = chunk.ChecksumSha256
 			}
 
 			if err := stream.Send(chunk); err != nil {
 				return status.Error(codes.Internal, "failed to send chunk")
+			}
+			if isFinal {
+				finalSent = true
 			}
 
 			offset += int64(n)
@@ -314,6 +325,14 @@ func (s *Service) DownloadFile(
 		}
 
 		if readErr == io.EOF {
+			if !finalSent {
+				sentChecksum, finalErr := sendFinalDownloadChunk(stream, hasher, offset)
+				if finalErr != nil {
+					return finalErr
+				}
+				finalChecksum = sentChecksum
+			}
+
 			break
 		}
 		if readErr != nil {
@@ -321,7 +340,71 @@ func (s *Service) DownloadFile(
 		}
 	}
 
+	s.logger.Debug("download stream finished",
+		"transfer_id", req.Path,
+		"offset", req.Offset,
+		"bytes_sent", totalSent,
+		"checksum_sha256", finalChecksum,
+	)
+
 	return nil
+}
+
+func (s *Service) newDownloadHasher(
+	ctx context.Context,
+	storagePath string,
+	req *proto.DownloadRequest,
+) (hash.Hash, error) {
+	hasher := sha256.New()
+	if req.Offset <= 0 {
+		return hasher, nil
+	}
+
+	prefixReader, openErr := s.storage.ReadStream(ctx, storagePath)
+	if openErr != nil {
+		return nil, status.Error(codes.Internal, "failed to open file for checksum prehash")
+	}
+
+	prefixedBytes, copyErr := io.CopyN(hasher, prefixReader, req.Offset)
+	closeErr := prefixReader.Close()
+	if copyErr != nil {
+		if errors.Is(copyErr, io.EOF) {
+			return nil, status.Error(codes.InvalidArgument, "offset exceeds file size")
+		}
+
+		return nil, status.Error(codes.Internal, "failed to prehash file prefix")
+	}
+	if closeErr != nil {
+		return nil, status.Error(codes.Internal, "failed to close prehash stream")
+	}
+
+	s.logger.Debug("download stream resumed",
+		"transfer_id", req.Path,
+		"offset", req.Offset,
+		"prefixed_bytes", prefixedBytes,
+	)
+
+	return hasher, nil
+}
+
+func sendFinalDownloadChunk(
+	stream proto.FileTransferService_DownloadFileServer,
+	hasher hash.Hash,
+	offset int64,
+) (string, error) {
+	checksum := hex.EncodeToString(hasher.Sum(nil))
+	finalChunk := &proto.DownloadChunk{
+		Data:           nil,
+		Offset:         offset,
+		IsFinal:        true,
+		ChecksumSha256: checksum,
+	}
+
+	if err := stream.Send(finalChunk); err != nil {
+		return "", status.Error(codes.Internal, "failed to send final chunk")
+	}
+
+	return checksum, nil
 }
 
 func (s *Service) writeSentinel(transferID string, totalParts int, checksum, errMsg string) {

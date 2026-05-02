@@ -117,6 +117,18 @@ func TestIndexFromChunkPath(t *testing.T) {
 			wantOK: true,
 		},
 		{
+			name:   "valid_local_bare_filename",
+			path:   "000123",
+			want:   123,
+			wantOK: true,
+		},
+		{
+			name:   "valid_s3_relative_key_with_trailing_slash",
+			path:   "000321/",
+			want:   321,
+			wantOK: true,
+		},
+		{
 			name:   "wrong_upload_id",
 			path:   "transfers/zzz/chunks/000000",
 			wantOK: false,
@@ -178,6 +190,18 @@ func TestUploadIDFromPath(t *testing.T) {
 		{
 			name:   "chunk_path_yields_upload_id",
 			path:   "transfers/xyz/chunks/000000",
+			wantID: "xyz",
+			wantOK: true,
+		},
+		{
+			name:   "local_bare_directory_name",
+			path:   "abc",
+			wantID: "abc",
+			wantOK: true,
+		},
+		{
+			name:   "s3_relative_key_with_trailing_slash",
+			path:   "xyz/",
 			wantID: "xyz",
 			wantOK: true,
 		},

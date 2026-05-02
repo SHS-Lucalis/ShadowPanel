@@ -765,6 +765,8 @@ func TestService_DownloadFile_offset_skips_leading_bytes(t *testing.T) {
 		assembled = append(assembled, c.GetData()...)
 	}
 	assert.Equal(t, payload[4:], assembled)
+	assert.Equal(t, computeSHA256(payload), chunks[len(chunks)-1].GetChecksumSha256(),
+		"final checksum must describe the full transfer payload even for resumed download")
 }
 
 func TestService_DownloadFile_unknown_path_returns_not_found(t *testing.T) {

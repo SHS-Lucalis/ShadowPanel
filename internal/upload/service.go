@@ -18,9 +18,10 @@ import (
 )
 
 type Config struct {
-	ChunkSize  uint64
-	SessionTTL time.Duration
-	MaxChunks  uint
+	ChunkSize             uint64
+	SessionTTL            time.Duration
+	MaxChunks             uint
+	DaemonDispatchTimeout time.Duration
 }
 
 type CreateParams struct {
@@ -248,14 +249,40 @@ func (s *Service) Complete(
 
 	actualChecksum := hex.EncodeToString(hasher.Sum(nil))
 	if actualChecksum != sess.ExpectedChecksum {
+		s.logger.Error(
+			"upload assemble checksum mismatch",
+			"upload_id", uploadID,
+			"expected_checksum", sess.ExpectedChecksum,
+			"assembled_checksum", actualChecksum,
+			"total_chunks", sess.TotalChunks,
+		)
+
 		_ = s.storage.Delete(context.Background(), dp)
 
 		return ErrChecksumMismatch
 	}
 
+	dispatchCtx := ctx
+	if s.cfg.DaemonDispatchTimeout > 0 {
+		var cancel context.CancelFunc
+		dispatchCtx, cancel = context.WithTimeout(ctx, s.cfg.DaemonDispatchTimeout)
+		defer cancel()
+	}
+
 	if dispatchErr := s.daemon.UploadStreamPrepared(
-		ctx, node, sess.FullPath, sess.UploadID, actualChecksum, sess.TotalSize,
+		dispatchCtx, node, sess.FullPath, sess.UploadID, actualChecksum, sess.TotalSize,
 	); dispatchErr != nil {
+		s.logger.Error(
+			"upload daemon dispatch failed",
+			"upload_id", uploadID,
+			"node_id", node.ID,
+			"full_path", sess.FullPath,
+			"expected_checksum", sess.ExpectedChecksum,
+			"assembled_checksum", actualChecksum,
+			"total_size", sess.TotalSize,
+			"error", dispatchErr,
+		)
+
 		_ = s.storage.Delete(context.Background(), dp)
 
 		return errors.WithMessage(dispatchErr, "dispatch upload to daemon")

@@ -1372,9 +1372,10 @@ func (c *Container) UploadSessionService() *upload.Service {
 			upload.RealClock(),
 			slog.Default(),
 			upload.Config{
-				ChunkSize:  c.config.Files.Upload.ChunkSize.Uint64(),
-				SessionTTL: c.config.Files.Upload.SessionTTL,
-				MaxChunks:  c.config.Files.Upload.MaxChunks,
+				ChunkSize:             c.config.Files.Upload.ChunkSize.Uint64(),
+				SessionTTL:            c.config.Files.Upload.SessionTTL,
+				MaxChunks:             c.config.Files.Upload.MaxChunks,
+				DaemonDispatchTimeout: c.config.Files.Upload.DispatchTimeout,
 			},
 		)
 	}
