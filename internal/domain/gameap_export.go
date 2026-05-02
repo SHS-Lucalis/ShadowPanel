@@ -89,6 +89,8 @@ func ParseGameExport(data []byte) (*GameExport, error) {
 
 func (e *GameExport) ToYAML() ([]byte, error) {
 	data, err := yaml.Marshal(e)
+	// yaml.Marshal on this struct (no custom MarshalYAML hooks) does not fail in practice;
+	// this branch is defensive.
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to marshal GameAP YAML")
 	}

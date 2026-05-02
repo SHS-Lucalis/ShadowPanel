@@ -10,47 +10,64 @@ import (
 func TestMetadata_Scan(t *testing.T) {
 	tests := []struct {
 		name     string
+		receiver Metadata
 		input    any
 		expected Metadata
 		wantErr  bool
 	}{
 		{
 			name:     "nil_value",
+			receiver: Metadata{"preexisting": "x"},
 			input:    nil,
 			expected: nil,
 		},
 		{
 			name:     "empty_bytes",
+			receiver: Metadata{"preexisting": "x"},
 			input:    []byte{},
 			expected: nil,
 		},
 		{
+			name:     "empty_string",
+			receiver: Metadata{"preexisting": "x"},
+			input:    "",
+			expected: nil,
+		},
+		{
 			name:     "valid_json_bytes",
+			receiver: nil,
 			input:    []byte(`{"docker_image":"ghcr.io/gameap/csgo:latest","default_port":27015}`),
 			expected: Metadata{"docker_image": "ghcr.io/gameap/csgo:latest", "default_port": float64(27015)},
 		},
 		{
 			name:     "valid_json_string",
+			receiver: nil,
 			input:    `{"key":"value"}`,
 			expected: Metadata{"key": "value"},
 		},
 		{
 			name:     "nested_object",
+			receiver: nil,
 			input:    []byte(`{"config":{"enabled":true,"ports":[27015,27016]}}`),
 			expected: Metadata{"config": map[string]any{"enabled": true, "ports": []any{float64(27015), float64(27016)}}},
 		},
 		{
-			name:     "unsupported_type",
+			name:     "unsupported_type_leaves_receiver_unchanged",
+			receiver: Metadata{"preexisting": "x"},
 			input:    123,
-			expected: nil,
+			expected: Metadata{"preexisting": "x"},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var m Metadata
+			// ARRANGE
+			m := tt.receiver
+
+			// ACT
 			err := m.Scan(tt.input)
 
+			// ASSERT
 			if tt.wantErr {
 				require.Error(t, err)
 
@@ -58,7 +75,7 @@ func TestMetadata_Scan(t *testing.T) {
 			}
 
 			require.NoError(t, err)
-			assert.Equal(t, tt.expected, m)
+			assert.Equal(t, tt.expected, m, "metadata receiver state mismatch")
 		})
 	}
 }
@@ -126,14 +143,21 @@ func TestMetadata_String(t *testing.T) {
 			metadata: Metadata{"key": "value"},
 			expected: `{"key":"value"}`,
 		},
+		{
+			name:     "metadata_with_channel_returns_empty",
+			metadata: Metadata{"key": make(chan int)},
+			expected: "",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// ARRANGE / ACT
 			result := tt.metadata.String()
 
+			// ASSERT
 			if tt.expected == "" {
-				assert.Equal(t, "", result)
+				assert.Empty(t, result, "expected empty string for un-marshalable / nil metadata")
 
 				return
 			}

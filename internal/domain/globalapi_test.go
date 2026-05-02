@@ -171,12 +171,39 @@ func TestGlobalAPIGame_ToDomainGame(t *testing.T) {
 				Enabled:           1,
 			},
 		},
+		{
+			name: "metadata_is_copied",
+			input: &GlobalAPIGame{
+				Code:          "csgo",
+				Name:          "CS:GO",
+				Engine:        "Source",
+				EngineVersion: "1.0",
+				Metadata: Metadata{
+					"docker_image": "ghcr.io/gameap/csgo:latest",
+					"default_port": float64(27015),
+				},
+			},
+			expected: &Game{
+				Code:          "csgo",
+				Name:          "CS:GO",
+				Engine:        "Source",
+				EngineVersion: "1.0",
+				Enabled:       1,
+				Metadata: Metadata{
+					"docker_image": "ghcr.io/gameap/csgo:latest",
+					"default_port": float64(27015),
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			// ARRANGE / ACT
 			result := test.input.ToDomainGame()
-			assert.Equal(t, test.expected, result)
+
+			// ASSERT
+			assert.Equal(t, test.expected, result, "domain game mismatch")
 		})
 	}
 }
@@ -402,12 +429,49 @@ func TestGlobalAPIGameMod_ToDomainGameMod(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "metadata_is_copied",
+			input: &GlobalAPIGameMod{
+				ID:       11,
+				GameCode: "csgo",
+				Name:     "WithMeta",
+				Metadata: Metadata{
+					"key":    "value",
+					"nested": map[string]any{"x": float64(1)},
+				},
+			},
+			expected: &GameMod{
+				GameCode: "csgo",
+				Name:     "WithMeta",
+				Metadata: Metadata{
+					"key":    "value",
+					"nested": map[string]any{"x": float64(1)},
+				},
+			},
+		},
+		{
+			name: "metadata_nil_stays_nil",
+			input: &GlobalAPIGameMod{
+				ID:       12,
+				GameCode: "csgo",
+				Name:     "NoMeta",
+				Metadata: nil,
+			},
+			expected: &GameMod{
+				GameCode: "csgo",
+				Name:     "NoMeta",
+				Metadata: nil,
+			},
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			// ARRANGE / ACT
 			result := test.input.ToDomainGameMod()
-			assert.Equal(t, test.expected, result)
+
+			// ASSERT
+			assert.Equal(t, test.expected, result, "domain game mod mismatch")
 		})
 	}
 }

@@ -70,6 +70,8 @@ func ParseNodeOS(os string) NodeOS {
 	}
 
 	var os3 string
+	// For len==3, both branches yield the same result (os[:3] == os);
+	// the boundary is benign — the test suite verifies behavior on either side.
 	if len(os) > 3 {
 		os3 = os[:3]
 	} else {
@@ -207,6 +209,7 @@ func (list IPList) Value() (driver.Value, error) {
 		return "[]", nil
 	}
 	b, err := json.Marshal(list)
+	// json.Marshal on []string never returns error in practice; this branch is defensive.
 	if err != nil {
 		return "[]", err
 	}

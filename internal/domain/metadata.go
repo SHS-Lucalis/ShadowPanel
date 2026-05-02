@@ -21,6 +21,7 @@ func (m *Metadata) Scan(value any) error {
 	case string:
 		bytes = []byte(v)
 	default:
+		// Unsupported scan-types leave the receiver unchanged (no-op).
 		return nil
 	}
 

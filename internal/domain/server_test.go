@@ -151,12 +151,39 @@ func TestServer_ReplaceServerShortcodes(t *testing.T) {
 			extra:   nil,
 			want:    "",
 		},
+		{
+			name:    "uppercase_host_shortcode_replaced",
+			command: "connect {HOST}:{port}",
+			extra:   nil,
+			want:    "connect 192.168.1.100:27015",
+		},
+		{
+			name:    "uppercase_port_shortcode_replaced",
+			command: "connect {host}:{PORT}",
+			extra:   nil,
+			want:    "connect 192.168.1.100:27015",
+		},
+		{
+			name:    "uppercase_id_shortcode_replaced",
+			command: "server_{ID}",
+			extra:   nil,
+			want:    "server_42",
+		},
+		{
+			name:    "mixed_case_shortcode_not_replaced",
+			command: "connect {Host}:27015",
+			extra:   nil,
+			want:    "connect {Host}:27015",
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			// ARRANGE / ACT
 			result := server.ReplaceServerShortcodes(node, test.command, test.extra)
-			assert.Equal(t, test.want, result)
+
+			// ASSERT
+			assert.Equal(t, test.want, result, "shortcode replacement mismatch")
 		})
 	}
 }

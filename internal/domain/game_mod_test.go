@@ -10,34 +10,59 @@ import (
 )
 
 func TestGameModFastRconList_Scan(t *testing.T) {
+	prefilled := GameModFastRconList{
+		{Info: "preexisting", Command: "preexisting_cmd"},
+	}
+
 	tests := []struct {
 		name     string
+		receiver GameModFastRconList
 		input    any
 		expected GameModFastRconList
 		wantErr  bool
 	}{
 		{
-			name:     "nil_value",
+			name:     "nil_value_overrides_receiver_to_nil",
+			receiver: prefilled,
 			input:    nil,
 			expected: nil,
 			wantErr:  false,
 		},
 		{
 			name:     "empty_array",
+			receiver: nil,
 			input:    []byte("[]"),
 			expected: GameModFastRconList{},
 			wantErr:  false,
 		},
 		{
-			name:  "valid_single_item",
-			input: []byte(`[{"info":"Status","command":"status"}]`),
+			name:     "empty_array_overwrites_prefilled",
+			receiver: prefilled,
+			input:    []byte("[]"),
+			expected: GameModFastRconList{},
+			wantErr:  false,
+		},
+		{
+			name:     "valid_single_item",
+			receiver: nil,
+			input:    []byte(`[{"info":"Status","command":"status"}]`),
 			expected: GameModFastRconList{
 				{Info: "Status", Command: "status"},
 			},
 			wantErr: false,
 		},
 		{
-			name: "valid_multiple_items",
+			name:     "valid_single_item_overwrites_prefilled",
+			receiver: prefilled,
+			input:    []byte(`[{"info":"Status","command":"status"}]`),
+			expected: GameModFastRconList{
+				{Info: "Status", Command: "status"},
+			},
+			wantErr: false,
+		},
+		{
+			name:     "valid_multiple_items",
+			receiver: nil,
 			input: []byte(`[
 				{"info":"Status","command":"status"},
 				{"info":"Players","command":"players"}
@@ -49,13 +74,22 @@ func TestGameModFastRconList_Scan(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:     "non_byte_slice_value",
+			name:     "non_byte_slice_value_leaves_receiver_unchanged",
+			receiver: prefilled,
+			input:    "string value",
+			expected: prefilled,
+			wantErr:  false,
+		},
+		{
+			name:     "non_byte_slice_value_with_nil_receiver",
+			receiver: nil,
 			input:    "string value",
 			expected: nil,
 			wantErr:  false,
 		},
 		{
 			name:     "invalid_json",
+			receiver: nil,
 			input:    []byte(`{invalid json`),
 			expected: nil,
 			wantErr:  true,
@@ -64,15 +98,21 @@ func TestGameModFastRconList_Scan(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var result GameModFastRconList
+			// ARRANGE
+			result := test.receiver
+
+			// ACT
 			err := result.Scan(test.input)
 
+			// ASSERT
 			if test.wantErr {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, test.expected, result)
+				require.Error(t, err)
+
+				return
 			}
+
+			require.NoError(t, err)
+			assert.Equal(t, test.expected, result, "fast rcon list mismatch")
 		})
 	}
 }
@@ -206,47 +246,102 @@ func TestGameModVarDefault_UnmarshalJSON(t *testing.T) {
 			input:    `65`,
 			expected: GameModVarDefault("A"),
 		},
+		{
+			name:     "zero_lower_boundary",
+			input:    `0`,
+			expected: GameModVarDefault("\x00"),
+		},
+		{
+			name:     "negative_one_rejected",
+			input:    `-1`,
+			expected: GameModVarDefault(""),
+		},
+		{
+			name:     "negative_large_rejected",
+			input:    `-1000`,
+			expected: GameModVarDefault(""),
+		},
+		{
+			name:     "max_rune_accepted",
+			input:    `1114111`,
+			expected: GameModVarDefault(string(rune(1114111))),
+		},
+		{
+			name:     "max_rune_plus_one_rejected",
+			input:    `1114112`,
+			expected: GameModVarDefault(""),
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			// ARRANGE
 			var result GameModVarDefault
+
+			// ACT
 			err := json.Unmarshal([]byte(test.input), &result)
-			assert.NoError(t, err)
-			assert.Equal(t, test.expected, result)
+
+			// ASSERT
+			require.NoError(t, err)
+			assert.Equal(t, test.expected, result, "unmarshal result mismatch")
 		})
 	}
 }
 
 func TestGameModVarList_Scan(t *testing.T) {
+	prefilled := GameModVarList{
+		{Var: "preexisting_var", Default: "preexisting", Info: "preexisting"},
+	}
+
 	tests := []struct {
 		name     string
+		receiver GameModVarList
 		input    any
 		expected GameModVarList
 		wantErr  bool
 	}{
 		{
-			name:     "nil_value",
+			name:     "nil_value_overrides_receiver_to_nil",
+			receiver: prefilled,
 			input:    nil,
 			expected: nil,
 			wantErr:  false,
 		},
 		{
 			name:     "empty_array",
+			receiver: nil,
 			input:    []byte("[]"),
 			expected: GameModVarList{},
 			wantErr:  false,
 		},
 		{
-			name:  "valid_single_var",
-			input: []byte(`[{"var":"sv_cheats","default":"0","info":"Enable cheats","admin_var":true}]`),
+			name:     "empty_array_overwrites_prefilled",
+			receiver: prefilled,
+			input:    []byte("[]"),
+			expected: GameModVarList{},
+			wantErr:  false,
+		},
+		{
+			name:     "valid_single_var",
+			receiver: nil,
+			input:    []byte(`[{"var":"sv_cheats","default":"0","info":"Enable cheats","admin_var":true}]`),
 			expected: GameModVarList{
 				{Var: "sv_cheats", Default: "0", Info: "Enable cheats", AdminVar: true},
 			},
 			wantErr: false,
 		},
 		{
-			name: "valid_multiple_vars",
+			name:     "valid_single_var_overwrites_prefilled",
+			receiver: prefilled,
+			input:    []byte(`[{"var":"sv_cheats","default":"0","info":"Enable cheats","admin_var":true}]`),
+			expected: GameModVarList{
+				{Var: "sv_cheats", Default: "0", Info: "Enable cheats", AdminVar: true},
+			},
+			wantErr: false,
+		},
+		{
+			name:     "valid_multiple_vars",
+			receiver: nil,
 			input: []byte(`[
 				{"var":"sv_cheats","default":"0","info":"Enable cheats","admin_var":true},
 				{"var":"hostname","default":"My Server","info":"Server name","admin_var":false}
@@ -258,21 +353,31 @@ func TestGameModVarList_Scan(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:  "single_object_not_array",
-			input: []byte(`{"var":"sv_cheats","default":"0","info":"Enable cheats","admin_var":true}`),
+			name:     "single_object_not_array",
+			receiver: nil,
+			input:    []byte(`{"var":"sv_cheats","default":"0","info":"Enable cheats","admin_var":true}`),
 			expected: GameModVarList{
 				{Var: "sv_cheats", Default: "0", Info: "Enable cheats", AdminVar: true},
 			},
 			wantErr: false,
 		},
 		{
-			name:     "non_byte_slice_value",
+			name:     "non_byte_slice_value_leaves_receiver_unchanged",
+			receiver: prefilled,
+			input:    "string value",
+			expected: prefilled,
+			wantErr:  false,
+		},
+		{
+			name:     "non_byte_slice_value_with_nil_receiver",
+			receiver: nil,
 			input:    "string value",
 			expected: nil,
 			wantErr:  false,
 		},
 		{
 			name:     "invalid_json_both_attempts",
+			receiver: nil,
 			input:    []byte(`{invalid json`),
 			expected: nil,
 			wantErr:  true,
@@ -281,15 +386,21 @@ func TestGameModVarList_Scan(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var result GameModVarList
+			// ARRANGE
+			result := test.receiver
+
+			// ACT
 			err := result.Scan(test.input)
 
+			// ASSERT
 			if test.wantErr {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, test.expected, result)
+				require.Error(t, err)
+
+				return
 			}
+
+			require.NoError(t, err)
+			assert.Equal(t, test.expected, result, "var list mismatch")
 		})
 	}
 }

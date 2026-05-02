@@ -182,7 +182,7 @@ func TestNodeOS_Scan(t *testing.T) {
 		expected NodeOS
 	}{
 		{
-			name:     "nil_value",
+			name:     "nil_value_overrides_to_other",
 			input:    nil,
 			expected: NodeOSOther,
 		},
@@ -252,7 +252,7 @@ func TestNodeOS_Scan(t *testing.T) {
 			expected: NodeOSOther,
 		},
 		{
-			name:     "unsupported_type",
+			name:     "unsupported_type_overrides_to_other",
 			input:    123,
 			expected: NodeOSOther,
 		},
@@ -260,10 +260,16 @@ func TestNodeOS_Scan(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var result NodeOS
+			// ARRANGE — start from a non-zero receiver distinct from any expected value
+			// so the test can detect missing assignments in any branch.
+			result := NodeOS("__sentinel__")
+
+			// ACT
 			err := result.Scan(test.input)
+
+			// ASSERT
 			require.NoError(t, err)
-			assert.Equal(t, test.expected, result)
+			assert.Equal(t, test.expected, result, "scan should overwrite the receiver to expected value")
 		})
 	}
 }
@@ -334,81 +340,88 @@ func TestIPList_Scan(t *testing.T) {
 		{
 			name:     "nil_value",
 			input:    nil,
-			expected: []string{},
+			expected: IPList{},
 		},
 		{
 			name:     "empty_bytes",
 			input:    []byte(""),
-			expected: []string{},
+			expected: IPList{},
 		},
 		{
 			name:     "empty_array_bytes",
 			input:    []byte("[]"),
-			expected: []string{},
+			expected: IPList{},
 		},
 		{
 			name:     "single_ip_bytes",
 			input:    []byte(`["192.168.1.1"]`),
-			expected: []string{"192.168.1.1"},
+			expected: IPList{"192.168.1.1"},
 		},
 		{
 			name:     "multiple_ips_bytes",
 			input:    []byte(`["192.168.1.1","10.0.0.1","172.16.0.1"]`),
-			expected: []string{"192.168.1.1", "10.0.0.1", "172.16.0.1"},
+			expected: IPList{"192.168.1.1", "10.0.0.1", "172.16.0.1"},
 		},
 		{
 			name:     "empty_string",
 			input:    "",
-			expected: []string{},
+			expected: IPList{},
 		},
 		{
 			name:     "empty_array_string",
 			input:    "[]",
-			expected: []string{},
+			expected: IPList{},
 		},
 		{
 			name:     "single_ip_string",
 			input:    `["192.168.1.1"]`,
-			expected: []string{"192.168.1.1"},
+			expected: IPList{"192.168.1.1"},
 		},
 		{
 			name:     "multiple_ips_string",
 			input:    `["192.168.1.1","10.0.0.1"]`,
-			expected: []string{"192.168.1.1", "10.0.0.1"},
+			expected: IPList{"192.168.1.1", "10.0.0.1"},
 		},
 		{
-			name:     "invalid_json_bytes",
+			name:     "invalid_json_bytes_become_empty",
 			input:    []byte(`{invalid json`),
-			expected: []string{},
+			expected: IPList{},
 		},
 		{
-			name:     "invalid_json_string",
+			name:     "invalid_json_string_becomes_empty",
 			input:    `{invalid json`,
-			expected: []string{},
+			expected: IPList{},
 		},
 		{
 			name:     "non_array_json_bytes",
 			input:    []byte(`{"key":"value"}`),
-			expected: []string{},
+			expected: IPList{},
 		},
 		{
-			name:     "unsupported_type",
+			name:     "unsupported_type_becomes_empty",
 			input:    123,
-			expected: []string{},
+			expected: IPList{},
 		},
 		{
 			name:     "array_with_empty_strings",
 			input:    []byte(`["","192.168.1.1",""]`),
-			expected: []string{"", "192.168.1.1", ""},
+			expected: IPList{"", "192.168.1.1", ""},
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var result IPList
+			// ARRANGE — start from a prefilled receiver to detect missing assignments.
+			result := IPList{"preexisting"}
+
+			// ACT
 			err := result.Scan(test.input)
+
+			// ASSERT
 			require.NoError(t, err)
-			assert.Equal(t, test.expected, result)
+			require.NotNil(t, result, "scan should never leave receiver nil")
+			require.Len(t, result, len(test.expected), "length mismatch")
+			assert.Equal(t, test.expected, result, "value mismatch")
 		})
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql/driver"
 	"encoding/json"
+	"fmt"
 	"strconv"
 )
 
@@ -43,13 +44,7 @@ func NewServerSettingValue(value any) ServerSettingValue {
 	case nil:
 		return ServerSettingValue{value: nil, tp: serverSettingTypeUnknown}
 	default:
-		// Fallback to string representation
-		str := ""
-		if v != nil {
-			str = strconv.FormatInt(int64(v.(int)), 10)
-		}
-
-		return ServerSettingValue{value: str, tp: serverSettingTypeString}
+		return ServerSettingValue{value: fmt.Sprintf("%v", value), tp: serverSettingTypeString}
 	}
 }
 
@@ -114,18 +109,12 @@ func (s ServerSettingValue) String() (string, bool) {
 
 			return "false", true
 		}
-	default:
-		return "", false
 	}
 
 	return "", false
 }
 
 func (s ServerSettingValue) Bool() (bool, bool) {
-	if s.tp == serverSettingTypeUnknown {
-		return false, false
-	}
-
 	if b, ok := s.value.(bool); ok {
 		return b, true
 	}

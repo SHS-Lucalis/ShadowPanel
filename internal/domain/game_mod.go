@@ -165,6 +165,7 @@ func (g *GameModVarList) Scan(value any) error {
 			return errors.WithMessage(err, "failed to unmarshal game mod vars")
 		}
 
+		// slog.Warn is a side-effect, not under direct test coverage.
 		slog.Warn(
 			"GameModVarList: received single object instead of array, wrapping into array",
 			"value", bytes,

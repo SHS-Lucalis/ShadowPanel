@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -376,6 +377,281 @@ func TestGameExport_Validate(t *testing.T) {
 			},
 			wantError: "mods[0].kick_cmd must be at most 200 characters",
 		},
+		{
+			name: "code_at_min_2",
+			export: &GameExport{
+				SchemaVersion: "1.0",
+				Game: GameExportGame{
+					Code:   "ab",
+					Name:   "Test Game",
+					Engine: "Test Engine",
+				},
+			},
+		},
+		{
+			name: "code_at_max_16",
+			export: &GameExport{
+				SchemaVersion: "1.0",
+				Game: GameExportGame{
+					Code:   strings.Repeat("a", 16),
+					Name:   "Test Game",
+					Engine: "Test Engine",
+				},
+			},
+		},
+		{
+			name: "code_too_long_17",
+			export: &GameExport{
+				SchemaVersion: "1.0",
+				Game: GameExportGame{
+					Code:   strings.Repeat("a", 17),
+					Name:   "Test Game",
+					Engine: "Test Engine",
+				},
+			},
+			wantError: "game.code must be between 2 and 16 characters",
+		},
+		{
+			name: "name_at_min_2",
+			export: &GameExport{
+				SchemaVersion: "1.0",
+				Game: GameExportGame{
+					Code:   "test",
+					Name:   "ab",
+					Engine: "Test Engine",
+				},
+			},
+		},
+		{
+			name: "name_at_max_128",
+			export: &GameExport{
+				SchemaVersion: "1.0",
+				Game: GameExportGame{
+					Code:   "test",
+					Name:   strings.Repeat("a", 128),
+					Engine: "Test Engine",
+				},
+			},
+		},
+		{
+			name: "name_too_long_129",
+			export: &GameExport{
+				SchemaVersion: "1.0",
+				Game: GameExportGame{
+					Code:   "test",
+					Name:   strings.Repeat("a", 129),
+					Engine: "Test Engine",
+				},
+			},
+			wantError: "game.name must be between 2 and 128 characters",
+		},
+		{
+			name: "engine_at_max_length_128",
+			export: &GameExport{
+				SchemaVersion: "1.0",
+				Game: GameExportGame{
+					Code:   "test",
+					Name:   "Test Game",
+					Engine: strings.Repeat("a", 128),
+				},
+			},
+		},
+		{
+			name: "engine_too_long_129",
+			export: &GameExport{
+				SchemaVersion: "1.0",
+				Game: GameExportGame{
+					Code:   "test",
+					Name:   "Test Game",
+					Engine: strings.Repeat("a", 129),
+				},
+			},
+			wantError: "game.engine must be at most 128 characters",
+		},
+		{
+			name: "engine_version_at_max_128",
+			export: &GameExport{
+				SchemaVersion: "1.0",
+				Game: GameExportGame{
+					Code:          "test",
+					Name:          "Test Game",
+					Engine:        "Test Engine",
+					EngineVersion: strings.Repeat("a", 128),
+				},
+			},
+		},
+		{
+			name: "engine_version_too_long_129",
+			export: &GameExport{
+				SchemaVersion: "1.0",
+				Game: GameExportGame{
+					Code:          "test",
+					Name:          "Test Game",
+					Engine:        "Test Engine",
+					EngineVersion: strings.Repeat("a", 129),
+				},
+			},
+			wantError: "game.engine_version must be at most 128 characters",
+		},
+		{
+			name: "remote_repo_linux_at_max_128",
+			export: &GameExport{
+				SchemaVersion: "1.0",
+				Game: GameExportGame{
+					Code:                  "test",
+					Name:                  "Test Game",
+					Engine:                "Test Engine",
+					RemoteRepositoryLinux: new(strings.Repeat("a", 128)),
+				},
+			},
+		},
+		{
+			name: "remote_repo_linux_too_long_129",
+			export: &GameExport{
+				SchemaVersion: "1.0",
+				Game: GameExportGame{
+					Code:                  "test",
+					Name:                  "Test Game",
+					Engine:                "Test Engine",
+					RemoteRepositoryLinux: new(strings.Repeat("a", 129)),
+				},
+			},
+			wantError: "game.remote_repository_linux must be at most 128 characters",
+		},
+		{
+			name: "remote_repo_windows_at_max_128",
+			export: &GameExport{
+				SchemaVersion: "1.0",
+				Game: GameExportGame{
+					Code:                    "test",
+					Name:                    "Test Game",
+					Engine:                  "Test Engine",
+					RemoteRepositoryWindows: new(strings.Repeat("a", 128)),
+				},
+			},
+		},
+		{
+			name: "remote_repo_windows_too_long_129",
+			export: &GameExport{
+				SchemaVersion: "1.0",
+				Game: GameExportGame{
+					Code:                    "test",
+					Name:                    "Test Game",
+					Engine:                  "Test Engine",
+					RemoteRepositoryWindows: new(strings.Repeat("a", 129)),
+				},
+			},
+			wantError: "game.remote_repository_windows must be at most 128 characters",
+		},
+		{
+			name: "local_repo_linux_at_max_128",
+			export: &GameExport{
+				SchemaVersion: "1.0",
+				Game: GameExportGame{
+					Code:                 "test",
+					Name:                 "Test Game",
+					Engine:               "Test Engine",
+					LocalRepositoryLinux: new(strings.Repeat("a", 128)),
+				},
+			},
+		},
+		{
+			name: "local_repo_linux_too_long_129",
+			export: &GameExport{
+				SchemaVersion: "1.0",
+				Game: GameExportGame{
+					Code:                 "test",
+					Name:                 "Test Game",
+					Engine:               "Test Engine",
+					LocalRepositoryLinux: new(strings.Repeat("a", 129)),
+				},
+			},
+			wantError: "game.local_repository_linux must be at most 128 characters",
+		},
+		{
+			name: "local_repo_windows_at_max_128",
+			export: &GameExport{
+				SchemaVersion: "1.0",
+				Game: GameExportGame{
+					Code:                   "test",
+					Name:                   "Test Game",
+					Engine:                 "Test Engine",
+					LocalRepositoryWindows: new(strings.Repeat("a", 128)),
+				},
+			},
+		},
+		{
+			name: "local_repo_windows_too_long_129",
+			export: &GameExport{
+				SchemaVersion: "1.0",
+				Game: GameExportGame{
+					Code:                   "test",
+					Name:                   "Test Game",
+					Engine:                 "Test Engine",
+					LocalRepositoryWindows: new(strings.Repeat("a", 129)),
+				},
+			},
+			wantError: "game.local_repository_windows must be at most 128 characters",
+		},
+		{
+			name: "steam_app_set_config_at_max_128",
+			export: &GameExport{
+				SchemaVersion: "1.0",
+				Game: GameExportGame{
+					Code:              "test",
+					Name:              "Test Game",
+					Engine:            "Test Engine",
+					SteamAppSetConfig: new(strings.Repeat("a", 128)),
+				},
+			},
+		},
+		{
+			name: "steam_app_set_config_too_long_129",
+			export: &GameExport{
+				SchemaVersion: "1.0",
+				Game: GameExportGame{
+					Code:              "test",
+					Name:              "Test Game",
+					Engine:            "Test Engine",
+					SteamAppSetConfig: new(strings.Repeat("a", 129)),
+				},
+			},
+			wantError: "game.steam_app_set_config must be at most 128 characters",
+		},
+		{
+			name: "start_cmd_linux_at_max_1000",
+			export: &GameExport{
+				SchemaVersion: "1.0",
+				Game: GameExportGame{
+					Code:   "test",
+					Name:   "Test Game",
+					Engine: "Test Engine",
+				},
+				Mods: []GameExportMod{
+					{
+						Name:          "Mod1",
+						StartCmdLinux: new(strings.Repeat("a", 1000)),
+					},
+				},
+			},
+		},
+		{
+			name: "kick_cmd_at_max_200",
+			export: &GameExport{
+				SchemaVersion: "1.0",
+				Game: GameExportGame{
+					Code:   "test",
+					Name:   "Test Game",
+					Engine: "Test Engine",
+				},
+				Mods: []GameExportMod{
+					{
+						Name:    "Mod1",
+						KickCmd: new(strings.Repeat("a", 200)),
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -384,7 +660,272 @@ func TestGameExport_Validate(t *testing.T) {
 
 			if tt.wantError != "" {
 				require.Error(t, err)
-				assert.Contains(t, err.Error(), tt.wantError)
+				assert.Contains(t, err.Error(), tt.wantError, "error message should contain expected substring")
+
+				return
+			}
+
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestValidateModCommands(t *testing.T) {
+	tests := []struct {
+		name      string
+		mod       GameExportMod
+		index     int
+		wantError string
+	}{
+		{
+			name:  "all_commands_nil_passes",
+			mod:   GameExportMod{Name: "Mod1"},
+			index: 0,
+		},
+		{
+			name: "start_cmd_linux_at_max_1000",
+			mod: GameExportMod{
+				Name:          "Mod1",
+				StartCmdLinux: new(strings.Repeat("a", 1000)),
+			},
+			index: 0,
+		},
+		{
+			name: "start_cmd_linux_too_long_1001",
+			mod: GameExportMod{
+				Name:          "Mod1",
+				StartCmdLinux: new(strings.Repeat("a", 1001)),
+			},
+			index:     0,
+			wantError: "mods[0].start_cmd_linux must be at most 1000 characters",
+		},
+		{
+			name: "start_cmd_windows_at_max_1000",
+			mod: GameExportMod{
+				Name:            "Mod1",
+				StartCmdWindows: new(strings.Repeat("a", 1000)),
+			},
+			index: 0,
+		},
+		{
+			name: "start_cmd_windows_too_long_1001",
+			mod: GameExportMod{
+				Name:            "Mod1",
+				StartCmdWindows: new(strings.Repeat("a", 1001)),
+			},
+			index:     0,
+			wantError: "mods[0].start_cmd_windows must be at most 1000 characters",
+		},
+		{
+			name: "kick_cmd_at_max_200",
+			mod: GameExportMod{
+				Name:    "Mod1",
+				KickCmd: new(strings.Repeat("a", 200)),
+			},
+			index: 0,
+		},
+		{
+			name: "kick_cmd_too_long_201",
+			mod: GameExportMod{
+				Name:    "Mod1",
+				KickCmd: new(strings.Repeat("a", 201)),
+			},
+			index:     0,
+			wantError: "mods[0].kick_cmd must be at most 200 characters",
+		},
+		{
+			name: "ban_cmd_at_max_200",
+			mod: GameExportMod{
+				Name:   "Mod1",
+				BanCmd: new(strings.Repeat("a", 200)),
+			},
+			index: 0,
+		},
+		{
+			name: "ban_cmd_too_long_201",
+			mod: GameExportMod{
+				Name:   "Mod1",
+				BanCmd: new(strings.Repeat("a", 201)),
+			},
+			index:     0,
+			wantError: "mods[0].ban_cmd must be at most 200 characters",
+		},
+		{
+			name: "chname_cmd_at_max_200",
+			mod: GameExportMod{
+				Name:      "Mod1",
+				ChnameCmd: new(strings.Repeat("a", 200)),
+			},
+			index: 0,
+		},
+		{
+			name: "chname_cmd_too_long_201",
+			mod: GameExportMod{
+				Name:      "Mod1",
+				ChnameCmd: new(strings.Repeat("a", 201)),
+			},
+			index:     0,
+			wantError: "mods[0].chname_cmd must be at most 200 characters",
+		},
+		{
+			name: "srestart_cmd_at_max_200",
+			mod: GameExportMod{
+				Name:        "Mod1",
+				SrestartCmd: new(strings.Repeat("a", 200)),
+			},
+			index: 0,
+		},
+		{
+			name: "srestart_cmd_too_long_201",
+			mod: GameExportMod{
+				Name:        "Mod1",
+				SrestartCmd: new(strings.Repeat("a", 201)),
+			},
+			index:     0,
+			wantError: "mods[0].srestart_cmd must be at most 200 characters",
+		},
+		{
+			name: "chmap_cmd_at_max_200",
+			mod: GameExportMod{
+				Name:     "Mod1",
+				ChmapCmd: new(strings.Repeat("a", 200)),
+			},
+			index: 0,
+		},
+		{
+			name: "chmap_cmd_too_long_201",
+			mod: GameExportMod{
+				Name:     "Mod1",
+				ChmapCmd: new(strings.Repeat("a", 201)),
+			},
+			index:     0,
+			wantError: "mods[0].chmap_cmd must be at most 200 characters",
+		},
+		{
+			name: "sendmsg_cmd_at_max_200",
+			mod: GameExportMod{
+				Name:       "Mod1",
+				SendmsgCmd: new(strings.Repeat("a", 200)),
+			},
+			index: 0,
+		},
+		{
+			name: "sendmsg_cmd_too_long_201",
+			mod: GameExportMod{
+				Name:       "Mod1",
+				SendmsgCmd: new(strings.Repeat("a", 201)),
+			},
+			index:     0,
+			wantError: "mods[0].sendmsg_cmd must be at most 200 characters",
+		},
+		{
+			name: "passwd_cmd_at_max_200",
+			mod: GameExportMod{
+				Name:      "Mod1",
+				PasswdCmd: new(strings.Repeat("a", 200)),
+			},
+			index: 0,
+		},
+		{
+			name: "passwd_cmd_too_long_201",
+			mod: GameExportMod{
+				Name:      "Mod1",
+				PasswdCmd: new(strings.Repeat("a", 201)),
+			},
+			index:     0,
+			wantError: "mods[0].passwd_cmd must be at most 200 characters",
+		},
+		{
+			name: "mod_remote_repo_linux_at_max_128",
+			mod: GameExportMod{
+				Name:                  "Mod1",
+				RemoteRepositoryLinux: new(strings.Repeat("a", 128)),
+			},
+			index: 0,
+		},
+		{
+			name: "mod_remote_repo_linux_too_long_129",
+			mod: GameExportMod{
+				Name:                  "Mod1",
+				RemoteRepositoryLinux: new(strings.Repeat("a", 129)),
+			},
+			index:     0,
+			wantError: "mods[0].remote_repository_linux must be at most 128 characters",
+		},
+		{
+			name: "mod_remote_repo_windows_at_max_128",
+			mod: GameExportMod{
+				Name:                    "Mod1",
+				RemoteRepositoryWindows: new(strings.Repeat("a", 128)),
+			},
+			index: 0,
+		},
+		{
+			name: "mod_remote_repo_windows_too_long_129",
+			mod: GameExportMod{
+				Name:                    "Mod1",
+				RemoteRepositoryWindows: new(strings.Repeat("a", 129)),
+			},
+			index:     0,
+			wantError: "mods[0].remote_repository_windows must be at most 128 characters",
+		},
+		{
+			name: "mod_local_repo_linux_at_max_128",
+			mod: GameExportMod{
+				Name:                 "Mod1",
+				LocalRepositoryLinux: new(strings.Repeat("a", 128)),
+			},
+			index: 0,
+		},
+		{
+			name: "mod_local_repo_linux_too_long_129",
+			mod: GameExportMod{
+				Name:                 "Mod1",
+				LocalRepositoryLinux: new(strings.Repeat("a", 129)),
+			},
+			index:     0,
+			wantError: "mods[0].local_repository_linux must be at most 128 characters",
+		},
+		{
+			name: "mod_local_repo_windows_at_max_128",
+			mod: GameExportMod{
+				Name:                   "Mod1",
+				LocalRepositoryWindows: new(strings.Repeat("a", 128)),
+			},
+			index: 0,
+		},
+		{
+			name: "mod_local_repo_windows_too_long_129",
+			mod: GameExportMod{
+				Name:                   "Mod1",
+				LocalRepositoryWindows: new(strings.Repeat("a", 129)),
+			},
+			index:     0,
+			wantError: "mods[0].local_repository_windows must be at most 128 characters",
+		},
+		{
+			name: "index_in_error_message",
+			mod: GameExportMod{
+				Name:          "Mod1",
+				StartCmdLinux: new(strings.Repeat("a", 1001)),
+			},
+			index:     5,
+			wantError: "mods[5].start_cmd_linux",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// ARRANGE
+			mod := tt.mod
+
+			// ACT
+			err := validateModCommands(&mod, tt.index)
+
+			// ASSERT
+			if tt.wantError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantError, "error message should contain expected substring")
 
 				return
 			}
@@ -527,6 +1068,102 @@ func TestNewGameExportFromDomain(t *testing.T) {
 	require.Len(t, export.Mods[0].FastRcon, 1)
 	require.Len(t, export.Mods[0].Vars, 1)
 	assert.NotNil(t, export.Mods[0].Metadata["pelican_egg"])
+}
+
+func TestNewGameExportFromDomain_FastRconAndVarsNilWhenEmpty(t *testing.T) {
+	tests := []struct {
+		name            string
+		fastRcon        GameModFastRconList
+		vars            GameModVarList
+		wantFastRconNil bool
+		wantVarsNil     bool
+		wantFastRconLen int
+		wantVarsLen     int
+	}{
+		{
+			name:            "nil_fast_rcon_and_vars_yield_nil_slices",
+			fastRcon:        nil,
+			vars:            nil,
+			wantFastRconNil: true,
+			wantVarsNil:     true,
+		},
+		{
+			name:            "empty_fast_rcon_and_vars_yield_nil_slices",
+			fastRcon:        GameModFastRconList{},
+			vars:            GameModVarList{},
+			wantFastRconNil: true,
+			wantVarsNil:     true,
+		},
+		{
+			name: "non_empty_fast_rcon_and_vars_yield_non_nil_slices",
+			fastRcon: GameModFastRconList{
+				{Info: "Status", Command: "status"},
+			},
+			vars: GameModVarList{
+				{Var: "maxplayers", Default: "32", Info: "Max players"},
+			},
+			wantFastRconNil: false,
+			wantVarsNil:     false,
+			wantFastRconLen: 1,
+			wantVarsLen:     1,
+		},
+	}
+
+	game := &Game{
+		Code:    "cstrike",
+		Name:    "Counter-Strike 1.6",
+		Engine:  "GoldSource",
+		Enabled: 1,
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// ARRANGE
+			mods := []GameMod{
+				{
+					ID:       1,
+					GameCode: "cstrike",
+					Name:     "Classic",
+					FastRcon: tt.fastRcon,
+					Vars:     tt.vars,
+				},
+			}
+
+			// ACT
+			export := NewGameExportFromDomain(game, mods, "")
+
+			// ASSERT
+			require.Len(t, export.Mods, 1)
+
+			if tt.wantFastRconNil {
+				assert.Nil(t, export.Mods[0].FastRcon, "fast rcon should be nil when source is empty")
+			} else {
+				require.Len(t, export.Mods[0].FastRcon, tt.wantFastRconLen)
+			}
+
+			if tt.wantVarsNil {
+				assert.Nil(t, export.Mods[0].Vars, "vars should be nil when source is empty")
+			} else {
+				require.Len(t, export.Mods[0].Vars, tt.wantVarsLen)
+			}
+		})
+	}
+}
+
+func TestNewGameExportFromDomain_ExportedByWithoutVersion(t *testing.T) {
+	// ARRANGE
+	game := &Game{
+		Code:    "cstrike",
+		Name:    "Counter-Strike 1.6",
+		Engine:  "GoldSource",
+		Enabled: 1,
+	}
+
+	// ACT
+	export := NewGameExportFromDomain(game, nil, "")
+
+	// ASSERT
+	assert.Equal(t, "GameAP", export.ExportedBy, "without version, ExportedBy should be exact 'GameAP'")
 }
 
 func TestGameExport_ToYAML(t *testing.T) {

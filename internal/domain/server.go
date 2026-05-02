@@ -67,6 +67,9 @@ type Server struct {
 
 const timeExpireProcessCheck = 2 * time.Minute
 
+// IsOnline returns true when the daemon's last process check was recent and the process was active.
+// The IsZero check is a defensive fast-path; without it, the After() comparison would still yield
+// false for a zero-value time, so equivalent behavior — kept for clarity.
 func (s *Server) IsOnline() bool {
 	if s.LastProcessCheck == nil || s.LastProcessCheck.IsZero() {
 		return false
@@ -122,7 +125,9 @@ func (s *Server) ReplaceServerShortcodes(node *Node, command string, extra map[s
 		replaceMap["user"] = *s.SuUser
 	}
 
-	// Replace all server shortcodes
+	// Replace all server shortcodes. Keys in replaceMap are stored lowercase ASCII;
+	// the ToLower line is defensive against future case changes, the ToUpper line allows
+	// callers to use {HOST}, {PORT}, etc. in commands.
 	for key, value := range replaceMap {
 		command = strings.ReplaceAll(command, "{"+key+"}", value)
 		command = strings.ReplaceAll(command, "{"+strings.ToLower(key)+"}", value)

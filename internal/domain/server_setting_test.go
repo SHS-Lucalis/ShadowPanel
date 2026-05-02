@@ -69,14 +69,28 @@ func TestNewServerSettingValue(t *testing.T) {
 			wantValue: 0,
 			wantType:  serverSettingTypeInt,
 		},
+		{
+			name:      "uint_value_falls_back_to_string",
+			input:     uint(42),
+			wantValue: "42",
+			wantType:  serverSettingTypeString,
+		},
+		{
+			name:      "byte_slice_falls_back_to_string",
+			input:     []byte("xy"),
+			wantValue: "[120 121]",
+			wantType:  serverSettingTypeString,
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			// ARRANGE / ACT
 			result := NewServerSettingValue(test.input)
 
-			assert.Equal(t, test.wantValue, result.value)
-			assert.Equal(t, test.wantType, result.tp)
+			// ASSERT
+			assert.Equal(t, test.wantValue, result.value, "value mismatch")
+			assert.Equal(t, test.wantType, result.tp, "type mismatch")
 		})
 	}
 }
@@ -232,13 +246,28 @@ func TestServerSettingValue_Int(t *testing.T) {
 			wantVal: 0,
 			wantOK:  false,
 		},
+		{
+			name:    "unknown_type_returns_zero_false",
+			value:   ServerSettingValue{value: nil, tp: serverSettingTypeUnknown},
+			wantVal: 0,
+			wantOK:  false,
+		},
+		{
+			name:    "int_type_with_non_int_value_returns_zero_false",
+			value:   ServerSettingValue{value: "not int", tp: serverSettingTypeInt},
+			wantVal: 0,
+			wantOK:  false,
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			// ARRANGE / ACT
 			val, ok := test.value.Int()
-			assert.Equal(t, test.wantVal, val)
-			assert.Equal(t, test.wantOK, ok)
+
+			// ASSERT
+			assert.Equal(t, test.wantVal, val, "value mismatch")
+			assert.Equal(t, test.wantOK, ok, "ok flag mismatch")
 		})
 	}
 }
@@ -382,78 +411,126 @@ func TestServerSettingValue_UnmarshalJSON(t *testing.T) {
 func TestServerSettingValue_Scan(t *testing.T) {
 	tests := []struct {
 		name      string
+		receiver  ServerSettingValue
 		input     any
 		wantValue any
 		wantType  serverSettingType
 	}{
 		{
 			name:      "nil_value",
+			receiver:  ServerSettingValue{},
+			input:     nil,
+			wantValue: nil,
+			wantType:  serverSettingTypeString,
+		},
+		{
+			name:      "nil_value_overwrites_string",
+			receiver:  NewServerSettingValue("preexisting_string"),
 			input:     nil,
 			wantValue: nil,
 			wantType:  serverSettingTypeString,
 		},
 		{
 			name:      "byte_slice_true",
+			receiver:  ServerSettingValue{},
+			input:     []byte("true"),
+			wantValue: true,
+			wantType:  serverSettingTypeBool,
+		},
+		{
+			name:      "byte_slice_true_overwrites_string",
+			receiver:  NewServerSettingValue("preexisting_string"),
 			input:     []byte("true"),
 			wantValue: true,
 			wantType:  serverSettingTypeBool,
 		},
 		{
 			name:      "byte_slice_false",
+			receiver:  ServerSettingValue{},
 			input:     []byte("false"),
 			wantValue: false,
 			wantType:  serverSettingTypeBool,
 		},
 		{
 			name:      "byte_slice_null",
+			receiver:  ServerSettingValue{},
+			input:     []byte("null"),
+			wantValue: nil,
+			wantType:  serverSettingTypeUnknown,
+		},
+		{
+			name:      "null_bytes_overwrites_int",
+			receiver:  NewServerSettingValue(42),
 			input:     []byte("null"),
 			wantValue: nil,
 			wantType:  serverSettingTypeUnknown,
 		},
 		{
 			name:      "byte_slice_int",
+			receiver:  ServerSettingValue{},
 			input:     []byte("42"),
 			wantValue: 42,
 			wantType:  serverSettingTypeInt,
 		},
 		{
 			name:      "byte_slice_negative_int",
+			receiver:  ServerSettingValue{},
 			input:     []byte("-100"),
 			wantValue: -100,
 			wantType:  serverSettingTypeInt,
 		},
 		{
 			name:      "byte_slice_hex_int",
+			receiver:  ServerSettingValue{},
 			input:     []byte("0x10"),
 			wantValue: 16,
 			wantType:  serverSettingTypeInt,
 		},
 		{
+			name:      "byte_slice_max_int64",
+			receiver:  ServerSettingValue{},
+			input:     []byte("9223372036854775807"),
+			wantValue: 9223372036854775807,
+			wantType:  serverSettingTypeInt,
+		},
+		{
 			name:      "byte_slice_string",
+			receiver:  ServerSettingValue{},
 			input:     []byte("hello world"),
 			wantValue: "hello world",
 			wantType:  serverSettingTypeString,
 		},
 		{
 			name:      "direct_string",
+			receiver:  ServerSettingValue{},
+			input:     "test",
+			wantValue: "test",
+			wantType:  serverSettingTypeString,
+		},
+		{
+			name:      "direct_string_overwrites_int",
+			receiver:  NewServerSettingValue(99),
 			input:     "test",
 			wantValue: "test",
 			wantType:  serverSettingTypeString,
 		},
 		{
 			name:      "direct_bool",
+			receiver:  ServerSettingValue{},
 			input:     true,
 			wantValue: true,
 			wantType:  serverSettingTypeBool,
 		},
 		{
 			name:      "direct_int",
+			receiver:  ServerSettingValue{},
 			input:     123,
 			wantValue: 123,
 			wantType:  serverSettingTypeInt,
 		},
 		{
 			name:      "direct_int64",
+			receiver:  ServerSettingValue{},
 			input:     int64(456),
 			wantValue: 456,
 			wantType:  serverSettingTypeInt,
@@ -462,11 +539,16 @@ func TestServerSettingValue_Scan(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var result ServerSettingValue
+			// ARRANGE
+			result := test.receiver
+
+			// ACT
 			err := result.Scan(test.input)
+
+			// ASSERT
 			require.NoError(t, err)
-			assert.Equal(t, test.wantValue, result.value)
-			assert.Equal(t, test.wantType, result.tp)
+			assert.Equal(t, test.wantValue, result.value, "value mismatch")
+			assert.Equal(t, test.wantType, result.tp, "type mismatch")
 		})
 	}
 }
