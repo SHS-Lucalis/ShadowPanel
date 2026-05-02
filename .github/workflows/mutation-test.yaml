@@ -76,18 +76,23 @@ jobs:
         run: |
           set +e
           mkdir -p gremlins-reports
-          # gremlins unleash takes a single path argument, so we loop over
-          # the space-separated PACKAGES list and write one report per pkg.
-          for pkg in $PACKAGES; do
-            safe=$(echo "$pkg" | tr '/.' '__')
-            echo "::group::gremlins $pkg"
-            gremlins unleash \
-              --threshold-efficacy=0 \
-              --threshold-mcover=0 \
-              --output="gremlins-reports/gremlins-${safe}.json" \
-              --workers=4 \
-              "$pkg"
-            echo "::endgroup::"
+          # gremlins unleash takes ONE non-recursive path (no /...) and runs
+          # `go test` internally. Expand each glob via `go list` so submodules
+          # are tested too, and convert module paths to relative ./... form.
+          MODULE=$(go list -m)
+          for glob in $PACKAGES; do
+            for full_pkg in $(go list "$glob"); do
+              rel_pkg="./${full_pkg#"${MODULE}/"}"
+              safe=$(echo "$rel_pkg" | tr '/.' '__')
+              echo "::group::gremlins $rel_pkg"
+              gremlins unleash \
+                --threshold-efficacy=0 \
+                --threshold-mcover=0 \
+                --output="gremlins-reports/gremlins-${safe}.json" \
+                --workers=4 \
+                "$rel_pkg"
+              echo "::endgroup::"
+            done
           done
           exit 0
 
@@ -161,19 +166,23 @@ jobs:
         run: |
           set +e
           mkdir -p mutation-reports
-          # Loop per package — go-mutesting writes report.json into cwd, so
-          # we move it after each run to keep all reports.
-          for pkg in $PACKAGES; do
-            safe=$(echo "$pkg" | tr '/.' '__')
-            echo "::group::go-mutesting $pkg"
-            rm -f report.json
-            go-mutesting \
-              --config=.go-mutesting.yaml \
-              "$pkg" 2>&1 | tee "mutation-reports/go-mutesting-${safe}.log"
-            if [ -f report.json ]; then
-              mv report.json "mutation-reports/go-mutesting-${safe}.json"
-            fi
-            echo "::endgroup::"
+          # Same `go list` expansion as gremlins, for consistent per-package
+          # reports across both tools.
+          MODULE=$(go list -m)
+          for glob in $PACKAGES; do
+            for full_pkg in $(go list "$glob"); do
+              rel_pkg="./${full_pkg#"${MODULE}/"}"
+              safe=$(echo "$rel_pkg" | tr '/.' '__')
+              echo "::group::go-mutesting $rel_pkg"
+              rm -f report.json
+              go-mutesting \
+                --config=.go-mutesting.yaml \
+                "$rel_pkg" 2>&1 | tee "mutation-reports/go-mutesting-${safe}.log"
+              if [ -f report.json ]; then
+                mv report.json "mutation-reports/go-mutesting-${safe}.json"
+              fi
+              echo "::endgroup::"
+            done
           done
           exit 0
 
