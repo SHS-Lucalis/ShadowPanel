@@ -679,6 +679,7 @@
     "game-server-console-send": "Access to send console commands",
     "game-server-rcon-console": "RCON console",
     "game-server-rcon-players": "RCON players manage",
+    "game-server-metrics": "Access to server metrics",
     "update_password": "Update Password",
     "server_permission_edit": "Edit Server Permission",
     "delete_confirm_msg": "Are you sure you want to delete this user?",
