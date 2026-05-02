@@ -109,34 +109,21 @@ jobs:
             echo "No gremlins reports produced"
             exit 0
           fi
+          # gremlins JSON layout: {go_module, files: [{file_name, mutations: [{type, status, ...}]}]}
+          # No aggregated counters — derive from mutations[].status.
+          summarize() {
+            local label=$1; shift
+            echo "--- $label ---"
+            jq -r '.files[]?.mutations[]?.status // empty' "$@" \
+              | sort | uniq -c \
+              | awk '{count=$1; $1=""; printf "  %-12s %d\n", substr($0,2), count}'
+          }
           echo "=== Gremlins Mutation Score (per package) ==="
           for r in "${reports[@]}"; do
-            echo "--- $(basename "$r") ---"
-            jq -r '
-              "  Killed:      \(.killed // 0)",
-              "  Lived:       \(.lived // 0)",
-              "  Not Covered: \(.notCovered // 0)",
-              "  Timed out:   \(.timedOut // 0)",
-              "  Not viable:  \(.notViable // 0)",
-              "  Efficacy:    \(((.efficacy // 0) * 100) | floor)%",
-              "  M-cover:     \(((.mutantsCoverage // 0) * 100) | floor)%"
-            ' "$r" 2>/dev/null || cat "$r"
+            summarize "$(basename "$r")" "$r"
           done
           echo "=== Gremlins Mutation Score (totals) ==="
-          jq -s -r '
-            (reduce .[] as $r ({killed:0,lived:0,notCovered:0,timedOut:0,notViable:0};
-              .killed += ($r.killed // 0) |
-              .lived += ($r.lived // 0) |
-              .notCovered += ($r.notCovered // 0) |
-              .timedOut += ($r.timedOut // 0) |
-              .notViable += ($r.notViable // 0)
-            )) as $t |
-            "Killed:      \($t.killed)",
-            "Lived:       \($t.lived)",
-            "Not Covered: \($t.notCovered)",
-            "Timed out:   \($t.timedOut)",
-            "Not viable:  \($t.notViable)"
-          ' "${reports[@]}"
+          summarize "all" "${reports[@]}"
 
   go-mutesting:
     name: go-mutesting
@@ -212,9 +199,14 @@ jobs:
           for r in "${reports[@]}"; do
             echo "--- $(basename "$r") ---"
             jq -r '
-              "  Total:  \(.stats.total // 0)",
-              "  Killed: \(.stats.killed // 0)",
-              "  Alive:  \(.stats.alive // 0)",
-              "  Score:  \(.stats.score // 0)"
+              .stats |
+              "  Total:        \(.totalMutantsCount // 0)",
+              "  Killed:       \(.killedCount // 0)",
+              "  Escaped:      \(.escapedCount // 0)",
+              "  Not covered:  \(.notCoveredCount // 0)",
+              "  Timed out:    \(.timeOutCount // 0)",
+              "  Errored:      \(.errorCount // 0)",
+              "  Skipped:      \(.skippedCount // 0)",
+              "  MSI:          \(((.msi // 0) * 100) | floor)%"
             ' "$r" 2>/dev/null || cat "$r"
           done

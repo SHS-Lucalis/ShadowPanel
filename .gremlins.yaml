@@ -4,9 +4,7 @@
 unleash:
   threshold-efficacy: 0
   threshold-mcover: 0
-  output: "gremlins-report.json"
   workers: 4
-  test-cpu: 0
   exclude-files:
     - "_mock\\.go$"
     - "_test\\.go$"
@@ -19,26 +17,3 @@ unleash:
     - "^migrations/"
     - "^test/"
     - "^pkg/testcontainer/"
-  mutants:
-    arithmetic-base:
-      enabled: true
-    conditionals-boundary:
-      enabled: true
-    conditionals-negation:
-      enabled: true
-    increment-decrement:
-      enabled: true
-    invert-negatives:
-      enabled: true
-    invert-assignments:
-      enabled: true
-    invert-bitwise:
-      enabled: true
-    invert-bwassign:
-      enabled: true
-    invert-logical:
-      enabled: true
-    invert-loopctrl:
-      enabled: true
-    remove-self-assignments:
-      enabled: true
