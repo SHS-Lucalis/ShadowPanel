@@ -66,7 +66,8 @@ jobs:
         run: go mod download
 
       - name: Install gremlins
-        run: go install github.com/go-gremlins/gremlins/v2/cmd/gremlins@latest
+        # gremlins is still on 0.x — pin a known-good tag to avoid surprise breakage.
+        run: go install github.com/go-gremlins/gremlins/cmd/gremlins@v0.6.0
 
       - name: Run gremlins
         continue-on-error: true
