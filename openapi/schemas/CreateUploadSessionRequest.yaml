@@ -1,0 +1,31 @@
+type: object
+required:
+  - path
+  - filename
+  - total_size
+  - expected_checksum
+properties:
+  path:
+    type: string
+    description: |
+      Destination directory relative to the server root. Use "" or "." for the server root.
+      Must not contain `..`.
+    example: configs
+  filename:
+    type: string
+    description: |
+      File name to write (no path separators or `..`).
+    example: addons.tar.gz
+  total_size:
+    type: integer
+    format: uint64
+    minimum: 1
+    description: Total size of the file in bytes.
+    example: 5368709120
+  expected_checksum:
+    type: string
+    pattern: "^[0-9a-fA-F]{64}$"
+    description: |
+      SHA-256 checksum of the entire file in hex (64 characters).
+      Server verifies the assembled file against this checksum at finalize.
+    example: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855

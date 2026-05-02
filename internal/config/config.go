@@ -3,6 +3,7 @@ package config
 import (
 	"crypto/tls"
 	"strings"
+	"time"
 
 	"github.com/caarlos0/env/v11"
 	"github.com/gameap/gameap/internal/application/defaults"
@@ -74,6 +75,13 @@ type Config struct {
 			AccessKeyID     string `env:"FILES_S3_ACCESS_KEY_ID" envDefault:""`
 			SecretAccessKey string `env:"FILES_S3_SECRET_ACCESS_KEY" envDefault:""`
 			Bucket          string `env:"FILES_S3_BUCKET" envDefault:""`
+		}
+
+		Upload struct {
+			ChunkSize       ByteSize      `env:"FILES_UPLOAD_CHUNK_SIZE" envDefault:"8M"`
+			SessionTTL      time.Duration `env:"FILES_UPLOAD_SESSION_TTL" envDefault:"24h"`
+			MaxChunks       uint          `env:"FILES_UPLOAD_MAX_CHUNKS" envDefault:"100000"`
+			JanitorInterval time.Duration `env:"FILES_UPLOAD_JANITOR_INTERVAL" envDefault:"12h"`
 		}
 	}
 

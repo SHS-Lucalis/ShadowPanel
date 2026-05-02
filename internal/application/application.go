@@ -147,6 +147,8 @@ func Run(runParams RunParams) {
 
 	startPubSub(ctx, container)
 
+	startUploadJanitor(ctx, container)
+
 	if cfg.GRPC.Enabled {
 		runWithGRPC(ctx, cfg, container)
 	} else {
@@ -277,6 +279,17 @@ func startHTTPSServer(ctx context.Context, cfg *config.Config, container *Contai
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			slog.ErrorContext(ctx, "HTTPS server error", slog.String("error", err.Error()))
 		}
+	}()
+}
+
+func startUploadJanitor(ctx context.Context, container *Container) {
+	janitor := container.UploadJanitor()
+	go func() {
+		slog.InfoContext(ctx, "Starting upload session janitor",
+			slog.Duration("interval", container.Config().Files.Upload.JanitorInterval),
+			slog.Duration("session_ttl", container.Config().Files.Upload.SessionTTL),
+		)
+		janitor.Run(ctx)
 	}()
 }
 

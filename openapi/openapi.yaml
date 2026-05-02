@@ -393,6 +393,14 @@ paths:
     $ref: './paths/file-manager.yaml#/~1api~1file-manager~1{server}~1delete'
   /api/file-manager/{server}/upload:
     $ref: './paths/file-manager.yaml#/~1api~1file-manager~1{server}~1upload'
+  /api/file-manager/{server}/upload/sessions:
+    $ref: './paths/file-manager-upload-sessions.yaml#/~1api~1file-manager~1{server}~1upload~1sessions'
+  /api/file-manager/{server}/upload/sessions/{uploadID}:
+    $ref: './paths/file-manager-upload-sessions.yaml#/~1api~1file-manager~1{server}~1upload~1sessions~1{uploadID}'
+  /api/file-manager/{server}/upload/sessions/{uploadID}/chunks/{index}:
+    $ref: './paths/file-manager-upload-sessions.yaml#/~1api~1file-manager~1{server}~1upload~1sessions~1{uploadID}~1chunks~1{index}'
+  /api/file-manager/{server}/upload/sessions/{uploadID}/complete:
+    $ref: './paths/file-manager-upload-sessions.yaml#/~1api~1file-manager~1{server}~1upload~1sessions~1{uploadID}~1complete'
   /api/file-manager/{server}/update-file:
     $ref: './paths/file-manager.yaml#/~1api~1file-manager~1{server}~1update-file'
   /api/file-manager/{server}/download:

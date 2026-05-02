@@ -1,0 +1,53 @@
+type: object
+required:
+  - upload_id
+  - total_size
+  - chunk_size
+  - total_chunks
+  - received_chunks
+  - missing_chunks
+  - uploaded_bytes
+  - completed
+  - expires_at
+properties:
+  upload_id:
+    type: string
+    example: 01HXR3K9SR7YQQF8K7B2T2NXSV
+  total_size:
+    type: integer
+    format: uint64
+    example: 5368709120
+  chunk_size:
+    type: integer
+    format: uint64
+    example: 8388608
+  total_chunks:
+    type: integer
+    format: uint
+    example: 640
+  received_chunks:
+    type: array
+    description: Sorted list of chunk indices received so far.
+    items:
+      type: integer
+      format: uint
+    example: [0, 1, 2, 3, 4, 5]
+  missing_chunks:
+    type: array
+    description: Sorted list of chunk indices the server has not received yet.
+    items:
+      type: integer
+      format: uint
+    example: [6, 7, 8]
+  uploaded_bytes:
+    type: integer
+    format: uint64
+    description: Total bytes of received chunks.
+    example: 50331648
+  completed:
+    type: boolean
+    description: True after Complete has succeeded; subsequent Complete calls are idempotent.
+    example: false
+  expires_at:
+    type: string
+    format: date-time

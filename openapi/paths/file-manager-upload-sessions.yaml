@@ -1,0 +1,298 @@
+/api/file-manager/{server}/upload/sessions:
+  post:
+    tags:
+      - FileManager
+    summary: Create chunked upload session
+    description: |
+      Initialises a resumable, chunked upload of a single file. The server returns the chunk
+      size to use and the total number of chunks; the client then PUTs each chunk to the
+      `/chunks/{index}` endpoint.
+
+      Multi-instance safe: chunks may be uploaded to any API instance behind a load balancer.
+
+      Sessions expire after the configured TTL (default 24h).
+    operationId: createUploadSession
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/CreateUploadSessionRequest.yaml'
+    responses:
+      '201':
+        description: Session created
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/UploadSession.yaml'
+      '400':
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Missing file-manager permission
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Server or node not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/file-manager/{server}/upload/sessions/{uploadID}:
+  get:
+    tags:
+      - FileManager
+    summary: Get upload session status
+    description: |
+      Returns which chunk indices have been received and which are still missing,
+      and whether the upload has been finalized. Use this to resume an interrupted upload.
+    operationId: getUploadSession
+    parameters:
+      - name: server
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: uploadID
+        in: path
+        required: true
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Session status
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/UploadSessionStatus.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Missing permission or session belongs to another user
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Session not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '410':
+        description: Session expired
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+  delete:
+    tags:
+      - FileManager
+    summary: Abort upload session
+    description: Removes the session and all received chunks.
+    operationId: abortUploadSession
+    parameters:
+      - name: server
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: uploadID
+        in: path
+        required: true
+        schema:
+          type: string
+    responses:
+      '204':
+        description: Session aborted (idempotent — also returned if session was already gone)
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Missing permission or session belongs to another user
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/file-manager/{server}/upload/sessions/{uploadID}/chunks/{index}:
+  put:
+    tags:
+      - FileManager
+    summary: Upload a chunk
+    description: |
+      Uploads a single chunk by zero-based index. Body is raw bytes (`application/octet-stream`).
+
+      All non-terminal chunks must be exactly `chunk_size` bytes; the last chunk
+      (`index == total_chunks - 1`) is `total_size - chunk_size * (total_chunks - 1)` bytes.
+
+      Re-uploading the same index overwrites the existing chunk (idempotent).
+      Different indices may be uploaded in parallel and to different API instances.
+    operationId: putUploadChunk
+    parameters:
+      - name: server
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: uploadID
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: index
+        in: path
+        required: true
+        description: Zero-based chunk index, must be < total_chunks.
+        schema:
+          type: integer
+          format: uint
+    requestBody:
+      required: true
+      content:
+        application/octet-stream:
+          schema:
+            type: string
+            format: binary
+    responses:
+      '204':
+        description: Chunk stored
+      '400':
+        description: Bad request (invalid index, missing uploadID, etc.)
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Missing permission or session belongs to another user
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Session not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '409':
+        description: Session is already completed
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '410':
+        description: Session expired
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '413':
+        description: Chunk size does not match expected size for this index
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/file-manager/{server}/upload/sessions/{uploadID}/complete:
+  post:
+    tags:
+      - FileManager
+    summary: Finalize upload
+    description: |
+      Validates that all chunks are present, assembles them into the final file (computing
+      SHA-256 in a single pass), verifies the checksum against the one declared at session
+      creation, and dispatches the file to the daemon for the target server.
+
+      On checksum mismatch the assembled file is removed but chunks are kept so the client
+      can re-upload faulty ones and retry.
+
+      Idempotent: a successful Complete is recorded; repeated calls return 200 without
+      re-dispatching.
+    operationId: completeUploadSession
+    parameters:
+      - name: server
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: uploadID
+        in: path
+        required: true
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Upload finalized and dispatched to daemon
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/CompleteUploadSessionResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Missing permission or node mismatch
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Session not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '409':
+        description: Not all chunks have been uploaded
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '410':
+        description: Session expired
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '422':
+        description: Checksum mismatch — chunks are kept for retry
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'

@@ -30,6 +30,7 @@ import (
 	"github.com/gameap/gameap/internal/services/serverconfigpush"
 	"github.com/gameap/gameap/internal/services/servercontrol"
 	"github.com/gameap/gameap/internal/services/taskdispatcher"
+	"github.com/gameap/gameap/internal/upload"
 	"github.com/gameap/gameap/internal/ws"
 	pkgapi "github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
@@ -65,6 +66,7 @@ type InmemoryContainer struct {
 	daemonStatusService   *daemon.StatusService
 	daemonFilesService    *daemon.FileService
 	daemonCommandsService *daemon.CommandService
+	uploadSessionService  *upload.Service
 }
 
 func (c *InmemoryContainer) Config() *config.Config                            { return c.cfg }
@@ -110,6 +112,7 @@ func (c *InmemoryContainer) CertificatesService() *certificates.Service   { retu
 func (c *InmemoryContainer) GlobalAPIService() *services.GlobalAPIService { return c.globalAPIService }
 func (c *InmemoryContainer) DaemonStatus() *daemon.StatusService          { return c.daemonStatusService }
 func (c *InmemoryContainer) DaemonFiles() *daemon.FileService             { return c.daemonFilesService }
+func (c *InmemoryContainer) UploadSessionService() *upload.Service        { return c.uploadSessionService }
 func (c *InmemoryContainer) DaemonCommands() *daemon.CommandService       { return c.daemonCommandsService }
 func (c *InmemoryContainer) ConsoleLogService() *daemon.ConsoleLogService { return nil }
 func (c *InmemoryContainer) PluginManager() *plugin.Manager               { return nil }
@@ -145,6 +148,14 @@ func (c *InmemoryContainer) EnrollmentServiceOrNil() *enrollment.Service { retur
 func (c *InmemoryContainer) GRPCPort() uint16                            { return 31718 }
 func (c *InmemoryContainer) GRPCExternalHost() string                    { return "" }
 func (c *InmemoryContainer) GRPCExternalPort() uint16                    { return 0 }
+
+type nopUploader struct{}
+
+func (nopUploader) UploadStreamPrepared(
+	context.Context, *domain.Node, string, string, string, uint64,
+) error {
+	return nil
+}
 
 func LoadInmemoryContainer() (*InmemoryContainer, error) {
 	c := buildInmemoryTestContainer()
@@ -194,6 +205,18 @@ func buildInmemoryTestContainer() *InmemoryContainer {
 		daemonFilesService:    nil,
 		daemonCommandsService: nil,
 	}
+
+	c.uploadSessionService = upload.NewService(
+		files.NewInMemoryFileManager(),
+		nopUploader{},
+		upload.RealClock(),
+		nil,
+		upload.Config{
+			ChunkSize:  1 << 20,
+			SessionTTL: 24 * time.Hour,
+			MaxChunks:  1000,
+		},
+	)
 
 	ctx := context.Background()
 

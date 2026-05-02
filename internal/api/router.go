@@ -43,6 +43,12 @@ import (
 	filemanagertree "github.com/gameap/gameap/internal/api/filemanager/tree"
 	filemanagerupdatefile "github.com/gameap/gameap/internal/api/filemanager/updatefile"
 	"github.com/gameap/gameap/internal/api/filemanager/upload"
+	"github.com/gameap/gameap/internal/api/filemanager/uploadsession"
+	uploadsessionabort "github.com/gameap/gameap/internal/api/filemanager/uploadsession/abortsession"
+	uploadsessioncomplete "github.com/gameap/gameap/internal/api/filemanager/uploadsession/completesession"
+	uploadsessioncreate "github.com/gameap/gameap/internal/api/filemanager/uploadsession/createsession"
+	uploadsessionget "github.com/gameap/gameap/internal/api/filemanager/uploadsession/getsession"
+	uploadsessionputchunk "github.com/gameap/gameap/internal/api/filemanager/uploadsession/putchunk"
 	"github.com/gameap/gameap/internal/api/gamemods/deletegamemod"
 	"github.com/gameap/gameap/internal/api/gamemods/getgamemod"
 	"github.com/gameap/gameap/internal/api/gamemods/getgamemods"
@@ -158,6 +164,7 @@ import (
 	"github.com/gameap/gameap/internal/services/serverconfigpush"
 	"github.com/gameap/gameap/internal/services/servercontrol"
 	"github.com/gameap/gameap/internal/services/taskdispatcher"
+	uploadservice "github.com/gameap/gameap/internal/upload"
 	"github.com/gameap/gameap/internal/ws"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
@@ -198,6 +205,7 @@ type container interface {
 	GlobalAPIService() *services.GlobalAPIService
 	DaemonStatus() *daemon.StatusService
 	DaemonFiles() *daemon.FileService
+	UploadSessionService() *uploadservice.Service
 	DaemonCommands() *daemon.CommandService
 	ConsoleLogService() *daemon.ConsoleLogService
 	PluginManager() *plugin.Manager
@@ -722,6 +730,52 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 				c.NodeRepository(),
 				c.RBAC(),
 				c.DaemonFiles(),
+				c.Responder(),
+			),
+		},
+		{
+			Method: http.MethodPost,
+			Path:   "/api/file-manager/{server}/upload/sessions",
+			Handler: uploadsessioncreate.NewHandler(
+				uploadsession.NewResolver(c.ServerRepository(), c.NodeRepository(), c.RBAC()),
+				c.UploadSessionService(),
+				c.Responder(),
+			),
+		},
+		{
+			Method: http.MethodPut,
+			Path:   "/api/file-manager/{server}/upload/sessions/{uploadID}/chunks/{index}",
+			Handler: uploadsessionputchunk.NewHandler(
+				uploadsession.NewResolver(c.ServerRepository(), c.NodeRepository(), c.RBAC()),
+				c.UploadSessionService(),
+				c.Responder(),
+				c.Config().Files.Upload.ChunkSize.Uint64(),
+			),
+		},
+		{
+			Method: http.MethodGet,
+			Path:   "/api/file-manager/{server}/upload/sessions/{uploadID}",
+			Handler: uploadsessionget.NewHandler(
+				uploadsession.NewResolver(c.ServerRepository(), c.NodeRepository(), c.RBAC()),
+				c.UploadSessionService(),
+				c.Responder(),
+			),
+		},
+		{
+			Method: http.MethodPost,
+			Path:   "/api/file-manager/{server}/upload/sessions/{uploadID}/complete",
+			Handler: uploadsessioncomplete.NewHandler(
+				uploadsession.NewResolver(c.ServerRepository(), c.NodeRepository(), c.RBAC()),
+				c.UploadSessionService(),
+				c.Responder(),
+			),
+		},
+		{
+			Method: http.MethodDelete,
+			Path:   "/api/file-manager/{server}/upload/sessions/{uploadID}",
+			Handler: uploadsessionabort.NewHandler(
+				uploadsession.NewResolver(c.ServerRepository(), c.NodeRepository(), c.RBAC()),
+				c.UploadSessionService(),
 				c.Responder(),
 			),
 		},

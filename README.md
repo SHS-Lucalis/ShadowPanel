@@ -151,6 +151,16 @@ Used when `FILES_DRIVER` is set to `s3`.
 - `FILES_S3_SECRET_ACCESS_KEY` - S3 secret access key
 - `FILES_S3_BUCKET` - S3 bucket name
 
+#### Chunked Upload Sessions
+
+Used by the resumable file-manager upload endpoints
+(`/api/file-manager/{server}/upload/sessions`).
+
+- `FILES_UPLOAD_CHUNK_SIZE` - Server-decided chunk size returned to clients. Accepts plain bytes (`8388608`) or human-readable sizes with binary suffixes (`8M`, `8MB`, `8MiB`, `1000KB`, `2GB`). Default: `8M`.
+- `FILES_UPLOAD_SESSION_TTL` - How long an in-progress upload session lives before janitor reclaims it (default: `24h`)
+- `FILES_UPLOAD_MAX_CHUNKS` - Hard cap on chunks per file; bounds the maximum file size to `FILES_UPLOAD_CHUNK_SIZE × FILES_UPLOAD_MAX_CHUNKS` (default: `1000000`)
+- `FILES_UPLOAD_JANITOR_INTERVAL` - How often the background janitor scans for expired upload sessions (default: `1h`)
+
 ### Legacy Configuration
 
 - `LEGACY_PATH` - Path to legacy GameAP installation (default: `/var/www/gameap/`)

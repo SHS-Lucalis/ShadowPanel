@@ -1,0 +1,11 @@
+type: object
+required:
+  - upload_id
+  - completed
+properties:
+  upload_id:
+    type: string
+    example: 01HXR3K9SR7YQQF8K7B2T2NXSV
+  completed:
+    type: boolean
+    example: true

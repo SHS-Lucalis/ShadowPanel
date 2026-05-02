@@ -1,0 +1,34 @@
+type: object
+required:
+  - upload_id
+  - chunk_size
+  - total_chunks
+  - total_size
+  - expires_at
+properties:
+  upload_id:
+    type: string
+    description: Opaque session identifier used in subsequent chunk PUTs and finalize.
+    example: 01HXR3K9SR7YQQF8K7B2T2NXSV
+  chunk_size:
+    type: integer
+    format: uint64
+    description: |
+      Server-decided chunk size in bytes. All non-terminal chunks MUST be exactly this size;
+      the last chunk = total_size - chunk_size * (total_chunks - 1).
+    example: 8388608
+  total_chunks:
+    type: integer
+    format: uint
+    description: Number of chunks the client must upload.
+    example: 640
+  total_size:
+    type: integer
+    format: uint64
+    description: Echoed back from the request.
+    example: 5368709120
+  expires_at:
+    type: string
+    format: date-time
+    description: When the session is garbage-collected if not completed.
+    example: "2026-05-03T12:00:00Z"

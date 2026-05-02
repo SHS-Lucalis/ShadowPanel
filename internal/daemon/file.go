@@ -505,6 +505,39 @@ func (s *FileService) Upload(
 	return s.dispatcher.DispatchFileWrite(ctx, nodeID, relPath, content, mode, true)
 }
 
+func (s *FileService) UploadStreamPrepared(
+	ctx context.Context,
+	node *domain.Node,
+	filePath string,
+	transferID string,
+	checksum string,
+	totalSize uint64,
+) error {
+	nodeID := uint64(node.ID)
+	relPath := stripWorkPath(node.WorkPath, filePath)
+
+	local, err := s.resolveRoute(nodeID)
+	if err != nil {
+		return err
+	}
+
+	if local && s.registry.HasCapability(nodeID, capabilityFileTransfer) {
+		if reqErr := s.gateway.RequestFileUploadTask(
+			ctx, nodeID, transferID, relPath, checksum, safeUint64ToInt64(totalSize),
+		); reqErr != nil {
+			return errors.WithMessage(reqErr, "upload task")
+		}
+
+		return nil
+	}
+
+	if dispatchErr := s.dispatcher.DispatchUploadTask(ctx, nodeID, transferID, relPath); dispatchErr != nil {
+		return errors.WithMessage(dispatchErr, "dispatched upload task")
+	}
+
+	return nil
+}
+
 func (s *FileService) UploadStream(
 	ctx context.Context,
 	node *domain.Node,

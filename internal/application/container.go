@@ -56,6 +56,7 @@ import (
 	"github.com/gameap/gameap/internal/services/servercontrol"
 	"github.com/gameap/gameap/internal/services/taskdispatcher"
 	"github.com/gameap/gameap/internal/transfers"
+	"github.com/gameap/gameap/internal/upload"
 	"github.com/gameap/gameap/internal/ws"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
@@ -156,6 +157,10 @@ type Container struct {
 	daemonCommandsLeg    *daemon.CommandBINNService
 	daemonConsoleLog     *daemon.ConsoleLogService
 	daemonHTTPProxy      *daemon.HTTPProxyService
+
+	// Upload sessions
+	uploadSessionService *upload.Service
+	uploadJanitor        *upload.Janitor
 
 	// Plugins
 	pluginManager    *pkgplugin.Manager
@@ -1357,6 +1362,37 @@ func (c *Container) DaemonFiles() *daemon.FileService {
 	}
 
 	return c.daemonFiles
+}
+
+func (c *Container) UploadSessionService() *upload.Service {
+	if c.uploadSessionService == nil {
+		c.uploadSessionService = upload.NewService(
+			c.StreamFileManager(),
+			c.DaemonFiles(),
+			upload.RealClock(),
+			slog.Default(),
+			upload.Config{
+				ChunkSize:  c.config.Files.Upload.ChunkSize.Uint64(),
+				SessionTTL: c.config.Files.Upload.SessionTTL,
+				MaxChunks:  c.config.Files.Upload.MaxChunks,
+			},
+		)
+	}
+
+	return c.uploadSessionService
+}
+
+func (c *Container) UploadJanitor() *upload.Janitor {
+	if c.uploadJanitor == nil {
+		c.uploadJanitor = upload.NewJanitor(
+			c.StreamFileManager(),
+			upload.RealClock(),
+			c.config.Files.Upload.JanitorInterval,
+			slog.Default(),
+		)
+	}
+
+	return c.uploadJanitor
 }
 
 func (c *Container) DaemonFilesLegacy() *daemon.FileBINNService {

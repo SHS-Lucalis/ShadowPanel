@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/gameap/gameap/internal/api/base"
+	"github.com/gameap/gameap/internal/api/filemanager/filemanagerpath"
 	serversbase "github.com/gameap/gameap/internal/api/servers/base"
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
@@ -26,14 +26,9 @@ const (
 )
 
 var (
-	errUserNotAuthenticated          = errors.New("user not authenticated")
-	errNoFilesUploaded               = errors.New("no files uploaded")
-	errInvalidFileSize               = errors.New("invalid file size")
-	errPathContainsTraversal         = errors.New("path contains invalid directory traversal")
-	errPathEscapesBaseDirectory      = errors.New("path attempts to escape base directory")
-	errFilenameEmpty                 = errors.New("filename is empty")
-	errFilenameContainsTraversal     = errors.New("filename contains invalid directory traversal")
-	errFilenameContainsPathSeparator = errors.New("filename contains path separators")
+	errUserNotAuthenticated = errors.New("user not authenticated")
+	errNoFilesUploaded      = errors.New("no files uploaded")
+	errInvalidFileSize      = errors.New("invalid file size")
 )
 
 type fileService interface {
@@ -144,7 +139,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		path = "."
 	}
 
-	if err = validatePath(path); err != nil {
+	if err = filemanagerpath.ValidatePath(path); err != nil {
 		h.responder.WriteError(ctx, rw, api.WrapHTTPError(
 			err,
 			http.StatusBadRequest,
@@ -212,7 +207,7 @@ func (h *Handler) processFiles(
 			)
 		}
 
-		if err := validateFilename(fileHeader.Filename); err != nil {
+		if err := filemanagerpath.ValidateFilename(fileHeader.Filename); err != nil {
 			return api.WrapHTTPError(err, http.StatusBadRequest)
 		}
 
@@ -244,35 +239,6 @@ func (h *Handler) processFiles(
 		if err != nil {
 			return errors.WithMessagef(err, "failed to upload file %s", fileHeader.Filename)
 		}
-	}
-
-	return nil
-}
-
-func validatePath(path string) error {
-	if strings.Contains(path, "..") {
-		return errPathContainsTraversal
-	}
-
-	cleanPath := filepath.Clean(path)
-	if strings.HasPrefix(cleanPath, "..") {
-		return errPathEscapesBaseDirectory
-	}
-
-	return nil
-}
-
-func validateFilename(filename string) error {
-	if filename == "" {
-		return errFilenameEmpty
-	}
-
-	if strings.Contains(filename, "..") {
-		return errFilenameContainsTraversal
-	}
-
-	if strings.ContainsAny(filename, "/\\") {
-		return errFilenameContainsPathSeparator
 	}
 
 	return nil
