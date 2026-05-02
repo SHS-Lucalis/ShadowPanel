@@ -35,14 +35,16 @@ func TestQuerySource_QueryInfoFailure(t *testing.T) {
 }
 
 // TestQuerySource_NewClientFailure exercises the early-return path where
-// a2s.NewClient itself fails (e.g., the address cannot be resolved or bound).
-// On this branch the function returns (nil, wrapped error).
+// a2s.NewClient itself fails. A negative port makes net.DialTimeout reject
+// the address synchronously with "invalid port" before any I/O, regardless
+// of platform (some platforms accept ":0" and surface the failure later
+// at QueryInfo time instead). On this early branch the function returns
+// (nil, wrapped error).
 func TestQuerySource_NewClientFailure(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	// Empty host with port 0 makes a2s.NewClient fail when it dials.
-	result, err := querySource(ctx, "", 0)
+	result, err := querySource(ctx, "127.0.0.1", -1)
 
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to create a2s client", "early failure must surface the NewClient wrap")
