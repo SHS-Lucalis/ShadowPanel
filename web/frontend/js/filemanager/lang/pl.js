@@ -42,6 +42,7 @@ const pl = {
         paste: 'Wklej',
         properties: 'Właściwości',
         rename: 'Zmień nazwę',
+        chmod: 'Permissions',
         select: 'Wybierz',
         view: 'Widok',
         zip: 'Spakuj',
@@ -64,6 +65,7 @@ const pl = {
             name: 'Nazwa',
             size: 'Rozmiar',
             type: 'Rodzaj',
+            permissions: 'Permissions',
         },
     },
     modal: {
@@ -103,6 +105,7 @@ const pl = {
             access_0: 'Brak dostępu',
             access_1: 'Tylko do odczytu',
             access_2: 'Odczyt i zapis',
+            permissions: 'Permissions',
         },
         rename: {
             directoryExist: 'Katalog istnieje',
@@ -110,6 +113,21 @@ const pl = {
             fieldFeedback: 'Błędna nazwa',
             fileExist: 'Plik istnieje',
             title: 'Zmień nazwę',
+        },
+        chmod: {
+            title: 'Edit permissions',
+            owner: 'Owner',
+            group: 'Group',
+            other: 'Other',
+            read: 'Read',
+            write: 'Write',
+            execute: 'Execute',
+            octalLabel: 'Octal value',
+            invalidMode: 'Mode must be an octal value between 0 and 777',
+            preview: 'Preview',
+            noSelected: 'Nothing selected!',
+            itemsSelected: 'items selected',
+            mixedSource: 'selected items have different permissions',
         },
         status: {
             noErrors: 'Bez błędów!',
@@ -169,6 +187,8 @@ const pl = {
     notifications: {
         cutToClipboard: 'Wytnij do schowka!',
         copyToClipboard: 'Skopiowane do schowka!',
+        chmodSuccess: 'Permissions changed!',
+        chmodError: 'Failed to change permissions!',
     },
     response: {
         noConfig: 'Nie znaleziono konfiguracji!',
@@ -192,6 +212,7 @@ const pl = {
         deleted: 'Usunięto!',
         renamed: 'Zmieniono nazwę!',
         copied: 'Skopiowano pomyślnie!',
+        chmodChanged: 'Permissions changed!',
         // zip
         zipError: 'Błąd podczas tworzenia archiwum!',
         // acl

@@ -43,6 +43,7 @@ const hu = {
         paste: 'Beillesztés',
         properties: 'Tulajdonságok',
         rename: 'Átnevezés',
+        chmod: 'Permissions',
         select: 'Kiválaszt',
         view: 'Megnyitás',
         zip: 'Becsomagolás',
@@ -65,6 +66,7 @@ const hu = {
             name: 'Név',
             size: 'Méret',
             type: 'Típus',
+            permissions: 'Permissions',
         },
     },
     modal: {
@@ -104,6 +106,7 @@ const hu = {
             access_0: 'Hozzáférés megtagadva',
             access_1: 'Csak olvasás',
             access_2: 'Olvasás és írás',
+            permissions: 'Permissions',
         },
         rename: {
             directoryExist: 'A mappa létezik',
@@ -111,6 +114,21 @@ const hu = {
             fieldFeedback: 'Érvénytelen név',
             fileExist: 'Fájl létezik',
             title: 'Átnevezés',
+        },
+        chmod: {
+            title: 'Edit permissions',
+            owner: 'Owner',
+            group: 'Group',
+            other: 'Other',
+            read: 'Read',
+            write: 'Write',
+            execute: 'Execute',
+            octalLabel: 'Octal value',
+            invalidMode: 'Mode must be an octal value between 0 and 777',
+            preview: 'Preview',
+            noSelected: 'Nothing selected!',
+            itemsSelected: 'items selected',
+            mixedSource: 'selected items have different permissions',
         },
         status: {
             noErrors: 'Nincs hiba',
@@ -170,6 +188,8 @@ const hu = {
     notifications: {
         cutToClipboard: 'Kivágás a vágólapra!',
         copyToClipboard: 'Másolás a vágólapra!',
+        chmodSuccess: 'Permissions changed!',
+        chmodError: 'Failed to change permissions!',
     },
     response: {
         noConfig: 'Konfiguráció nem található!',
@@ -193,6 +213,7 @@ const hu = {
         deleted: 'Törölve!',
         renamed: 'Átnevezve!',
         copied: 'Sikeres másolás!',
+        chmodChanged: 'Permissions changed!',
         // zip
         zipError: 'Hiba becsomagolás közben!',
         // acl

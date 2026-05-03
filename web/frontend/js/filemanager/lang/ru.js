@@ -48,6 +48,7 @@ const ru = {
         paste: 'Вставить',
         properties: 'Свойства',
         rename: 'Переименовать',
+        chmod: 'Права доступа',
         select: 'Выбрать',
         view: 'Просмотр',
         zip: 'Архивировать',
@@ -85,6 +86,7 @@ const ru = {
             name: 'Имя',
             size: 'Размер',
             type: 'Тип',
+            permissions: 'Права',
         },
     },
     modal: {
@@ -124,6 +126,7 @@ const ru = {
             access_0: 'Нет доступа',
             access_1: 'Только чтение',
             access_2: 'Чтение и Запись',
+            permissions: 'Права доступа',
         },
         rename: {
             directoryExist: 'Папка существует',
@@ -131,6 +134,21 @@ const ru = {
             fieldFeedback: 'Некорректное имя',
             fileExist: 'Файл существует',
             title: 'Переименовать',
+        },
+        chmod: {
+            title: 'Изменить права доступа',
+            owner: 'Владелец',
+            group: 'Группа',
+            other: 'Остальные',
+            read: 'Чтение',
+            write: 'Запись',
+            execute: 'Выполнение',
+            octalLabel: 'Восьмеричное значение',
+            invalidMode: 'Значение должно быть восьмеричным числом от 0 до 777',
+            preview: 'Предпросмотр',
+            noSelected: 'Ничего не выбрано!',
+            itemsSelected: 'элементов выбрано',
+            mixedSource: 'у выбранных элементов разные права',
         },
         status: {
             noErrors: 'Ошибок нет!',
@@ -218,6 +236,8 @@ const ru = {
     notifications: {
         cutToClipboard: 'Вырезано!',
         copyToClipboard: 'Скопировано!',
+        chmodSuccess: 'Права изменены!',
+        chmodError: 'Не удалось изменить права!',
     },
     response: {
         noConfig: 'Конфигурация не найдена!',
@@ -241,6 +261,7 @@ const ru = {
         deleted: 'Удалено!',
         renamed: 'Переименовано!',
         copied: 'Скопировано!',
+        chmodChanged: 'Права изменены!',
         // zip
         zipError: 'Ошибка создания архива!',
         // acl

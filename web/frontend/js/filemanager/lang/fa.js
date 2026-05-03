@@ -43,6 +43,7 @@ const fa = {
         paste: 'جاگذاری',
         properties: 'ویژگی ها',
         rename: 'تغییر نام',
+        chmod: 'Permissions',
         select: 'انتخاب',
         view: 'مشاهده',
         zip: 'فشرده کردن',
@@ -65,6 +66,7 @@ const fa = {
             name: 'نام',
             size: 'اندازه',
             type: 'نوع',
+            permissions: 'Permissions',
         },
     },
     modal: {
@@ -104,6 +106,7 @@ const fa = {
             access_0: 'دسترسی امکان پذیر نیست',
             access_1: 'فقط خواندن',
             access_2: 'خواندن و نوشتن',
+            permissions: 'Permissions',
         },
         rename: {
             directoryExist: 'فهرست وجود دارد',
@@ -111,6 +114,21 @@ const fa = {
             fieldFeedback: 'نام نامعتبر است',
             fileExist: 'فایل وجود دارد',
             title: 'تغییر نام',
+        },
+        chmod: {
+            title: 'Edit permissions',
+            owner: 'Owner',
+            group: 'Group',
+            other: 'Other',
+            read: 'Read',
+            write: 'Write',
+            execute: 'Execute',
+            octalLabel: 'Octal value',
+            invalidMode: 'Mode must be an octal value between 0 and 777',
+            preview: 'Preview',
+            noSelected: 'Nothing selected!',
+            itemsSelected: 'items selected',
+            mixedSource: 'selected items have different permissions',
         },
         status: {
             noErrors: 'خطایی وجود ندارد!',
@@ -170,6 +188,8 @@ const fa = {
     notifications: {
         cutToClipboard: 'برش یه کلیپ بورد!',
         copyToClipboard: 'رونوشت به کلیپ بورد!',
+        chmodSuccess: 'Permissions changed!',
+        chmodError: 'Failed to change permissions!',
     },
     response: {
         noConfig: 'پیکربندی یافت نشد',
@@ -193,6 +213,7 @@ const fa = {
         deleted: 'حذف شد!',
         renamed: 'تغییر نام یافت!',
         copied: 'رونوشت با موفقیت انجام شد!',
+        chmodChanged: 'Permissions changed!',
         // zip
         zipError: 'خطای ایجاد بایگانی! zip',
         // acl

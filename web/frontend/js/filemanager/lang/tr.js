@@ -42,6 +42,7 @@ const tr = {
         paste: 'Yapıştır',
         properties: 'Özellikler',
         rename: 'Yeniden adlandır',
+        chmod: 'Permissions',
         select: 'Seç',
         view: 'Gör',
         zip: 'Zip',
@@ -64,6 +65,7 @@ const tr = {
             name: 'İsim',
             size: 'Boyut',
             type: 'Tür',
+            permissions: 'Permissions',
         },
     },
     modal: {
@@ -103,6 +105,7 @@ const tr = {
             access_0: 'Erişim engellendi',
             access_1: 'Salt okunur',
             access_2: 'Okuma ve yazma',
+            permissions: 'Permissions',
         },
         rename: {
             directoryExist: 'Klasör mevcut',
@@ -110,6 +113,21 @@ const tr = {
             fieldFeedback: 'Geçersiz isim',
             fileExist: 'Dosya mevcut',
             title: 'Yeniden adlandır',
+        },
+        chmod: {
+            title: 'Edit permissions',
+            owner: 'Owner',
+            group: 'Group',
+            other: 'Other',
+            read: 'Read',
+            write: 'Write',
+            execute: 'Execute',
+            octalLabel: 'Octal value',
+            invalidMode: 'Mode must be an octal value between 0 and 777',
+            preview: 'Preview',
+            noSelected: 'Nothing selected!',
+            itemsSelected: 'items selected',
+            mixedSource: 'selected items have different permissions',
         },
         status: {
             noErrors: 'Hata yok!',
@@ -169,6 +187,8 @@ const tr = {
     notifications: {
         cutToClipboard: 'Panoya kesildi!',
         copyToClipboard: 'Panoya kopyalandı!',
+        chmodSuccess: 'Permissions changed!',
+        chmodError: 'Failed to change permissions!',
     },
     response: {
         noConfig: 'Ayarlar bulunamadı!',
@@ -192,6 +212,7 @@ const tr = {
         deleted: 'Silindi!',
         renamed: 'Yeniden adlandırıldı!',
         copied: 'Başarıyla kopyalandı!',
+        chmodChanged: 'Permissions changed!',
         // zip
         zipError: 'Arşiv yaratılırken hata oluştu!',
         // acl

@@ -43,6 +43,7 @@ const pt_BR = {
         paste: 'Colar',
         properties: 'Propriedades',
         rename: 'Renomear',
+        chmod: 'Permissions',
         select: 'Selecionar',
         view: 'Visualizar',
         zip: 'Compactar',
@@ -65,6 +66,7 @@ const pt_BR = {
             name: 'Nome',
             size: 'Tamanho',
             type: 'Tipo',
+            permissions: 'Permissions',
         },
     },
     modal: {
@@ -104,6 +106,7 @@ const pt_BR = {
             access_0: 'Acesso negado',
             access_1: 'Apenas leitura',
             access_2: 'Leitura e escrita',
+            permissions: 'Permissions',
         },
         rename: {
             directoryExist: 'Pasta existente',
@@ -111,6 +114,21 @@ const pt_BR = {
             fieldFeedback: 'Nome inválido',
             fileExist: 'Arquivo existente',
             title: 'Renomear',
+        },
+        chmod: {
+            title: 'Edit permissions',
+            owner: 'Owner',
+            group: 'Group',
+            other: 'Other',
+            read: 'Read',
+            write: 'Write',
+            execute: 'Execute',
+            octalLabel: 'Octal value',
+            invalidMode: 'Mode must be an octal value between 0 and 777',
+            preview: 'Preview',
+            noSelected: 'Nothing selected!',
+            itemsSelected: 'items selected',
+            mixedSource: 'selected items have different permissions',
         },
         status: {
             noErrors: 'Nenhum erro!',
@@ -170,6 +188,8 @@ const pt_BR = {
     notifications: {
         cutToClipboard: 'Recortado para área de transferência!',
         copyToClipboard: 'Copiado para área de transferência!',
+        chmodSuccess: 'Permissions changed!',
+        chmodError: 'Failed to change permissions!',
     },
     response: {
         noConfig: 'Configuração não encontrada!',
@@ -193,6 +213,7 @@ const pt_BR = {
         deleted: 'Deletado!',
         renamed: 'Renomeado!',
         copied: 'Copiado com sucesso!',
+        chmodChanged: 'Permissions changed!',
         // zip
         zipError: 'Erro ao compactar!',
         // acl

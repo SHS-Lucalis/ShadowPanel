@@ -24,6 +24,7 @@ type directoryItemResponse struct {
 	Type      string `json:"type"`
 	Dirname   string `json:"dirname"`
 	Basename  string `json:"basename"`
+	Mode      uint32 `json:"mode"`
 }
 
 type fileItemResponse struct {
@@ -36,6 +37,7 @@ type fileItemResponse struct {
 	Basename   string  `json:"basename"`
 	Extension  *string `json:"extension,omitempty"`
 	Filename   string  `json:"filename"`
+	Mode       uint32  `json:"mode"`
 }
 
 func newContentResponse(fileInfoList []*daemon.FileInfo, directory string) contentResponse {
@@ -57,6 +59,7 @@ func newContentResponse(fileInfoList []*daemon.FileInfo, directory string) conte
 				Type:      "dir",
 				Dirname:   dirname,
 				Basename:  fileInfo.Name,
+				Mode:      fileInfo.Perm & 0o777,
 			})
 		case daemon.FileTypeFile:
 			filename, extension := parseFilename(fileInfo.Name)
@@ -71,6 +74,7 @@ func newContentResponse(fileInfoList []*daemon.FileInfo, directory string) conte
 				Dirname:    dirname,
 				Basename:   fileInfo.Name,
 				Filename:   filename,
+				Mode:       fileInfo.Perm & 0o777,
 			}
 
 			if extension != "" {

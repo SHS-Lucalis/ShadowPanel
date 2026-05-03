@@ -76,6 +76,7 @@ export function useContextMenu() {
     const copyRule = computed(() => true)
     const cutRule = computed(() => true)
     const renameRule = computed(() => !multiSelect.value)
+    const chmodRule = computed(() => selectedItems.value.length > 0)
     const pasteRule = computed(() => !!fm.clipboard.type)
 
     const deleteRule = computed(() => true)
@@ -151,6 +152,10 @@ export function useContextMenu() {
         modal.setModalState({ show: true, modalName: 'RenameModal' })
     }
 
+    function chmodAction() {
+        modal.setModalState({ show: true, modalName: 'ChmodModal' })
+    }
+
     function pasteAction() {
         fm.paste()
     }
@@ -177,6 +182,7 @@ export function useContextMenu() {
             copy: copyRule,
             cut: cutRule,
             rename: renameRule,
+            chmod: chmodRule,
             paste: pasteRule,
             delete: deleteRule,
             properties: propertiesRule,
@@ -198,6 +204,7 @@ export function useContextMenu() {
             copy: copyAction,
             cut: cutAction,
             rename: renameAction,
+            chmod: chmodAction,
             paste: pasteAction,
             delete: deleteAction,
             properties: propertiesAction,
@@ -229,6 +236,7 @@ export function useContextMenu() {
         copyRule,
         cutRule,
         renameRule,
+        chmodRule,
         pasteRule,
         deleteRule,
         propertiesRule,

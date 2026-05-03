@@ -65,25 +65,57 @@
                 <div>{{ lang.modal.properties['access_' + selectedItem.acl] }}</div>
             </div>
         </template>
+        <template v-if="hasMode">
+            <div class="grid grid-cols-3 gap-4 my-3 hover:bg-stone-100 dark:hover:bg-stone-800 rounded p-1 items-center">
+                <div><strong>{{ lang.modal.properties.permissions }}:</strong></div>
+                <div>
+                    <code>{{ symbolicMode }}</code>
+                    <span class="ml-2 text-stone-500 dark:text-stone-400">({{ octalMode }})</span>
+                </div>
+                <div class="text-right">
+                    <GButton color="black" size="small" @click="openChmod">
+                        <GIcon name="lock" class="mr-1" />
+                        {{ lang.btn.edit }}
+                    </GButton>
+                </div>
+            </div>
+        </template>
     </div>
 </template>
 
 <script setup>
+/* eslint-disable no-bitwise */
 import { computed } from 'vue'
 import { GIcon } from '@gameap/ui'
+import GButton from '@/components/GButton.vue'
 import { useFileManagerStore } from '../../../stores/useFileManagerStore.js'
+import { useModalStore } from '../../../stores/useModalStore.js'
 import { useTranslate } from '../../../composables/useTranslate.js'
 import { useHelper } from '../../../composables/useHelper.js'
 import { useModal } from '../../../composables/useModal.js'
 import { notification } from '@/parts/dialogs.js'
 
 const fm = useFileManagerStore()
+const modal = useModalStore()
 const { lang } = useTranslate()
 const { bytesToHuman, timestampToDate } = useHelper()
 const { hideModal } = useModal()
 
 const selectedDisk = computed(() => fm.selectedDisk)
 const selectedItem = computed(() => fm.selectedItems[0])
+
+const hasMode = computed(() => selectedItem.value && typeof selectedItem.value.mode === 'number')
+const octalMode = computed(() => (selectedItem.value.mode & 0o777).toString(8).padStart(3, '0'))
+const symbolicMode = computed(() => {
+    const { mode } = selectedItem.value
+    const triplet = (bits) => [bits & 0o4 ? 'r' : '-', bits & 0o2 ? 'w' : '-', bits & 0o1 ? 'x' : '-'].join('')
+
+    return triplet((mode >> 6) & 0o7) + triplet((mode >> 3) & 0o7) + triplet(mode & 0o7)
+})
+
+function openChmod() {
+    modal.setModalState({ modalName: 'ChmodModal', show: true })
+}
 
 function copyToClipboard(text) {
     const copy = () => {

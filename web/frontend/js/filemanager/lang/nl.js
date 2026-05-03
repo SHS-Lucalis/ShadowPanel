@@ -45,6 +45,7 @@ const nl = {
         paste: 'Plak',
         properties: 'Eigenschappen',
         rename: 'Hernoem',
+        chmod: 'Permissions',
         select: 'Selecteerd',
         view: 'Bekijken',
         zip: 'Inpakken',
@@ -67,6 +68,7 @@ const nl = {
             name: 'Naam',
             size: 'Grootte',
             type: 'Type',
+            permissions: 'Permissions',
         },
     },
     modal: {
@@ -106,6 +108,7 @@ const nl = {
             access_0: 'Geen toegang',
             access_1: 'Alleen Lezen',
             access_2: 'Lezen en Schrijven',
+            permissions: 'Permissions',
         },
         rename: {
             directoryExist: 'Bestand bestaat',
@@ -113,6 +116,21 @@ const nl = {
             fieldFeedback: 'Ongeldige naam',
             fileExist: 'Bestand bestaat',
             title: 'Hernoemen',
+        },
+        chmod: {
+            title: 'Edit permissions',
+            owner: 'Owner',
+            group: 'Group',
+            other: 'Other',
+            read: 'Read',
+            write: 'Write',
+            execute: 'Execute',
+            octalLabel: 'Octal value',
+            invalidMode: 'Mode must be an octal value between 0 and 777',
+            preview: 'Preview',
+            noSelected: 'Nothing selected!',
+            itemsSelected: 'items selected',
+            mixedSource: 'selected items have different permissions',
         },
         status: {
             noErrors: 'Geen errors!',
@@ -172,6 +190,8 @@ const nl = {
     notifications: {
         cutToClipboard: 'Knippen naar klembord!',
         copyToClipboard: 'Kopiëren naar klembord!',
+        chmodSuccess: 'Permissions changed!',
+        chmodError: 'Failed to change permissions!',
     },
     // todo - need to translate - end
     response: {
@@ -196,6 +216,7 @@ const nl = {
         deleted: 'Verwijderd!',
         renamed: 'Hernoemd!',
         copied: 'Succesvol gekopieerd!',
+        chmodChanged: 'Permissions changed!',
         // zip
         zipError: 'Fout bij het maken van archief!',
         // acl

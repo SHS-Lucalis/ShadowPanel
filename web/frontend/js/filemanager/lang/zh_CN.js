@@ -44,6 +44,7 @@ const zh_CN = {
         paste: '粘贴',
         properties: '属性',
         rename: '重命名',
+        chmod: 'Permissions',
         select: '选择',
         view: '查看',
         zip: '压缩',
@@ -66,6 +67,7 @@ const zh_CN = {
             name: '名称',
             size: '大小',
             type: '类型',
+            permissions: 'Permissions',
         },
     },
     modal: {
@@ -105,6 +107,7 @@ const zh_CN = {
             access_0: '禁止访问',
             access_1: '只读',
             access_2: '读写',
+            permissions: 'Permissions',
         },
         rename: {
             directoryExist: '目录存在',
@@ -112,6 +115,21 @@ const zh_CN = {
             fieldFeedback: '名称不可用',
             fileExist: '文件存在',
             title: '重命名',
+        },
+        chmod: {
+            title: 'Edit permissions',
+            owner: 'Owner',
+            group: 'Group',
+            other: 'Other',
+            read: 'Read',
+            write: 'Write',
+            execute: 'Execute',
+            octalLabel: 'Octal value',
+            invalidMode: 'Mode must be an octal value between 0 and 777',
+            preview: 'Preview',
+            noSelected: 'Nothing selected!',
+            itemsSelected: 'items selected',
+            mixedSource: 'selected items have different permissions',
         },
         status: {
             noErrors: '暂无错误!',
@@ -171,6 +189,8 @@ const zh_CN = {
     notifications: {
         cutToClipboard: '剪切到粘贴板!',
         copyToClipboard: '复制到粘贴板!',
+        chmodSuccess: 'Permissions changed!',
+        chmodError: 'Failed to change permissions!',
     },
     // todo - need to translate
     response: {
@@ -195,6 +215,7 @@ const zh_CN = {
         deleted: 'Deleted!',
         renamed: 'Renamed!',
         copied: 'Copied successfully!',
+        chmodChanged: 'Permissions changed!',
         // zip
         zipError: 'Error creating archive!',
         // acl

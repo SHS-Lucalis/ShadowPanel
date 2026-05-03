@@ -73,6 +73,7 @@ export const useSettingsStore = defineStore('fm-settings', () => {
             { name: 'copy', icon: 'copy' },
             { name: 'cut', icon: 'cut' },
             { name: 'rename', icon: 'edit' },
+            { name: 'chmod', icon: 'lock' },
             { name: 'paste', icon: 'paste' },
         ],
         [

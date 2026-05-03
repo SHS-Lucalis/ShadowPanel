@@ -78,6 +78,13 @@
                           modified:
                             type: string
                             format: date-time
+                          mode:
+                            type: integer
+                            minimum: 0
+                            maximum: 511
+                            description: |
+                              Unix file permissions as integer (octal value 0..0o777).
+                              Example: 493 = 0o755 = `rwxr-xr-x`.
                 - type: object
                   description: File content
                   properties:
@@ -451,6 +458,98 @@
               $ref: '../schemas/SuccessResponse.yaml'
       '401':
         description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
+/api/file-manager/{server}/chmod:
+  post:
+    tags:
+      - FileManager
+    summary: Change file permissions
+    description: |
+      Changes Unix file permissions for one or more files or directories.
+      Mode is an integer in the range 0..0o777 (0..511 decimal). Special
+      bits (setuid, setgid, sticky) are not supported and will be masked
+      off. Operates on the specified path only — directories are not
+      modified recursively.
+      Items are processed sequentially; the first failing item aborts the
+      batch (fail-fast behavior, consistent with `delete` endpoint).
+    operationId: chmodFiles
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              disk:
+                type: string
+                enum: [server]
+                description: Disk identifier (only `server` is supported)
+              mode:
+                type: integer
+                minimum: 0
+                maximum: 511
+                description: |
+                  New permissions as integer (octal 0..0o777).
+                  Example: 493 = 0o755 = `rwxr-xr-x`.
+              items:
+                type: array
+                description: Paths to chmod
+                items:
+                  type: object
+                  properties:
+                    path:
+                      type: string
+                      description: Path inside the server data directory
+                  required:
+                    - path
+            required:
+              - disk
+              - mode
+              - items
+    responses:
+      '200':
+        description: Permissions changed
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/SuccessResponse.yaml'
+      '400':
+        description: Bad request (invalid path, mode out of range, unsupported disk)
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: User does not have files permission for this server
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Server or node not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '500':
+        description: Daemon failed to change permissions
         content:
           application/json:
             schema:

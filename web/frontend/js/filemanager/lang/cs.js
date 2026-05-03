@@ -43,6 +43,7 @@ const cs = {
         paste: 'Vložit',
         properties: 'Vlastnosti',
         rename: 'Přejmenovat',
+        chmod: 'Permissions',
         select: 'Vybrat',
         view: 'Zobrazit',
         zip: 'Zabalit (Zip)',
@@ -65,6 +66,7 @@ const cs = {
             name: 'Název',
             size: 'Velikost',
             type: 'Typ',
+            permissions: 'Permissions',
         },
     },
     modal: {
@@ -104,6 +106,7 @@ const cs = {
             access_0: 'Přístup odepřen',
             access_1: 'Pouze ke čtení',
             access_2: 'Čtení a zápis',
+            permissions: 'Permissions',
         },
         rename: {
             directoryExist: 'Složka již existuje',
@@ -111,6 +114,21 @@ const cs = {
             fieldFeedback: 'Neplatné jméno',
             fileExist: 'Soubor již existuje',
             title: 'Přejmenovat',
+        },
+        chmod: {
+            title: 'Edit permissions',
+            owner: 'Owner',
+            group: 'Group',
+            other: 'Other',
+            read: 'Read',
+            write: 'Write',
+            execute: 'Execute',
+            octalLabel: 'Octal value',
+            invalidMode: 'Mode must be an octal value between 0 and 777',
+            preview: 'Preview',
+            noSelected: 'Nothing selected!',
+            itemsSelected: 'items selected',
+            mixedSource: 'selected items have different permissions',
         },
         status: {
             noErrors: 'Žádná chyba!',
@@ -170,6 +188,8 @@ const cs = {
     notifications: {
         cutToClipboard: 'Vyjmuto do schránky!',
         copyToClipboard: 'Zkopírováno do schránky!',
+        chmodSuccess: 'Permissions changed!',
+        chmodError: 'Failed to change permissions!',
     },
     response: {
         noConfig: 'Konfigurace nebyla nalezena!',
@@ -193,6 +213,7 @@ const cs = {
         deleted: 'Smazáno!',
         renamed: 'Přejmenováno!',
         copied: 'Úspěšně zkopírováno!',
+        chmodChanged: 'Permissions changed!',
         // zip
         zipError: 'Chyba při vytváření archivu!',
         // acl

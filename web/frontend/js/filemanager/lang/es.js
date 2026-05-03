@@ -43,6 +43,7 @@ const es = {
         paste: 'Pegar',
         properties: 'Propiedades',
         rename: 'Renombrar',
+        chmod: 'Permissions',
         select: 'Seleccionar',
         view: 'Vista',
         zip: 'Zip',
@@ -65,6 +66,7 @@ const es = {
             name: 'Nombre',
             size: 'Tamaño',
             type: 'Tipo',
+            permissions: 'Permissions',
         },
     },
     modal: {
@@ -104,6 +106,7 @@ const es = {
             access_0: 'Access denied',
             access_1: 'Only Read',
             access_2: 'Read and Write',
+            permissions: 'Permissions',
         },
         rename: {
             directoryExist: 'Ya existe el directorio',
@@ -111,6 +114,21 @@ const es = {
             fieldFeedback: 'Nombre invalido',
             fileExist: 'Ya existe el archivo',
             title: 'Renombrar',
+        },
+        chmod: {
+            title: 'Edit permissions',
+            owner: 'Owner',
+            group: 'Group',
+            other: 'Other',
+            read: 'Read',
+            write: 'Write',
+            execute: 'Execute',
+            octalLabel: 'Octal value',
+            invalidMode: 'Mode must be an octal value between 0 and 777',
+            preview: 'Preview',
+            noSelected: 'Nothing selected!',
+            itemsSelected: 'items selected',
+            mixedSource: 'selected items have different permissions',
         },
         status: {
             noErrors: 'No errors!',
@@ -170,6 +188,8 @@ const es = {
     notifications: {
         cutToClipboard: 'Copiado!',
         copyToClipboard: 'Copiado!',
+        chmodSuccess: 'Permissions changed!',
+        chmodError: 'Failed to change permissions!',
     },
     // todo - need to translate
     response: {
@@ -194,6 +214,7 @@ const es = {
         deleted: 'Eliminado!',
         renamed: 'Renombrado!',
         copied: 'Copiado exitosamente!',
+        chmodChanged: 'Permissions changed!',
         // zip
         zipError: 'Error al crear archivo!',
         // acl

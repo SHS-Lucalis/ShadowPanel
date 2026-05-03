@@ -42,6 +42,7 @@ const fr = {
         paste: 'Coller',
         properties: 'Propriétés',
         rename: 'Renommer',
+        chmod: 'Permissions',
         select: 'Sélectionner',
         view: 'Voir',
         zip: 'Zipper',
@@ -64,6 +65,7 @@ const fr = {
             name: 'Nom',
             size: 'Taille',
             type: 'Type',
+            permissions: 'Permissions',
         },
     },
     modal: {
@@ -103,6 +105,7 @@ const fr = {
             access_0: 'Accès refusé',
             access_1: 'Lecture seul',
             access_2: 'Lecture/écriture',
+            permissions: 'Permissions',
         },
         rename: {
             directoryExist: 'Dossier existant',
@@ -110,6 +113,21 @@ const fr = {
             fieldFeedback: 'Nom invalide',
             fileExist: 'Fichier existant',
             title: 'Renommer',
+        },
+        chmod: {
+            title: 'Edit permissions',
+            owner: 'Owner',
+            group: 'Group',
+            other: 'Other',
+            read: 'Read',
+            write: 'Write',
+            execute: 'Execute',
+            octalLabel: 'Octal value',
+            invalidMode: 'Mode must be an octal value between 0 and 777',
+            preview: 'Preview',
+            noSelected: 'Nothing selected!',
+            itemsSelected: 'items selected',
+            mixedSource: 'selected items have different permissions',
         },
         status: {
             noErrors: 'Aucune erreurs!',
@@ -169,6 +187,8 @@ const fr = {
     notifications: {
         cutToClipboard: 'Coller dans le presse-papier!',
         copyToClipboard: 'Copied dans le presse-papier!',
+        chmodSuccess: 'Permissions changed!',
+        chmodError: 'Failed to change permissions!',
     },
     response: {
         noConfig: 'Configuration introuvable!',
@@ -192,6 +212,7 @@ const fr = {
         deleted: 'Supprimé!',
         renamed: 'Renommé!',
         copied: 'Copié!',
+        chmodChanged: 'Permissions changed!',
         // zip
         zipError: "Erreur dans la création de l'archive!",
         // acl

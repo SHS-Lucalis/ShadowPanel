@@ -48,6 +48,7 @@ const en = {
         paste: 'Paste',
         properties: 'Properties',
         rename: 'Rename',
+        chmod: 'Permissions',
         select: 'Select',
         view: 'View',
         zip: 'Zip',
@@ -85,6 +86,7 @@ const en = {
             name: 'Name',
             size: 'Size',
             type: 'Type',
+            permissions: 'Permissions',
         },
     },
     modal: {
@@ -124,6 +126,7 @@ const en = {
             access_0: 'Access denied',
             access_1: 'Only Read',
             access_2: 'Read and Write',
+            permissions: 'Permissions',
         },
         rename: {
             directoryExist: 'Directory exists',
@@ -131,6 +134,21 @@ const en = {
             fieldFeedback: 'Invalid name',
             fileExist: 'File exists',
             title: 'Rename',
+        },
+        chmod: {
+            title: 'Edit permissions',
+            owner: 'Owner',
+            group: 'Group',
+            other: 'Other',
+            read: 'Read',
+            write: 'Write',
+            execute: 'Execute',
+            octalLabel: 'Octal value',
+            invalidMode: 'Mode must be an octal value between 0 and 777',
+            preview: 'Preview',
+            noSelected: 'Nothing selected!',
+            itemsSelected: 'items selected',
+            mixedSource: 'selected items have different permissions',
         },
         status: {
             noErrors: 'No errors!',
@@ -218,6 +236,8 @@ const en = {
     notifications: {
         cutToClipboard: 'Cut to clipboard!',
         copyToClipboard: 'Copied to clipboard!',
+        chmodSuccess: 'Permissions changed!',
+        chmodError: 'Failed to change permissions!',
     },
     response: {
         noConfig: 'Config not found!',
@@ -241,6 +261,7 @@ const en = {
         deleted: 'Deleted!',
         renamed: 'Renamed!',
         copied: 'Copied successfully!',
+        chmodChanged: 'Permissions changed!',
         // zip
         zipError: 'Error creating archive!',
         // acl

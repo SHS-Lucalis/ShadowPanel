@@ -40,6 +40,7 @@ import DeleteModal from './views/DeleteModal.vue'
 import ClipboardModal from './views/ClipboardModal.vue'
 import StatusModal from './views/StatusModal.vue'
 import RenameModal from './views/RenameModal.vue'
+import ChmodModal from './views/ChmodModal.vue'
 import PropertiesModal from './views/PropertiesModal.vue'
 import PreviewModal from './views/PreviewModal.vue'
 import TextEditModal from './views/TextEditModal.vue'
@@ -61,6 +62,7 @@ const modalComponents = {
     ClipboardModal,
     StatusModal,
     RenameModal,
+    ChmodModal,
     PropertiesModal,
     PreviewModal,
     TextEditModal,
@@ -87,6 +89,7 @@ const modalConfig = computed(() => ({
     ClipboardModal: { title: lang.value.clipboard.title, width: '600px' },
     StatusModal: { title: lang.value.modal.status.title, width: '600px' },
     RenameModal: { title: lang.value.modal.rename.title, width: '600px' },
+    ChmodModal: { title: lang.value.modal.chmod.title, width: '600px' },
     PropertiesModal: { title: lang.value.modal.properties.title, width: '600px' },
     PreviewModal: { title: lang.value.modal.preview.title, width: '1000px' },
     TextEditModal: { title: lang.value.modal.editor.title, width: '1000px' },

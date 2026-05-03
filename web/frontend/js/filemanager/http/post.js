@@ -112,4 +112,13 @@ export default {
     paste(data) {
         return HTTP.post('paste', data);
     },
+
+    /**
+     * Change file permissions
+     * @param data
+     * @returns {*}
+     */
+    chmod(data) {
+        return HTTP.post('chmod', data);
+    },
 };

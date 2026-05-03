@@ -31,11 +31,14 @@
                             <GIcon name="sort-asc" v-show="sortSettings.direction === 'up'" />
                         </template>
                     </th>
+                    <th class="w-permissions">
+                        {{ lang.manager.table.permissions }}
+                    </th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-if="!isRootPath">
-                    <td colspan="4" class="fm-content-item" v-on:click="levelUp">
+                    <td colspan="5" class="fm-content-item" v-on:click="levelUp">
                         <GIcon name="arrow-turn-up" />
                     </td>
                 </tr>
@@ -58,6 +61,7 @@
                     <td>
                         {{ timestampToDate(directory.timestamp) }}
                     </td>
+                    <td class="fm-permissions">{{ formatMode(directory.mode) }}</td>
                 </tr>
                 <tr
                     v-for="(file, index) in files"
@@ -78,6 +82,7 @@
                     <td>
                         {{ timestampToDate(file.timestamp) }}
                     </td>
+                    <td class="fm-permissions">{{ formatMode(file.mode) }}</td>
                 </tr>
             </tbody>
         </table>
@@ -85,6 +90,7 @@
 </template>
 
 <script setup>
+/* eslint-disable no-bitwise */
 import { computed } from 'vue'
 import { GIcon } from '@gameap/ui'
 import EventBus from '../../emitter.js'
@@ -166,6 +172,14 @@ function handleSelectDirectory(path) {
 
 function handleSortBy(field) {
     sortBy(field, null)
+}
+
+function formatMode(mode) {
+    if (typeof mode !== 'number') return '---------'
+
+    const triplet = (bits) => [bits & 0o4 ? 'r' : '-', bits & 0o2 ? 'w' : '-', bits & 0o1 ? 'x' : '-'].join('')
+
+    return triplet((mode >> 6) & 0o7) + triplet((mode >> 3) & 0o7) + triplet(mode & 0o7)
 }
 
 function selectAction(file) {
@@ -250,6 +264,16 @@ function selectAction(file) {
 
     .w-65 {
         width: 65%;
+    }
+
+    .w-permissions {
+        width: 9ch;
+    }
+
+    .fm-permissions {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.85em;
+        @apply text-stone-500 dark:text-stone-400;
     }
 
     .fm-content-item {

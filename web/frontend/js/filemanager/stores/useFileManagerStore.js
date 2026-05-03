@@ -885,6 +885,19 @@ export const useFileManagerStore = defineStore('fm', () => {
         return response
     }
 
+    async function chmod({ items, mode }) {
+        const response = await POST.chmod({
+            disk: selectedDisk.value,
+            items,
+            mode,
+        })
+
+        if (response.data.result.status === 'success') {
+            refreshManagers()
+        }
+        return response
+    }
+
     function url({ disk, path }) {
         return GET.url(disk, path)
     }
@@ -1069,6 +1082,7 @@ export const useFileManagerStore = defineStore('fm', () => {
         delete: deleteItems,
         paste,
         rename,
+        chmod,
         url,
         toClipboard,
         refreshManagers,

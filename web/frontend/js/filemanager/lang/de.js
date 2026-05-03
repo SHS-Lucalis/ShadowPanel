@@ -42,6 +42,7 @@ const de = {
         paste: 'Einfügen',
         properties: 'Einstellungen',
         rename: 'Umbenennen',
+        chmod: 'Permissions',
         select: 'Wählen',
         view: 'Vorschau',
         zip: 'Zip',
@@ -64,6 +65,7 @@ const de = {
             name: 'Name',
             size: 'Größe',
             type: 'Type',
+            permissions: 'Permissions',
         },
     },
     modal: {
@@ -103,6 +105,7 @@ const de = {
             access_0: 'Zugriff verweigert',
             access_1: 'Nur Lesezugriff',
             access_2: 'Lesen- und Schreibenzugriff',
+            permissions: 'Permissions',
         },
         rename: {
             directoryExist: 'Verzeichnis ist vorhanden',
@@ -110,6 +113,21 @@ const de = {
             fieldFeedback: 'Ungültiger Name',
             fileExist: 'Datei ist vorhanden',
             title: 'Umbenennen',
+        },
+        chmod: {
+            title: 'Edit permissions',
+            owner: 'Owner',
+            group: 'Group',
+            other: 'Other',
+            read: 'Read',
+            write: 'Write',
+            execute: 'Execute',
+            octalLabel: 'Octal value',
+            invalidMode: 'Mode must be an octal value between 0 and 777',
+            preview: 'Preview',
+            noSelected: 'Nothing selected!',
+            itemsSelected: 'items selected',
+            mixedSource: 'selected items have different permissions',
         },
         status: {
             noErrors: 'Keine Fehler!',
@@ -169,6 +187,8 @@ const de = {
     notifications: {
         cutToClipboard: 'Ausgeschnitten in die Zwischenablage!',
         copyToClipboard: 'Kopiert in die Zwischenablage!',
+        chmodSuccess: 'Permissions changed!',
+        chmodError: 'Failed to change permissions!',
     },
     response: {
         noConfig: 'Konfiguration nicht gefunden!',
@@ -192,6 +212,7 @@ const de = {
         deleted: 'Gelöscht!',
         renamed: 'Umbenannt!',
         copied: 'Erfolgreich kopiert!',
+        chmodChanged: 'Permissions changed!',
         // zip
         zipError: 'Fehler bei der Erstellung des Archivs!',
         // acl

@@ -43,6 +43,7 @@ const it = {
         paste: 'Incolla',
         properties: 'Proprietà',
         rename: 'Rinomina',
+        chmod: 'Permissions',
         select: 'Seleziona',
         view: 'Anteprima',
         zip: 'Zip',
@@ -65,6 +66,7 @@ const it = {
             name: 'Nome',
             size: 'Dim.',
             type: 'Tipo',
+            permissions: 'Permissions',
         },
     },
     modal: {
@@ -104,6 +106,7 @@ const it = {
             access_0: 'Accesso negato',
             access_1: 'Sola lettura',
             access_2: 'Lettura e Scrittura',
+            permissions: 'Permissions',
         },
         rename: {
             directoryExist: 'La cartella esiste',
@@ -111,6 +114,21 @@ const it = {
             fieldFeedback: 'Nome non valido',
             fileExist: 'Il file esiste',
             title: 'Rinomina',
+        },
+        chmod: {
+            title: 'Edit permissions',
+            owner: 'Owner',
+            group: 'Group',
+            other: 'Other',
+            read: 'Read',
+            write: 'Write',
+            execute: 'Execute',
+            octalLabel: 'Octal value',
+            invalidMode: 'Mode must be an octal value between 0 and 777',
+            preview: 'Preview',
+            noSelected: 'Nothing selected!',
+            itemsSelected: 'items selected',
+            mixedSource: 'selected items have different permissions',
         },
         status: {
             noErrors: 'Nessun errore!',
@@ -170,6 +188,8 @@ const it = {
     notifications: {
         cutToClipboard: 'Tagliato e salvato negli appunti!',
         copyToClipboard: 'Copiato negli appunti!',
+        chmodSuccess: 'Permissions changed!',
+        chmodError: 'Failed to change permissions!',
     },
     response: {
         noConfig: 'File di configuraizone non trovato!',
@@ -193,6 +213,7 @@ const it = {
         deleted: 'Eliminato!',
         renamed: 'Rinominato!',
         copied: 'Copiato con successo!',
+        chmodChanged: 'Permissions changed!',
         // zip
         zipError: "Errore dirante la creazione dell'archivio!",
         // acl

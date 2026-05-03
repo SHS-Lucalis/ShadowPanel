@@ -43,6 +43,7 @@ const zh_TW = {
         paste: '貼上',
         properties: '屬性',
         rename: '重新命名',
+        chmod: 'Permissions',
         select: '選擇',
         view: '查看',
         zip: '壓縮',
@@ -65,6 +66,7 @@ const zh_TW = {
             name: '名稱',
             size: '大小',
             type: '類型',
+            permissions: 'Permissions',
         },
     },
     modal: {
@@ -104,6 +106,7 @@ const zh_TW = {
             access_0: '禁止訪問',
             access_1: '唯獨',
             access_2: '讀寫',
+            permissions: 'Permissions',
         },
         rename: {
             directoryExist: '目錄存在',
@@ -111,6 +114,21 @@ const zh_TW = {
             fieldFeedback: '名稱不可用',
             fileExist: '文件存在',
             title: '重命名',
+        },
+        chmod: {
+            title: 'Edit permissions',
+            owner: 'Owner',
+            group: 'Group',
+            other: 'Other',
+            read: 'Read',
+            write: 'Write',
+            execute: 'Execute',
+            octalLabel: 'Octal value',
+            invalidMode: 'Mode must be an octal value between 0 and 777',
+            preview: 'Preview',
+            noSelected: 'Nothing selected!',
+            itemsSelected: 'items selected',
+            mixedSource: 'selected items have different permissions',
         },
         status: {
             noErrors: '暫無錯誤!',
@@ -170,6 +188,8 @@ const zh_TW = {
     notifications: {
         cutToClipboard: '剪下到剪貼簿!',
         copyToClipboard: '複製到剪貼簿!',
+        chmodSuccess: 'Permissions changed!',
+        chmodError: 'Failed to change permissions!',
     },
     response: {
         noConfig: '找不到設定檔!',
@@ -193,6 +213,7 @@ const zh_TW = {
         deleted: '已刪除!',
         renamed: '已重新命名!',
         copied: '已複製完成!',
+        chmodChanged: 'Permissions changed!',
         // zip
         zipError: '壓縮檔建立失敗!',
         // acl

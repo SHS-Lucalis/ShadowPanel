@@ -43,6 +43,7 @@ const sr = {
         paste: 'Nalepi',
         properties: 'Svojstva',
         rename: 'Preimenuj',
+        chmod: 'Permissions',
         select: 'Izaberi',
         view: 'Pregledaj',
         zip: 'Arhiviraj',
@@ -65,6 +66,7 @@ const sr = {
             name: 'Naziv',
             size: 'Veličina',
             type: 'Vrsta',
+            permissions: 'Permissions',
         },
     },
     modal: {
@@ -104,6 +106,7 @@ const sr = {
             access_0: 'Pristup odbijen',
             access_1: 'Samo za čitanje',
             access_2: 'Pristup za čitanje i pisanje',
+            permissions: 'Permissions',
         },
         rename: {
             directoryExist: 'Direktorijum postoji',
@@ -111,6 +114,21 @@ const sr = {
             fieldFeedback: 'Neispravan naziv',
             fileExist: 'Datoteka već postoji',
             title: 'Preimenuj',
+        },
+        chmod: {
+            title: 'Edit permissions',
+            owner: 'Owner',
+            group: 'Group',
+            other: 'Other',
+            read: 'Read',
+            write: 'Write',
+            execute: 'Execute',
+            octalLabel: 'Octal value',
+            invalidMode: 'Mode must be an octal value between 0 and 777',
+            preview: 'Preview',
+            noSelected: 'Nothing selected!',
+            itemsSelected: 'items selected',
+            mixedSource: 'selected items have different permissions',
         },
         status: {
             noErrors: 'Nema Grešaka!',
@@ -170,6 +188,8 @@ const sr = {
     notifications: {
         cutToClipboard: 'Isečeno u klipbord!',
         copyToClipboard: 'Kopirano u klipbord!',
+        chmodSuccess: 'Permissions changed!',
+        chmodError: 'Failed to change permissions!',
     },
     response: {
         noConfig: 'Nema konfiguracije!',
@@ -193,6 +213,7 @@ const sr = {
         deleted: 'Obrisano!',
         renamed: 'Preimenovano!',
         copied: 'Uspešno kopirano!',
+        chmodChanged: 'Permissions changed!',
         // zip
         zipError: 'Greška u pravljenju arhive!',
         // acl

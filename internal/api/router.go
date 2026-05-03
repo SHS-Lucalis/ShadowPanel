@@ -31,6 +31,7 @@ import (
 	"github.com/gameap/gameap/internal/api/daemontasks/canceldaemontask"
 	"github.com/gameap/gameap/internal/api/daemontasks/getdaemontask"
 	"github.com/gameap/gameap/internal/api/daemontasks/getdaemontasks"
+	filemanagerchmod "github.com/gameap/gameap/internal/api/filemanager/chmod"
 	"github.com/gameap/gameap/internal/api/filemanager/content"
 	filemanagercreatedirectory "github.com/gameap/gameap/internal/api/filemanager/createdirectory"
 	filemanagercreatefile "github.com/gameap/gameap/internal/api/filemanager/createfile"
@@ -825,6 +826,17 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 			Method: http.MethodPost,
 			Path:   "/api/file-manager/{server}/rename",
 			Handler: filemanagerrename.NewHandler(
+				c.ServerRepository(),
+				c.NodeRepository(),
+				c.RBAC(),
+				c.DaemonFiles(),
+				c.Responder(),
+			),
+		},
+		{
+			Method: http.MethodPost,
+			Path:   "/api/file-manager/{server}/chmod",
+			Handler: filemanagerchmod.NewHandler(
 				c.ServerRepository(),
 				c.NodeRepository(),
 				c.RBAC(),

@@ -42,6 +42,7 @@ const ar = {
         paste: 'لصق',
         properties: 'الخصائص',
         rename: 'اعادة تسمية',
+        chmod: 'Permissions',
         select: 'اختيار',
         view: 'عرض',
         zip: 'ضغط',
@@ -64,6 +65,7 @@ const ar = {
             name: 'أسم',
             size: 'حجم',
             type: 'نوع',
+            permissions: 'Permissions',
         },
     },
     modal: {
@@ -103,6 +105,7 @@ const ar = {
             access_0: 'تم الرفض',
             access_1: 'قراءة فقط',
             access_2: 'اقرا و اكتب',
+            permissions: 'Permissions',
         },
         rename: {
             directoryExist: 'المجلد موجود',
@@ -110,6 +113,21 @@ const ar = {
             fieldFeedback: 'اسم خاطئ',
             fileExist: 'الملف موجود',
             title: 'اعادة تسمية',
+        },
+        chmod: {
+            title: 'Edit permissions',
+            owner: 'Owner',
+            group: 'Group',
+            other: 'Other',
+            read: 'Read',
+            write: 'Write',
+            execute: 'Execute',
+            octalLabel: 'Octal value',
+            invalidMode: 'Mode must be an octal value between 0 and 777',
+            preview: 'Preview',
+            noSelected: 'Nothing selected!',
+            itemsSelected: 'items selected',
+            mixedSource: 'selected items have different permissions',
         },
         status: {
             noErrors: 'لايوجد خطأ!',
@@ -169,6 +187,8 @@ const ar = {
     notifications: {
         cutToClipboard: 'قص إلى الحافظة!',
         copyToClipboard: 'نسخ إلى الحافظة!',
+        chmodSuccess: 'Permissions changed!',
+        chmodError: 'Failed to change permissions!',
     },
     response: {
         noConfig: 'الاعدادت غير متوفرة!',
@@ -192,6 +212,7 @@ const ar = {
         deleted: 'تم الحذف!',
         renamed: 'أعيدت تسميتها!',
         copied: 'تم النسخ بنجاح!',
+        chmodChanged: 'Permissions changed!',
         // zip
         zipError: 'خطأ في إنشاء الأرشيف!',
         // acl

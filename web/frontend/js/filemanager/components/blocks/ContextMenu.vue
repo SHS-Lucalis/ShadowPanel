@@ -135,6 +135,10 @@ function renameRule() {
     return !multiSelect.value
 }
 
+function chmodRule() {
+    return selectedItems.value.length > 0
+}
+
 function pasteRule() {
     return !!fm.clipboard.type
 }
@@ -172,6 +176,7 @@ const rules = {
     copy: copyRule,
     cut: cutRule,
     rename: renameRule,
+    chmod: chmodRule,
     paste: pasteRule,
     zip: zipRule,
     unzip: unzipRule,
@@ -243,6 +248,10 @@ function renameAction() {
     modal.setModalState({ modalName: 'RenameModal', show: true })
 }
 
+function chmodAction() {
+    modal.setModalState({ modalName: 'ChmodModal', show: true })
+}
+
 function pasteAction() {
     fm.paste()
 }
@@ -275,6 +284,7 @@ const actions = {
     copy: copyAction,
     cut: cutAction,
     rename: renameAction,
+    chmod: chmodAction,
     paste: pasteAction,
     zip: zipAction,
     unzip: unzipAction,

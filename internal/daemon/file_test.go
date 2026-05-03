@@ -912,6 +912,119 @@ func TestFileService_Chmod_Local(t *testing.T) {
 	assert.Equal(t, int32(0o755), gotMode)
 }
 
+func TestFileService_Chmod_Dispatched_Success(t *testing.T) {
+	// When the daemon is connected on a different instance, FileService routes
+	// chmod through the dispatcher rather than calling gateway directly.
+
+	// ARRANGE
+	s := setupFileService(t)
+	node := newTestNode(190)
+	s.registry.setConnected(uint64(node.ID), false)
+	s.registry.setConnectedAnywhere(uint64(node.ID), true)
+
+	var gotPath string
+	var gotMode int32
+	stubDispatcher := &fakeDispatcher{
+		dispatchFileOp: func(_ context.Context, nodeID uint64, req *proto.FileOperationRequest) (*proto.FileOperationResponse, error) {
+			assert.Equal(t, uint64(node.ID), nodeID)
+			assert.Equal(t, proto.FileOperationType_FILE_OPERATION_TYPE_CHMOD, req.Operation)
+			if c := req.GetChmodParams(); c != nil {
+				gotPath = c.Path
+				gotMode = c.Mode
+			}
+
+			return &proto.FileOperationResponse{Success: true}, nil
+		},
+	}
+	svc := NewFileService(s.gateway, s.registry, stubDispatcher, s.storage, s.transferReg, nil, slog.Default())
+
+	// ACT
+	err := svc.Chmod(testContext(t), node, "/srv/gameap/scripts/run.sh", 0o755)
+
+	// ASSERT
+	require.NoError(t, err)
+	assert.Equal(t, "scripts/run.sh", gotPath, "WorkPath prefix must be stripped before sending over dispatcher")
+	assert.Equal(t, int32(0o755), gotMode)
+}
+
+func TestFileService_Chmod_DaemonReturnsFailure(t *testing.T) {
+	// ARRANGE
+	s := setupFileService(t)
+	node := newTestNode(191)
+	s.registry.setConnected(uint64(node.ID), true)
+
+	s.gateway.requestFileOp = func(_ context.Context, _ uint64, _ *proto.FileOperationRequest) (*proto.FileOperationResponse, error) {
+		return &proto.FileOperationResponse{Success: false, Error: "permission denied"}, nil
+	}
+
+	// ACT
+	err := s.service.Chmod(testContext(t), node, "/srv/gameap/x", 0o644)
+
+	// ASSERT
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "file operation failed")
+	assert.Contains(t, err.Error(), "permission denied")
+}
+
+func TestFileService_Chmod_GatewayError(t *testing.T) {
+	// ARRANGE
+	s := setupFileService(t)
+	node := newTestNode(192)
+	s.registry.setConnected(uint64(node.ID), true)
+	s.gateway.requestFileOp = func(_ context.Context, _ uint64, _ *proto.FileOperationRequest) (*proto.FileOperationResponse, error) {
+		return nil, errors.New("transport boom")
+	}
+
+	// ACT
+	err := s.service.Chmod(testContext(t), node, "/srv/gameap/x", 0o644)
+
+	// ASSERT
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "file operation")
+	assert.Contains(t, err.Error(), "transport boom")
+}
+
+func TestFileService_Chmod_NotConnected(t *testing.T) {
+	// ARRANGE
+	s := setupFileService(t)
+	node := newTestNode(193)
+
+	// ACT
+	err := s.service.Chmod(testContext(t), node, "/srv/gameap/x", 0o644)
+
+	// ASSERT
+	require.Error(t, err)
+	assert.ErrorIs(t, err, ErrDaemonNotConnected)
+}
+
+func TestFileService_Chmod_MaskHighBits(t *testing.T) {
+	// Bits above the 9 standard rwxrwxrwx bits (setuid 04000, setgid 02000,
+	// sticky 01000) must be stripped by `mode & 0x1FF` before reaching daemon.
+	// Without the mask, callers could grant elevated execution rights via the
+	// HTTP layer; this test pins the mask invariant.
+
+	// ARRANGE
+	s := setupFileService(t)
+	node := newTestNode(194)
+	s.registry.setConnected(uint64(node.ID), true)
+
+	var gotMode int32
+	s.gateway.requestFileOp = func(_ context.Context, _ uint64, req *proto.FileOperationRequest) (*proto.FileOperationResponse, error) {
+		if c := req.GetChmodParams(); c != nil {
+			gotMode = c.Mode
+		}
+
+		return &proto.FileOperationResponse{Success: true}, nil
+	}
+
+	// ACT
+	err := s.service.Chmod(testContext(t), node, "/srv/gameap/x", 0o7777)
+
+	// ASSERT
+	require.NoError(t, err)
+	assert.Equal(t, int32(0o777), gotMode, "high bits (setuid/setgid/sticky) must be masked off")
+}
+
 func TestFileService_GetFileInfo_Local(t *testing.T) {
 	// ARRANGE
 	s := setupFileService(t)
