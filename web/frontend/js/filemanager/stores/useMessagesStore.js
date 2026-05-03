@@ -118,6 +118,7 @@ export const useMessagesStore = defineStore('fm-messages', () => {
                 renamedTo: null,
                 phase: 'pending',
                 loaded: 0,
+                uploadedBytes: 0,
                 error: null,
             })
             raws.push(f.file)
@@ -189,6 +190,12 @@ export const useMessagesStore = defineStore('fm-messages', () => {
         file.renamedTo = renamedTo
     }
 
+    function fileUploadedContribution(file) {
+        if (file.phase === 'done' || file.phase === 'completing') return file.size
+
+        return Math.min(file.uploadedBytes || 0, file.size)
+    }
+
     function recomputeDirAggregates() {
         const up = uploadProgress.value
         for (const key of Object.keys(up.dirs)) {
@@ -203,6 +210,7 @@ export const useMessagesStore = defineStore('fm-messages', () => {
         let totalFailed = 0
         let totalSkipped = 0
         for (const file of up.files) {
+            const contribution = fileUploadedContribution(file)
             const chain = dirChain(file.dirPath)
             for (const dirRel of chain) {
                 const node = up.dirs[dirRel]
@@ -210,12 +218,12 @@ export const useMessagesStore = defineStore('fm-messages', () => {
                 if (file.phase === 'done') node.completed += 1
                 if (file.phase === 'error') node.failed += 1
                 if (file.phase === 'skipped') node.skipped += 1
-                node.loaded += file.phase === 'done' ? file.size : Math.min(file.loaded || 0, file.size)
+                node.loaded += contribution
             }
             if (file.phase === 'done') totalCompleted += 1
             if (file.phase === 'error') totalFailed += 1
             if (file.phase === 'skipped') totalSkipped += 1
-            totalLoaded += file.phase === 'done' ? file.size : Math.min(file.loaded || 0, file.size)
+            totalLoaded += contribution
         }
         up.totals.completedFiles = totalCompleted
         up.totals.failedFiles = totalFailed
@@ -227,14 +235,27 @@ export const useMessagesStore = defineStore('fm-messages', () => {
         const file = uploadProgress.value.files[index]
         if (!file) return
         file.phase = phase
-        if (phase === 'done') file.loaded = file.size
+        if (phase === 'uploading') {
+            file.loaded = 0
+            file.uploadedBytes = 0
+        }
+        if (phase === 'completing') {
+            file.uploadedBytes = file.size
+        }
+        if (phase === 'done') {
+            file.loaded = file.size
+            file.uploadedBytes = file.size
+        }
         recomputeDirAggregates()
     }
 
-    function setFileProgress({ index, loaded }) {
+    function setFileProgress({ index, loaded, phase }) {
         const file = uploadProgress.value.files[index]
         if (!file) return
         file.loaded = loaded
+        if (phase === 'uploading' && file.phase !== 'completing' && file.phase !== 'done') {
+            file.uploadedBytes = Math.min(loaded, file.size)
+        }
         recomputeDirAggregates()
     }
 
@@ -262,6 +283,7 @@ export const useMessagesStore = defineStore('fm-messages', () => {
             if (file.phase === 'error') {
                 file.phase = 'pending'
                 file.loaded = 0
+                file.uploadedBytes = 0
                 file.error = null
             }
         }

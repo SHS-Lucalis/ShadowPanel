@@ -611,7 +611,7 @@ export const useFileManagerStore = defineStore('fm', () => {
                     filename,
                     signal: abortController.signal,
                     onPhase: (phase) => messages.setFilePhase({ index: file.index, phase }),
-                    onProgress: ({ loaded }) => messages.setFileProgress({ index: file.index, loaded }),
+                    onProgress: ({ phase, loaded }) => messages.setFileProgress({ index: file.index, loaded, phase }),
                 })
                 messages.setFilePhase({ index: file.index, phase: 'done' })
             } catch (err) {
