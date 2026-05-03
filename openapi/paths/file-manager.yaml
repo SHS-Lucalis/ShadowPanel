@@ -305,6 +305,113 @@
             schema:
               $ref: '../schemas/ErrorResponse.yaml'
 
+/api/file-manager/{server}/download-archive:
+  get:
+    tags:
+      - FileManager
+    summary: Download directory as ZIP archive
+    description: |
+      Streams a directory tree as a ZIP archive.
+      The total size and file count are reported in response headers
+      (`X-Archive-Total-Bytes`, `X-Archive-Total-Files`) before the body
+      begins, so the client can show a determinate progress bar.
+      Symlinks are preserved as Unix-symlink entries inside the zip.
+      Special files (sockets, FIFOs, devices) are skipped and listed in
+      a trailing `_SKIPPED.txt` entry.
+    operationId: downloadFileManagerArchive
+    parameters:
+      - name: server
+        in: path
+        required: true
+        description: Server ID
+        schema:
+          type: integer
+      - name: disk
+        in: query
+        required: true
+        description: Disk identifier (only `server` is supported)
+        schema:
+          type: string
+          enum: [server]
+      - name: path
+        in: query
+        required: true
+        description: Directory path inside the server data directory
+        schema:
+          type: string
+      - name: compress
+        in: query
+        required: false
+        description: |
+          Compression level. `0` (default) = ZIP store (no compression,
+          maximum throughput). `1`–`9` = DEFLATE with the given level.
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 9
+          default: 0
+    responses:
+      '200':
+        description: ZIP archive stream
+        headers:
+          X-Archive-Total-Bytes:
+            description: Total uncompressed payload size in bytes (sum of file sizes).
+            schema:
+              type: integer
+              format: int64
+          X-Archive-Total-Files:
+            description: Number of regular files and symlinks in the archive.
+            schema:
+              type: integer
+          X-Archive-Skipped-Count:
+            description: Number of skipped special-file entries (sockets, FIFOs, devices).
+            schema:
+              type: integer
+          Content-Disposition:
+            schema:
+              type: string
+        content:
+          application/zip:
+            schema:
+              type: string
+              format: binary
+      '400':
+        description: Bad request (invalid path, unsupported disk, or invalid compress level)
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: User does not have files permission for this server
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '404':
+        description: Directory is empty or not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '413':
+        description: Archive total size or file count exceeds configured limits
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '429':
+        description: Too many concurrent archive downloads for this server
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+
 /api/file-manager/{server}/rename:
   post:
     tags:

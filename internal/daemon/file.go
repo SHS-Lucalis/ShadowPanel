@@ -88,12 +88,29 @@ func (s *FileService) ReadDir(
 	node *domain.Node,
 	directory string,
 ) ([]*FileInfo, error) {
+	return s.readDir(ctx, node, directory, false)
+}
+
+func (s *FileService) ReadDirRecursive(
+	ctx context.Context,
+	node *domain.Node,
+	directory string,
+) ([]*FileInfo, error) {
+	return s.readDir(ctx, node, directory, true)
+}
+
+func (s *FileService) readDir(
+	ctx context.Context,
+	node *domain.Node,
+	directory string,
+	recursive bool,
+) ([]*FileInfo, error) {
 	nodeID := uint64(node.ID)
 	relDir := stripWorkPath(node.WorkPath, directory)
 
 	local, err := s.resolveRoute(nodeID)
 	if err != nil {
-		if s.legacy != nil {
+		if s.legacy != nil && !recursive {
 			return s.legacy.ReadDir(ctx, node, directory)
 		}
 
@@ -102,9 +119,9 @@ func (s *FileService) ReadDir(
 
 	var resp *proto.FileListResponse
 	if local {
-		resp, err = s.gateway.RequestFileList(ctx, nodeID, relDir, false, "")
+		resp, err = s.gateway.RequestFileList(ctx, nodeID, relDir, recursive, "")
 	} else {
-		resp, err = s.dispatcher.DispatchFileList(ctx, nodeID, relDir, false, "")
+		resp, err = s.dispatcher.DispatchFileList(ctx, nodeID, relDir, recursive, "")
 	}
 	if err != nil {
 		return nil, errors.WithMessage(err, "file list request")
@@ -819,11 +836,13 @@ func protoFileStatToFileInfo(f *proto.FileStat) *FileInfo {
 	}
 
 	return &FileInfo{
-		Name:         f.Name,
-		Size:         f.Size,
-		TimeModified: modTime,
-		Type:         protoFileTypeToFileType(f.Type),
-		Perm:         f.Mode,
+		Name:          f.Name,
+		Path:          f.Path,
+		Size:          f.Size,
+		TimeModified:  modTime,
+		Type:          protoFileTypeToFileType(f.Type),
+		Perm:          f.Mode,
+		SymlinkTarget: f.SymlinkTarget,
 	}
 }
 
@@ -874,6 +893,7 @@ func protoFileStatToDetails(s *proto.FileStat) *FileDetails {
 		AccessTime:       accessTime,
 		Perm:             s.Mode,
 		Type:             protoFileTypeToFileType(s.Type),
+		SymlinkTarget:    s.SymlinkTarget,
 	}
 }
 

@@ -3,6 +3,8 @@ import { ref, computed, reactive } from 'vue'
 import GET from '../http/get.js'
 import POST from '../http/post.js'
 import { uploadFileChunked } from '../http/upload-session.js'
+import { downloadDirectoryArchive, ArchiveDownloadError } from '../http/download-archive.js'
+import { downloadSingleFile, FileDownloadError } from '../http/download-file.js'
 import { detectConflicts, joinPath, dirOf } from '../http/upload-conflicts.js'
 import { useSettingsStore } from './useSettingsStore.js'
 import { useMessagesStore } from './useMessagesStore.js'
@@ -729,32 +731,114 @@ export const useFileManagerStore = defineStore('fm', () => {
 
     async function download({ disk, path, filename }) {
         const messages = useMessagesStore()
+        const settings = useSettingsStore()
 
-        messages.setProgress(0, filename)
-
-        const config = {
-            onDownloadProgress(progressEvent) {
-                if (progressEvent.total) {
-                    const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-                    messages.setProgress(progress)
-                }
-            },
-        }
+        const fileName = filename || (path || '').split('/').filter(Boolean).pop() || 'file'
+        const abortController = new AbortController()
+        messages.startArchiveDownload({ filename: fileName, abortController, kind: 'file' })
 
         try {
-            const response = await GET.download(disk, path, config)
-            messages.clearProgress()
-
-            const tempLink = document.createElement('a')
-            tempLink.style.display = 'none'
-            tempLink.setAttribute('download', filename)
-            tempLink.href = window.URL.createObjectURL(new Blob([response.data]))
-            document.body.appendChild(tempLink)
-            tempLink.click()
-            document.body.removeChild(tempLink)
-        } catch {
-            messages.clearProgress()
+            await downloadSingleFile({
+                baseUrl: settings.baseUrl,
+                disk,
+                path,
+                filename: fileName,
+                headers: settings.headers,
+                onPhase: (phase) => messages.setArchivePhase(phase),
+                onProgress: (progress) => messages.setArchiveProgress(progress),
+                signal: abortController.signal,
+            })
+            setTimeout(() => messages.clearArchiveDownload(), 5000)
+        } catch (err) {
+            console.error('[download] failed', err)
+            const code = err instanceof FileDownloadError ? err.code : 'unknown'
+            const message = err && err.message ? err.message : 'unknown'
+            messages.setArchiveError({ code, message })
+            const dismissAfter = code === 'aborted' ? 1500 : 8000
+            setTimeout(() => messages.clearArchiveDownload(), dismissAfter)
         }
+    }
+
+    async function downloadDirectory({ disk, path, filename, compress = 0 }) {
+        const messages = useMessagesStore()
+        const settings = useSettingsStore()
+
+        const archiveName = filename || `${(path || '').split('/').filter(Boolean).pop() || 'archive'}.zip`
+        const abortController = new AbortController()
+        messages.startArchiveDownload({ filename: archiveName, abortController })
+
+        try {
+            await downloadDirectoryArchive({
+                baseUrl: settings.baseUrl,
+                disk,
+                path,
+                filename: archiveName,
+                compress,
+                headers: settings.headers,
+                onPhase: (phase) => messages.setArchivePhase(phase),
+                onProgress: (progress) => messages.setArchiveProgress(progress),
+                signal: abortController.signal,
+            })
+            setTimeout(() => messages.clearArchiveDownload(), 5000)
+        } catch (err) {
+            console.error('[downloadDirectory] failed', err)
+            const code = err instanceof ArchiveDownloadError ? err.code : 'unknown'
+            const message = err && err.message ? err.message : 'unknown'
+            messages.setArchiveError({ code, message })
+            const dismissAfter = code === 'aborted' ? 1500 : 8000
+            setTimeout(() => messages.clearArchiveDownload(), dismissAfter)
+            throw err
+        }
+    }
+
+    function sanitizeArchiveName(raw) {
+        const cleaned = String(raw || '').trim().replace(/\s+/g, '_').replace(/[\\/:*?"<>|]/g, '_')
+
+        return cleaned || 'archive'
+    }
+
+    function isRootPath(p) {
+        return !p || p === '/' || p === '.' || p === ''
+    }
+
+    async function downloadCurrentDirectory() {
+        const settings = useSettingsStore()
+        const manager = getManager(activeManager.value)
+        const currentDisk = manager.selectedDisk
+        if (!currentDisk) return
+
+        const currentPath = manager.selectedDirectory
+        const rootCandidate = isRootPath(currentPath)
+
+        let archiveName
+        if (rootCandidate && settings.serverName) {
+            archiveName = `${sanitizeArchiveName(settings.serverName)}.zip`
+        } else {
+            const segments = (currentPath || '').split('/').filter(Boolean)
+            const last = segments.length > 0 ? segments[segments.length - 1] : ''
+            archiveName = `${sanitizeArchiveName(last || settings.serverName || 'archive')}.zip`
+        }
+
+        await downloadDirectory({
+            disk: currentDisk,
+            path: rootCandidate ? '/' : currentPath,
+            filename: archiveName,
+        }).catch(() => {
+            /* errors are surfaced via the messages store */
+        })
+    }
+
+    function cancelDirectoryDownload() {
+        const messages = useMessagesStore()
+        const ctl = messages.archiveDownload.abortController
+        if (ctl) {
+            try {
+                ctl.abort()
+            } catch (e) {
+                console.warn('[cancelDirectoryDownload] abort failed', e)
+            }
+        }
+        messages.clearArchiveDownload()
     }
 
     async function deleteItems(items) {
@@ -979,6 +1063,9 @@ export const useFileManagerStore = defineStore('fm', () => {
         retryFailed,
         clearUpload,
         download,
+        downloadDirectory,
+        downloadCurrentDirectory,
+        cancelDirectoryDownload,
         delete: deleteItems,
         paste,
         rename,

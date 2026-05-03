@@ -27,6 +27,7 @@ const ru = {
         upload: 'Загрузить',
         uploadSelect: 'Выбрать файлы',
         uploadDir: 'Загрузить каталог',
+        downloadDir: 'Скачать ZIP',
         hidden: 'Скрытые файлы',
     },
     clipboard: {
@@ -41,6 +42,7 @@ const ru = {
         cut: 'Вырезать',
         delete: 'Удалить',
         download: 'Скачать',
+        downloadDir: 'Скачать ZIP',
         info: 'Выбрано:',
         open: 'Открыть',
         paste: 'Вставить',
@@ -65,6 +67,16 @@ const ru = {
     progress: {
         downloading: 'Скачивание',
         uploading: 'Загрузка',
+        preparingDownload: 'Подготовка скачивания...',
+        downloadError: 'Ошибка скачивания',
+        preparingArchive: 'Подготовка архива...',
+        downloadingArchive: 'Скачивание архива',
+        archiveFiles: 'Файлов: {count}',
+        archiveTooLarge: 'Каталог слишком большой для скачивания',
+        archiveTooManyFiles: 'Слишком много файлов в каталоге',
+        archiveTooManyConcurrent: 'Уже идёт другое скачивание архива для этого сервера',
+        archiveError: 'Ошибка скачивания архива',
+        archiveAborted: 'Скачивание отменено',
     },
     manager: {
         table: {

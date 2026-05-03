@@ -71,6 +71,8 @@ export function useContextMenu() {
 
     const downloadRule = computed(() => !multiSelect.value && firstItemType.value === 'file')
 
+    const downloadDirRule = computed(() => !multiSelect.value && firstItemType.value === 'dir')
+
     const copyRule = computed(() => true)
     const cutRule = computed(() => true)
     const renameRule = computed(() => !multiSelect.value)
@@ -125,6 +127,18 @@ export function useContextMenu() {
         document.body.removeChild(tempLink)
     }
 
+    function downloadDirAction() {
+        const item = selectedItems.value[0]
+        const archiveName = `${item.basename || item.name || 'archive'}.zip`
+        fm.downloadDirectory({
+            disk: selectedDisk.value,
+            path: item.path,
+            filename: archiveName,
+        }).catch(() => {
+            /* errors are surfaced via store; ignore here to avoid unhandled rejection */
+        })
+    }
+
     function copyAction() {
         fm.toClipboard('copy')
     }
@@ -159,6 +173,7 @@ export function useContextMenu() {
             edit: editRule,
             select: selectRule,
             download: downloadRule,
+            downloadDir: downloadDirRule,
             copy: copyRule,
             cut: cutRule,
             rename: renameRule,
@@ -179,6 +194,7 @@ export function useContextMenu() {
             edit: editAction,
             select: selectAction,
             download: downloadAction,
+            downloadDir: downloadDirAction,
             copy: copyAction,
             cut: cutAction,
             rename: renameAction,
@@ -209,6 +225,7 @@ export function useContextMenu() {
         editRule,
         selectRule,
         downloadRule,
+        downloadDirRule,
         copyRule,
         cutRule,
         renameRule,
@@ -224,6 +241,7 @@ export function useContextMenu() {
         editAction,
         selectAction,
         downloadAction,
+        downloadDirAction,
         copyAction,
         cutAction,
         renameAction,

@@ -405,6 +405,8 @@ paths:
     $ref: './paths/file-manager.yaml#/~1api~1file-manager~1{server}~1update-file'
   /api/file-manager/{server}/download:
     $ref: './paths/file-manager.yaml#/~1api~1file-manager~1{server}~1download'
+  /api/file-manager/{server}/download-archive:
+    $ref: './paths/file-manager.yaml#/~1api~1file-manager~1{server}~1download-archive'
   /api/file-manager/{server}/rename:
     $ref: './paths/file-manager.yaml#/~1api~1file-manager~1{server}~1rename'
   /api/file-manager/{server}/create-directory:

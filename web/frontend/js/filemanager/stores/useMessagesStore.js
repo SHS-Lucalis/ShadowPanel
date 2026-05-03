@@ -1,5 +1,20 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, markRaw } from 'vue'
+
+function createInitialArchiveDownload() {
+    return {
+        status: 'idle',
+        kind: 'archive',
+        phase: null,
+        filename: '',
+        loaded: 0,
+        total: 0,
+        totalFiles: 0,
+        skippedCount: 0,
+        abortController: null,
+        error: null,
+    }
+}
 
 function createInitialUploadProgress() {
     return {
@@ -71,6 +86,7 @@ export const useMessagesStore = defineStore('fm-messages', () => {
     const uploadProgress = ref(createInitialUploadProgress())
     const uploadRawFiles = { current: [] }
     const uploadListings = { current: new Map() }
+    const archiveDownload = ref(createInitialArchiveDownload())
 
     const loading = computed(() => loadingCount.value > 0)
 
@@ -295,6 +311,45 @@ export const useMessagesStore = defineStore('fm-messages', () => {
         if (node) node.expanded = !node.expanded
     }
 
+    function startArchiveDownload({ filename, abortController, kind }) {
+        archiveDownload.value = {
+            ...createInitialArchiveDownload(),
+            status: 'preparing',
+            kind: kind || 'archive',
+            phase: 'preparing',
+            filename: filename || '',
+            abortController: abortController ? markRaw(abortController) : null,
+        }
+    }
+
+    function setArchivePhase(phase) {
+        const ad = archiveDownload.value
+        ad.phase = phase
+        if (phase === 'downloading') ad.status = 'downloading'
+        if (phase === 'completed') ad.status = 'completed'
+    }
+
+    function setArchiveProgress({ loaded, total, totalFiles, skippedCount }) {
+        const ad = archiveDownload.value
+        if (typeof loaded === 'number') ad.loaded = loaded
+        if (typeof total === 'number') ad.total = total
+        if (typeof totalFiles === 'number') ad.totalFiles = totalFiles
+        if (typeof skippedCount === 'number') ad.skippedCount = skippedCount
+    }
+
+    function setArchiveError(error) {
+        archiveDownload.value = {
+            ...archiveDownload.value,
+            status: 'error',
+            phase: 'error',
+            error,
+        }
+    }
+
+    function clearArchiveDownload() {
+        archiveDownload.value = createInitialArchiveDownload()
+    }
+
     function clearUploadProgress() {
         uploadRawFiles.current = []
         uploadListings.current = new Map()
@@ -353,5 +408,11 @@ export const useMessagesStore = defineStore('fm-messages', () => {
         resetFailedToPending,
         toggleDirExpanded,
         clearUploadProgress,
+        archiveDownload,
+        startArchiveDownload,
+        setArchivePhase,
+        setArchiveProgress,
+        setArchiveError,
+        clearArchiveDownload,
     }
 })

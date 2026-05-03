@@ -23,11 +23,13 @@ type NodeVersion struct {
 
 // FileInfo represents basic information about a file or directory.
 type FileInfo struct {
-	Name         string
-	Size         uint64
-	TimeModified uint64
-	Type         FileType
-	Perm         uint32
+	Name          string
+	Path          string
+	Size          uint64
+	TimeModified  uint64
+	Type          FileType
+	Perm          uint32
+	SymlinkTarget string
 }
 
 // FileDetails represents detailed information about a file or directory.
@@ -40,6 +42,7 @@ type FileDetails struct {
 	CreateTime       uint64
 	Perm             uint32
 	Type             FileType
+	SymlinkTarget    string
 }
 
 type FileType uint8

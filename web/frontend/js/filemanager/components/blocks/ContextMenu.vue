@@ -119,6 +119,10 @@ function downloadRule() {
     return !multiSelect.value && firstItemType.value === 'file'
 }
 
+function downloadDirRule() {
+    return !multiSelect.value && firstItemType.value === 'dir'
+}
+
 function copyRule() {
     return true
 }
@@ -164,6 +168,7 @@ const rules = {
     edit: editRule,
     select: selectRule,
     download: downloadRule,
+    downloadDir: downloadDirRule,
     copy: copyRule,
     cut: cutRule,
     rename: renameRule,
@@ -214,6 +219,18 @@ function downloadAction() {
     })
 }
 
+function downloadDirAction() {
+    const item = selectedItems.value[0]
+    const archiveName = `${item.basename || item.name || 'archive'}.zip`
+    fm.downloadDirectory({
+        disk: selectedDisk.value,
+        path: item.path,
+        filename: archiveName,
+    }).catch(() => {
+        /* errors are surfaced via the messages store */
+    })
+}
+
 function copyAction() {
     fm.toClipboard('copy')
 }
@@ -254,6 +271,7 @@ const actions = {
     edit: editAction,
     select: selectAction,
     download: downloadAction,
+    downloadDir: downloadDirAction,
     copy: copyAction,
     cut: cutAction,
     rename: renameAction,

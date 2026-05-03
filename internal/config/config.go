@@ -84,6 +84,12 @@ type Config struct {
 			DispatchTimeout time.Duration `env:"FILES_UPLOAD_DISPATCH_TIMEOUT" envDefault:"2m"`
 			JanitorInterval time.Duration `env:"FILES_UPLOAD_JANITOR_INTERVAL" envDefault:"12h"`
 		}
+
+		Archive struct {
+			MaxBytes            ByteSize `env:"FILES_ARCHIVE_MAX_BYTES" envDefault:"100G"`
+			MaxFiles            uint32   `env:"FILES_ARCHIVE_MAX_FILES" envDefault:"500000"`
+			ConcurrentPerServer uint32   `env:"FILES_ARCHIVE_CONCURRENT_PER_SERVER" envDefault:"2"`
+		}
 	}
 
 	Logger struct {

@@ -1,4 +1,5 @@
 import FileNetworkIcon from './svg/FileNetworkIcon.vue'
+import FolderDownloadIcon from './svg/FolderDownloadIcon.vue'
 import MaximizeIcon from './svg/MaximizeIcon.vue'
 
 export const defaultIconMap = {
@@ -123,6 +124,7 @@ export const defaultIconMap = {
   "folder-solid": "fa-solid fa-folder",
   "folder-open": "fa-regular fa-folder-open",
   "folder-plus": "fa-solid fa-folder-plus",
+  "folder-download": FolderDownloadIcon,
   "clipboard": "fa-regular fa-clipboard",
   "ftp": FileNetworkIcon,
 

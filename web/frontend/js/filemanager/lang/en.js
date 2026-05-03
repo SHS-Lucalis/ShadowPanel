@@ -27,6 +27,7 @@ const en = {
         upload: 'Upload',
         uploadSelect: 'Select files',
         uploadDir: 'Upload folder',
+        downloadDir: 'Download as ZIP',
         hidden: ' Hidden files',
     },
     clipboard: {
@@ -41,6 +42,7 @@ const en = {
         cut: 'Cut',
         delete: 'Delete',
         download: 'Download',
+        downloadDir: 'Download as ZIP',
         info: 'Selected:',
         open: 'Open',
         paste: 'Paste',
@@ -65,6 +67,16 @@ const en = {
     progress: {
         downloading: 'Downloading',
         uploading: 'Uploading',
+        preparingDownload: 'Preparing download...',
+        downloadError: 'Download failed',
+        preparingArchive: 'Preparing archive...',
+        downloadingArchive: 'Downloading archive',
+        archiveFiles: '{count} files',
+        archiveTooLarge: 'Directory is too large to download',
+        archiveTooManyFiles: 'Too many files in directory',
+        archiveTooManyConcurrent: 'Another archive download for this server is in progress',
+        archiveError: 'Archive download failed',
+        archiveAborted: 'Download cancelled',
     },
     manager: {
         table: {

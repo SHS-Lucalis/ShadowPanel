@@ -49,6 +49,15 @@
                     </button>
                     <button
                         type="button"
+                        class="btn btn-small btn-secondary border-r"
+                        v-bind:disabled="archiveDownloading"
+                        v-on:click="handleDownloadDirectory"
+                        v-bind:title="lang.btn.downloadDir"
+                    >
+                        <GIcon name="folder-download" />
+                    </button>
+                    <button
+                        type="button"
                         class="btn btn-small btn-secondary rounded-e"
                         v-bind:disabled="!isAnyItemSelected"
                         v-on:click="showModal('DeleteModal')"
@@ -124,6 +133,11 @@ const isAnyItemSelected = computed(() => {
 
 const uploading = computed(() => messages.actionProgress > 0)
 
+const archiveDownloading = computed(() => {
+    const status = messages.archiveDownload?.status
+    return status === 'preparing' || status === 'downloading'
+})
+
 const clipboardType = computed(() => fm.clipboard.type)
 
 const fullScreen = computed(() => fm.fullScreen)
@@ -161,6 +175,10 @@ function handleToClipboard(type) {
 
 function handlePaste() {
     fm.paste()
+}
+
+function handleDownloadDirectory() {
+    fm.downloadCurrentDirectory()
 }
 
 function toggleHidden() {

@@ -205,6 +205,7 @@
                 :settings="{
                     'lang': pageLanguage(),
                     'baseUrl': '/api/file-manager/'+$route.params.id,
+                    'serverName': server?.name || '',
                     'headers':{
                         'X-Requested-With': 'XMLHttpRequest'
                     }

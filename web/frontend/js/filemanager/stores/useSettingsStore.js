@@ -24,6 +24,7 @@ export const useSettingsStore = defineStore('fm-settings', () => {
     const version = ref('4.0.0-dev2')
     const headers = ref({})
     const baseUrl = ref(null)
+    const serverName = ref('')
 
     /**
      * File manager windows configuration
@@ -66,6 +67,7 @@ export const useSettingsStore = defineStore('fm-settings', () => {
             { name: 'edit', icon: 'edit' },
             { name: 'select', icon: 'file' },
             { name: 'download', icon: 'download' },
+            { name: 'downloadDir', icon: 'folder-download' },
         ],
         [
             { name: 'copy', icon: 'copy' },
@@ -133,6 +135,9 @@ export const useSettingsStore = defineStore('fm-settings', () => {
         if (Object.prototype.hasOwnProperty.call(data, 'baseUrl')) {
             baseUrl.value = data.baseUrl
         }
+        if (Object.prototype.hasOwnProperty.call(data, 'serverName')) {
+            serverName.value = data.serverName || ''
+        }
         if (Object.prototype.hasOwnProperty.call(data, 'windowsConfig')) {
             windowsConfig.value = data.windowsConfig
         }
@@ -179,6 +184,7 @@ export const useSettingsStore = defineStore('fm-settings', () => {
         version,
         headers,
         baseUrl,
+        serverName,
         windowsConfig,
         lang,
         translations,

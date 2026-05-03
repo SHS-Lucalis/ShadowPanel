@@ -25,7 +25,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { GIcon } from '@gameap/ui'
 import HTTP from './http/axios.js'
 import EventBus from './emitter.js'
@@ -172,6 +172,13 @@ function responseInterceptor() {
         }
     )
 }
+
+watch(
+    () => props.settings && props.settings.serverName,
+    (name) => {
+        settings.manualSettings({ serverName: name || '' })
+    },
+)
 
 // Lifecycle
 onMounted(() => {

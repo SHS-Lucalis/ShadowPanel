@@ -48,6 +48,7 @@ import (
 	"github.com/gameap/gameap/internal/repositories/postgres"
 	"github.com/gameap/gameap/internal/repositories/sqlite"
 	"github.com/gameap/gameap/internal/services"
+	"github.com/gameap/gameap/internal/services/filemanager/archiver"
 	"github.com/gameap/gameap/internal/services/gameapimporter"
 	"github.com/gameap/gameap/internal/services/gameexporter"
 	"github.com/gameap/gameap/internal/services/pelicaneggimporter"
@@ -161,6 +162,9 @@ type Container struct {
 	// Upload sessions
 	uploadSessionService *upload.Service
 	uploadJanitor        *upload.Janitor
+
+	fileManagerArchiver     *archiver.Archiver
+	fileManagerArchiveGuard *archiver.InMemoryConcurrencyGuard
 
 	// Plugins
 	pluginManager    *pkgplugin.Manager
@@ -1394,6 +1398,28 @@ func (c *Container) UploadJanitor() *upload.Janitor {
 	}
 
 	return c.uploadJanitor
+}
+
+func (c *Container) FileManagerArchiver() *archiver.Archiver {
+	if c.fileManagerArchiver == nil {
+		c.fileManagerArchiver = archiver.NewArchiver(
+			c.DaemonFiles(),
+			c.DaemonFiles(),
+			slog.Default(),
+		)
+	}
+
+	return c.fileManagerArchiver
+}
+
+func (c *Container) FileManagerArchiveGuard() *archiver.InMemoryConcurrencyGuard {
+	if c.fileManagerArchiveGuard == nil {
+		c.fileManagerArchiveGuard = archiver.NewInMemoryConcurrencyGuard(
+			c.config.Files.Archive.ConcurrentPerServer,
+		)
+	}
+
+	return c.fileManagerArchiveGuard
 }
 
 func (c *Container) DaemonFilesLegacy() *daemon.FileBINNService {

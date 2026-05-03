@@ -23,6 +23,7 @@ import (
 	"github.com/gameap/gameap/internal/repositories/base"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/internal/services"
+	"github.com/gameap/gameap/internal/services/filemanager/archiver"
 	"github.com/gameap/gameap/internal/services/gameapimporter"
 	"github.com/gameap/gameap/internal/services/gameexporter"
 	"github.com/gameap/gameap/internal/services/pelicaneggimporter"
@@ -113,6 +114,10 @@ func (c *InmemoryContainer) GlobalAPIService() *services.GlobalAPIService { retu
 func (c *InmemoryContainer) DaemonStatus() *daemon.StatusService          { return c.daemonStatusService }
 func (c *InmemoryContainer) DaemonFiles() *daemon.FileService             { return c.daemonFilesService }
 func (c *InmemoryContainer) UploadSessionService() *upload.Service        { return c.uploadSessionService }
+func (c *InmemoryContainer) FileManagerArchiver() *archiver.Archiver      { return nil }
+func (c *InmemoryContainer) FileManagerArchiveGuard() *archiver.InMemoryConcurrencyGuard {
+	return archiver.NewInMemoryConcurrencyGuard(2)
+}
 func (c *InmemoryContainer) DaemonCommands() *daemon.CommandService       { return c.daemonCommandsService }
 func (c *InmemoryContainer) ConsoleLogService() *daemon.ConsoleLogService { return nil }
 func (c *InmemoryContainer) PluginManager() *plugin.Manager               { return nil }

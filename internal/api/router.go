@@ -36,6 +36,7 @@ import (
 	filemanagercreatefile "github.com/gameap/gameap/internal/api/filemanager/createfile"
 	filemanagerdelete "github.com/gameap/gameap/internal/api/filemanager/delete"
 	filemanagerdownload "github.com/gameap/gameap/internal/api/filemanager/download"
+	filemanagerdownloadarchive "github.com/gameap/gameap/internal/api/filemanager/downloadarchive"
 	"github.com/gameap/gameap/internal/api/filemanager/initialize"
 	filemanagerpaste "github.com/gameap/gameap/internal/api/filemanager/paste"
 	filemanagerrename "github.com/gameap/gameap/internal/api/filemanager/rename"
@@ -157,6 +158,7 @@ import (
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/internal/repositories/base"
 	"github.com/gameap/gameap/internal/services"
+	"github.com/gameap/gameap/internal/services/filemanager/archiver"
 	"github.com/gameap/gameap/internal/services/gameapimporter"
 	"github.com/gameap/gameap/internal/services/gameexporter"
 	"github.com/gameap/gameap/internal/services/pelicaneggimporter"
@@ -206,6 +208,8 @@ type container interface {
 	DaemonStatus() *daemon.StatusService
 	DaemonFiles() *daemon.FileService
 	UploadSessionService() *uploadservice.Service
+	FileManagerArchiver() *archiver.Archiver
+	FileManagerArchiveGuard() *archiver.InMemoryConcurrencyGuard
 	DaemonCommands() *daemon.CommandService
 	ConsoleLogService() *daemon.ConsoleLogService
 	PluginManager() *plugin.Manager
@@ -798,6 +802,22 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 				c.NodeRepository(),
 				c.RBAC(),
 				c.DaemonFiles(),
+				c.Responder(),
+			),
+		},
+		{
+			Method: http.MethodGet,
+			Path:   "/api/file-manager/{server}/download-archive",
+			Handler: filemanagerdownloadarchive.NewHandler(
+				c.ServerRepository(),
+				c.NodeRepository(),
+				c.RBAC(),
+				c.FileManagerArchiver(),
+				c.FileManagerArchiveGuard(),
+				filemanagerdownloadarchive.Limits{
+					MaxTotalBytes: c.Config().Files.Archive.MaxBytes.Uint64(),
+					MaxFiles:      c.Config().Files.Archive.MaxFiles,
+				},
 				c.Responder(),
 			),
 		},
