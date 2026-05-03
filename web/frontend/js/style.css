@@ -61,10 +61,6 @@
     @apply ms-2 text-sm font-medium text-stone-900 dark:text-stone-300;
 }
 
-.table-info {
-    @apply w-full bg-stone-100 dark:bg-stone-900;
-}
-
 .form-select {
     @apply block w-full p-1.5 mb-6 text-sm text-stone-900 border border-stone-300 rounded focus:ring-blue-500 focus:border-blue-500 dark:bg-stone-700 dark:border-stone-600 dark:placeholder-stone-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500;
 }

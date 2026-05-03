@@ -11,10 +11,10 @@
         <transition name="fade">
             <div
                 v-if="dropOver"
-                class="absolute inset-0 z-50 flex items-center justify-center pointer-events-none bg-sky-500/10 dark:bg-sky-700/20 border-4 border-dashed border-sky-500 dark:border-sky-400 rounded-md"
+                class="absolute inset-0 z-50 flex items-center justify-center pointer-events-none bg-stone-900/10 dark:bg-stone-100/10 border-4 border-dashed border-stone-700 dark:border-stone-300 rounded-md"
             >
                 <div class="bg-white dark:bg-stone-800 px-8 py-6 rounded-lg shadow-2xl flex flex-col items-center gap-3">
-                    <GIcon name="upload" class="text-5xl text-sky-500 dark:text-sky-400" />
+                    <GIcon name="upload" class="text-5xl text-stone-700 dark:text-stone-200" />
                     <p class="text-lg font-semibold text-stone-700 dark:text-stone-200">
                         {{ lang.modal.upload.dropOverlay }}
                     </p>
@@ -78,6 +78,51 @@ const interceptorIndex = ref({
 
 // Computed
 const fullScreen = computed(() => fm.fullScreen)
+
+function isEditableTarget(target) {
+    if (!target) return false
+    const tag = target.tagName
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true
+    if (target.isContentEditable) return true
+
+    return false
+}
+
+function handleGlobalKey(event) {
+    if (modal.showModal) return
+    if (isEditableTarget(event.target)) return
+
+    const meta = event.ctrlKey || event.metaKey
+    const key = event.key
+
+    if (meta && (key === 'a' || key === 'A')) {
+        event.preventDefault()
+        fm.selectAllVisible(fm.activeManager)
+
+        return
+    }
+
+    if (key === 'Escape') {
+        if (fm.getSelectedCount(fm.activeManager) > 0) {
+            event.preventDefault()
+            fm.clearSelection(fm.activeManager)
+        }
+
+        return
+    }
+
+    if (key === 'Delete' && fm.getSelectedCount(fm.activeManager) > 0) {
+        event.preventDefault()
+        modal.setModalState({ modalName: 'DeleteModal', show: true })
+
+        return
+    }
+
+    if (key === 'F5') {
+        event.preventDefault()
+        fm.refreshAll()
+    }
+}
 
 // Methods
 function setAxiosConfig() {
@@ -188,9 +233,11 @@ onMounted(() => {
     requestInterceptor()
     responseInterceptor()
     fm.initializeApp()
+    document.addEventListener('keydown', handleGlobalKey)
 })
 
 onUnmounted(() => {
+    document.removeEventListener('keydown', handleGlobalKey)
     fm.resetState()
     EventBus.all.clear()
     HTTP.interceptors.request.eject(interceptorIndex.value.request)
@@ -233,7 +280,7 @@ onUnmounted(() => {
 }
 
 .fm-info {
-  @apply text-white bg-sky-500 dark:bg-sky-800 border-sky-500 dark:border-sky-400;
+  @apply text-white bg-stone-600 dark:bg-stone-700 border-stone-500 dark:border-stone-400;
 }
 
 .fm.fm-full-screen {

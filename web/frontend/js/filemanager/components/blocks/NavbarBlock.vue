@@ -1,100 +1,96 @@
 <template>
     <div class="fm-navbar">
-        <div class="grid grid-cols-2 gap-4">
-            <div class="mb-2">
-                <div class="btn-group mr-4" role="group">
-                    <button
-                        type="button"
-                        class="btn btn-small btn-secondary rounded"
-                        v-on:click="refreshAll()"
-                        v-bind:title="lang.btn.refresh"
-                    >
-                        <GIcon name="refresh" />
-                    </button>
-                </div>
-                <div class="btn-group mr-4" role="group">
-                    <button
-                        type="button"
-                        class="btn btn-small btn-secondary rounded-s border-r"
-                        v-on:click="showModal('NewFileModal')"
-                        v-bind:title="lang.btn.file"
-                    >
-                        <GIcon name="file" />
-                    </button>
-                    <button
-                        type="button"
-                        class="btn btn-small btn-secondary border-r"
-                        v-on:click="showModal('NewFolderModal')"
-                        v-bind:title="lang.btn.folder"
-                    >
-                        <GIcon name="folder" />
-                    </button>
-                    <button
-                        type="button"
-                        class="btn btn-small btn-secondary border-r"
-                        disabled
-                        v-if="uploading"
-                        v-bind:title="lang.btn.upload"
-                    >
-                        <GIcon name="upload" />
-                    </button>
-                    <button
-                        type="button"
-                        class="btn btn-small btn-secondary border-r"
-                        v-else
-                        v-on:click="showModal('UploadModal')"
-                        v-bind:title="lang.btn.upload"
-                    >
-                        <GIcon name="upload" />
-                    </button>
-                    <button
-                        type="button"
-                        class="btn btn-small btn-secondary border-r"
-                        v-bind:disabled="archiveDownloading"
-                        v-on:click="handleDownloadDirectory"
-                        v-bind:title="lang.btn.downloadDir"
-                    >
-                        <GIcon name="folder-download" />
-                    </button>
-                    <button
-                        type="button"
-                        class="btn btn-small btn-secondary rounded-e"
-                        v-bind:disabled="!isAnyItemSelected"
-                        v-on:click="showModal('DeleteModal')"
-                        v-bind:title="lang.btn.delete"
-                    >
-                        <GIcon name="delete" />
-                    </button>
-                </div>
-                <div class="btn-group mr-4" role="group">
-                    <button
-                        type="button"
-                        class="btn btn-small btn-secondary rounded-s border-r"
-                        v-bind:disabled="!isAnyItemSelected"
-                        v-bind:title="lang.btn.copy"
-                        v-on:click="handleToClipboard('copy')"
-                    >
-                        <GIcon name="copy" />
-                    </button>
-                    <button
-                        type="button"
-                        class="btn btn-small btn-secondary border-r"
-                        v-bind:disabled="!isAnyItemSelected"
-                        v-bind:title="lang.btn.cut"
-                        v-on:click="handleToClipboard('cut')"
-                    >
-                        <GIcon name="cut" />
-                    </button>
-                    <button
-                        type="button"
-                        class="btn btn-small btn-secondary rounded-e"
-                        v-bind:disabled="!clipboardType"
-                        v-bind:title="lang.btn.paste"
-                        v-on:click="handlePaste"
-                    >
-                        <GIcon name="paste" />
-                    </button>
-                </div>
+        <div class="fm-toolbar">
+            <div class="fm-toolbar-group" role="group">
+                <button
+                    type="button"
+                    class="fm-tool-btn"
+                    v-bind:title="`${lang.btn.refresh} (${lang.hint.f5})`"
+                    v-on:click="refreshAll"
+                >
+                    <GIcon name="refresh" />
+                </button>
+            </div>
+
+            <div class="fm-toolbar-group" role="group">
+                <button
+                    type="button"
+                    class="fm-tool-btn"
+                    v-bind:title="lang.btn.file"
+                    v-on:click="showModal('NewFileModal')"
+                >
+                    <GIcon name="file" />
+                </button>
+                <button
+                    type="button"
+                    class="fm-tool-btn"
+                    v-bind:title="lang.btn.folder"
+                    v-on:click="showModal('NewFolderModal')"
+                >
+                    <GIcon name="folder" />
+                </button>
+                <button
+                    type="button"
+                    class="fm-tool-btn"
+                    v-bind:disabled="uploading"
+                    v-bind:title="lang.btn.upload"
+                    v-on:click="showModal('UploadModal')"
+                >
+                    <GIcon name="upload" />
+                </button>
+                <button
+                    type="button"
+                    class="fm-tool-btn"
+                    v-bind:disabled="archiveDownloading"
+                    v-bind:title="lang.btn.downloadDir"
+                    v-on:click="handleDownloadDirectory"
+                >
+                    <GIcon name="folder-download" />
+                </button>
+            </div>
+
+            <div class="fm-toolbar-group" role="group">
+                <button
+                    type="button"
+                    class="fm-tool-btn"
+                    v-bind:disabled="!isAnyItemSelected"
+                    v-bind:title="lang.btn.copy"
+                    v-on:click="handleToClipboard('copy')"
+                >
+                    <GIcon name="copy" />
+                </button>
+                <button
+                    type="button"
+                    class="fm-tool-btn"
+                    v-bind:disabled="!isAnyItemSelected"
+                    v-bind:title="lang.btn.cut"
+                    v-on:click="handleToClipboard('cut')"
+                >
+                    <GIcon name="cut" />
+                </button>
+                <button
+                    type="button"
+                    class="fm-tool-btn"
+                    v-bind:disabled="!clipboardType"
+                    v-bind:title="lang.btn.paste"
+                    v-on:click="handlePaste"
+                >
+                    <GIcon name="paste" />
+                </button>
+            </div>
+
+            <div class="fm-toolbar-spacer" />
+
+            <div class="fm-toolbar-group" role="group">
+                <button
+                    type="button"
+                    class="fm-tool-btn fm-tool-btn--danger"
+                    v-bind:disabled="!isAnyItemSelected"
+                    v-bind:title="`${lang.btn.delete} (${lang.hint.del})`"
+                    v-on:click="showModal('DeleteModal')"
+                >
+                    <GIcon name="delete" />
+                </button>
             </div>
         </div>
     </div>
@@ -107,27 +103,18 @@ import { notification } from '@/parts/dialogs.js'
 import { useFileManagerStore } from '../../stores/useFileManagerStore.js'
 import { useMessagesStore } from '../../stores/useMessagesStore.js'
 import { useModalStore } from '../../stores/useModalStore.js'
-import { useSettingsStore } from '../../stores/useSettingsStore.js'
 import { useTranslate } from '../../composables/useTranslate.js'
 
 const fm = useFileManagerStore()
 const messages = useMessagesStore()
 const modal = useModalStore()
-const settings = useSettingsStore()
 const { lang } = useTranslate()
 
-// Computed
 const activeManager = computed(() => fm.activeManager)
-
-const backDisabled = computed(() => !fm.getManager(activeManager.value).historyPointer)
-
-const forwardDisabled = computed(() => {
-    const manager = fm.getManager(activeManager.value)
-    return manager.historyPointer === manager.history.length - 1
-})
 
 const isAnyItemSelected = computed(() => {
     const manager = fm.getManager(activeManager.value)
+
     return manager.selected.files.length > 0 || manager.selected.directories.length > 0
 })
 
@@ -135,41 +122,23 @@ const uploading = computed(() => messages.actionProgress > 0)
 
 const archiveDownloading = computed(() => {
     const status = messages.archiveDownload?.status
+
     return status === 'preparing' || status === 'downloading'
 })
 
 const clipboardType = computed(() => fm.clipboard.type)
 
-const fullScreen = computed(() => fm.fullScreen)
-
-const hiddenFiles = computed(() => settings.hiddenFiles)
-
-// Methods
 function refreshAll() {
     fm.refreshAll()
-}
-
-function historyBack() {
-    fm.historyBack(activeManager.value)
-}
-
-function historyForward() {
-    fm.historyForward(activeManager.value)
 }
 
 function handleToClipboard(type) {
     fm.toClipboard(type)
 
     if (type === 'cut') {
-        notification({
-            content: lang.value.notifications.cutToClipboard,
-            type: 'success',
-        })
+        notification({ content: lang.value.notifications.cutToClipboard, type: 'success' })
     } else if (type === 'copy') {
-        notification({
-            content: lang.value.notifications.copyToClipboard,
-            type: 'success',
-        })
+        notification({ content: lang.value.notifications.copyToClipboard, type: 'success' })
     }
 }
 
@@ -181,60 +150,63 @@ function handleDownloadDirectory() {
     fm.downloadCurrentDirectory()
 }
 
-function toggleHidden() {
-    settings.toggleHiddenFiles()
-}
-
 function showModal(modalName) {
     modal.setModalState({ modalName, show: true })
-}
-
-function screenToggle() {
-    const fmEl = document.getElementsByClassName('fm')[0]
-
-    if (!fullScreen.value) {
-        if (fmEl.requestFullscreen) {
-            fmEl.requestFullscreen()
-        } else if (fmEl.mozRequestFullScreen) {
-            fmEl.mozRequestFullScreen()
-        } else if (fmEl.webkitRequestFullscreen) {
-            fmEl.webkitRequestFullscreen()
-        } else if (fmEl.msRequestFullscreen) {
-            fmEl.msRequestFullscreen()
-        }
-    } else if (document.exitFullscreen) {
-        document.exitFullscreen()
-    } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen()
-    } else if (document.mozCancelFullScreen) {
-        document.mozCancelFullScreen()
-    } else if (document.msExitFullscreen) {
-        document.msExitFullscreen()
-    }
-
-    fm.screenToggle()
 }
 </script>
 
 <style lang="scss">
 .fm-navbar {
     flex: 0 0 auto;
+    margin-bottom: 0.6rem;
+}
 
-    .col-auto > .btn-group:not(:last-child) {
-        margin-right: 0.4rem;
+.fm-toolbar {
+    @apply flex flex-wrap items-center gap-2;
+}
+
+.fm-toolbar-group {
+    @apply inline-flex items-stretch overflow-hidden rounded-md border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 shadow-sm;
+}
+
+.fm-toolbar-spacer {
+    flex: 1 1 auto;
+}
+
+.fm-tool-btn {
+    @apply inline-flex items-center justify-center px-2.5 py-1.5 text-sm
+        text-stone-600 dark:text-stone-300
+        transition-colors duration-100
+        border-r border-stone-200 dark:border-stone-700;
+    min-width: 2.25rem;
+
+    &:last-child {
+        border-right: none;
     }
 
-    .btn-group {
-        @apply inline-flex;
+    &:hover:not(:disabled) {
+        @apply bg-stone-100 dark:bg-stone-700/60 text-stone-900 dark:text-white;
+    }
 
-        .btn {
-            @apply border-stone-300 dark:border-stone-800 dark:text-stone-400 dark:disabled:text-stone-700;
-        }
+    &:focus-visible {
+        @apply outline-none ring-2 ring-stone-500 ring-offset-0;
+        z-index: 1;
+    }
+
+    &:disabled {
+        @apply text-stone-300 dark:text-stone-600 cursor-not-allowed;
     }
 }
 
-.btn.btn-small {
-  @apply py-1.5 px-2.5;
+.fm-tool-btn--toggled {
+    @apply bg-stone-200 dark:bg-stone-600 text-stone-900 dark:text-stone-50;
 }
 
+.fm-tool-btn--toggled:hover:not(:disabled) {
+    @apply bg-stone-300 dark:bg-stone-500 text-stone-900 dark:text-white;
+}
+
+.fm-tool-btn--danger:hover:not(:disabled) {
+    @apply bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400;
+}
 </style>

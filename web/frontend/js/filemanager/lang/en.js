@@ -29,6 +29,16 @@ const en = {
         uploadDir: 'Upload folder',
         downloadDir: 'Download as ZIP',
         hidden: ' Hidden files',
+        up: 'Up',
+        selectAll: 'Select all',
+        clearSelection: 'Clear selection',
+    },
+    hint: {
+        ctrlA: 'Ctrl+A',
+        esc: 'Esc',
+        del: 'Del',
+        f5: 'F5',
+        shiftClick: 'Shift+Click for range',
     },
     clipboard: {
         actionType: 'Type',
@@ -64,6 +74,10 @@ const en = {
         selected: 'Selected:',
         selectedSize: 'Files size:',
         size: 'Files size:',
+        clearSelection: 'Clear selection',
+        selectAll: 'Select all',
+        empty: 'This folder is empty',
+        emptyHint: 'Drop files here, or click Upload to begin.',
     },
     progress: {
         downloading: 'Downloading',
@@ -88,6 +102,10 @@ const en = {
             type: 'Type',
             permissions: 'Permissions',
         },
+        empty: 'This folder is empty',
+        emptyHint: 'Drop files here, or click Upload to begin.',
+        sortAsc: 'Sort ascending',
+        sortDesc: 'Sort descending',
     },
     modal: {
         about: {

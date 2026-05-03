@@ -24,6 +24,7 @@ export function useManager(managerName) {
     const selectedDirectory = computed(() => manager.value.selectedDirectory)
     const sort = computed(() => manager.value.sort)
     const selected = computed(() => manager.value.selected)
+    const lastSelectedPath = computed(() => manager.value.lastSelectedPath)
     const history = computed(() => manager.value.history)
     const historyPointer = computed(() => manager.value.historyPointer)
 
@@ -37,6 +38,12 @@ export function useManager(managerName) {
     const selectedCount = computed(() => fm.getSelectedCount(getManagerName()))
     const selectedFilesSize = computed(() => fm.getSelectedFilesSize(getManagerName()))
     const breadcrumb = computed(() => fm.getBreadcrumb(getManagerName()))
+
+    // Unified ordered list of items (folders first, then files) used for range selection.
+    const flatVisible = computed(() => [
+        ...directories.value.map((d) => ({ type: 'directories', path: d.path })),
+        ...files.value.map((f) => ({ type: 'files', path: f.path })),
+    ])
 
     const canHistoryBack = computed(() => historyPointer.value > 0)
     const canHistoryForward = computed(() => historyPointer.value < history.value.length - 1)
@@ -113,6 +120,28 @@ export function useManager(managerName) {
         fm.clearSelection(getManagerName())
     }
 
+    function setAnchor(type, path) {
+        fm.setAnchor(getManagerName(), { type, path })
+    }
+
+    function selectRangeTo(type, path) {
+        const anchor = lastSelectedPath.value
+        if (!anchor) {
+            fm.changeSelected(getManagerName(), { type, path })
+
+            return
+        }
+        fm.selectRange(getManagerName(), {
+            fromAnchor: anchor,
+            toItem: { type, path },
+            visible: flatVisible.value,
+        })
+    }
+
+    function selectAllVisible() {
+        fm.selectAllVisible(getManagerName())
+    }
+
     // Check functions
     function isSelected(type, path) {
         return selected.value[type].includes(path)
@@ -170,11 +199,13 @@ export function useManager(managerName) {
         selectedDirectory,
         sort,
         selected,
+        lastSelectedPath,
         history,
         historyPointer,
         // Getters
         files,
         directories,
+        flatVisible,
         filesCount,
         directoriesCount,
         filesSize,
@@ -202,6 +233,9 @@ export function useManager(managerName) {
         toggleSelect,
         singleSelect,
         clearSelection,
+        setAnchor,
+        selectRangeTo,
+        selectAllVisible,
         isSelected,
         directoryExist,
         fileExist,

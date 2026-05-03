@@ -29,6 +29,16 @@ const ru = {
         uploadDir: 'Загрузить каталог',
         downloadDir: 'Скачать ZIP',
         hidden: 'Скрытые файлы',
+        up: 'Вверх',
+        selectAll: 'Выделить всё',
+        clearSelection: 'Снять выделение',
+    },
+    hint: {
+        ctrlA: 'Ctrl+A',
+        esc: 'Esc',
+        del: 'Del',
+        f5: 'F5',
+        shiftClick: 'Shift+клик для диапазона',
     },
     clipboard: {
         actionType: 'Тип операции',
@@ -64,6 +74,10 @@ const ru = {
         selected: 'Выбрано:',
         selectedSize: 'Размер:',
         size: 'Размер файлов:',
+        clearSelection: 'Снять выделение',
+        selectAll: 'Выделить всё',
+        empty: 'Папка пуста',
+        emptyHint: 'Перетащите файлы сюда или нажмите «Загрузить».',
     },
     progress: {
         downloading: 'Скачивание',
@@ -88,6 +102,10 @@ const ru = {
             type: 'Тип',
             permissions: 'Права',
         },
+        empty: 'Папка пуста',
+        emptyHint: 'Перетащите файлы сюда или нажмите «Загрузить».',
+        sortAsc: 'По возрастанию',
+        sortDesc: 'По убыванию',
     },
     modal: {
         about: {

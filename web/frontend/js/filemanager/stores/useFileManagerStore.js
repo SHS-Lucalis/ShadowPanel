@@ -50,6 +50,7 @@ function createManagerState() {
             directories: [],
             files: [],
         },
+        lastSelectedPath: null,
         sort: {
             field: 'name',
             direction: 'up',
@@ -185,7 +186,9 @@ export const useFileManagerStore = defineStore('fm', () => {
     }
 
     function addToSelection(managerName, { type, path }) {
-        getManager(managerName).selected[type].push(path)
+        const manager = getManager(managerName)
+        manager.selected[type].push(path)
+        manager.lastSelectedPath = { type, path }
     }
 
     function removeFromSelection(managerName, { type, path }) {
@@ -194,6 +197,7 @@ export const useFileManagerStore = defineStore('fm', () => {
         if (itemIndex !== -1) {
             manager.selected[type].splice(itemIndex, 1)
         }
+        manager.lastSelectedPath = { type, path }
     }
 
     function changeSelected(managerName, { type, path }) {
@@ -201,12 +205,40 @@ export const useFileManagerStore = defineStore('fm', () => {
         manager.selected.directories = []
         manager.selected.files = []
         manager.selected[type].push(path)
+        manager.lastSelectedPath = { type, path }
     }
 
     function clearSelection(managerName) {
         const manager = getManager(managerName)
         manager.selected.directories = []
         manager.selected.files = []
+        manager.lastSelectedPath = null
+    }
+
+    function setAnchor(managerName, { type, path }) {
+        getManager(managerName).lastSelectedPath = { type, path }
+    }
+
+    function selectRange(managerName, { fromAnchor, toItem, visible }) {
+        if (!fromAnchor || !toItem || !Array.isArray(visible) || visible.length === 0) return
+
+        const idxA = visible.findIndex((i) => i.type === fromAnchor.type && i.path === fromAnchor.path)
+        const idxB = visible.findIndex((i) => i.type === toItem.type && i.path === toItem.path)
+        if (idxA < 0 || idxB < 0) return
+
+        const [lo, hi] = idxA < idxB ? [idxA, idxB] : [idxB, idxA]
+        const range = visible.slice(lo, hi + 1)
+
+        const manager = getManager(managerName)
+        manager.selected.directories = range.filter((i) => i.type === 'directories').map((i) => i.path)
+        manager.selected.files = range.filter((i) => i.type === 'files').map((i) => i.path)
+        manager.lastSelectedPath = { type: toItem.type, path: toItem.path }
+    }
+
+    function selectAllVisible(managerName) {
+        const manager = getManager(managerName)
+        manager.selected.directories = getDirectories(managerName).map((d) => d.path)
+        manager.selected.files = getFiles(managerName).map((f) => f.path)
     }
 
     function addNewFile(managerName, newFile) {
@@ -1042,6 +1074,9 @@ export const useFileManagerStore = defineStore('fm', () => {
         removeFromSelection,
         changeSelected,
         clearSelection,
+        setAnchor,
+        selectRange,
+        selectAllVisible,
         addNewFile,
         setFile,
         addNewDirectory,

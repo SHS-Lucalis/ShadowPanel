@@ -1,88 +1,150 @@
 <template>
-    <div class="fm-table">
-        <table class="table table-sm w-full">
+    <div
+        ref="tableArea"
+        class="fm-table-area"
+        tabindex="0"
+        v-on:click.self="clearOnEmpty"
+        v-on:keydown="onKeyDown"
+    >
+        <table class="fm-table">
             <thead>
                 <tr>
-                    <th class="w-65" v-on:click="handleSortBy('name')">
-                        {{ lang.manager.table.name }}
-                        <template v-if="sortSettings.field === 'name'">
-                            <GIcon name="sort-desc" v-show="sortSettings.direction === 'down'" />
-                            <GIcon name="sort-asc" v-show="sortSettings.direction === 'up'" />
-                        </template>
+                    <th
+                        class="fm-th fm-th--name"
+                        v-bind:class="{ 'fm-th--active': sortSettings.field === 'name' }"
+                        v-on:click="handleSortBy('name')"
+                    >
+                        <span class="fm-th-label">{{ lang.manager.table.name }}</span>
+                        <GIcon
+                            class="fm-th-sort"
+                            v-bind:class="{ 'fm-th-sort--inactive': sortSettings.field !== 'name' }"
+                            v-bind:name="sortIcon('name')"
+                        />
                     </th>
-                    <th class="w-10" v-on:click="handleSortBy('size')">
-                        {{ lang.manager.table.size }}
-                        <template v-if="sortSettings.field === 'size'">
-                            <GIcon name="sort-desc" v-show="sortSettings.direction === 'down'" />
-                            <GIcon name="sort-asc" v-show="sortSettings.direction === 'up'" />
-                        </template>
+                    <th
+                        class="fm-th fm-th--size"
+                        v-bind:class="{ 'fm-th--active': sortSettings.field === 'size' }"
+                        v-on:click="handleSortBy('size')"
+                    >
+                        <span class="fm-th-label">{{ lang.manager.table.size }}</span>
+                        <GIcon
+                            class="fm-th-sort"
+                            v-bind:class="{ 'fm-th-sort--inactive': sortSettings.field !== 'size' }"
+                            v-bind:name="sortIcon('size')"
+                        />
                     </th>
-                    <th class="w-10" v-on:click="handleSortBy('type')">
-                        {{ lang.manager.table.type }}
-                        <template v-if="sortSettings.field === 'type'">
-                            <GIcon name="sort-desc" v-show="sortSettings.direction === 'down'" />
-                            <GIcon name="sort-asc" v-show="sortSettings.direction === 'up'" />
-                        </template>
+                    <th
+                        class="fm-th fm-th--type"
+                        v-bind:class="{ 'fm-th--active': sortSettings.field === 'type' }"
+                        v-on:click="handleSortBy('type')"
+                    >
+                        <span class="fm-th-label">{{ lang.manager.table.type }}</span>
+                        <GIcon
+                            class="fm-th-sort"
+                            v-bind:class="{ 'fm-th-sort--inactive': sortSettings.field !== 'type' }"
+                            v-bind:name="sortIcon('type')"
+                        />
                     </th>
-                    <th class="w-auto" v-on:click="handleSortBy('date')">
-                        {{ lang.manager.table.date }}
-                        <template v-if="sortSettings.field === 'date'">
-                            <GIcon name="sort-desc" v-show="sortSettings.direction === 'down'" />
-                            <GIcon name="sort-asc" v-show="sortSettings.direction === 'up'" />
-                        </template>
+                    <th
+                        class="fm-th fm-th--date"
+                        v-bind:class="{ 'fm-th--active': sortSettings.field === 'date' }"
+                        v-on:click="handleSortBy('date')"
+                    >
+                        <span class="fm-th-label">{{ lang.manager.table.date }}</span>
+                        <GIcon
+                            class="fm-th-sort"
+                            v-bind:class="{ 'fm-th-sort--inactive': sortSettings.field !== 'date' }"
+                            v-bind:name="sortIcon('date')"
+                        />
                     </th>
-                    <th class="w-permissions">
+                    <th class="fm-th fm-th--perm">
                         {{ lang.manager.table.permissions }}
                     </th>
                 </tr>
             </thead>
             <tbody>
-                <tr v-if="!isRootPath">
-                    <td colspan="5" class="fm-content-item" v-on:click="levelUp">
+                <tr v-if="!isRootPath" class="fm-row fm-row--up" v-on:click="levelUp">
+                    <td colspan="5" class="fm-content-item">
                         <GIcon name="arrow-turn-up" />
+                        <span class="ml-2 text-stone-500 dark:text-stone-400">..</span>
                     </td>
                 </tr>
                 <tr
                     v-for="(directory, index) in directories"
-                    v-bind:key="`d-${index}`"
-                    v-bind:class="{ 'table-info': checkSelect('directories', directory.path) }"
-                    v-on:click="selectItem('directories', directory.path, $event)"
+                    v-bind:key="`d-${directory.path}`"
+                    v-bind:ref="(el) => registerRow(el, directoryRowIndex(index))"
+                    class="fm-row fm-row--directory"
+                    v-bind:class="{
+                        'fm-row--zebra': directoryRowIndex(index) % 2 === 1,
+                        'fm-row--selected': checkSelect('directories', directory.path),
+                        'fm-row--focused': focusedIndex === directoryRowIndex(index),
+                        'fm-row--locked': acl && directory.acl === 0,
+                    }"
+                    tabindex="-1"
+                    v-on:click="selectItem('directories', directory.path, $event, directoryRowIndex(index))"
+                    v-on:dblclick="handleSelectDirectory(directory.path)"
                     v-on:contextmenu.prevent="contextMenu(directory, $event)"
                 >
-                    <td
-                        class="fm-content-item unselectable"
-                        v-bind:class="acl && directory.acl === 0 ? 'text-hidden' : ''"
-                        v-on:dblclick="handleSelectDirectory(directory.path)"
-                    >
-                        <GIcon name="folder" /> {{ directory.basename }}
+                    <td class="fm-content-item unselectable">
+                        <span class="fm-row-icon">
+                            <GIcon
+                                v-if="checkSelect('directories', directory.path)"
+                                name="check"
+                                class="fm-row-check"
+                            />
+                            <GIcon v-else name="folder-solid" class="fm-row-glyph fm-row-glyph--dir" />
+                        </span>
+                        <span class="fm-row-name">{{ directory.basename }}</span>
                     </td>
-                    <td />
+                    <td class="fm-cell-muted">—</td>
                     <td>{{ lang.manager.table.folder }}</td>
-                    <td>
-                        {{ timestampToDate(directory.timestamp) }}
-                    </td>
+                    <td>{{ timestampToDate(directory.timestamp) }}</td>
                     <td class="fm-permissions">{{ formatMode(directory.mode) }}</td>
                 </tr>
                 <tr
                     v-for="(file, index) in files"
-                    v-bind:key="`f-${index}`"
-                    v-bind:class="{ 'table-info': checkSelect('files', file.path) }"
-                    v-on:click="selectItem('files', file.path, $event)"
+                    v-bind:key="`f-${file.path}`"
+                    v-bind:ref="(el) => registerRow(el, fileRowIndex(index))"
+                    class="fm-row fm-row--file"
+                    v-bind:class="{
+                        'fm-row--zebra': fileRowIndex(index) % 2 === 1,
+                        'fm-row--selected': checkSelect('files', file.path),
+                        'fm-row--focused': focusedIndex === fileRowIndex(index),
+                        'fm-row--locked': acl && file.acl === 0,
+                    }"
+                    tabindex="-1"
+                    v-on:click="selectItem('files', file.path, $event, fileRowIndex(index))"
                     v-on:dblclick="selectAction(file)"
                     v-on:contextmenu.prevent="contextMenu(file, $event)"
                 >
-                    <td class="fm-content-item unselectable" v-bind:class="acl && file.acl === 0 ? 'text-hidden' : ''">
-                        <GIcon :name="extensionToIcon(file.extension)" />
-                        {{ file.basename }}
+                    <td class="fm-content-item unselectable">
+                        <span class="fm-row-icon">
+                            <GIcon
+                                v-if="checkSelect('files', file.path)"
+                                name="check"
+                                class="fm-row-check"
+                            />
+                            <GIcon
+                                v-else
+                                v-bind:name="extensionToIcon(file.extension)"
+                                class="fm-row-glyph fm-row-glyph--file"
+                            />
+                        </span>
+                        <span class="fm-row-name">{{ file.basename }}</span>
                     </td>
                     <td>{{ bytesToHuman(file.size) }}</td>
-                    <td>
-                        {{ file.extension }}
-                    </td>
-                    <td>
-                        {{ timestampToDate(file.timestamp) }}
-                    </td>
+                    <td class="fm-cell-extension">{{ file.extension || '—' }}</td>
+                    <td>{{ timestampToDate(file.timestamp) }}</td>
                     <td class="fm-permissions">{{ formatMode(file.mode) }}</td>
+                </tr>
+                <tr v-if="isEmpty" class="fm-row fm-row--empty">
+                    <td colspan="5">
+                        <div class="fm-empty">
+                            <GIcon name="folder-open" class="fm-empty-icon" />
+                            <p class="fm-empty-title">{{ lang.manager.empty }}</p>
+                            <p class="fm-empty-hint">{{ lang.manager.emptyHint }}</p>
+                        </div>
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -91,7 +153,7 @@
 
 <script setup>
 /* eslint-disable no-bitwise */
-import { computed } from 'vue'
+import { computed, ref, nextTick } from 'vue'
 import { GIcon } from '@gameap/ui'
 import EventBus from '../../emitter.js'
 import { useFileManagerStore } from '../../stores/useFileManagerStore.js'
@@ -118,15 +180,38 @@ const {
     selectedDirectory,
     files,
     directories,
+    flatVisible,
     selected,
     sort,
     selectDirectory,
     sortBy,
+    selectRangeTo,
 } = useManager(props.manager)
 
 const sortSettings = computed(() => sort.value)
 const acl = computed(() => settings.acl)
 const isRootPath = computed(() => selectedDirectory.value === null)
+const isEmpty = computed(() => directories.value.length === 0 && files.value.length === 0)
+
+const tableArea = ref(null)
+const focusedIndex = ref(-1)
+const rowEls = new Map()
+
+function directoryRowIndex(index) {
+    return index
+}
+
+function fileRowIndex(index) {
+    return directories.value.length + index
+}
+
+function registerRow(el, index) {
+    if (el) {
+        rowEls.set(index, el)
+    } else {
+        rowEls.delete(index)
+    }
+}
 
 function levelUp() {
     if (selectedDirectory.value) {
@@ -139,20 +224,32 @@ function checkSelect(type, path) {
     return selected.value[type].includes(path)
 }
 
-function selectItem(type, path, event) {
-    const alreadySelected = selected.value[type].includes(path)
+function selectItem(type, path, event, rowIndex) {
+    focusedIndex.value = rowIndex
+
+    if (event.shiftKey) {
+        event.preventDefault()
+        selectRangeTo(type, path)
+
+        return
+    }
 
     if (event.ctrlKey || event.metaKey) {
+        const alreadySelected = selected.value[type].includes(path)
         if (!alreadySelected) {
             fm.addToSelection(props.manager, { type, path })
         } else {
             fm.removeFromSelection(props.manager, { type, path })
         }
+
+        return
     }
 
-    if (!event.ctrlKey && !alreadySelected && !event.metaKey) {
-        fm.changeSelected(props.manager, { type, path })
-    }
+    fm.changeSelected(props.manager, { type, path })
+}
+
+function clearOnEmpty() {
+    fm.clearSelection(props.manager)
 }
 
 function contextMenu(item, event) {
@@ -174,6 +271,12 @@ function handleSortBy(field) {
     sortBy(field, null)
 }
 
+function sortIcon(field) {
+    if (sortSettings.value.field !== field) return 'sort-desc'
+
+    return sortSettings.value.direction === 'down' ? 'sort-desc' : 'sort-asc'
+}
+
 function formatMode(mode) {
     if (typeof mode !== 'number') return '---------'
 
@@ -191,6 +294,7 @@ function selectAction(file) {
                 fm.fileCallback(response.data.url)
             }
         })
+
         return
     }
 
@@ -199,8 +303,9 @@ function selectAction(file) {
         modal.openPluginEditor({
             pluginId: customEditor.pluginId,
             editor: customEditor.editor,
-            file: file
+            file,
         })
+
         return
     }
 
@@ -218,71 +323,272 @@ function selectAction(file) {
         fm.openPDF({ disk: selectedDisk.value, path })
     }
 }
+
+function moveFocus(delta, withShift) {
+    const total = flatVisible.value.length
+    if (total === 0) return
+
+    let next = focusedIndex.value + delta
+    if (next < 0) next = 0
+    if (next > total - 1) next = total - 1
+    focusedIndex.value = next
+
+    const item = flatVisible.value[next]
+    if (item) {
+        if (withShift) {
+            selectRangeTo(item.type, item.path)
+        }
+        nextTick(() => {
+            const el = rowEls.get(next)
+            if (el) {
+                el.scrollIntoView({ block: 'nearest' })
+                el.focus({ preventScroll: true })
+            }
+        })
+    }
+}
+
+function activateFocused() {
+    const item = flatVisible.value[focusedIndex.value]
+    if (!item) return
+
+    if (item.type === 'directories') {
+        selectDirectory(item.path, true)
+    } else {
+        const file = files.value.find((f) => f.path === item.path)
+        if (file) selectAction(file)
+    }
+}
+
+function toggleFocused() {
+    const item = flatVisible.value[focusedIndex.value]
+    if (!item) return
+
+    const alreadySelected = selected.value[item.type].includes(item.path)
+    if (alreadySelected) {
+        fm.removeFromSelection(props.manager, { type: item.type, path: item.path })
+    } else {
+        fm.addToSelection(props.manager, { type: item.type, path: item.path })
+    }
+}
+
+function onKeyDown(event) {
+    if (modal.showModal) return
+
+    switch (event.key) {
+        case 'ArrowDown':
+            event.preventDefault()
+            moveFocus(1, event.shiftKey)
+            break
+        case 'ArrowUp':
+            event.preventDefault()
+            moveFocus(-1, event.shiftKey)
+            break
+        case 'Home':
+            event.preventDefault()
+            moveFocus(-flatVisible.value.length, event.shiftKey)
+            break
+        case 'End':
+            event.preventDefault()
+            moveFocus(flatVisible.value.length, event.shiftKey)
+            break
+        case 'Enter':
+            event.preventDefault()
+            activateFocused()
+            break
+        case ' ':
+            event.preventDefault()
+            toggleFocused()
+            break
+        default:
+            break
+    }
+}
 </script>
 
 <style lang="scss">
-.fm-table {
-    thead th {
-        @apply text-left bg-white dark:bg-stone-800;
+.fm-table-area {
+    position: relative;
+    height: 100%;
+    outline: none;
 
+    &:focus-visible {
+        box-shadow: inset 0 0 0 2px theme('colors.stone.500 / 30%');
+    }
+}
+
+.fm-table {
+    @apply w-full text-left text-sm;
+    border-collapse: separate;
+    border-spacing: 0;
+    --fm-accent: theme('colors.stone.800');
+
+    thead th {
+        @apply text-left bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-300 font-medium;
         position: sticky;
         top: 0;
         z-index: 10;
         cursor: pointer;
-        border-top: none;
+        padding: 0.625rem 0.75rem;
+        user-select: none;
+        border-bottom: 1px solid theme('colors.stone.200');
+        box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.04);
+        transition: color 120ms ease, background-color 120ms ease;
 
         &:hover {
-          @apply bg-stone-100 dark:bg-[#262322];
-        }
-
-        & > i {
-            padding-left: 0.5rem;
+            @apply bg-stone-100 dark:bg-stone-700/60;
         }
     }
+
+    .dark & thead th {
+        border-bottom-color: theme('colors.stone.700');
+    }
+
+    .fm-th--active {
+        @apply text-stone-900 dark:text-stone-100 font-semibold;
+    }
+
+    .fm-th-sort {
+        margin-left: 0.4rem;
+        font-size: 0.85em;
+        transition: opacity 120ms ease;
+    }
+
+    .fm-th-sort--inactive {
+        opacity: 0;
+    }
+
+    thead th:hover .fm-th-sort--inactive {
+        opacity: 0.4;
+    }
+
+    .fm-th--name { width: 60%; }
+    .fm-th--size { width: 9%; }
+    .fm-th--type { width: 9%; }
+    .fm-th--date { width: 16%; }
+    .fm-th--perm { width: 10ch; }
 
     td {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        padding: 0.5rem 0.75rem;
     }
 
-    tr:nth-child(odd) {
-        @apply bg-stone-50 dark:bg-stone-800;
-    }
-
-    tr:nth-child(even) {
+    tr.fm-row {
+        cursor: pointer;
+        transition: background-color 120ms ease;
         @apply bg-white dark:bg-stone-900;
+
+        &.fm-row--zebra {
+            @apply bg-stone-50 dark:bg-stone-800;
+        }
+
+        &:hover {
+            @apply bg-stone-100 dark:bg-stone-800/60;
+        }
+
+        &.fm-row--zebra:hover {
+            @apply bg-stone-100 dark:bg-stone-700/60;
+        }
+
+        &.fm-row--selected,
+        &.fm-row--selected.fm-row--zebra {
+            @apply bg-stone-200 dark:bg-stone-600;
+            box-shadow: inset 3px 0 0 0 var(--fm-accent);
+        }
+
+        &.fm-row--selected:hover,
+        &.fm-row--selected.fm-row--zebra:hover {
+            @apply bg-stone-300 dark:bg-stone-500;
+        }
+
+        &.fm-row--focused {
+            outline: 2px solid theme('colors.stone.500 / 70%');
+            outline-offset: -2px;
+        }
     }
 
-    tr:hover {
-        @apply bg-stone-100 dark:bg-[#3d3836];
+    tr.fm-row--up {
+        @apply text-stone-500 dark:text-stone-400 italic;
     }
 
-    .w-10 {
-        width: 10%;
+    tr.fm-row--locked {
+        @apply text-stone-400 dark:text-stone-600;
     }
 
-    .w-65 {
-        width: 65%;
+    tr.fm-row--empty {
+        background: transparent !important;
+        cursor: default;
     }
 
-    .w-permissions {
-        width: 9ch;
+    tr.fm-row--empty:hover {
+        background: transparent !important;
+    }
+
+    .fm-row-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.5rem;
+        height: 1.5rem;
+        margin-right: 0.5rem;
+        vertical-align: middle;
+    }
+
+    .fm-row-glyph--dir {
+        @apply text-stone-600 dark:text-stone-300;
+    }
+
+    .fm-row-glyph--file {
+        @apply text-stone-400 dark:text-stone-500;
+    }
+
+    .fm-row-check {
+        @apply text-stone-800 dark:text-stone-100;
+    }
+
+    .fm-row-name {
+        vertical-align: middle;
+    }
+
+    .fm-cell-muted {
+        @apply text-stone-400 dark:text-stone-600;
+    }
+
+    .fm-cell-extension {
+        @apply text-stone-500 dark:text-stone-400 uppercase tracking-wide;
+        font-size: 0.78em;
     }
 
     .fm-permissions {
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-        font-size: 0.85em;
+        font-size: 0.8em;
         @apply text-stone-500 dark:text-stone-400;
     }
 
     .fm-content-item {
-        @apply px-2 py-3;
         cursor: pointer;
     }
 
-    .text-hidden {
-        color: #cdcdcd;
+    .fm-empty {
+        @apply flex flex-col items-center justify-center text-center py-12 px-4 text-stone-500 dark:text-stone-400;
     }
+
+    .fm-empty-icon {
+        @apply text-5xl text-stone-300 dark:text-stone-600 mb-4;
+    }
+
+    .fm-empty-title {
+        @apply text-base font-medium text-stone-600 dark:text-stone-300 mb-1;
+    }
+
+    .fm-empty-hint {
+        @apply text-xs text-stone-400 dark:text-stone-500;
+    }
+}
+
+.dark .fm-table {
+    --fm-accent: theme('colors.stone.200');
 }
 </style>

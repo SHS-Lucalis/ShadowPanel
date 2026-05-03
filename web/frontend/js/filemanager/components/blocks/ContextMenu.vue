@@ -407,7 +407,7 @@ onMounted(() => {
         }
 
         i, svg {
-            padding-right: 1.5rem;
+            margin-right: 1.5rem;
         }
     }
 
@@ -416,7 +416,7 @@ onMounted(() => {
         cursor: not-allowed;
 
         i, svg {
-            padding-right: 1.5rem;
+            margin-right: 1.5rem;
         }
     }
 }

@@ -1,24 +1,32 @@
 <template>
-    <div class="fm-breadcrumb">
-        <nav aria-label="breadcrumb" class="flex px-3 py-1.5 rounded text-stone-700 bg-stone-100 dark:bg-stone-800 dark:border-stone-700">
-            <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse" v-bind:class="[manager === activeManager ? 'active-manager' : 'bg-light']">
-                <li class="breadcrumb-item" v-on:click="selectMainDirectory">
-                    <span class="badge bg-secondary dark:text-stone-400">
-                        <GIcon name="hard-drive" />
-                    </span>
-                </li>
-                <li
-                    class="breadcrumb-item text-truncate dark:text-stone-400"
-                    v-for="(item, index) in breadcrumb"
-                    v-bind:key="index"
-                    v-bind:class="[breadcrumb.length === index + 1 ? 'active' : '']"
-                    v-on:click="handleSelectDirectory(index)"
-                >
-                    <div class="flex items-center">
-                        <span class="mx-2 text-stone-400">/</span>
-                        <span>{{ item }}</span>
-                    </div>
-                </li>
+    <div class="fm-breadcrumb" v-bind:class="{ 'fm-breadcrumb--active': manager === activeManager }">
+        <nav class="fm-breadcrumb-nav" aria-label="breadcrumb">
+            <button
+                type="button"
+                class="fm-breadcrumb-disk"
+                v-bind:title="selectedDisk || ''"
+                v-on:click="selectMainDirectory"
+            >
+                <GIcon name="hard-drive" />
+                <span v-if="selectedDisk" class="fm-breadcrumb-disk-label">{{ selectedDisk }}</span>
+            </button>
+
+            <ol class="fm-breadcrumb-list">
+                <template v-for="(item, index) in displaySegments" v-bind:key="index">
+                    <li v-if="item.type === 'ellipsis'" class="fm-breadcrumb-sep">
+                        <span class="fm-breadcrumb-divider">/</span>
+                        <span class="fm-breadcrumb-ellipsis" v-bind:title="item.title">…</span>
+                    </li>
+                    <li
+                        v-else
+                        class="fm-breadcrumb-item"
+                        v-bind:class="{ 'fm-breadcrumb-item--active': item.isLast }"
+                        v-on:click="handleSelectDirectory(item.absoluteIndex)"
+                    >
+                        <span class="fm-breadcrumb-divider">/</span>
+                        <span class="fm-breadcrumb-text">{{ item.label }}</span>
+                    </li>
+                </template>
             </ol>
         </nav>
     </div>
@@ -39,8 +47,57 @@ const { selectedDisk, selectedDirectory, breadcrumb, selectDirectory } = useMana
 
 const activeManager = computed(() => fm.activeManager)
 
+const MAX_VISIBLE = 5
+
+const displaySegments = computed(() => {
+    const segments = breadcrumb.value || []
+    if (segments.length === 0) return []
+
+    const last = segments.length - 1
+    if (segments.length <= MAX_VISIBLE) {
+        return segments.map((label, idx) => ({
+            type: 'segment',
+            label,
+            absoluteIndex: idx,
+            isLast: idx === last,
+        }))
+    }
+
+    // Show first segment, ellipsis, then last (MAX_VISIBLE - 2) segments
+    const tailCount = MAX_VISIBLE - 2
+    const tailStart = segments.length - tailCount
+    const collapsedSegments = segments.slice(1, tailStart)
+
+    const result = [
+        {
+            type: 'segment',
+            label: segments[0],
+            absoluteIndex: 0,
+            isLast: false,
+        },
+        {
+            type: 'ellipsis',
+            title: collapsedSegments.join('/'),
+        },
+    ]
+
+    for (let i = tailStart; i < segments.length; i += 1) {
+        result.push({
+            type: 'segment',
+            label: segments[i],
+            absoluteIndex: i,
+            isLast: i === last,
+        })
+    }
+
+    return result
+})
+
 function handleSelectDirectory(index) {
-    const path = breadcrumb.value.slice(0, index + 1).join('/')
+    const segments = breadcrumb.value || []
+    if (index < 0 || index >= segments.length) return
+
+    const path = segments.slice(0, index + 1).join('/')
     if (path !== selectedDirectory.value) {
         selectDirectory(path, true)
     }
@@ -55,16 +112,67 @@ function selectMainDirectory() {
 
 <style lang="scss">
 .fm-breadcrumb {
-    @apply mb-1;
+    @apply mb-2;
+}
 
-    .breadcrumb-item {
-        @apply inline-flex items-center;
-    }
+.fm-breadcrumb-nav {
+    @apply flex items-center gap-1 px-1.5 py-1 rounded-md
+        bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700
+        min-w-0;
+    transition: border-color 120ms ease, background-color 120ms ease;
+}
 
-    .breadcrumb-item:not(.active):hover {
-        cursor: pointer;
-        font-weight: normal;
-        color: #6c757d;
-    }
+.fm-breadcrumb--active .fm-breadcrumb-nav {
+    @apply border-stone-400 dark:border-stone-500;
+}
+
+.fm-breadcrumb-disk {
+    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded
+        text-stone-700 dark:text-stone-200 text-sm font-medium
+        hover:bg-white dark:hover:bg-stone-700/50
+        transition-colors duration-100;
+    flex: 0 0 auto;
+}
+
+.fm-breadcrumb-disk-label {
+    @apply text-xs uppercase tracking-wide text-stone-500 dark:text-stone-400;
+}
+
+.fm-breadcrumb-list {
+    @apply flex items-center min-w-0;
+    flex: 1 1 auto;
+    overflow: hidden;
+}
+
+.fm-breadcrumb-item,
+.fm-breadcrumb-sep {
+    @apply inline-flex items-center min-w-0;
+}
+
+.fm-breadcrumb-divider {
+    @apply mx-1 text-stone-400 dark:text-stone-600 text-sm select-none;
+}
+
+.fm-breadcrumb-text {
+    @apply px-1.5 py-0.5 rounded text-sm text-stone-600 dark:text-stone-300;
+    cursor: pointer;
+    transition: background-color 120ms ease, color 120ms ease;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 12rem;
+}
+
+.fm-breadcrumb-item:not(.fm-breadcrumb-item--active) .fm-breadcrumb-text:hover {
+    @apply bg-white dark:bg-stone-700/50 text-stone-900 dark:text-white;
+}
+
+.fm-breadcrumb-item--active .fm-breadcrumb-text {
+    @apply font-semibold text-stone-900 dark:text-stone-100;
+    cursor: default;
+}
+
+.fm-breadcrumb-ellipsis {
+    @apply px-1.5 text-stone-400 dark:text-stone-500 select-none;
 }
 </style>
