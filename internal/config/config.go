@@ -164,6 +164,11 @@ type Config struct {
 	}
 
 	DaemonSetupKey string `env:"DAEMON_SETUP_KEY" envDefault:""`
+
+	TaskReaper struct {
+		Interval       time.Duration `env:"TASK_REAPER_INTERVAL" envDefault:"1m"`
+		StaleThreshold time.Duration `env:"TASK_REAPER_STALE_THRESHOLD" envDefault:"10m"`
+	}
 }
 
 func LoadConfig() (*Config, error) {

@@ -56,6 +56,7 @@ import (
 	"github.com/gameap/gameap/internal/services/serverconfigpush"
 	"github.com/gameap/gameap/internal/services/servercontrol"
 	"github.com/gameap/gameap/internal/services/taskdispatcher"
+	"github.com/gameap/gameap/internal/services/taskreaper"
 	"github.com/gameap/gameap/internal/transfers"
 	"github.com/gameap/gameap/internal/upload"
 	"github.com/gameap/gameap/internal/ws"
@@ -196,6 +197,7 @@ type Container struct {
 	attachHandler       *handlers.AttachHandler
 	metricsHandler      *handlers.MetricsHandler
 	metricsHub          metrics.Hub
+	taskReaper          *taskreaper.Reaper
 	grpcServer          *grpc.Server
 	multiplexedServer   *MultiplexedServer
 
@@ -1789,6 +1791,23 @@ func (c *Container) MetricsHub() metrics.Hub {
 	}
 
 	return c.metricsHub
+}
+
+func (c *Container) TaskReaper() *taskreaper.Reaper {
+	if c.taskReaper == nil {
+		c.taskReaper = taskreaper.NewReaper(
+			c.DaemonTaskRepository(),
+			c.SessionRegistry(),
+			c.TaskHandler(),
+			taskreaper.Options{
+				Interval:       c.config.TaskReaper.Interval,
+				StaleThreshold: c.config.TaskReaper.StaleThreshold,
+			},
+			slog.Default(),
+		)
+	}
+
+	return c.taskReaper
 }
 
 func (c *Container) GatewayService() *gateway.Service {

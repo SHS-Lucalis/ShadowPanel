@@ -165,6 +165,205 @@ func TestHandleTaskStatusUpdate_ServerInstalledStatus(t *testing.T) {
 	}
 }
 
+func TestReconcileWorkingTasks(t *testing.T) {
+	now := time.Now()
+	ctx := context.Background()
+
+	type taskSpec struct {
+		id                uint
+		dedicatedServerID uint
+		status            domain.DaemonTaskStatus
+		taskType          domain.DaemonTaskType
+		serverID          *uint
+		output            *string
+	}
+
+	type wantState struct {
+		id     uint
+		status domain.DaemonTaskStatus
+		// outputContains, when non-empty, asserts that the persisted output
+		// contains this substring after reconciliation.
+		outputContains string
+	}
+
+	serverID := uint(11)
+
+	tests := []struct {
+		name        string
+		seed        []taskSpec
+		nodeID      uint64
+		inFlightIDs []uint64
+		wantMarked  int
+		wantState   []wantState
+	}{
+		{
+			name: "missing_in_flight_marks_error_and_appends_output",
+			seed: []taskSpec{
+				{id: 1, dedicatedServerID: 1, status: domain.DaemonTaskStatusWorking, taskType: domain.DaemonTaskTypeCmdExec},
+			},
+			nodeID:      1,
+			inFlightIDs: nil,
+			wantMarked:  1,
+			wantState: []wantState{
+				{id: 1, status: domain.DaemonTaskStatusError, outputContains: AbandonedTaskMessage},
+			},
+		},
+		{
+			name: "task_present_in_flight_is_left_alone",
+			seed: []taskSpec{
+				{id: 1, dedicatedServerID: 1, status: domain.DaemonTaskStatusWorking, taskType: domain.DaemonTaskTypeCmdExec},
+			},
+			nodeID:      1,
+			inFlightIDs: []uint64{1},
+			wantMarked:  0,
+			wantState: []wantState{
+				{id: 1, status: domain.DaemonTaskStatusWorking},
+			},
+		},
+		{
+			name: "tasks_for_other_node_unchanged",
+			seed: []taskSpec{
+				{id: 1, dedicatedServerID: 1, status: domain.DaemonTaskStatusWorking, taskType: domain.DaemonTaskTypeCmdExec},
+				{id: 2, dedicatedServerID: 2, status: domain.DaemonTaskStatusWorking, taskType: domain.DaemonTaskTypeCmdExec},
+			},
+			nodeID:      1,
+			inFlightIDs: nil,
+			wantMarked:  1,
+			wantState: []wantState{
+				{id: 1, status: domain.DaemonTaskStatusError, outputContains: AbandonedTaskMessage},
+				{id: 2, status: domain.DaemonTaskStatusWorking},
+			},
+		},
+		{
+			name: "non_working_statuses_unaffected",
+			seed: []taskSpec{
+				{id: 1, dedicatedServerID: 1, status: domain.DaemonTaskStatusWaiting, taskType: domain.DaemonTaskTypeCmdExec},
+				{id: 2, dedicatedServerID: 1, status: domain.DaemonTaskStatusSuccess, taskType: domain.DaemonTaskTypeCmdExec},
+				{id: 3, dedicatedServerID: 1, status: domain.DaemonTaskStatusError, taskType: domain.DaemonTaskTypeCmdExec},
+			},
+			nodeID:      1,
+			inFlightIDs: nil,
+			wantMarked:  0,
+			wantState: []wantState{
+				{id: 1, status: domain.DaemonTaskStatusWaiting},
+				{id: 2, status: domain.DaemonTaskStatusSuccess},
+				{id: 3, status: domain.DaemonTaskStatusError},
+			},
+		},
+		{
+			name: "mixed_partial_in_flight",
+			seed: []taskSpec{
+				{id: 1, dedicatedServerID: 1, status: domain.DaemonTaskStatusWorking, taskType: domain.DaemonTaskTypeCmdExec},
+				{id: 2, dedicatedServerID: 1, status: domain.DaemonTaskStatusWorking, taskType: domain.DaemonTaskTypeCmdExec},
+				{id: 3, dedicatedServerID: 1, status: domain.DaemonTaskStatusWorking, taskType: domain.DaemonTaskTypeCmdExec},
+			},
+			nodeID:      1,
+			inFlightIDs: []uint64{2},
+			wantMarked:  2,
+			wantState: []wantState{
+				{id: 1, status: domain.DaemonTaskStatusError, outputContains: AbandonedTaskMessage},
+				{id: 2, status: domain.DaemonTaskStatusWorking},
+				{id: 3, status: domain.DaemonTaskStatusError, outputContains: AbandonedTaskMessage},
+			},
+		},
+		{
+			name:        "no_working_tasks_is_noop",
+			seed:        nil,
+			nodeID:      1,
+			inFlightIDs: nil,
+			wantMarked:  0,
+		},
+		{
+			name: "appends_to_existing_output",
+			seed: []taskSpec{
+				{
+					id: 1, dedicatedServerID: 1, status: domain.DaemonTaskStatusWorking,
+					taskType: domain.DaemonTaskTypeCmdExec,
+					output:   new("partial-progress\n"),
+				},
+			},
+			nodeID:      1,
+			inFlightIDs: nil,
+			wantMarked:  1,
+			wantState: []wantState{
+				{id: 1, status: domain.DaemonTaskStatusError, outputContains: "partial-progress"},
+			},
+		},
+		{
+			name: "install_task_resets_server_installed_status",
+			seed: []taskSpec{
+				{
+					id: 1, dedicatedServerID: 1, status: domain.DaemonTaskStatusWorking,
+					taskType: domain.DaemonTaskTypeServerInstall,
+					serverID: &serverID,
+				},
+			},
+			nodeID:      1,
+			inFlightIDs: nil,
+			wantMarked:  1,
+			wantState: []wantState{
+				{id: 1, status: domain.DaemonTaskStatusError, outputContains: AbandonedTaskMessage},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			taskRepo := inmemory.NewDaemonTaskRepository()
+			for _, spec := range tt.seed {
+				task := &domain.DaemonTask{
+					ID:                spec.id,
+					DedicatedServerID: spec.dedicatedServerID,
+					ServerID:          spec.serverID,
+					Task:              spec.taskType,
+					Status:            spec.status,
+					Output:            spec.output,
+					CreatedAt:         &now,
+					UpdatedAt:         &now,
+				}
+				require.NoError(t, taskRepo.Save(ctx, task))
+			}
+
+			serverRepo := inmemory.NewServerRepository()
+			require.NoError(t, serverRepo.Save(ctx, &domain.Server{
+				ID: serverID, UUID: uuid.New(), UUIDShort: "s11",
+				Name: "Server", GameID: "cs", DSID: 1, GameModID: 1,
+				ServerIP: "127.0.0.1", ServerPort: 27015, Dir: "/srv/s",
+				Installed: domain.ServerInstalledStatusInstallationInProg,
+			}))
+
+			handler := NewTaskHandler(taskRepo, serverRepo, nil, slog.Default())
+
+			marked, err := handler.ReconcileWorkingTasks(ctx, tt.nodeID, tt.inFlightIDs, "test_reason")
+			require.NoError(t, err)
+			assert.Equal(t, tt.wantMarked, marked)
+
+			for _, want := range tt.wantState {
+				tasks, err := taskRepo.FindWithOutput(ctx, &filters.FindDaemonTask{
+					IDs: []uint{want.id},
+				}, nil, nil)
+				require.NoError(t, err)
+				require.Len(t, tasks, 1)
+
+				assert.Equal(t, want.status, tasks[0].Status,
+					"task %d expected status %s, got %s", want.id, want.status, tasks[0].Status)
+
+				if want.outputContains != "" {
+					require.NotNil(t, tasks[0].Output, "task %d expected output, got nil", want.id)
+					assert.Contains(t, *tasks[0].Output, want.outputContains)
+				}
+			}
+
+			if tt.name == "install_task_resets_server_installed_status" {
+				servers, err := serverRepo.Find(ctx, &filters.FindServer{IDs: []uint{serverID}}, nil, nil)
+				require.NoError(t, err)
+				require.Len(t, servers, 1)
+				assert.Equal(t, domain.ServerInstalledStatusNotInstalled, servers[0].Installed)
+			}
+		})
+	}
+}
+
 func TestResolveInstalledStatus(t *testing.T) {
 	tests := []struct {
 		name       string
