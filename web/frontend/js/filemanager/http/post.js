@@ -24,10 +24,11 @@ export default {
     /**
      * Create new directory
      * @param data
+     * @param config
      * @returns {*}
      */
-    createDirectory(data) {
-        return HTTP.post('create-directory', data);
+    createDirectory(data, config = {}) {
+        return HTTP.post('create-directory', data, config);
     },
 
     /**

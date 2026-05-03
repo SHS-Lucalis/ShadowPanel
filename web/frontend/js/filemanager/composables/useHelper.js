@@ -165,10 +165,25 @@ export function useHelper() {
         return 'file'
     }
 
+    function addRenameSuffix(name, taken) {
+        const dot = name.lastIndexOf('.')
+        const base = dot > 0 ? name.slice(0, dot) : name
+        const ext = dot > 0 ? name.slice(dot) : ''
+        let i = 1
+        let candidate = `${base}_${i}${ext}`
+        while (taken.has(candidate)) {
+            i += 1
+            candidate = `${base}_${i}${ext}`
+        }
+
+        return candidate
+    }
+
     return {
         bytesToHuman,
         timestampToDate,
         mimeToIcon,
         extensionToIcon,
+        addRenameSuffix,
     }
 }

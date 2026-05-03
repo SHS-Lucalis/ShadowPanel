@@ -3,9 +3,40 @@ import { ref, computed, reactive } from 'vue'
 import GET from '../http/get.js'
 import POST from '../http/post.js'
 import { uploadFileChunked } from '../http/upload-session.js'
+import { detectConflicts, joinPath, dirOf } from '../http/upload-conflicts.js'
 import { useSettingsStore } from './useSettingsStore.js'
 import { useMessagesStore } from './useMessagesStore.js'
 import { useModalStore } from './useModalStore.js'
+
+const FILE_CONCURRENCY = 3
+const MKDIR_CONCURRENCY = 5
+
+function addRenameSuffix(name, taken) {
+    const dot = name.lastIndexOf('.')
+    const base = dot > 0 ? name.slice(0, dot) : name
+    const ext = dot > 0 ? name.slice(dot) : ''
+    let i = 1
+    let candidate = `${base}_${i}${ext}`
+    while (taken.has(candidate)) {
+        i += 1
+        candidate = `${base}_${i}${ext}`
+    }
+
+    return candidate
+}
+
+async function runPool(items, concurrency, worker) {
+    let cursor = 0
+    async function loop() {
+        while (cursor < items.length) {
+            const idx = cursor
+            cursor += 1
+            await worker(items[idx], idx)
+        }
+    }
+    const c = Math.min(concurrency, items.length || 1)
+    await Promise.all(Array.from({ length: c }, () => loop()))
+}
 
 function createManagerState() {
     return {
@@ -492,56 +523,208 @@ export const useFileManagerStore = defineStore('fm', () => {
         return response
     }
 
-    async function upload({ files }) {
+    function uniqueDirsFromEntries(entries, emptyDirs) {
+        const dirs = new Set()
+        for (const e of entries) {
+            let d = dirOf(e.relPath)
+            while (d) {
+                dirs.add(d)
+                const i = d.lastIndexOf('/')
+                d = i === -1 ? '' : d.slice(0, i)
+            }
+        }
+        for (const d of emptyDirs) {
+            let cur = d
+            while (cur) {
+                dirs.add(cur)
+                const i = cur.lastIndexOf('/')
+                cur = i === -1 ? '' : cur.slice(0, i)
+            }
+        }
+        const sorted = Array.from(dirs)
+        sorted.sort((a, b) => a.split('/').length - b.split('/').length)
+
+        return sorted
+    }
+
+    async function preparePreflight({ entries, emptyDirs }) {
         const messages = useMessagesStore()
-        const currentDirectory = selectedDirectory.value
-        const fileList = Array.from(files)
+        const rootPath = selectedDirectory.value || ''
+        const abortController = new AbortController()
+        messages.initUploadProgress({
+            rootPath,
+            files: entries,
+            emptyDirs,
+            abortController,
+        })
 
-        messages.initUploadProgress(fileList.map((f) => ({ name: f.name, size: f.size })))
+        const result = await detectConflicts({
+            disk: selectedDisk.value,
+            rootPath,
+            files: entries,
+            emptyDirs,
+        })
+        messages.setUploadListings(result.listings)
+        messages.applyConflicts(result)
+        messages.setUploadStatus('review')
+    }
 
-        const totalBytes = fileList.reduce((sum, f) => sum + f.size, 0)
-        const fileBaseLoaded = new Array(fileList.length).fill(0)
+    async function upload({ entries, emptyDirs = [] }) {
+        const list = Array.from(entries || [])
+        if (list.length === 0 && emptyDirs.length === 0) return { data: { result: { status: 'warning' } } }
+        await preparePreflight({ entries: list, emptyDirs })
 
-        const reportAggregate = (index, loaded) => {
-            const before = fileBaseLoaded.slice(0, index).reduce((s, v) => s + v, 0)
-            const overall = totalBytes > 0 ? Math.round(((before + loaded) * 100) / totalBytes) : 0
-            messages.setProgress(Math.min(overall, 100))
-        }
+        return { data: { result: { status: 'review' } } }
+    }
 
-        let hadError = false
-        try {
-            for (let i = 0; i < fileList.length; i += 1) {
-                const file = fileList[i]
-                try {
-                    // eslint-disable-next-line no-await-in-loop
-                    await uploadFileChunked(file, {
-                        path: currentDirectory || '',
-                        onPhase: (phase) => messages.setFilePhase({ index: i, phase }),
-                        onProgress: ({ phase, loaded }) => {
-                            messages.setFileProgress({ index: i, loaded })
-                            if (phase === 'uploading') reportAggregate(i, loaded)
-                        },
-                    })
-                    fileBaseLoaded[i] = file.size
-                    messages.setFilePhase({ index: i, phase: 'done' })
-                    reportAggregate(i, 0)
-                } catch (e) {
-                    hadError = true
-                    messages.setFileError({ index: i, error: e.code || 'unknown' })
+    async function ensureDirectories(rootPath, dirRels) {
+        if (dirRels.length === 0) return
+        await runPool(dirRels, MKDIR_CONCURRENCY, async (relDir) => {
+            const target = joinPath(rootPath, relDir)
+            const slash = target.lastIndexOf('/')
+            const parent = slash === -1 ? '' : target.slice(0, slash)
+            const name = slash === -1 ? target : target.slice(slash + 1)
+            try {
+                await POST.createDirectory(
+                    {
+                        disk: selectedDisk.value,
+                        path: parent,
+                        name,
+                    },
+                    { silent: true },
+                )
+            } catch (err) {
+                /* merge: ignore creation errors (already exists) */
+            }
+        })
+    }
+
+    async function runFilePool(rootPath, files, abortController) {
+        const messages = useMessagesStore()
+        await runPool(files, FILE_CONCURRENCY, async (file) => {
+            if (abortController.signal.aborted) return
+            const targetDir = joinPath(rootPath, file.dirPath)
+            const filename = file.renamedTo || file.name
+            try {
+                await uploadFileChunked(file._raw, {
+                    path: targetDir,
+                    filename,
+                    signal: abortController.signal,
+                    onPhase: (phase) => messages.setFilePhase({ index: file.index, phase }),
+                    onProgress: ({ loaded }) => messages.setFileProgress({ index: file.index, loaded }),
+                })
+                messages.setFilePhase({ index: file.index, phase: 'done' })
+            } catch (err) {
+                const code = err && err.code ? err.code : 'unknown'
+                messages.setFileError({ index: file.index, error: code })
+            }
+        })
+    }
+
+    async function startUpload() {
+        const messages = useMessagesStore()
+        const up = messages.uploadProgress
+        const rootPath = up.rootPath || ''
+        const abortController = up.abortController || new AbortController()
+        if (!up.abortController) up.abortController = abortController
+
+        const renamesUsed = new Map()
+        const fileItems = []
+        for (let i = 0; i < up.files.length; i += 1) {
+            const meta = up.files[i]
+            const raw = messages.getRawFile(i)
+            const action = meta.action
+            if ((meta.conflict === 'file' || meta.conflict === 'dir-vs-file') && action === 'skip') {
+                messages.markFilesSkipped((f) => f.index === meta.index)
+                continue
+            }
+            if (meta.conflict === 'dir-vs-file') {
+                messages.setFileError({ index: meta.index, error: 'dir_vs_file' })
+                continue
+            }
+            let renamedTo = null
+            if (action === 'rename' && meta.conflict === 'file') {
+                const dirKey = meta.dirPath
+                if (!renamesUsed.has(dirKey)) {
+                    const taken = new Set()
+                    const absDir = joinPath(rootPath, dirKey)
+                    const serverListing = messages.getDirListing(absDir)
+                    if (serverListing) {
+                        for (const existing of serverListing.keys()) taken.add(existing)
+                    }
+                    renamesUsed.set(dirKey, taken)
                 }
+                renamesUsed.get(dirKey).add(meta.name)
+                renamedTo = addRenameSuffix(meta.name, renamesUsed.get(dirKey))
+                renamesUsed.get(dirKey).add(renamedTo)
+                messages.setFileAction({ index: meta.index, action: 'rename', renamedTo })
             }
-
-            if (currentDirectory === selectedDirectory.value) {
-                await refreshManagers()
-            }
-
-            return { data: { result: { status: hadError ? 'warning' : 'success' } } }
-        } finally {
-            setTimeout(() => {
-                messages.clearProgress()
-                messages.clearUploadProgress()
-            }, 1500)
+            fileItems.push({ ...meta, renamedTo, _raw: raw })
         }
+
+        messages.setUploadStatus('mkdir')
+        const dirRels = uniqueDirsFromEntries(
+            up.files.map((f) => ({ relPath: f.relPath })),
+            up.emptyDirs || [],
+        )
+        await ensureDirectories(rootPath, dirRels)
+        if (abortController.signal.aborted) {
+            messages.setUploadStatus('cancelled')
+
+            return { data: { result: { status: 'cancelled' } } }
+        }
+
+        messages.setUploadStatus('uploading')
+        await runFilePool(rootPath, fileItems, abortController)
+
+        if (abortController.signal.aborted) {
+            messages.setUploadStatus('cancelled')
+
+            return { data: { result: { status: 'cancelled' } } }
+        }
+
+        const failed = up.totals.failedFiles
+        messages.setUploadStatus(failed > 0 ? 'partial' : 'completed')
+
+        if (rootPath === (selectedDirectory.value || '')) {
+            await refreshManagers()
+        }
+
+        return { data: { result: { status: failed > 0 ? 'warning' : 'success' } } }
+    }
+
+    function cancelUpload() {
+        const messages = useMessagesStore()
+        const up = messages.uploadProgress
+        if (up.abortController) up.abortController.abort()
+        messages.setUploadStatus('cancelled')
+    }
+
+    async function retryFailed() {
+        const messages = useMessagesStore()
+        const up = messages.uploadProgress
+        const newController = new AbortController()
+        up.abortController = newController
+        messages.resetFailedToPending()
+        messages.setUploadStatus('uploading')
+
+        const items = []
+        for (const meta of up.files) {
+            if (meta.phase !== 'pending') continue
+            const raw = messages.getRawFile(meta.index)
+            items.push({ ...meta, _raw: raw })
+        }
+        await runFilePool(up.rootPath || '', items, newController)
+        const failed = up.totals.failedFiles
+        messages.setUploadStatus(failed > 0 ? 'partial' : 'completed')
+        if ((up.rootPath || '') === (selectedDirectory.value || '')) {
+            await refreshManagers()
+        }
+    }
+
+    function clearUpload() {
+        const messages = useMessagesStore()
+        messages.clearUploadProgress()
     }
 
     async function download({ disk, path, filename }) {
@@ -791,6 +974,10 @@ export const useFileManagerStore = defineStore('fm', () => {
         updateFile: updateFileAction,
         createDirectory,
         upload,
+        startUpload,
+        cancelUpload,
+        retryFailed,
+        clearUpload,
         download,
         delete: deleteItems,
         paste,

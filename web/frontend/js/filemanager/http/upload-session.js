@@ -220,7 +220,7 @@ function fireAndForgetAbort(uploadId) {
     POST.abortUploadSession(uploadId).catch(() => {})
 }
 
-export async function uploadFileChunked(file, { path, onPhase, onProgress, signal } = {}) {
+export async function uploadFileChunked(file, { path, filename, onPhase, onProgress, signal } = {}) {
     let createdUploadId = null
     try {
         if (onPhase) onPhase('hashing')
@@ -233,7 +233,7 @@ export async function uploadFileChunked(file, { path, onPhase, onProgress, signa
         if (onPhase) onPhase('uploading')
         const createRes = await POST.createUploadSession({
             path: path || '',
-            filename: file.name,
+            filename: filename || file.name,
             total_size: file.size,
             expected_checksum: expectedChecksum,
         }).catch((err) => {

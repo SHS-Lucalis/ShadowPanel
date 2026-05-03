@@ -82,7 +82,7 @@ const modalName = computed(() => modal.modalName)
 const modalConfig = computed(() => ({
     NewFileModal: { title: lang.value.modal.newFile.title, width: '600px' },
     NewFolderModal: { title: lang.value.modal.newFolder.title, width: '600px' },
-    UploadModal: { title: lang.value.modal.upload.title, width: '600px' },
+    UploadModal: { title: lang.value.modal.upload.title, width: '760px' },
     DeleteModal: { title: lang.value.modal.delete.title, width: '600px' },
     ClipboardModal: { title: lang.value.clipboard.title, width: '600px' },
     StatusModal: { title: lang.value.modal.status.title, width: '600px' },

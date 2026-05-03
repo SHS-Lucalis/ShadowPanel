@@ -1,178 +1,366 @@
 <template>
     <div class="fm-modal-upload">
-        <div class="fm-btn-wrapper relative overflow-hidden mb-4" v-show="!uploading">
-            <n-button class="w-full">{{ lang.btn.uploadSelect }}</n-button>
-            <input
-                type="file"
+        <div v-if="status === 'idle'" class="space-y-3">
+            <n-upload
                 multiple
-                name="myfile"
-                class="absolute left-0 top-0 opacity-0 cursor-pointer text-[100px] h-full w-full"
-                @change="selectFiles($event)"
-            />
+                directory-dnd
+                :default-upload="false"
+                :show-file-list="false"
+                :file-list="uploadFileList"
+                @change="onUploadChange"
+            >
+                <n-upload-dragger>
+                    <div class="flex flex-col items-center gap-2 py-6">
+                        <GIcon name="upload" class="text-4xl text-stone-400" />
+                        <p class="text-stone-700 dark:text-stone-300 font-medium">
+                            {{ lang.modal.upload.dragger.text }}
+                        </p>
+                        <p class="text-sm text-stone-500 dark:text-stone-500">
+                            {{ lang.modal.upload.dragger.hint }}
+                        </p>
+                    </div>
+                </n-upload-dragger>
+            </n-upload>
+            <div class="text-center">
+                <GButton color="white" @click="openFolderPicker">
+                    <GIcon name="folder" class="mr-1" />
+                    {{ lang.btn.uploadDir }}
+                </GButton>
+                <input
+                    ref="folderInputRef"
+                    type="file"
+                    webkitdirectory
+                    multiple
+                    class="hidden"
+                    @change="onFolderInputChange"
+                />
+            </div>
+            <p v-if="!hasPending" class="text-stone-500 text-center text-sm pt-2">
+                {{ lang.modal.upload.noSelected }}
+            </p>
         </div>
 
-        <div class="fm-upload-list" v-if="hasFiles && !uploading">
-            <div class="grid grid-cols-2 gap-4 my-4" v-for="(item, index) in newFiles" :key="index">
-                <div class="truncate">
-                    <GIcon :name="mimeToIcon(item.type)" />
-                    {{ item.name }}
-                </div>
-                <div class="text-right">
-                    {{ bytesToHuman(item.size) }}
-                </div>
-            </div>
-            <GDivider />
-            <div class="grid grid-cols-2 gap-4 my-4">
+        <div v-if="status === 'preflight'" class="py-8 flex flex-col items-center gap-3 text-stone-500">
+            <GIcon name="loading" class="text-3xl text-sky-500" />
+            <p>{{ lang.modal.upload.detecting }}</p>
+        </div>
+
+        <div v-if="status === 'review'" class="space-y-3">
+            <div v-if="!isSingleFile" class="grid grid-cols-3 gap-2 text-sm bg-stone-50 dark:bg-stone-800 rounded p-3">
                 <div>
-                    <strong>{{ lang.modal.upload.selected }}</strong>
-                    {{ newFiles.length }}
+                    <strong>{{ lang.modal.upload.summaryFiles }}</strong>
+                    {{ totals.files }}
+                </div>
+                <div>
+                    <strong>{{ lang.modal.upload.summaryDirs }}</strong>
+                    {{ dirCount }}
                 </div>
                 <div class="text-right">
                     <strong>{{ lang.modal.upload.size }}</strong>
-                    {{ allFilesSize }}
+                    {{ bytesToHuman(totals.bytes) }}
                 </div>
             </div>
-            <GDivider />
-        </div>
-        <div v-else-if="!uploading">
-            <p>{{ lang.modal.upload.noSelected }}</p>
+            <div v-if="hasConflicts" class="border border-orange-300 dark:border-orange-800 rounded p-3 bg-orange-50 dark:bg-orange-950/40">
+                <div class="flex items-center gap-2 mb-2">
+                    <GIcon name="warning" class="text-orange-500" />
+                    <strong class="text-orange-700 dark:text-orange-300">
+                        {{ lang.modal.upload.review.conflictsHeader }}
+                    </strong>
+                </div>
+                <div class="flex items-center gap-2 text-sm">
+                    <span>{{ lang.modal.upload.review.defaultAction }}</span>
+                    <n-select
+                        :value="defaultAction"
+                        :options="defaultActionOptions"
+                        size="small"
+                        class="w-48"
+                        @update:value="onDefaultAction"
+                    />
+                </div>
+            </div>
+            <div class="max-h-96 overflow-auto border border-stone-200 dark:border-stone-700 rounded">
+                <UploadTreeNode :is-review="true" />
+            </div>
         </div>
 
-        <div class="fm-upload-progress my-2" v-if="uploading">
-            <div
-                v-for="(item, index) in progressFiles"
-                :key="index"
-                class="flex flex-col gap-1 my-3"
-            >
-                <div class="flex items-center gap-2">
-                    <GIcon :name="phaseIcon(item)" :class="phaseIconClass(item)" />
-                    <span class="truncate flex-1" :title="item.name">{{ item.name }}</span>
-                    <n-tag :type="phaseTagType(item)" size="small" round>
-                        {{ phaseLabel(item) }}
-                    </n-tag>
-                    <span class="text-xs text-stone-500 shrink-0 w-12 text-right">
-                        {{ item.phase === 'error' ? '' : `${filePercent(item)}%` }}
+        <div v-if="status === 'mkdir' || status === 'uploading'" class="space-y-3">
+            <div v-if="!isSingleFile" class="bg-stone-50 dark:bg-stone-800 rounded p-3">
+                <div class="flex items-center justify-between mb-2">
+                    <strong class="text-sm">
+                        {{ status === 'mkdir' ? lang.modal.upload.creatingDirs : lang.modal.upload.phase.uploading }}
+                    </strong>
+                    <span class="text-xs text-stone-500">
+                        {{ totals.completedFiles }}/{{ totals.files }}
+                        ·
+                        {{ bytesToHuman(totals.loadedBytes) }} / {{ bytesToHuman(totals.bytes) }}
                     </span>
                 </div>
                 <n-progress
                     type="line"
-                    :percentage="filePercent(item)"
+                    :percentage="overallPercent"
                     :show-indicator="false"
-                    :height="6"
-                    :border-radius="3"
-                    :status="progressStatus(item)"
-                    :processing="item.phase === 'hashing' || item.phase === 'uploading' || item.phase === 'completing'"
+                    :height="8"
+                    :border-radius="4"
+                    processing
                 />
+            </div>
+            <div class="max-h-96 overflow-auto border border-stone-200 dark:border-stone-700 rounded">
+                <UploadTreeNode :is-review="false" />
+            </div>
+        </div>
+
+        <div v-if="status === 'completed' || status === 'partial' || status === 'cancelled'" class="space-y-3">
+            <div
+                class="rounded p-3 text-sm"
+                :class="resultBoxClass"
+            >
+                <div class="flex items-center gap-2 mb-1">
+                    <GIcon :name="resultIcon" />
+                    <strong>{{ resultTitle }}</strong>
+                </div>
+                <p v-if="!isSingleFile">
+                    {{ resultMessage }}
+                </p>
+            </div>
+            <div class="max-h-96 overflow-auto border border-stone-200 dark:border-stone-700 rounded">
+                <UploadTreeNode :is-review="false" />
             </div>
         </div>
     </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { GIcon, GDivider } from '@gameap/ui'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { GIcon } from '@gameap/ui'
+import { NUpload, NUploadDragger, NSelect, NProgress } from 'naive-ui'
 import { useFileManagerStore } from '../../../stores/useFileManagerStore.js'
 import { useMessagesStore } from '../../../stores/useMessagesStore.js'
+import { useModalStore } from '../../../stores/useModalStore.js'
 import { useTranslate } from '../../../composables/useTranslate.js'
 import { useHelper } from '../../../composables/useHelper.js'
 import { useModal } from '../../../composables/useModal.js'
+import { entriesFromFileList } from '../../../composables/useDropZone.js'
+import UploadTreeNode from './UploadTreeNode.vue'
 
 const fm = useFileManagerStore()
 const messages = useMessagesStore()
+const modal = useModalStore()
 const { lang } = useTranslate()
-const { bytesToHuman, mimeToIcon } = useHelper()
+const { bytesToHuman } = useHelper()
 const { hideModal } = useModal()
 
-const newFiles = ref([])
+const folderInputRef = ref(null)
+const pendingDrop = ref({ entries: [], emptyDirs: [] })
+const uploadFileList = ref([])
 
-const progressFiles = computed(() => messages.uploadProgress.files)
-const uploading = computed(() => progressFiles.value.length > 0)
-const hasFiles = computed(() => newFiles.value.length > 0)
+const status = computed(() => messages.uploadProgress.status)
+const totals = computed(() => messages.uploadProgress.totals)
+const defaultAction = computed(() => messages.uploadProgress.defaultAction)
+const hasConflicts = computed(() => messages.uploadProgress.hasConflicts)
+const dirCount = computed(() => Object.keys(messages.uploadProgress.dirs).filter((k) => k !== '').length)
+const isSingleFile = computed(() => totals.value.files === 1 && dirCount.value === 0 && messages.uploadProgress.emptyDirs.length === 0)
+const overallPercent = computed(() => {
+    const t = totals.value
+    if (!t.bytes) return 0
 
-const allFilesSize = computed(() => {
-    let size = 0
-    for (let i = 0; i < newFiles.value.length; i += 1) {
-        size += newFiles.value[i].size
-    }
-    return bytesToHuman(size)
+    return Math.min(Math.round((t.loadedBytes * 100) / t.bytes), 100)
 })
 
-function selectFiles(event) {
-    newFiles.value = event.target.files.length === 0 ? [] : Array.from(event.target.files)
+const hasPending = computed(() => pendingDrop.value.entries.length > 0 || pendingDrop.value.emptyDirs.length > 0)
+
+const defaultActionOptions = computed(() => [
+    { label: lang.value.modal.upload.actions.overwriteAll, value: 'overwrite' },
+    { label: lang.value.modal.upload.actions.skipAll, value: 'skip' },
+    { label: lang.value.modal.upload.actions.renameAll, value: 'rename' },
+])
+
+const resultIcon = computed(() => {
+    if (status.value === 'completed') return 'check'
+    if (status.value === 'cancelled') return 'close'
+
+    return 'warning'
+})
+
+const resultTitle = computed(() => {
+    if (status.value === 'completed') return lang.value.modal.upload.resultSuccess
+    if (status.value === 'cancelled') return lang.value.modal.upload.resultCancelled
+
+    return lang.value.modal.upload.resultPartial
+})
+
+const resultMessage = computed(() => {
+    const t = totals.value
+
+    return lang.value.modal.upload.completed
+        .replace('{success}', t.completedFiles)
+        .replace('{failed}', t.failedFiles)
+        .replace('{skipped}', t.skippedFiles)
+})
+
+const resultBoxClass = computed(() => {
+    if (status.value === 'completed') return 'bg-lime-50 dark:bg-lime-950/40 text-lime-700 dark:text-lime-300 border border-lime-300 dark:border-lime-800'
+    if (status.value === 'cancelled') return 'bg-stone-50 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border border-stone-300 dark:border-stone-700'
+
+    return 'bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 border border-orange-300 dark:border-orange-800'
+})
+
+function openFolderPicker() {
+    if (folderInputRef.value) folderInputRef.value.click()
 }
 
-function uploadFiles() {
-    if (!hasFiles.value || uploading.value) return
-
-    fm.upload({ files: newFiles.value }).then((response) => {
-        if (response && response.data.result.status === 'success') {
-            hideModal()
-        }
-    })
-}
-
-function filePercent(file) {
-    if (!file.size) return 0
-    return Math.min(Math.round((file.loaded * 100) / file.size), 100)
-}
-
-function phaseLabel(file) {
-    const phases = lang.value.modal.upload.phase || {}
-    if (file.phase === 'error') {
-        const errors = lang.value.modal.upload.errors || {}
-        return errors[file.error] || errors.unknown || 'Failed'
+function onUploadChange({ fileList }) {
+    if (!fileList || fileList.length === 0) return
+    const files = []
+    for (const item of fileList) {
+        if (item.file) files.push(item.file)
     }
-    return phases[file.phase] || ''
+    uploadFileList.value = []
+    if (files.length === 0) return
+    const result = entriesFromFileList(files)
+    pendingDrop.value = { entries: result.files, emptyDirs: result.emptyDirs }
+    submitPending()
 }
 
-function phaseIcon(file) {
-    if (file.phase === 'error') return 'close'
-    if (file.phase === 'done') return 'check'
-    if (file.phase === 'hashing') return 'loading'
-    if (file.phase === 'completing') return 'loading'
-    if (file.phase === 'uploading') return 'upload'
-    return 'file'
+function onFolderInputChange(event) {
+    if (!event.target.files || event.target.files.length === 0) return
+    const result = entriesFromFileList(event.target.files)
+    pendingDrop.value = { entries: result.files, emptyDirs: result.emptyDirs }
+    submitPending()
+    event.target.value = ''
 }
 
-function phaseIconClass(file) {
-    if (file.phase === 'error') return 'text-red-500'
-    if (file.phase === 'done') return 'text-lime-500'
-    if (file.phase === 'hashing' || file.phase === 'completing') return 'text-sky-500'
-    return 'text-stone-500'
+async function submitPending() {
+    const { entries, emptyDirs } = pendingDrop.value
+    if (entries.length === 0 && emptyDirs.length === 0) return
+    pendingDrop.value = { entries: [], emptyDirs: [] }
+    await fm.upload({ entries, emptyDirs })
 }
 
-function phaseTagType(file) {
-    if (file.phase === 'error') return 'error'
-    if (file.phase === 'done') return 'success'
-    return 'default'
+function onDefaultAction(action) {
+    messages.setDefaultAction(action)
 }
 
-function progressStatus(file) {
-    if (file.phase === 'error') return 'error'
-    if (file.phase === 'done') return 'success'
-    return 'default'
+function applyPayloadFromModal() {
+    const payload = modal.consumePayload()
+    if (!payload) return
+    const entries = payload.entries || []
+    const emptyDirs = payload.emptyDirs || []
+    if (entries.length === 0 && emptyDirs.length === 0) return
+    pendingDrop.value = { entries, emptyDirs }
+    submitPending()
 }
+
+function close() {
+    if (status.value === 'mkdir' || status.value === 'uploading') {
+        const ok = window.confirm(lang.value.modal.upload.confirmCloseUploading)
+        if (!ok) return
+        fm.cancelUpload()
+    }
+    fm.clearUpload()
+    hideModal()
+}
+
+function onSubmitReview() {
+    fm.startUpload()
+}
+
+function onCancelAll() {
+    fm.cancelUpload()
+}
+
+function onRetryFailed() {
+    fm.retryFailed()
+}
+
+onMounted(() => {
+    const terminal = ['completed', 'partial', 'cancelled']
+    if (terminal.includes(status.value)) {
+        messages.clearUploadProgress()
+    }
+    applyPayloadFromModal()
+})
+
+onUnmounted(() => {
+    const active = ['mkdir', 'uploading']
+    if (active.includes(status.value)) {
+        fm.cancelUpload()
+    }
+    messages.clearUploadProgress()
+})
+
+watch(
+    () => modal.payload,
+    (val) => {
+        if (val && status.value === 'idle') applyPayloadFromModal()
+    },
+)
 
 defineExpose({
-    footerButtons: computed(() =>
-        uploading.value
-            ? []
-            : [
-                  {
-                      label: lang.value.btn.submit,
-                      color: 'green',
-                      icon: 'upload',
-                      action: uploadFiles,
-                      disabled: !hasFiles.value,
-                  },
-                  { label: lang.value.btn.cancel, color: 'black', icon: 'close', action: hideModal },
-              ],
-    ),
+    footerButtons: computed(() => {
+        if (status.value === 'idle') {
+            return [
+                {
+                    label: lang.value.btn.cancel,
+                    color: 'black',
+                    icon: 'close',
+                    action: close,
+                },
+            ]
+        }
+        if (status.value === 'preflight') {
+            return [
+                {
+                    label: lang.value.btn.cancel,
+                    color: 'black',
+                    icon: 'close',
+                    action: close,
+                },
+            ]
+        }
+        if (status.value === 'review') {
+            return [
+                {
+                    label: lang.value.btn.submit,
+                    color: 'green',
+                    icon: 'upload',
+                    action: onSubmitReview,
+                    disabled: totals.value.files === 0,
+                },
+                {
+                    label: lang.value.btn.cancel,
+                    color: 'black',
+                    icon: 'close',
+                    action: close,
+                },
+            ]
+        }
+        if (status.value === 'mkdir' || status.value === 'uploading') {
+            return [
+                {
+                    label: lang.value.btn.cancelAll,
+                    color: 'red',
+                    icon: 'stop',
+                    action: onCancelAll,
+                },
+            ]
+        }
+        const buttons = []
+        if (totals.value.failedFiles > 0) {
+            buttons.push({
+                label: lang.value.btn.retryFailed,
+                color: 'orange',
+                icon: 'refresh',
+                action: onRetryFailed,
+            })
+        }
+        buttons.push({
+            label: lang.value.btn.close,
+            color: 'black',
+            icon: 'close',
+            action: close,
+        })
+
+        return buttons
+    }),
 })
 </script>
-
-<style scoped>
-.fm-btn-wrapper:hover :deep(.n-button) {
-    background-color: var(--n-color-hover);
-}
-</style>

@@ -8,18 +8,34 @@
         </div>
         <progress-block />
         <info-block />
+        <transition name="fade">
+            <div
+                v-if="dropOver"
+                class="absolute inset-0 z-50 flex items-center justify-center pointer-events-none bg-sky-500/10 dark:bg-sky-700/20 border-4 border-dashed border-sky-500 dark:border-sky-400 rounded-md"
+            >
+                <div class="bg-white dark:bg-stone-800 px-8 py-6 rounded-lg shadow-2xl flex flex-col items-center gap-3">
+                    <GIcon name="upload" class="text-5xl text-sky-500 dark:text-sky-400" />
+                    <p class="text-lg font-semibold text-stone-700 dark:text-stone-200">
+                        {{ lang.modal.upload.dropOverlay }}
+                    </p>
+                </div>
+            </div>
+        </transition>
     </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { GIcon } from '@gameap/ui'
 import HTTP from './http/axios.js'
 import EventBus from './emitter.js'
 import { errorNotification, notification } from '@/parts/dialogs.js'
 import { useFileManagerStore } from './stores/useFileManagerStore.js'
 import { useSettingsStore } from './stores/useSettingsStore.js'
 import { useMessagesStore } from './stores/useMessagesStore.js'
+import { useModalStore } from './stores/useModalStore.js'
 import { useTranslate } from './composables/useTranslate.js'
+import { useWindowDropZone } from './composables/useDropZone.js'
 
 import NavbarBlock from './components/blocks/NavbarBlock.vue'
 import Manager from './components/manager/Manager.vue'
@@ -40,7 +56,20 @@ const props = defineProps({
 const fm = useFileManagerStore()
 const settings = useSettingsStore()
 const messages = useMessagesStore()
+const modal = useModalStore()
 const { lang } = useTranslate()
+
+const { isOver: dropOver } = useWindowDropZone({
+    isActive: () => !modal.showModal,
+    onDrop: ({ files, emptyDirs }) => {
+        messages.clearUploadProgress()
+        modal.setModalState({
+            show: true,
+            modalName: 'UploadModal',
+            payload: { entries: files, emptyDirs },
+        })
+    },
+})
 
 const interceptorIndex = ref({
     request: null,
@@ -77,7 +106,9 @@ function responseInterceptor() {
         (response) => {
             messages.subtractLoading()
 
-            if (Object.prototype.hasOwnProperty.call(response.data, 'result')) {
+            const silent = response.config && response.config.silent
+
+            if (!silent && Object.prototype.hasOwnProperty.call(response.data, 'result')) {
                 if (response.data.result.message) {
                     const messageText = Object.prototype.hasOwnProperty.call(
                         lang.value.response,
@@ -104,6 +135,9 @@ function responseInterceptor() {
         (error) => {
             messages.subtractLoading()
 
+            const silent = error.config && (error.config.silent || error.config.silentError)
+            const aborted = error.code === 'ERR_CANCELED' || error.message === 'canceled'
+
             const errorMessage = {
                 status: 0,
                 message: '',
@@ -112,7 +146,7 @@ function responseInterceptor() {
             if (error.response) {
                 errorMessage.status = error.response.status
 
-                if (error.response.data.message) {
+                if (error.response.data && error.response.data.message) {
                     errorMessage.message = Object.prototype.hasOwnProperty.call(
                         lang.value.response,
                         error.response.data.message
@@ -129,8 +163,10 @@ function responseInterceptor() {
                 errorMessage.message = error.message
             }
 
-            messages.setError(errorMessage)
-            errorNotification(errorMessage.message)
+            if (!silent && !aborted) {
+                messages.setError(errorMessage)
+                errorNotification(errorMessage.message)
+            }
 
             return Promise.reject(error)
         }

@@ -32,10 +32,11 @@ export default {
      * Get content (files and folders)
      * @param disk
      * @param path
+     * @param config
      * @returns {*}
      */
-    content(disk, path) {
-        return HTTP.get('content', { params: { disk, path } });
+    content(disk, path, config = {}) {
+        return HTTP.get('content', { params: { disk, path }, ...config });
     },
 
     /**

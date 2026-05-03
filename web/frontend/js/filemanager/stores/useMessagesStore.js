@@ -1,6 +1,64 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
+function createInitialUploadProgress() {
+    return {
+        status: 'idle',
+        rootPath: null,
+        abortController: null,
+        defaultAction: null,
+        hasConflicts: false,
+        totals: {
+            files: 0,
+            bytes: 0,
+            completedFiles: 0,
+            failedFiles: 0,
+            skippedFiles: 0,
+            loadedBytes: 0,
+        },
+        dirs: {},
+        files: [],
+        emptyDirs: [],
+    }
+}
+
+function dirOfRel(relPath) {
+    const i = relPath.lastIndexOf('/')
+
+    return i === -1 ? '' : relPath.slice(0, i)
+}
+
+function ensureDir(dirs, relPath) {
+    if (!dirs[relPath]) {
+        dirs[relPath] = {
+            relPath,
+            name: relPath === '' ? '' : relPath.slice(relPath.lastIndexOf('/') + 1),
+            files: 0,
+            completed: 0,
+            failed: 0,
+            skipped: 0,
+            loaded: 0,
+            size: 0,
+            expanded: relPath === '',
+        }
+    }
+
+    return dirs[relPath]
+}
+
+function dirChain(relPath) {
+    const chain = ['']
+    if (!relPath) return chain
+    const parts = relPath.split('/')
+    let cur = ''
+    for (const p of parts) {
+        cur = cur ? `${cur}/${p}` : p
+        chain.push(cur)
+    }
+
+    return chain
+}
+
 export const useMessagesStore = defineStore('fm-messages', () => {
     const actionResult = ref({
         status: null,
@@ -10,12 +68,12 @@ export const useMessagesStore = defineStore('fm-messages', () => {
     const progressLabel = ref('')
     const loadingCount = ref(0)
     const errors = ref([])
-    const uploadProgress = ref({ files: [] })
+    const uploadProgress = ref(createInitialUploadProgress())
+    const uploadRawFiles = { current: [] }
+    const uploadListings = { current: new Map() }
 
-    // Getters
     const loading = computed(() => loadingCount.value > 0)
 
-    // Actions
     function setActionResult({ status, message }) {
         actionResult.value.status = status
         actionResult.value.message = message
@@ -38,38 +96,187 @@ export const useMessagesStore = defineStore('fm-messages', () => {
         progressLabel.value = ''
     }
 
-    function initUploadProgress(files) {
-        uploadProgress.value = {
-            files: files.map((f) => ({
+    function initUploadProgress({ rootPath = '', files = [], emptyDirs = [], abortController = null } = {}) {
+        const next = createInitialUploadProgress()
+        next.status = 'preflight'
+        next.rootPath = rootPath
+        next.abortController = abortController
+        next.emptyDirs = emptyDirs.slice()
+
+        const raws = []
+        for (let i = 0; i < files.length; i += 1) {
+            const f = files[i]
+            const dir = dirOfRel(f.relPath)
+            next.files.push({
+                index: i,
+                relPath: f.relPath,
                 name: f.name,
                 size: f.size,
+                dirPath: dir,
+                conflict: 'none',
+                action: 'overwrite',
+                renamedTo: null,
                 phase: 'pending',
                 loaded: 0,
                 error: null,
-            })),
+            })
+            raws.push(f.file)
+            for (const d of dirChain(dir)) {
+                const node = ensureDir(next.dirs, d)
+                node.files += 1
+                node.size += f.size
+            }
+            next.totals.files += 1
+            next.totals.bytes += f.size
         }
+        for (const d of emptyDirs) {
+            for (const part of dirChain(d)) {
+                ensureDir(next.dirs, part)
+            }
+        }
+        uploadRawFiles.current = raws
+        uploadProgress.value = next
+    }
+
+    function getRawFile(index) {
+        return uploadRawFiles.current[index] || null
+    }
+
+    function setUploadListings(listings) {
+        uploadListings.current = listings || new Map()
+    }
+
+    function getDirListing(absDir) {
+        return uploadListings.current.get(absDir) || null
+    }
+
+    function applyConflicts({ fileConflicts, dirConflicts }) {
+        const up = uploadProgress.value
+        let hasConflicts = false
+        for (const file of up.files) {
+            const c = fileConflicts.get(file.relPath) || 'none'
+            file.conflict = c
+            if (c === 'file' || c === 'dir-vs-file') hasConflicts = true
+        }
+        if (dirConflicts) {
+            for (const [d, kind] of dirConflicts.entries()) {
+                if (kind === 'file-vs-dir') hasConflicts = true
+                const node = ensureDir(up.dirs, d)
+                node.conflict = kind
+            }
+        }
+        up.hasConflicts = hasConflicts
+    }
+
+    function setUploadStatus(status) {
+        uploadProgress.value.status = status
+    }
+
+    function setDefaultAction(action) {
+        const up = uploadProgress.value
+        up.defaultAction = action
+        for (const file of up.files) {
+            if (file.conflict === 'file' || file.conflict === 'none') {
+                file.action = action
+            }
+        }
+    }
+
+    function setFileAction({ index, action, renamedTo = null }) {
+        const file = uploadProgress.value.files[index]
+        if (!file) return
+        file.action = action
+        file.renamedTo = renamedTo
+    }
+
+    function recomputeDirAggregates() {
+        const up = uploadProgress.value
+        for (const key of Object.keys(up.dirs)) {
+            const d = up.dirs[key]
+            d.completed = 0
+            d.failed = 0
+            d.skipped = 0
+            d.loaded = 0
+        }
+        let totalLoaded = 0
+        let totalCompleted = 0
+        let totalFailed = 0
+        let totalSkipped = 0
+        for (const file of up.files) {
+            const chain = dirChain(file.dirPath)
+            for (const dirRel of chain) {
+                const node = up.dirs[dirRel]
+                if (!node) continue
+                if (file.phase === 'done') node.completed += 1
+                if (file.phase === 'error') node.failed += 1
+                if (file.phase === 'skipped') node.skipped += 1
+                node.loaded += file.phase === 'done' ? file.size : Math.min(file.loaded || 0, file.size)
+            }
+            if (file.phase === 'done') totalCompleted += 1
+            if (file.phase === 'error') totalFailed += 1
+            if (file.phase === 'skipped') totalSkipped += 1
+            totalLoaded += file.phase === 'done' ? file.size : Math.min(file.loaded || 0, file.size)
+        }
+        up.totals.completedFiles = totalCompleted
+        up.totals.failedFiles = totalFailed
+        up.totals.skippedFiles = totalSkipped
+        up.totals.loadedBytes = totalLoaded
     }
 
     function setFilePhase({ index, phase }) {
         const file = uploadProgress.value.files[index]
-        if (file) file.phase = phase
+        if (!file) return
+        file.phase = phase
+        if (phase === 'done') file.loaded = file.size
+        recomputeDirAggregates()
     }
 
     function setFileProgress({ index, loaded }) {
         const file = uploadProgress.value.files[index]
-        if (file) file.loaded = loaded
+        if (!file) return
+        file.loaded = loaded
+        recomputeDirAggregates()
     }
 
     function setFileError({ index, error }) {
         const file = uploadProgress.value.files[index]
-        if (file) {
-            file.phase = 'error'
-            file.error = error
+        if (!file) return
+        file.phase = 'error'
+        file.error = error
+        recomputeDirAggregates()
+    }
+
+    function markFilesSkipped(predicate) {
+        const up = uploadProgress.value
+        for (const file of up.files) {
+            if (predicate(file)) {
+                file.phase = 'skipped'
+            }
         }
+        recomputeDirAggregates()
+    }
+
+    function resetFailedToPending() {
+        const up = uploadProgress.value
+        for (const file of up.files) {
+            if (file.phase === 'error') {
+                file.phase = 'pending'
+                file.loaded = 0
+                file.error = null
+            }
+        }
+        recomputeDirAggregates()
+    }
+
+    function toggleDirExpanded(dirPath) {
+        const node = uploadProgress.value.dirs[dirPath]
+        if (node) node.expanded = !node.expanded
     }
 
     function clearUploadProgress() {
-        uploadProgress.value = { files: [] }
+        uploadRawFiles.current = []
+        uploadListings.current = new Map()
+        uploadProgress.value = createInitialUploadProgress()
     }
 
     function addLoading() {
@@ -93,16 +300,13 @@ export const useMessagesStore = defineStore('fm-messages', () => {
     }
 
     return {
-        // State
         actionResult,
         actionProgress,
         progressLabel,
         loadingCount,
         errors,
         uploadProgress,
-        // Getters
         loading,
-        // Actions
         setActionResult,
         clearActionResult,
         setProgress,
@@ -113,9 +317,19 @@ export const useMessagesStore = defineStore('fm-messages', () => {
         setError,
         clearErrors,
         initUploadProgress,
+        getRawFile,
+        setUploadListings,
+        getDirListing,
+        applyConflicts,
+        setUploadStatus,
+        setDefaultAction,
+        setFileAction,
         setFilePhase,
         setFileProgress,
         setFileError,
+        markFilesSkipped,
+        resetFailedToPending,
+        toggleDirExpanded,
         clearUploadProgress,
     }
 })
