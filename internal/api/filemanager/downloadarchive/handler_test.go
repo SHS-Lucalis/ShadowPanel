@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/gameap/gameap/internal/domain"
+	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/rbac"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/internal/services"
@@ -27,7 +28,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var errDaemonUnavailable = errors.New("daemon unavailable")
+var (
+	errDaemonUnavailable = errors.New("daemon unavailable")
+	errBuildManifestXyz  = errors.New("xyz")
+	errNodeRepoFindAll   = errors.New("findall unused")
+	errNodeRepoSave      = errors.New("save unused")
+	errNodeRepoDelete    = errors.New("delete unused")
+	errNodeRepoDBDown    = errors.New("db down")
+)
 
 var testUser = domain.User{
 	ID:    1,
@@ -107,6 +115,7 @@ type stubArchiver struct {
 	writeErr      error
 	writeContent  []byte
 	writeRecorded *archiver.Manifest
+	recordedOpts  archiver.Options
 }
 
 func (s *stubArchiver) BuildManifest(
@@ -116,8 +125,9 @@ func (s *stubArchiver) BuildManifest(
 }
 
 func (s *stubArchiver) WriteArchive(
-	_ context.Context, w io.Writer, _ *domain.Node, m *archiver.Manifest, _ archiver.Options,
+	_ context.Context, w io.Writer, _ *domain.Node, m *archiver.Manifest, opts archiver.Options,
 ) (*archiver.Result, error) {
+	s.recordedOpts = opts
 	s.writeRecorded = m
 	if s.writeErr != nil {
 		return nil, s.writeErr
@@ -422,6 +432,174 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			setupGuard:     func() *fakeGuard { return &fakeGuard{} },
 			expectedStatus: http.StatusInternalServerError,
 		},
+		{
+			name:          "success_compress_zero_produces_store_zip",
+			serverID:      "1",
+			queryDisk:     "server",
+			queryPath:     "data",
+			queryCompress: "0",
+			setupCtx:      authedCtx,
+			setupRepo:     saveServerWithFilesAbility,
+			setupArchiver: func() *stubArchiver {
+				return &stubArchiver{
+					manifest: &archiver.Manifest{
+						RootName: "data",
+						Entries:  []archiver.Entry{{RelPath: "data/a.txt"}},
+					},
+				}
+			},
+			setupGuard:     func() *fakeGuard { return &fakeGuard{} },
+			expectedStatus: http.StatusOK,
+			validate: func(t *testing.T, _ *httptest.ResponseRecorder, arch *stubArchiver, _ *fakeGuard) {
+				t.Helper()
+				assert.Equal(t, 0, arch.recordedOpts.CompressLevel, "explicit zero must reach archiver as 0")
+			},
+		},
+		{
+			name:          "success_compress_max_level_nine",
+			serverID:      "1",
+			queryDisk:     "server",
+			queryPath:     "data",
+			queryCompress: "9",
+			setupCtx:      authedCtx,
+			setupRepo:     saveServerWithFilesAbility,
+			setupArchiver: func() *stubArchiver {
+				return &stubArchiver{
+					manifest: &archiver.Manifest{
+						RootName: "data",
+						Entries:  []archiver.Entry{{RelPath: "data/a.txt"}},
+					},
+				}
+			},
+			setupGuard:     func() *fakeGuard { return &fakeGuard{} },
+			expectedStatus: http.StatusOK,
+			validate: func(t *testing.T, _ *httptest.ResponseRecorder, arch *stubArchiver, _ *fakeGuard) {
+				t.Helper()
+				assert.Equal(t, 9, arch.recordedOpts.CompressLevel, "level 9 must reach archiver unchanged")
+			},
+		},
+		{
+			name:          "success_compress_whitespace_trimmed",
+			serverID:      "1",
+			queryDisk:     "server",
+			queryPath:     "data",
+			queryCompress: "  3  ",
+			setupCtx:      authedCtx,
+			setupRepo:     saveServerWithFilesAbility,
+			setupArchiver: func() *stubArchiver {
+				return &stubArchiver{
+					manifest: &archiver.Manifest{
+						RootName: "data",
+						Entries:  []archiver.Entry{{RelPath: "data/a.txt"}},
+					},
+				}
+			},
+			setupGuard:     func() *fakeGuard { return &fakeGuard{} },
+			expectedStatus: http.StatusOK,
+			validate: func(t *testing.T, _ *httptest.ResponseRecorder, arch *stubArchiver, _ *fakeGuard) {
+				t.Helper()
+				assert.Equal(t, 3, arch.recordedOpts.CompressLevel, "whitespace must be trimmed before parsing")
+			},
+		},
+		{
+			name:      "success_cache_control_header_set",
+			serverID:  "1",
+			queryDisk: "server",
+			queryPath: "data",
+			setupCtx:  authedCtx,
+			setupRepo: saveServerWithFilesAbility,
+			setupArchiver: func() *stubArchiver {
+				return &stubArchiver{
+					manifest: &archiver.Manifest{
+						RootName: "data",
+						Entries:  []archiver.Entry{{RelPath: "data/a.txt"}},
+					},
+				}
+			},
+			setupGuard:     func() *fakeGuard { return &fakeGuard{} },
+			expectedStatus: http.StatusOK,
+			validate: func(t *testing.T, w *httptest.ResponseRecorder, _ *stubArchiver, _ *fakeGuard) {
+				t.Helper()
+				assert.Equal(t, "no-store", w.Header().Get("Cache-Control"), "Cache-Control must be no-store")
+			},
+		},
+		{
+			name:           "error_compress_negative",
+			serverID:       "1",
+			queryDisk:      "server",
+			queryPath:      "data",
+			queryCompress:  "-1",
+			setupCtx:       authedCtx,
+			setupRepo:      saveServerWithFilesAbility,
+			setupArchiver:  func() *stubArchiver { return &stubArchiver{} },
+			setupGuard:     func() *fakeGuard { return &fakeGuard{} },
+			expectedStatus: http.StatusBadRequest,
+			wantError:      "compress must be",
+		},
+		{
+			name:           "error_compress_non_numeric",
+			serverID:       "1",
+			queryDisk:      "server",
+			queryPath:      "data",
+			queryCompress:  "abc",
+			setupCtx:       authedCtx,
+			setupRepo:      saveServerWithFilesAbility,
+			setupArchiver:  func() *stubArchiver { return &stubArchiver{} },
+			setupGuard:     func() *fakeGuard { return &fakeGuard{} },
+			expectedStatus: http.StatusBadRequest,
+			wantError:      "compress must be",
+		},
+		{
+			name:      "error_node_not_found_returns_404",
+			serverID:  "1",
+			queryDisk: "server",
+			queryPath: "data",
+			setupCtx:  authedCtx,
+			setupRepo: func(t *testing.T, serverRepo *inmemory.ServerRepository, _ *inmemory.NodeRepository, rbacRepo *inmemory.RBACRepository) {
+				t.Helper()
+				now := time.Now()
+				server := &domain.Server{
+					ID: 1, UID: uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					UUIDShort: "short", Enabled: true, Installed: 1, Name: "S1",
+					GameID: "g", DSID: 1, GameModID: 1, ServerIP: "127.0.0.1",
+					Dir: "servers/s1", CreatedAt: &now, UpdatedAt: &now,
+				}
+				require.NoError(t, serverRepo.Save(context.Background(), server))
+				serverRepo.AddUserServer(testUser.ID, server.ID)
+
+				ability := &domain.Ability{
+					Name:       domain.AbilityNameGameServerFiles,
+					EntityType: lo.ToPtr(domain.EntityTypeServer),
+					EntityID:   new(server.ID),
+				}
+				require.NoError(t, rbacRepo.SaveAbility(context.Background(), ability))
+				require.NoError(t, rbacRepo.SavePermission(context.Background(), &domain.Permission{
+					AbilityID:  ability.ID,
+					EntityID:   new(testUser.ID),
+					EntityType: lo.ToPtr(domain.EntityTypeUser),
+					Forbidden:  false,
+				}))
+			},
+			setupArchiver:  func() *stubArchiver { return &stubArchiver{} },
+			setupGuard:     func() *fakeGuard { return &fakeGuard{} },
+			expectedStatus: http.StatusNotFound,
+			wantError:      "node not found",
+		},
+		{
+			name:      "error_archiver_internal_error_returns_500_wrapped_build_manifest",
+			serverID:  "1",
+			queryDisk: "server",
+			queryPath: "data",
+			setupCtx:  authedCtx,
+			setupRepo: saveServerWithFilesAbility,
+			setupArchiver: func() *stubArchiver {
+				return &stubArchiver{
+					manifestErr: errBuildManifestXyz,
+				}
+			},
+			setupGuard:     func() *fakeGuard { return &fakeGuard{} },
+			expectedStatus: http.StatusInternalServerError,
+		},
 	}
 
 	for _, tt := range tests {
@@ -476,24 +654,29 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 func TestValidatePath(t *testing.T) {
 	tests := []struct {
-		name    string
-		path    string
-		wantErr bool
+		name      string
+		path      string
+		wantError string
 	}{
-		{name: "valid_relative", path: "data/sub", wantErr: false},
-		{name: "valid_single", path: "logs", wantErr: false},
-		{name: "invalid_traversal", path: "../etc", wantErr: true},
-		{name: "invalid_double_dots_inside", path: "a/../b", wantErr: true},
+		{name: "valid_relative", path: "data/sub", wantError: ""},
+		{name: "valid_single", path: "logs", wantError: ""},
+		{name: "invalid_traversal", path: "../etc", wantError: "path contains invalid directory traversal"},
+		{name: "invalid_double_dots_inside", path: "a/../b", wantError: "path contains invalid directory traversal"},
+		{name: "empty_path_returns_nil", path: "", wantError: ""},
+		{name: "leading_dot_slash_allowed", path: "./data", wantError: ""},
+		{name: "root_slash_allowed", path: "/data", wantError: ""},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := validatePath(tt.path)
-			if tt.wantErr {
-				assert.Error(t, err)
-			} else {
+			if tt.wantError == "" {
 				assert.NoError(t, err)
+
+				return
 			}
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), tt.wantError)
 		})
 	}
 }
@@ -508,6 +691,10 @@ func TestArchiveFilename(t *testing.T) {
 		{name: "uses_root_name", rootName: "data", path: "any", want: "data.zip"},
 		{name: "falls_back_to_path_basename", rootName: "", path: "logs/sub", want: "sub.zip"},
 		{name: "falls_back_to_archive", rootName: ".", path: "/", want: "archive.zip"},
+		{name: "slash_only_root_falls_back", rootName: "/", path: "", want: "archive.zip"},
+		{name: "dot_root_falls_back_to_path_basename", rootName: ".", path: "logs/x", want: "x.zip"},
+		{name: "both_empty_returns_archive", rootName: "", path: "", want: "archive.zip"},
+		{name: "dot_path_falls_back", rootName: "", path: ".", want: "archive.zip"},
 	}
 
 	for _, tt := range tests {
@@ -522,4 +709,174 @@ func TestContentDispositionHeader_RFC5987(t *testing.T) {
 	header := contentDispositionHeader("кириллица.zip")
 	assert.True(t, strings.HasPrefix(header, "attachment;"))
 	assert.Contains(t, header, "filename*=UTF-8''")
+}
+
+func TestReadCompressLevel(t *testing.T) {
+	tests := []struct {
+		name      string
+		raw       string
+		wantValue int
+		wantError string
+	}{
+		{name: "empty_returns_zero", raw: "", wantValue: 0, wantError: ""},
+		{name: "zero", raw: "0", wantValue: 0, wantError: ""},
+		{name: "nine", raw: "9", wantValue: 9, wantError: ""},
+		{name: "whitespace_trimmed", raw: "  3  ", wantValue: 3, wantError: ""},
+		{name: "negative", raw: "-1", wantValue: 0, wantError: "compress must be"},
+		{name: "over_nine", raw: "10", wantValue: 0, wantError: "compress must be"},
+		{name: "non_numeric", raw: "abc", wantValue: 0, wantError: "compress must be"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// ARRANGE
+			urlStr := "/?"
+			if tt.raw != "" {
+				urlStr = "/?compress=" + url.QueryEscape(tt.raw)
+			}
+			req := httptest.NewRequest(http.MethodGet, urlStr, nil)
+
+			// ACT
+			got, err := readCompressLevel(req)
+
+			// ASSERT
+			if tt.wantError == "" {
+				require.NoError(t, err)
+				assert.Equal(t, tt.wantValue, got)
+
+				return
+			}
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), tt.wantError)
+			assert.Equal(t, tt.wantValue, got)
+		})
+	}
+}
+
+func TestStripNonASCII(t *testing.T) {
+	// stripNonASCII iterates by rune: every non-ASCII rune becomes one underscore.
+	// Empty result falls back to "archive.zip".
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{name: "pure_ascii_passthrough", in: "data.zip", want: "data.zip"},
+		{name: "mixed_strips_non_ascii", in: "data_файл.zip", want: "data_____.zip"},
+		{name: "quote_replaced", in: `a"b`, want: "a_b"},
+		{name: "backslash_replaced", in: `a\b`, want: "a_b"},
+		{name: "non_ascii_only_replaces_each_rune_with_underscore", in: "файл", want: "____"},
+		{name: "empty_string_falls_back_to_archive", in: "", want: "archive.zip"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := stripNonASCII(tt.in)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestMapManifestError(t *testing.T) {
+	tests := []struct {
+		name          string
+		inErr         error
+		wantStatus    int
+		wantSubstring string
+	}{
+		{
+			name:       "too_large_returns_413",
+			inErr:      archiver.ErrTooLarge,
+			wantStatus: http.StatusRequestEntityTooLarge,
+		},
+		{
+			name:       "too_many_files_returns_413",
+			inErr:      archiver.ErrTooManyFiles,
+			wantStatus: http.StatusRequestEntityTooLarge,
+		},
+		{
+			name:       "empty_manifest_returns_404",
+			inErr:      archiver.ErrEmptyManifest,
+			wantStatus: http.StatusNotFound,
+		},
+		{
+			name:       "not_a_directory_returns_400",
+			inErr:      archiver.ErrNotADirectory,
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name:          "unknown_error_wrapped_build_manifest",
+			inErr:         errBuildManifestXyz,
+			wantSubstring: "build manifest",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// ACT
+			got := mapManifestError(tt.inErr)
+			require.Error(t, got)
+
+			// ASSERT
+			if tt.wantStatus != 0 {
+				var statusErr interface{ HTTPStatus() int }
+				require.ErrorAs(t, got, &statusErr, "result must expose HTTPStatus")
+				assert.Equal(t, tt.wantStatus, statusErr.HTTPStatus())
+
+				return
+			}
+			assert.Contains(t, got.Error(), tt.wantSubstring, "unknown errors must surface wrap layer")
+			assert.Contains(t, got.Error(), tt.inErr.Error(), "underlying message must propagate")
+		})
+	}
+}
+
+type errNodeRepo struct {
+	findErr error
+}
+
+func (e *errNodeRepo) FindAll(
+	_ context.Context, _ []filters.Sorting, _ *filters.Pagination,
+) ([]domain.Node, error) {
+	return nil, errNodeRepoFindAll
+}
+
+func (e *errNodeRepo) Find(
+	_ context.Context, _ *filters.FindNode, _ []filters.Sorting, _ *filters.Pagination,
+) ([]domain.Node, error) {
+	return nil, e.findErr
+}
+
+func (e *errNodeRepo) Save(_ context.Context, _ *domain.Node) error {
+	return errNodeRepoSave
+}
+
+func (e *errNodeRepo) Delete(_ context.Context, _ uint) error {
+	return errNodeRepoDelete
+}
+
+func TestHandler_ServeHTTP_NodeRepoError(t *testing.T) {
+	// ARRANGE
+	serverRepo := inmemory.NewServerRepository()
+	rbacRepo := inmemory.NewRBACRepository()
+	rbacService := rbac.NewRBAC(services.NewNilTransactionManager(), rbacRepo, 0)
+	responder := api.NewResponder()
+
+	saveServerWithFilesAbility(t, serverRepo, inmemory.NewNodeRepository(), rbacRepo)
+
+	nodeRepo := &errNodeRepo{findErr: errNodeRepoDBDown}
+	arch := &stubArchiver{}
+	guard := &fakeGuard{}
+	handler := NewHandler(serverRepo, nodeRepo, rbacService, arch, guard, Limits{}, responder)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/file-manager/1/download-archive?disk=server&path=data", nil)
+	req = req.WithContext(authedCtx())
+	req = mux.SetURLVars(req, map[string]string{"server": "1"})
+	w := httptest.NewRecorder()
+
+	// ACT
+	handler.ServeHTTP(w, req)
+
+	// ASSERT
+	assert.Equal(t, http.StatusInternalServerError, w.Code, "node-repo errors must surface as 500")
 }

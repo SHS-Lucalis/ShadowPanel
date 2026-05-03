@@ -85,4 +85,52 @@ func TestInMemoryConcurrencyGuard(t *testing.T) {
 		assert.GreaterOrEqual(t, success, 5, "at least limit-many should succeed eventually")
 		assert.Equal(t, 50, success+rejected)
 	})
+
+	t.Run("default_limit_when_zero", func(t *testing.T) {
+		t.Parallel()
+
+		// ARRANGE
+		guard := archiver.NewInMemoryConcurrencyGuard(0)
+
+		// ACT
+		release, err := guard.Acquire(context.Background(), 1)
+		require.NoError(t, err)
+		_, err2 := guard.Acquire(context.Background(), 1)
+
+		// ASSERT
+		assert.ErrorIs(t, err2, archiver.ErrTooManyConcurrent, "zero must default to limit=1")
+		release()
+	})
+
+	t.Run("release_called_twice_is_safe", func(t *testing.T) {
+		t.Parallel()
+
+		// ARRANGE
+		guard := archiver.NewInMemoryConcurrencyGuard(1)
+		release, err := guard.Acquire(context.Background(), 5)
+		require.NoError(t, err)
+
+		// ACT
+		release()
+		assert.NotPanics(t, release, "second release must be a no-op")
+
+		// ASSERT
+		next, err := guard.Acquire(context.Background(), 5)
+		require.NoError(t, err, "counter must not have gone negative — fresh acquire still works")
+		next()
+	})
+
+	t.Run("repeated_acquire_release_does_not_leak", func(t *testing.T) {
+		t.Parallel()
+
+		// ARRANGE
+		guard := archiver.NewInMemoryConcurrencyGuard(1)
+
+		// ACT + ASSERT: 1000 cycles must each succeed (counter must reset each time)
+		for range 1000 {
+			release, err := guard.Acquire(context.Background(), 42)
+			require.NoError(t, err)
+			release()
+		}
+	})
 }

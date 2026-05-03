@@ -7,6 +7,7 @@ import (
 	"github.com/gameap/gameap/internal/daemon"
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/services/filemanager/archiver"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -165,6 +166,100 @@ func TestBuildManifest(t *testing.T) {
 			},
 			rootPath:  "/work/server-1/data",
 			wantError: "nothing to archive",
+		},
+		{
+			name: "error_stat_root_path",
+			setupRepo: func() *stubFileLister {
+				return &stubFileLister{
+					statErr: errors.New("daemon timeout"),
+				}
+			},
+			rootPath:  "/work/server-1/data",
+			wantError: "stat root path",
+		},
+		{
+			name: "error_list_directory_recursive",
+			setupRepo: func() *stubFileLister {
+				return &stubFileLister{
+					statResult: &daemon.FileDetails{Type: daemon.FileTypeDir},
+					listErr:    errors.New("rpc broken"),
+				}
+			},
+			rootPath:  "/work/server-1/data",
+			wantError: "list directory recursive",
+		},
+		{
+			name: "success_root_name_falls_back_to_archive",
+			setupRepo: func() *stubFileLister {
+				return &stubFileLister{
+					statResult: &daemon.FileDetails{Type: daemon.FileTypeDir},
+					listResult: []*daemon.FileInfo{
+						{Path: "x.txt", Size: 1, Type: daemon.FileTypeFile, Perm: 0o644},
+					},
+				}
+			},
+			rootPath: "/work",
+			assert: func(t *testing.T, m *archiver.Manifest) {
+				t.Helper()
+				assert.Equal(t, "archive", m.RootName, "root that resolves to '.' falls back to 'archive'")
+			},
+		},
+		{
+			name: "success_entries_sorted_lexicographically",
+			setupRepo: func() *stubFileLister {
+				return &stubFileLister{
+					statResult: &daemon.FileDetails{Type: daemon.FileTypeDir},
+					listResult: []*daemon.FileInfo{
+						{Path: "server-1/data/b.txt", Size: 1, Type: daemon.FileTypeFile, Perm: 0o644},
+						{Path: "server-1/data/a.txt", Size: 1, Type: daemon.FileTypeFile, Perm: 0o644},
+						{Path: "server-1/data/sub/c.txt", Size: 1, Type: daemon.FileTypeFile, Perm: 0o644},
+					},
+				}
+			},
+			rootPath: "/work/server-1/data",
+			assert: func(t *testing.T, m *archiver.Manifest) {
+				t.Helper()
+				require.Len(t, m.Entries, 3)
+				assert.Equal(t, "data/a.txt", m.Entries[0].RelPath)
+				assert.Equal(t, "data/b.txt", m.Entries[1].RelPath)
+				assert.Equal(t, "data/sub/c.txt", m.Entries[2].RelPath)
+			},
+		},
+		{
+			name: "success_skips_root_self_entry",
+			setupRepo: func() *stubFileLister {
+				return &stubFileLister{
+					statResult: &daemon.FileDetails{Type: daemon.FileTypeDir},
+					listResult: []*daemon.FileInfo{
+						{Path: "server-1/data", Type: daemon.FileTypeDir, Perm: 0o755},
+						{Path: "server-1/data/x.txt", Size: 1, Type: daemon.FileTypeFile, Perm: 0o644},
+					},
+				}
+			},
+			rootPath: "/work/server-1/data",
+			assert: func(t *testing.T, m *archiver.Manifest) {
+				t.Helper()
+				require.Len(t, m.Entries, 1, "self-entry of the archive root must be skipped")
+				assert.Equal(t, "data/x.txt", m.Entries[0].RelPath)
+			},
+		},
+		{
+			name: "success_symlink_with_empty_target_preserved",
+			setupRepo: func() *stubFileLister {
+				return &stubFileLister{
+					statResult: &daemon.FileDetails{Type: daemon.FileTypeDir},
+					listResult: []*daemon.FileInfo{
+						{Path: "server-1/data/link", Type: daemon.FileTypeSymlink, SymlinkTarget: "", Perm: 0o777},
+					},
+				}
+			},
+			rootPath: "/work/server-1/data",
+			assert: func(t *testing.T, m *archiver.Manifest) {
+				t.Helper()
+				require.Len(t, m.Entries, 1)
+				assert.Equal(t, daemon.FileTypeSymlink, m.Entries[0].Type)
+				assert.Empty(t, m.Entries[0].SymlinkTarget, "empty target preserved for archiver to resolve later")
+			},
 		},
 	}
 

@@ -15,6 +15,7 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/files"
 	"github.com/gameap/gameap/internal/pubsub/memory"
+	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/internal/transfers"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -251,6 +252,100 @@ func TestFileService_ReadDir_GatewayError(t *testing.T) {
 	require.Error(t, err)
 	assert.Nil(t, files)
 	assert.Contains(t, err.Error(), "transport boom")
+}
+
+func TestFileService_ReadDirRecursive_Local_Success(t *testing.T) {
+	// ARRANGE
+	s := setupFileService(t)
+	node := newTestNode(50)
+	s.registry.setConnected(uint64(node.ID), true)
+
+	s.gateway.requestFileList = func(_ context.Context, nodeID uint64, path string, recursive bool, _ string) (*proto.FileListResponse, error) {
+		assert.Equal(t, uint64(node.ID), nodeID)
+		assert.Equal(t, "subdir", path, "WorkPath prefix must be stripped before sending to gateway")
+		assert.True(t, recursive, "recursive flag must reach gateway")
+
+		return &proto.FileListResponse{
+			Success: true,
+			Files: []*proto.FileStat{
+				{Name: "a.txt", Path: "subdir/a.txt", Size: 10, Type: proto.FileType_FILE_TYPE_REGULAR, Mode: 0o644},
+			},
+		}, nil
+	}
+
+	// ACT
+	got, err := s.service.ReadDirRecursive(testContext(t), node, "/srv/gameap/subdir")
+
+	// ASSERT
+	require.NoError(t, err)
+	require.Len(t, got, 1)
+	assert.Equal(t, "a.txt", got[0].Name)
+	assert.Equal(t, "subdir/a.txt", got[0].Path, "Path field must come from proto.FileStat.Path")
+	assert.Equal(t, FileTypeFile, got[0].Type)
+}
+
+func TestFileService_ReadDirRecursive_Dispatched_Success(t *testing.T) {
+	// ARRANGE
+	s := setupFileService(t)
+	node := newTestNode(51)
+	s.registry.setConnected(uint64(node.ID), false)
+	s.registry.setConnectedAnywhere(uint64(node.ID), true)
+
+	stubDispatcher := &fakeDispatcher{
+		dispatchFileList: func(_ context.Context, nodeID uint64, path string, recursive bool, _ string) (*proto.FileListResponse, error) {
+			assert.Equal(t, uint64(node.ID), nodeID)
+			assert.Equal(t, "deep", path)
+			assert.True(t, recursive, "dispatched call must propagate recursive=true")
+
+			return &proto.FileListResponse{
+				Success: true,
+				Files: []*proto.FileStat{
+					{Name: "y.txt", Path: "deep/y.txt", Size: 7, Type: proto.FileType_FILE_TYPE_REGULAR},
+				},
+			}, nil
+		},
+	}
+	svc := NewFileService(s.gateway, s.registry, stubDispatcher, s.storage, s.transferReg, nil, slog.Default())
+
+	// ACT
+	got, err := svc.ReadDirRecursive(testContext(t), node, "/srv/gameap/deep")
+
+	// ASSERT
+	require.NoError(t, err)
+	require.Len(t, got, 1)
+	assert.Equal(t, "y.txt", got[0].Name)
+	assert.Equal(t, "deep/y.txt", got[0].Path)
+}
+
+func TestFileService_ReadDirRecursive_LegacyBypass(t *testing.T) {
+	// When the daemon is not connected anywhere AND legacy is non-nil,
+	// non-recursive ReadDir falls back to legacy. ReadDirRecursive must NOT —
+	// the new readDir branch (file.go:113) gates legacy behind !recursive.
+	// If legacy were invoked, it would call fileManager.Read on the empty
+	// inmemory store first, producing a different "failed to make config" error.
+	// Surfacing ErrDaemonNotConnected proves the recursive path bypassed legacy.
+
+	// ARRANGE
+	s := setupFileService(t)
+	node := newTestNode(52)
+	s.registry.setConnected(uint64(node.ID), false)
+	s.registry.setConnectedAnywhere(uint64(node.ID), false)
+
+	certRepo := inmemory.NewClientCertificateRepository()
+	fakeFM := files.NewInMemoryFileManager()
+	legacy := NewFileBINNService(certRepo, fakeFM)
+	svc := NewFileService(s.gateway, s.registry, s.dispatcher, s.storage, s.transferReg, legacy, slog.Default())
+
+	// ACT
+	got, err := svc.ReadDirRecursive(testContext(t), node, "/srv/gameap/anything")
+
+	// ASSERT
+	require.Error(t, err)
+	assert.Nil(t, got)
+	assert.ErrorIs(
+		t, err, ErrDaemonNotConnected,
+		"recursive path must surface daemon-not-connected; non-recursive path would surface a config-load error from legacy",
+	)
 }
 
 func TestFileService_Download_Local_Success(t *testing.T) {
@@ -1157,11 +1252,13 @@ func TestProtoFileStatToFileInfo_NilReturnsNil(t *testing.T) {
 func TestProtoFileStatToFileInfo_PopulatesFields(t *testing.T) {
 	// ARRANGE
 	stat := &proto.FileStat{
-		Name:       "x.txt",
-		Size:       42,
-		Mode:       0o644,
-		Type:       proto.FileType_FILE_TYPE_REGULAR,
-		ModifiedAt: timestamppb.New(testTime()),
+		Name:          "x.txt",
+		Path:          "subdir/x.txt",
+		Size:          42,
+		Mode:          0o644,
+		Type:          proto.FileType_FILE_TYPE_REGULAR,
+		ModifiedAt:    timestamppb.New(testTime()),
+		SymlinkTarget: "../target",
 	}
 
 	// ACT
@@ -1174,6 +1271,8 @@ func TestProtoFileStatToFileInfo_PopulatesFields(t *testing.T) {
 	assert.Equal(t, FileTypeFile, info.Type)
 	assert.Equal(t, uint32(0o644), info.Perm)
 	assert.NotZero(t, info.TimeModified)
+	assert.Equal(t, "subdir/x.txt", info.Path, "Path field must be copied from proto.FileStat.Path")
+	assert.Equal(t, "../target", info.SymlinkTarget, "SymlinkTarget field must be copied from proto.FileStat.SymlinkTarget")
 }
 
 func TestProtoFileStatToDetails_NilReturnsEmpty(t *testing.T) {
@@ -1184,12 +1283,13 @@ func TestProtoFileStatToDetails_NilReturnsEmpty(t *testing.T) {
 
 func TestProtoFileStatToDetails_PopulatesFields(t *testing.T) {
 	stat := &proto.FileStat{
-		Name:       "x.txt",
-		Size:       42,
-		Mode:       0o644,
-		Type:       proto.FileType_FILE_TYPE_REGULAR,
-		ModifiedAt: timestamppb.New(testTime()),
-		AccessedAt: timestamppb.New(testTime()),
+		Name:          "x.txt",
+		Size:          42,
+		Mode:          0o644,
+		Type:          proto.FileType_FILE_TYPE_REGULAR,
+		ModifiedAt:    timestamppb.New(testTime()),
+		AccessedAt:    timestamppb.New(testTime()),
+		SymlinkTarget: "/abs/target",
 	}
 
 	got := protoFileStatToDetails(stat)
@@ -1199,6 +1299,7 @@ func TestProtoFileStatToDetails_PopulatesFields(t *testing.T) {
 	assert.Equal(t, FileTypeFile, got.Type)
 	assert.NotZero(t, got.ModificationTime)
 	assert.NotZero(t, got.AccessTime)
+	assert.Equal(t, "/abs/target", got.SymlinkTarget, "SymlinkTarget field must be copied from proto.FileStat.SymlinkTarget")
 }
 
 func TestDaemonNotConnectedError(t *testing.T) {

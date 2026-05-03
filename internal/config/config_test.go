@@ -65,6 +65,36 @@ func TestLoadConfig(t *testing.T) {
 		assert.False(t, cfg.Logger.LogDBQueries)
 		assert.Equal(t, "https://api.gameap.com", cfg.GlobalAPI.URL)
 	})
+
+	t.Run("default_archive_values", func(t *testing.T) {
+		t.Setenv("DATABASE_URL", "mysql://localhost/test")
+		t.Setenv("AUTH_SECRET", "test-secret")
+
+		cfg, err := LoadConfig()
+		require.NoError(t, err)
+
+		assert.Equal(t, uint64(100*1024*1024*1024), cfg.Files.Archive.MaxBytes.Uint64(),
+			"FILES_ARCHIVE_MAX_BYTES default must be 100 GiB")
+		assert.Equal(t, uint32(500_000), cfg.Files.Archive.MaxFiles,
+			"FILES_ARCHIVE_MAX_FILES default must be 500 000")
+		assert.Equal(t, uint32(2), cfg.Files.Archive.ConcurrentPerServer,
+			"FILES_ARCHIVE_CONCURRENT_PER_SERVER default must be 2")
+	})
+
+	t.Run("archive_env_overrides", func(t *testing.T) {
+		t.Setenv("DATABASE_URL", "mysql://localhost/test")
+		t.Setenv("AUTH_SECRET", "test-secret")
+		t.Setenv("FILES_ARCHIVE_MAX_BYTES", "10G")
+		t.Setenv("FILES_ARCHIVE_MAX_FILES", "100")
+		t.Setenv("FILES_ARCHIVE_CONCURRENT_PER_SERVER", "5")
+
+		cfg, err := LoadConfig()
+		require.NoError(t, err)
+
+		assert.Equal(t, uint64(10*1024*1024*1024), cfg.Files.Archive.MaxBytes.Uint64())
+		assert.Equal(t, uint32(100), cfg.Files.Archive.MaxFiles)
+		assert.Equal(t, uint32(5), cfg.Files.Archive.ConcurrentPerServer)
+	})
 }
 
 func TestNormalizeConfigValues(t *testing.T) {
