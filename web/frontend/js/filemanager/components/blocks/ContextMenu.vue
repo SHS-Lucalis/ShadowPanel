@@ -396,7 +396,7 @@ onMounted(() => {
           @apply bg-stone-100 dark:bg-[#262322];
         }
 
-        i {
+        i, svg {
             padding-right: 1.5rem;
         }
     }
@@ -405,7 +405,7 @@ onMounted(() => {
         @apply text-stone-400 dark:text-stone-600;
         cursor: not-allowed;
 
-        i {
+        i, svg {
             padding-right: 1.5rem;
         }
     }

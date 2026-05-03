@@ -51,16 +51,18 @@ const fontAwesomeSizeMap = {
 }
 
 const componentSizeMap = {
-  sm: '0.875em',
-  md: '1em',
-  lg: '1.25em',
-  xl: '2em'
+  sm: '1em',
+  md: '1.25em',
+  lg: '1.5em',
+  xl: '2.5em'
 }
 
 const sizeClass = computed(() => fontAwesomeSizeMap[props.size] || '')
 
 const sizeStyle = computed(() => ({
   width: componentSizeMap[props.size],
-  height: componentSizeMap[props.size]
+  height: componentSizeMap[props.size],
+  display: 'inline-block',
+  verticalAlign: '-0.25em'
 }))
 </script>
