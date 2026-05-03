@@ -166,6 +166,16 @@ const overallPercent = computed(() => {
     return Math.min(Math.round((t.loadedBytes * 100) / t.bytes), 100)
 })
 
+const canCancelUpload = computed(() => {
+    const up = messages.uploadProgress
+    if (!up.abortController) return false
+    if (up.abortController.signal.aborted) return false
+
+    return up.files.some(
+        (f) => f.phase === 'pending' || f.phase === 'hashing' || f.phase === 'uploading',
+    )
+})
+
 const hasPending = computed(() => pendingDrop.value.entries.length > 0 || pendingDrop.value.emptyDirs.length > 0)
 
 const defaultActionOptions = computed(() => [
@@ -341,6 +351,7 @@ defineExpose({
                     color: 'red',
                     icon: 'stop',
                     action: onCancelAll,
+                    disabled: !canCancelUpload.value,
                 },
             ]
         }
