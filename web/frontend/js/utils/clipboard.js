@@ -1,3 +1,7 @@
+export function isClipboardSupported() {
+    return Boolean(window.isSecureContext && navigator.clipboard?.writeText)
+}
+
 export async function copyToClipboard(text) {
     if (window.isSecureContext && navigator.clipboard?.writeText) {
         try {

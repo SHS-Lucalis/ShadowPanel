@@ -47,7 +47,7 @@ import {
   NInputGroup,
 } from "naive-ui"
 import {errorNotification, notification} from "@/parts/dialogs";
-import {copyToClipboard} from "@/utils/clipboard";
+import {copyToClipboard, isClipboardSupported} from "@/utils/clipboard";
 import GenerateTokenForm from "./forms/GenerateTokenForm.vue";
 
 const tokensStore = useTokensStore()
@@ -169,7 +169,7 @@ const onGenerateToken = () => {
               size: 'small',
               style: 'width: 100%',
             }),
-            h(NButton, {
+            isClipboardSupported() ? h(NButton, {
               type: "primary",
               onClick: async () => {
                 const ok = await copyToClipboard(result.token)
@@ -183,7 +183,7 @@ const onGenerateToken = () => {
                 copied.value
                     ? h(GIcon, {name: "check" })
                     : h(GIcon, {name: "copy" }),
-            ])
+            ]) : null
           ]),
         ]
       },
