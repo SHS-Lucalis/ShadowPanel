@@ -94,6 +94,7 @@ import { useTranslate } from '../../../composables/useTranslate.js'
 import { useHelper } from '../../../composables/useHelper.js'
 import { useModal } from '../../../composables/useModal.js'
 import { notification } from '@/parts/dialogs.js'
+import { copyToClipboard as copyText } from '@/utils/clipboard.js'
 
 const fm = useFileManagerStore()
 const modal = useModalStore()
@@ -117,27 +118,17 @@ function openChmod() {
     modal.setModalState({ modalName: 'ChmodModal', show: true })
 }
 
-function copyToClipboard(text) {
-    const copy = () => {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            return navigator.clipboard.writeText(text)
-        } else {
-            const textArea = document.createElement('textarea')
-            textArea.value = text
-            textArea.style.position = 'fixed'
-            textArea.style.left = '-9999px'
-            document.body.appendChild(textArea)
-            textArea.select()
-            document.execCommand('copy')
-            document.body.removeChild(textArea)
-            return Promise.resolve()
-        }
+async function copyToClipboard(text) {
+    const ok = await copyText(text)
+    if (!ok) {
+        console.error('Failed to copy to clipboard')
+
+        return
     }
-    copy().then(() => {
-        notification({
-            content: lang.value.notifications.copyToClipboard,
-            type: 'success',
-        })
+
+    notification({
+        content: lang.value.notifications.copyToClipboard,
+        type: 'success',
     })
 }
 

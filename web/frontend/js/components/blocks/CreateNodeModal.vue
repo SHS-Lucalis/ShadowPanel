@@ -190,6 +190,7 @@ import {useNodeListStore} from "@/store/nodeList";
 import {storeToRefs} from "pinia"
 import {NFormItem, NSwitch, NInput} from "naive-ui";
 import {errorNotification} from "@/parts/dialogs";
+import {copyToClipboard as copyText} from "@/utils/clipboard";
 
 const props = defineProps({
   modelValue: {
@@ -313,17 +314,11 @@ const copiedKey = ref(null)
 let copyTimeout = null
 
 const copyToClipboard = async (key, text) => {
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    await navigator.clipboard.writeText(text)
-  } else {
-    const textArea = document.createElement('textarea')
-    textArea.value = text
-    textArea.style.position = 'fixed'
-    textArea.style.left = '-9999px'
-    document.body.appendChild(textArea)
-    textArea.select()
-    document.execCommand('copy')
-    document.body.removeChild(textArea)
+  const ok = await copyText(text)
+  if (!ok) {
+    console.error('Failed to copy to clipboard')
+
+    return
   }
 
   if (copyTimeout) {

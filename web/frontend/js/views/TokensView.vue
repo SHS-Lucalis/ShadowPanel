@@ -47,6 +47,7 @@ import {
   NInputGroup,
 } from "naive-ui"
 import {errorNotification, notification} from "@/parts/dialogs";
+import {copyToClipboard} from "@/utils/clipboard";
 import GenerateTokenForm from "./forms/GenerateTokenForm.vue";
 
 const tokensStore = useTokensStore()
@@ -170,27 +171,13 @@ const onGenerateToken = () => {
             }),
             h(NButton, {
               type: "primary",
-              onClick: () => {
-                const copyText = (text) => {
-                  if (navigator.clipboard && navigator.clipboard.writeText) {
-                    return navigator.clipboard.writeText(text)
-                  } else {
-                    const textArea = document.createElement('textarea')
-                    textArea.value = text
-                    textArea.style.position = 'fixed'
-                    textArea.style.left = '-9999px'
-                    document.body.appendChild(textArea)
-                    textArea.select()
-                    document.execCommand('copy')
-                    document.body.removeChild(textArea)
-                    return Promise.resolve()
-                  }
-                }
-                copyText(result.token).then(() => {
+              onClick: async () => {
+                const ok = await copyToClipboard(result.token)
+                if (ok) {
                   copied.value = true
-                }, () => {
-                  console.error('Failed to copy');
-                });
+                } else {
+                  console.error('Failed to copy')
+                }
               },
             }, [
                 copied.value
