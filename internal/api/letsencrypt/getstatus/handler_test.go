@@ -132,3 +132,133 @@ func TestHandler_ReportsFailureState(t *testing.T) {
 	assert.Equal(t, "failed", body["state"])
 	assert.Contains(t, body["last_error"], "DNS provider rejected token")
 }
+
+func TestHandler_PendingStateOmitsDates(t *testing.T) {
+	// ARRANGE
+	cfg := stubConfig{enabled: true}
+	svc := stubService{
+		status: acme.Status{
+			Enabled: true,
+			State:   acme.StatePending,
+			Domains: []string{"example.com"},
+		},
+	}
+	h := getstatus.NewHandler(cfg, svc, api.NewResponder())
+
+	rw := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/api/admin/letsencrypt/status", nil)
+
+	// ACT
+	h.ServeHTTP(rw, req)
+
+	// ASSERT
+	require.Equal(t, http.StatusOK, rw.Code)
+
+	var body map[string]any
+	require.NoError(t, json.Unmarshal(rw.Body.Bytes(), &body))
+
+	assert.Equal(t, "pending", body["state"])
+	assert.NotContains(t, body, "not_before",
+		"zero NotBefore must be omitted via omitzero")
+	assert.NotContains(t, body, "not_after",
+		"zero NotAfter must be omitted via omitzero")
+	assert.NotContains(t, body, "last_renewal_at",
+		"zero LastRenewalAt must be omitted via omitzero")
+}
+
+func TestHandler_RenewingStateIncludesLastRenewalAt(t *testing.T) {
+	// ARRANGE
+	last := time.Date(2026, 3, 15, 10, 0, 0, 0, time.UTC)
+	cfg := stubConfig{enabled: true}
+	svc := stubService{
+		status: acme.Status{
+			Enabled:       true,
+			State:         acme.StateRenewing,
+			Domains:       []string{"example.com"},
+			LastRenewalAt: last,
+		},
+	}
+	h := getstatus.NewHandler(cfg, svc, api.NewResponder())
+
+	rw := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/api/admin/letsencrypt/status", nil)
+
+	// ACT
+	h.ServeHTTP(rw, req)
+
+	// ASSERT
+	require.Equal(t, http.StatusOK, rw.Code)
+
+	var body map[string]any
+	require.NoError(t, json.Unmarshal(rw.Body.Bytes(), &body))
+
+	assert.Equal(t, "renewing", body["state"])
+	require.Contains(t, body, "last_renewal_at",
+		"renewing state must include last_renewal_at")
+
+	parsed, err := time.Parse(time.RFC3339Nano, body["last_renewal_at"].(string))
+	require.NoError(t, err)
+	assert.True(t, parsed.Equal(last), "last_renewal_at must round-trip the input timestamp")
+}
+
+func TestHandler_DNSChallengeIncludesDNSProviderField(t *testing.T) {
+	// ARRANGE
+	cfg := stubConfig{enabled: true}
+	svc := stubService{
+		status: acme.Status{
+			Enabled:       true,
+			State:         acme.StateActive,
+			ChallengeType: "dns-01",
+			Domains:       []string{"example.com"},
+			DNSProvider:   "cloudflare",
+		},
+	}
+	h := getstatus.NewHandler(cfg, svc, api.NewResponder())
+
+	rw := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/api/admin/letsencrypt/status", nil)
+
+	// ACT
+	h.ServeHTTP(rw, req)
+
+	// ASSERT
+	require.Equal(t, http.StatusOK, rw.Code)
+
+	var body map[string]any
+	require.NoError(t, json.Unmarshal(rw.Body.Bytes(), &body))
+
+	assert.Equal(t, "dns-01", body["challenge_type"])
+	assert.Equal(t, "cloudflare", body["dns_provider"])
+}
+
+func TestHandler_WildcardDomainsPassedThrough(t *testing.T) {
+	// ARRANGE
+	cfg := stubConfig{enabled: true}
+	svc := stubService{
+		status: acme.Status{
+			Enabled: true,
+			State:   acme.StateActive,
+			Domains: []string{"*.example.com", "example.com", "*.dev.example.com"},
+		},
+	}
+	h := getstatus.NewHandler(cfg, svc, api.NewResponder())
+
+	rw := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/api/admin/letsencrypt/status", nil)
+
+	// ACT
+	h.ServeHTTP(rw, req)
+
+	// ASSERT
+	require.Equal(t, http.StatusOK, rw.Code)
+
+	var body map[string]any
+	require.NoError(t, json.Unmarshal(rw.Body.Bytes(), &body))
+
+	domains, ok := body["domains"].([]any)
+	require.True(t, ok)
+	require.Len(t, domains, 3)
+	assert.Equal(t, "*.example.com", domains[0])
+	assert.Equal(t, "example.com", domains[1])
+	assert.Equal(t, "*.dev.example.com", domains[2])
+}
