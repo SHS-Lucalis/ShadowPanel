@@ -237,14 +237,26 @@ const buildQueryParams = () => {
   return params.toString()
 }
 
+const buildLinuxCliArgs = () => {
+  let args = ''
+  if (daemonConfigProcessManager.value && daemonConfigProcessManager.value !== 'auto') {
+    args += ` --config='process_manager.name=${daemonConfigProcessManager.value}'`
+  }
+  if (useGithubSource.value) {
+    args += ' --github'
+  }
+  if (branchName.value) {
+    args += ` --branch=${branchName.value}`
+  }
+  return args
+}
+
 const linuxCmd = computed(() => {
   const cmd = autoSetupData.value.linux_cmd || ''
   if (!hasCustomParams.value) {
     return cmd
   }
-  const setupLink = autoSetupData.value.setup_link || ''
-  const separator = setupLink.includes('?') ? '&' : '?'
-  return `curl -sLf '${setupLink}${separator}${buildQueryParams()}' | bash`
+  return `${cmd}${buildLinuxCliArgs()}`
 })
 
 const windowsCmd = computed(() => {

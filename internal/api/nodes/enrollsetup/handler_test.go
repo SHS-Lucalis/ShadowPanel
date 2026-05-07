@@ -56,16 +56,19 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				t.Helper()
 
 				assert.Contains(t, resp, "#!/bin/bash")
-				assert.Contains(t, resp, "set -e")
+				assert.Contains(t, resp, "set -euo pipefail")
 				assert.Contains(t, resp, "trap cleanup EXIT")
 				assert.Contains(t, resp, "CONNECT_URL=\"grpc://panel.example.com:31718/AbCdEfGh1234567890AbCdEfGh123456\"")
+				assert.Contains(t, resp, "$(id -u)")
 				assert.Contains(t, resp, "command -v gameapctl")
 				assert.Contains(t, resp, "gameapctl self-update")
 				assert.Contains(t, resp, "command -v \"$cmd\"")
 				assert.Contains(t, resp, "curl -sLf")
 				assert.Contains(t, resp, "api.github.com/repos/gameap/gameapctl/releases")
-				assert.Contains(t, resp, "gameapctl")
-				assert.Contains(t, resp, "--connect=\"$CONNECT_URL\"")
+				assert.Contains(t, resp, "mktemp -t gameapctl.XXXXXX")
+				assert.Contains(t, resp, "install -m 0755 \"${_tmpbin}\" /usr/local/bin/gameapctl")
+				assert.Contains(t, resp, "\"$GAMEAPCTL_BIN\" daemon install --connect=\"$CONNECT_URL\"")
+				assert.Contains(t, resp, "\"$@\"")
 			},
 		},
 		{
@@ -141,6 +144,19 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				assert.Contains(t, resp, "--config='process_manager.name=systemd'")
 				assert.Contains(t, resp, " --github")
 				assert.Contains(t, resp, "--branch='develop'")
+			},
+		},
+		{
+			name:           "passes_through_cli_args",
+			key:            "AbCdEfGh1234567890AbCdEfGh123456",
+			setupKey:       "AbCdEfGh1234567890AbCdEfGh123456",
+			grpcPort:       31718,
+			panelHost:      "panel.example.com",
+			expectedStatus: http.StatusOK,
+			validateResp: func(t *testing.T, resp string) {
+				t.Helper()
+
+				assert.Contains(t, resp, "\"$GAMEAPCTL_BIN\" daemon install --connect=\"$CONNECT_URL\" \"$@\"")
 			},
 		},
 		{

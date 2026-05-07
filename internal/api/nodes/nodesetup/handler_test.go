@@ -461,8 +461,8 @@ func TestHandler_GRPCMode(t *testing.T) {
 				assert.Equal(t, "grpc://panel.example.com:31718/"+resp.Token, resp.ConnectURL,
 					"connect URL must use scheme grpc + panel host + grpcPort + key")
 
-				assert.Equal(t, "curl -sLf '"+resp.Link+"' | bash", resp.LinuxCmd,
-					"Linux command must wrap the setup link in curl|bash")
+				assert.Equal(t, "bash <(curl -s '"+resp.Link+"')", resp.LinuxCmd,
+					"Linux command must use process substitution so CLI args can follow")
 				assert.Equal(t, "gameapctl daemon install --connect="+resp.ConnectURL, resp.WindowsCmd,
 					"Windows command must contain --connect=<connect-url>")
 			},

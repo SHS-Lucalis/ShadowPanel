@@ -90,7 +90,7 @@ func (h *Handler) handleGRPCMode(rw http.ResponseWriter, r *http.Request) {
 	connectURL := enrollment.FormatConnectURL(grpcHost, grpcPort, setupKey)
 	baseURL := h.detectBaseURL(r)
 	setupLink := baseURL + "/nodes/setup/" + setupKey
-	linuxCmd := "curl -sLf '" + setupLink + "' | bash"
+	linuxCmd := "bash <(curl -s '" + setupLink + "')"
 	windowsCmd := "gameapctl daemon install --connect=" + connectURL
 
 	h.responder.Write(ctx, rw, setupResponse{
