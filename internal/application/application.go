@@ -123,14 +123,6 @@ func Run(runParams RunParams) {
 		slog.String("build_date", defaults.BuildDate),
 	)
 
-	slog.InfoContext(ctx, "Starting HTTP server",
-		slog.String("address", net.JoinHostPort(cfg.HTTPBindIP, strconv.Itoa(int(cfg.HTTPPort)))),
-	)
-
-	if cfg.TLSEnabled() {
-		startHTTPSServer(ctx, cfg, container)
-	}
-
 	err = container.PluginLoader().LoadAll(ctx)
 	if err != nil {
 		slog.ErrorContext(ctx, "Failed to load plugins", slog.String("error", err.Error()))
@@ -164,21 +156,41 @@ func Run(runParams RunParams) {
 }
 
 func runHTTPOnly(ctx context.Context, cfg *config.Config, container *Container) {
-	slog.InfoContext(ctx, "Starting HTTP server",
-		slog.String("address", net.JoinHostPort(cfg.HTTPBindIP, strconv.Itoa(int(cfg.HTTPPort)))),
-	)
+	startHTTPListener(ctx, cfg, container)
 
 	if cfg.TLSEnabled() {
 		startHTTPSServer(ctx, cfg, container)
 	}
+}
 
+// startHTTPListener binds the plain-HTTP listener and starts serving on it
+// in a background goroutine. We deliberately bind synchronously (so that a
+// "port already in use" failure is visible at startup) and serve async — the
+// listener must already be accepting connections before startHTTPSServer
+// kicks off the ACME HTTP-01 challenge, otherwise Let's Encrypt will hit a
+// connection-refused on /.well-known/acme-challenge/.
+func startHTTPListener(ctx context.Context, cfg *config.Config, container *Container) {
 	server := container.HTTPServer()
 
-	err := server.ListenAndServe()
-	if err != nil && !errors.Is(err, http.ErrServerClosed) {
-		slog.Error(err.Error())
+	addr := net.JoinHostPort(cfg.HTTPBindIP, strconv.Itoa(int(cfg.HTTPPort)))
+
+	listener, err := new(net.ListenConfig).Listen(ctx, "tcp", addr)
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to bind HTTP listener",
+			slog.String("address", addr),
+			slog.String("error", err.Error()),
+		)
+
 		os.Exit(1)
 	}
+
+	go func() {
+		slog.InfoContext(ctx, "Starting HTTP server", slog.String("address", addr))
+
+		if err := server.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			slog.ErrorContext(ctx, "HTTP server error", slog.String("error", err.Error()))
+		}
+	}()
 }
 
 func runWithGRPC(ctx context.Context, cfg *config.Config, container *Container) {
@@ -243,18 +255,10 @@ func runWithGRPC(ctx context.Context, cfg *config.Config, container *Container) 
 		}
 	}()
 
+	startHTTPListener(ctx, cfg, container)
+
 	if cfg.TLSEnabled() {
 		startHTTPSServer(ctx, cfg, container)
-	}
-
-	server := container.HTTPServer()
-	slog.InfoContext(ctx, "Starting HTTP server",
-		slog.String("address", net.JoinHostPort(cfg.HTTPBindIP, strconv.Itoa(int(cfg.HTTPPort)))),
-	)
-
-	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		slog.Error(err.Error())
-		os.Exit(1)
 	}
 }
 
