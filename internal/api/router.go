@@ -8,6 +8,8 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/gameap/gameap/internal/acme"
+	"github.com/gameap/gameap/internal/acme/http01"
 	"github.com/gameap/gameap/internal/api/auth/login"
 	"github.com/gameap/gameap/internal/api/auth/logout"
 	"github.com/gameap/gameap/internal/api/clientcertificates/deleteclientcertificates"
@@ -68,6 +70,7 @@ import (
 	"github.com/gameap/gameap/internal/api/games/putgame"
 	"github.com/gameap/gameap/internal/api/games/upgradegames"
 	"github.com/gameap/gameap/internal/api/gethealth"
+	letsencryptgetstatus "github.com/gameap/gameap/internal/api/letsencrypt/getstatus"
 	"github.com/gameap/gameap/internal/api/middlewares"
 	"github.com/gameap/gameap/internal/api/nodes/deletenode"
 	"github.com/gameap/gameap/internal/api/nodes/enrollsetup"
@@ -231,6 +234,7 @@ type container interface {
 	AttachHandler() *grpchandlers.AttachHandler
 	MetricsHub() metrics.Hub
 	PubSub() pubsub.PubSub
+	ACMEService() *acme.Service
 }
 
 func CreateRouter(c container) *http.ServeMux {
@@ -245,6 +249,10 @@ func CreateRouter(c container) *http.ServeMux {
 	serverMux.Handle("/gdaemon/", setupRoutes)
 	serverMux.Handle("/nodes/", setupRoutes)
 	serverMux.Handle("/gdaemon_api/", gdaemonAPIRoutes(c, router))
+
+	if h := c.ACMEService().HTTP01Handler(); h != nil {
+		serverMux.Handle(http01.ChallengePathPrefix, h)
+	}
 
 	static, err := webstatic.GetFS()
 	if err != nil {
@@ -1067,6 +1075,18 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 
 		//
 		// Admin routes
+
+		// Let's Encrypt
+		{
+			Method: http.MethodGet,
+			Path:   "/api/admin/letsencrypt/status",
+			Handler: letsencryptgetstatus.NewHandler(
+				c.Config(),
+				c.ACMEService(),
+				c.Responder(),
+			),
+			AdminOnly: true,
+		},
 
 		// Users
 		{

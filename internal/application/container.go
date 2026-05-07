@@ -16,6 +16,10 @@ import (
 	trmsql "github.com/avito-tech/go-transaction-manager/drivers/sql/v2"
 	trmcontext "github.com/avito-tech/go-transaction-manager/trm/v2/context"
 	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
+	"github.com/gameap/gameap/internal/acme"
+	acmedns "github.com/gameap/gameap/internal/acme/dnsprovider"
+	acmelocker "github.com/gameap/gameap/internal/acme/locker"
+	acmestorage "github.com/gameap/gameap/internal/acme/storage"
 	internalapi "github.com/gameap/gameap/internal/api"
 	"github.com/gameap/gameap/internal/api/middlewares"
 	"github.com/gameap/gameap/internal/cache"
@@ -178,6 +182,9 @@ type Container struct {
 	httpServer  *http.Server
 	httpsServer *http.Server
 	responder   *api.Responder
+
+	// ACME
+	acmeService *acme.Service
 
 	// PubSub
 	pubsub pubsub.PubSub
@@ -516,6 +523,44 @@ func (c *Container) createHTTPSServer() *http.Server {
 		ReadTimeout:  httpServerReadTimeout,
 		IdleTimeout:  httpServerIdleTimeout,
 	}
+}
+
+func (c *Container) ACMEService() *acme.Service {
+	if c.acmeService == nil {
+		c.acmeService = c.createACMEService()
+	}
+
+	return c.acmeService
+}
+
+func (c *Container) createACMEService() *acme.Service {
+	storage := acmestorage.NewFileStorage(c.FileManager(), c.config.ACME.StoragePath)
+
+	var locker acme.Locker
+
+	if c.config.Cache.Driver == cacheDriverRedis {
+		redisCache, ok := c.Cache().(*cache.Redis)
+		if ok {
+			locker = acmelocker.NewRedisLocker(redisCache.Client())
+		}
+	}
+
+	if locker == nil {
+		locker = acmelocker.NewInMemoryLocker()
+	}
+
+	registry := acmedns.NewBuiltinRegistry()
+
+	return acme.NewService(acme.ServiceConfig{
+		ChallengeType:        c.config.ACME.ChallengeType,
+		Email:                c.config.ACME.Email,
+		Domains:              c.config.ACME.Domains,
+		DirectoryURL:         c.config.ACME.DirectoryURL,
+		DNSProvider:          c.config.ACME.DNSProvider,
+		RenewalThreshold:     c.config.ACME.RenewalThreshold,
+		RenewalCheckInterval: c.config.ACME.RenewalCheckInterval,
+		PropagationTimeout:   c.config.ACME.PropagationTimeout,
+	}, storage, locker, registry, slog.Default())
 }
 
 func (c *Container) Router() *http.ServeMux {
@@ -1012,11 +1057,7 @@ func (c *Container) createCache() cache.Cache {
 		}
 
 		c.appendLateShutdownFunc(func() error {
-			if rc, ok := c.cache.(*cache.Redis); ok {
-				return rc.Close()
-			}
-
-			return nil
+			return redisCache.Close()
 		})
 
 		return redisCache

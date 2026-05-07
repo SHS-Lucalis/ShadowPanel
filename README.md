@@ -85,11 +85,191 @@ GameAP is configured via environment variables. Below are the available configur
 
 ### TLS Configuration
 
+GameAP can terminate TLS itself or, if you prefer, sit behind a reverse proxy.
+For self-terminated TLS the panel accepts three certificate sources, evaluated
+in this order:
+
+1. **ACME / Let's Encrypt** — `ACME_ENABLED=true` plus the `ACME_*` variables
+   below. The panel obtains and renews the certificate automatically.
+2. **Static cert files** — `TLS_CERT_FILE` + `TLS_KEY_FILE`.
+3. **Inline cert content** — `TLS_CERT` + `TLS_KEY` (raw PEM or base64-encoded).
+
+If none of the three is configured, the HTTPS listener does not start and the
+panel only serves plain HTTP on `HTTP_PORT`.
+
 - `TLS_CERT_FILE` - Path to TLS certificate file
 - `TLS_KEY_FILE` - Path to TLS private key file
 - `TLS_CERT` - TLS certificate content (PEM or base64 encoded)
 - `TLS_KEY` - TLS private key content (PEM or base64 encoded)
-- `TLS_FORCE_HTTPS` - Force redirect HTTP to HTTPS (default: `false`)
+- `TLS_FORCE_HTTPS` - Force redirect HTTP to HTTPS (default: `false`).
+  When `true`, all `HTTP_PORT` requests get a `301` redirect to
+  `https://${HTTP_HOST}:${HTTPS_PORT}`.
+
+**Ports.** `HTTPS_PORT` defaults to `443`. Binding to a privileged port (≤1024)
+needs `CAP_NET_BIND_SERVICE` — the systemd unit shipped by `gameapctl panel
+install` already grants it. In Docker, expose the port and run as root or set
+`--cap-add=NET_BIND_SERVICE`.
+
+#### Static TLS example
+
+```bash
+HTTP_HOST=panel.example.com
+HTTP_PORT=80
+HTTPS_PORT=443
+TLS_CERT_FILE=/etc/ssl/gameap/fullchain.pem
+TLS_KEY_FILE=/etc/ssl/gameap/privkey.pem
+TLS_FORCE_HTTPS=true
+```
+
+### Let's Encrypt (ACME) Configuration
+
+GameAP embeds the [`go-acme/lego`](https://github.com/go-acme/lego) ACME client
+and can manage Let's Encrypt certificates in-process — no external `certbot`,
+no nginx, no cron. Renewal runs in a background goroutine and the certificate
+is hot-swapped via `tls.Config.GetCertificate`, so renewals never restart the
+HTTPS listener.
+
+Two challenge solvers are supported:
+
+| Solver    | Wildcards | Network requirement                | Best for                 |
+|-----------|-----------|-------------------------------------|--------------------------|
+| `http-01` | ❌ no     | Inbound TCP/80 reachable from LE   | Single-domain panels     |
+| `dns-01`  | ✅ yes    | API access to your DNS provider    | Wildcards, firewalled VMs |
+
+If the initial issuance fails (LE unreachable, DNS provider misconfigured, …)
+the panel exits with code 1 — there is no silent fallback to plain HTTP. Run
+against the LE staging endpoint while iterating on configuration.
+
+#### ACME environment variables
+
+- `ACME_ENABLED` - Enable in-process ACME (default: `false`)
+- `ACME_CHALLENGE_TYPE` - `http-01` or `dns-01` (default: `http-01`)
+- `ACME_EMAIL` - Account email registered with Let's Encrypt (required)
+- `ACME_DOMAINS` - Comma-separated list of domains. Wildcards (`*.example.com`)
+  require `dns-01`.
+- `ACME_DIRECTORY_URL` - ACME directory endpoint (default: Let's Encrypt
+  production; switch to `https://acme-staging-v02.api.letsencrypt.org/directory`
+  for testing)
+- `ACME_DNS_PROVIDER` - DNS provider name when `ACME_CHALLENGE_TYPE=dns-01`
+  (currently built-in: `cloudflare`)
+- `ACME_RENEWAL_THRESHOLD` - Renew when the cert has less than this duration
+  remaining (default: `720h` = 30 days)
+- `ACME_RENEWAL_CHECK_INTERVAL` - How often the background loop inspects the
+  certificate (default: `12h`)
+- `ACME_PROPAGATION_TIMEOUT` - Maximum wait for DNS propagation during
+  `dns-01` (default: `180s`)
+- `ACME_STORAGE_PATH` - Subdirectory under the `files.FileManager` root used
+  to persist the ACME account and certificate material (default: `acme`).
+  With `FILES_DRIVER=local`, this resolves to
+  `${FILES_LOCAL_BASE_PATH}/acme/`. With `FILES_DRIVER=s3`, it lives in the
+  configured bucket — which is what enables multi-instance deployments.
+
+#### HTTP-01 example
+
+`http-01` requires Let's Encrypt to reach `http://${ACME_DOMAINS}/.well-known/acme-challenge/...`.
+That means the panel must listen on port 80 (or have a reverse proxy that
+forwards `/.well-known/acme-challenge/*` to it).
+
+```bash
+HTTP_HOST=panel.example.com
+HTTP_PORT=80
+HTTPS_PORT=443
+TLS_FORCE_HTTPS=true
+
+ACME_ENABLED=true
+ACME_CHALLENGE_TYPE=http-01
+ACME_EMAIL=ops@example.com
+ACME_DOMAINS=panel.example.com
+```
+
+The `/.well-known/acme-challenge/{token}` route is registered ahead of the
+SPA fallback automatically; you do not need to configure it.
+
+#### DNS-01 + Cloudflare example
+
+`dns-01` does not need port 80 to be reachable. Lego writes a TXT record at
+`_acme-challenge.<domain>` via your DNS provider's API. The Cloudflare
+provider reads its credentials directly from the environment.
+
+```bash
+HTTP_HOST=panel.example.com
+HTTPS_PORT=443
+TLS_FORCE_HTTPS=true
+
+ACME_ENABLED=true
+ACME_CHALLENGE_TYPE=dns-01
+ACME_EMAIL=ops@example.com
+ACME_DOMAINS=*.example.com,example.com
+ACME_DNS_PROVIDER=cloudflare
+
+# Read by lego's cloudflare provider — scope the token to the relevant zone.
+CLOUDFLARE_DNS_API_TOKEN=cf-token-with-Zone-DNS-Edit-permission
+```
+
+Other DNS providers will be added over time — open an issue if you need one.
+
+#### Staging vs. production
+
+Let's Encrypt enforces aggressive rate limits on the production directory
+(5 duplicate certs / week, 50 certs / week / registered domain, …). While
+testing, point at the staging endpoint to avoid getting locked out:
+
+```bash
+ACME_DIRECTORY_URL=https://acme-staging-v02.api.letsencrypt.org/directory
+```
+
+Browsers will warn about the staging certificate — that is expected. Switch
+back to the default production URL once the flow works end to end.
+
+#### Multi-instance deployments
+
+A single panel instance is fully self-contained. For horizontally scaled
+deployments:
+
+- **`dns-01`** is the supported path. Set `CACHE_DRIVER=redis` (the Redis
+  client is also used as the distributed locker for renewals) and
+  `FILES_DRIVER=s3` so every replica reads the same certificate. Only one
+  replica at a time talks to LE; the rest pick up the new certificate from
+  shared storage.
+- **`http-01`** in a multi-instance setup needs sticky session affinity for
+  `/.well-known/acme-challenge/*` at the load balancer (the challenge token
+  lives in memory on the instance that received the `Present` call).
+  `dns-01` is usually less hassle.
+
+#### gameapctl helper
+
+Editing `config.env` by hand is fine, but the friendlier path is:
+
+```bash
+gameapctl panel letsencrypt setup
+gameapctl panel letsencrypt disable
+```
+
+`setup` is an interactive wizard (also accepts `--challenge`, `--domains`,
+`--email`, `--dns-provider`, `--staging`, `--env KEY=VALUE`,
+`--non-interactive` flags) that writes the variables and restarts the
+`gameap` systemd service. `disable` clears the `ACME_*` keys.
+
+#### Status endpoint
+
+Admin-only `GET /api/admin/letsencrypt/status` returns the current ACME
+state, useful for monitoring dashboards and the `gameapctl` polling logic:
+
+```json
+{
+  "enabled": true,
+  "state": "active",
+  "challenge_type": "http-01",
+  "domains": ["panel.example.com"],
+  "dns_provider": "",
+  "not_before": "2026-04-01T00:00:00Z",
+  "not_after":  "2026-06-30T00:00:00Z",
+  "last_renewal_at": "2026-04-01T00:00:00Z",
+  "next_renewal_check_at": "2026-04-01T12:00:00Z"
+}
+```
+
+`state` is one of `disabled`, `pending`, `active`, `renewing`, `failed`.
 
 ### Database Configuration
 
@@ -192,13 +372,35 @@ Used by the resumable file-manager upload endpoints
 
 ```bash
 # Server
-HTTP_HOST=0.0.0.0
+HTTP_HOST=panel.example.com
 HTTP_PORT=8025
+HTTPS_PORT=443
 
-# TLS (optional)
-# TLS_CERT_FILE=/path/to/cert.pem
-# TLS_KEY_FILE=/path/to/key.pem
+# --- TLS: pick ONE of (a), (b) or (c). Leave all commented out for plain HTTP. ---
+
+# (a) Static cert files
+# TLS_CERT_FILE=/etc/ssl/gameap/fullchain.pem
+# TLS_KEY_FILE=/etc/ssl/gameap/privkey.pem
 # TLS_FORCE_HTTPS=true
+
+# (b) ACME / Let's Encrypt — HTTP-01 (port 80 must be reachable from LE)
+# HTTP_PORT=80
+# TLS_FORCE_HTTPS=true
+# ACME_ENABLED=true
+# ACME_CHALLENGE_TYPE=http-01
+# ACME_EMAIL=ops@example.com
+# ACME_DOMAINS=panel.example.com
+
+# (c) ACME / Let's Encrypt — DNS-01 + Cloudflare (supports wildcards)
+# TLS_FORCE_HTTPS=true
+# ACME_ENABLED=true
+# ACME_CHALLENGE_TYPE=dns-01
+# ACME_EMAIL=ops@example.com
+# ACME_DOMAINS=*.example.com,example.com
+# ACME_DNS_PROVIDER=cloudflare
+# CLOUDFLARE_DNS_API_TOKEN=cf-token-with-Zone-DNS-Edit-permission
+# Use the staging endpoint while iterating to avoid LE rate limits:
+# ACME_DIRECTORY_URL=https://acme-staging-v02.api.letsencrypt.org/directory
 
 # Database
 DATABASE_DRIVER=mysql
@@ -211,13 +413,20 @@ AUTH_SERVICE=paseto
 
 # Cache
 CACHE_DRIVER=memory
-# For Redis cache:
+# For Redis cache (also enables the distributed lock used by ACME renewals):
 # CACHE_DRIVER=redis
 # CACHE_REDIS_ADDR=localhost:6379
 
 # File Storage
 FILES_DRIVER=local
 FILES_LOCAL_BASE_PATH=/var/lib/gameap/files
+# For multi-instance deployments switch to S3 so every replica sees the same
+# ACME storage:
+# FILES_DRIVER=s3
+# FILES_S3_ENDPOINT=https://s3.example.com
+# FILES_S3_BUCKET=gameap
+# FILES_S3_ACCESS_KEY_ID=...
+# FILES_S3_SECRET_ACCESS_KEY=...
 
 # Legacy
 LEGACY_PATH=/var/www/gameap/

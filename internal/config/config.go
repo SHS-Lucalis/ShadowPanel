@@ -31,6 +31,19 @@ type Config struct {
 		ForceHTTPS bool   `env:"TLS_FORCE_HTTPS" envDefault:"false"`
 	}
 
+	ACME struct {
+		Enabled              bool          `env:"ACME_ENABLED" envDefault:"false"`
+		ChallengeType        string        `env:"ACME_CHALLENGE_TYPE" envDefault:"http-01"`
+		Email                string        `env:"ACME_EMAIL" envDefault:""`
+		Domains              []string      `env:"ACME_DOMAINS" envDefault:"" envSeparator:","`
+		DirectoryURL         string        `env:"ACME_DIRECTORY_URL" envDefault:""`
+		DNSProvider          string        `env:"ACME_DNS_PROVIDER" envDefault:""`
+		RenewalThreshold     time.Duration `env:"ACME_RENEWAL_THRESHOLD" envDefault:"720h"`
+		RenewalCheckInterval time.Duration `env:"ACME_RENEWAL_CHECK_INTERVAL" envDefault:"12h"`
+		PropagationTimeout   time.Duration `env:"ACME_PROPAGATION_TIMEOUT" envDefault:"180s"`
+		StoragePath          string        `env:"ACME_STORAGE_PATH" envDefault:"acme"`
+	}
+
 	DatabaseDriver string `env:"DATABASE_DRIVER,required" envDefault:"mysql"`
 	DatabaseURL    string `env:"DATABASE_URL,required,notEmpty"`
 
@@ -186,6 +199,10 @@ func LoadConfig() (*Config, error) {
 	return &cfg, nil
 }
 
+// LetsEncryptProductionDirectoryURL is the production ACME directory used
+// when ACME_DIRECTORY_URL is not explicitly set.
+const LetsEncryptProductionDirectoryURL = "https://acme-v02.api.letsencrypt.org/directory"
+
 func setDefaultConfigValues(cfg *Config) {
 	if cfg.Legacy.Path == "" {
 		cfg.Legacy.Path = defaults.LegacyPath
@@ -193,6 +210,10 @@ func setDefaultConfigValues(cfg *Config) {
 
 	if cfg.Legacy.EnvPath == "" {
 		cfg.Legacy.EnvPath = defaults.LegacyEnvPath
+	}
+
+	if cfg.ACME.DirectoryURL == "" {
+		cfg.ACME.DirectoryURL = LetsEncryptProductionDirectoryURL
 	}
 }
 
@@ -222,8 +243,65 @@ func normalizeConfigValues(cfg *Config) {
 }
 
 func (c *Config) TLSEnabled() bool {
-	return (c.TLS.CertFile != "" && c.TLS.KeyFile != "") ||
-		(c.TLS.Cert != "" && c.TLS.Key != "")
+	return c.EffectiveCertSource() != CertSourceNone
+}
+
+const (
+	ACMEChallengeHTTP01 = "http-01"
+	ACMEChallengeDNS01  = "dns-01"
+)
+
+func (c *Config) ACMEEnabled() bool {
+	if !c.ACME.Enabled || c.ACME.Email == "" || len(c.ACME.Domains) == 0 {
+		return false
+	}
+
+	switch c.ACME.ChallengeType {
+	case ACMEChallengeHTTP01:
+		return true
+	case ACMEChallengeDNS01:
+		return c.ACME.DNSProvider != ""
+	default:
+		return false
+	}
+}
+
+type CertSource int
+
+const (
+	CertSourceNone CertSource = iota
+	CertSourceACME
+	CertSourceFile
+	CertSourceInline
+)
+
+func (s CertSource) String() string {
+	switch s {
+	case CertSourceACME:
+		return "acme"
+	case CertSourceFile:
+		return "file"
+	case CertSourceInline:
+		return "inline"
+	default:
+		return "none"
+	}
+}
+
+func (c *Config) EffectiveCertSource() CertSource {
+	if c.ACMEEnabled() {
+		return CertSourceACME
+	}
+
+	if c.TLS.CertFile != "" && c.TLS.KeyFile != "" {
+		return CertSourceFile
+	}
+
+	if c.TLS.Cert != "" && c.TLS.Key != "" {
+		return CertSourceInline
+	}
+
+	return CertSourceNone
 }
 
 func (c *Config) LoadTLSCertificate() (*tls.Certificate, error) {

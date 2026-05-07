@@ -532,6 +532,10 @@ paths:
   /api/admin/plugins/{id}:
     $ref: './paths/admin-plugins.yaml#/~1api~1admin~1plugins~1{id}'
 
+  # Admin Let's Encrypt
+  /api/admin/letsencrypt/status:
+    $ref: './paths/admin-letsencrypt.yaml#/~1api~1admin~1letsencrypt~1status'
+
   # Daemon Setup
   /gdaemon/setup/{token}:
     $ref: './paths/gdaemon-setup.yaml#/~1gdaemon~1setup~1{token}'

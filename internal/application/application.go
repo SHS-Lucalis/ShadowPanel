@@ -259,9 +259,12 @@ func runWithGRPC(ctx context.Context, cfg *config.Config, container *Container) 
 }
 
 func startHTTPSServer(ctx context.Context, cfg *config.Config, container *Container) {
-	cert, err := cfg.LoadTLSCertificate()
+	getCert, err := buildGetCertificate(ctx, cfg, container)
 	if err != nil {
-		slog.ErrorContext(ctx, "Failed to load TLS certificate", slog.String("error", err.Error()))
+		slog.ErrorContext(ctx, "Failed to initialise TLS certificate source",
+			slog.String("source", cfg.EffectiveCertSource().String()),
+			slog.String("error", err.Error()),
+		)
 
 		os.Exit(1)
 
@@ -270,13 +273,14 @@ func startHTTPSServer(ctx context.Context, cfg *config.Config, container *Contai
 
 	httpsServer := container.HTTPSServer()
 	httpsServer.TLSConfig = &tls.Config{
-		Certificates: []tls.Certificate{*cert},
-		MinVersion:   tls.VersionTLS12,
+		GetCertificate: getCert,
+		MinVersion:     tls.VersionTLS12,
 	}
 
 	go func() {
 		slog.InfoContext(ctx, "Starting HTTPS server",
 			slog.String("address", net.JoinHostPort(cfg.HTTPBindIP, strconv.Itoa(int(cfg.HTTPSPort)))),
+			slog.String("cert_source", cfg.EffectiveCertSource().String()),
 		)
 
 		err := httpsServer.ListenAndServeTLS("", "")
@@ -284,6 +288,41 @@ func startHTTPSServer(ctx context.Context, cfg *config.Config, container *Contai
 			slog.ErrorContext(ctx, "HTTPS server error", slog.String("error", err.Error()))
 		}
 	}()
+}
+
+func buildGetCertificate(
+	ctx context.Context,
+	cfg *config.Config,
+	container *Container,
+) (func(*tls.ClientHelloInfo) (*tls.Certificate, error), error) {
+	source := cfg.EffectiveCertSource()
+
+	switch source {
+	case config.CertSourceACME:
+		if cfg.TLS.CertFile != "" || cfg.TLS.Cert != "" {
+			slog.WarnContext(ctx, "ACME is enabled; static TLS_CERT_FILE/TLS_CERT settings are ignored")
+		}
+
+		acmeService := container.ACMEService()
+		if err := acmeService.Start(ctx); err != nil {
+			return nil, errors.WithMessage(err, "ACME initialisation failed")
+		}
+
+		return acmeService.GetCertificate, nil
+	case config.CertSourceFile, config.CertSourceInline:
+		cert, err := cfg.LoadTLSCertificate()
+		if err != nil {
+			return nil, errors.WithMessage(err, "failed to load static TLS certificate")
+		}
+
+		return func(_ *tls.ClientHelloInfo) (*tls.Certificate, error) {
+			return cert, nil
+		}, nil
+	case config.CertSourceNone:
+		return nil, errors.New("no certificate source configured but TLS startup attempted")
+	default:
+		return nil, errors.Errorf("unsupported cert source %q", source)
+	}
 }
 
 func startUploadJanitor(ctx context.Context, container *Container) {
