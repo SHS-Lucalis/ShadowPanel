@@ -81,6 +81,7 @@ const (
 
 const (
 	cacheDriverInmemory = "inmemory"
+	cacheDriverMemory   = "memory"
 	cacheDriverMySQL    = "mysql"
 	cacheDriverRedis    = "redis"
 )
@@ -89,6 +90,10 @@ const (
 	pubsubDriverMemory   = "memory"
 	pubsubDriverRedis    = "redis"
 	pubsubDriverPostgres = "postgres"
+)
+
+const (
+	filesDriverLocal = "local"
 )
 
 const (
@@ -1037,7 +1042,7 @@ func (c *Container) Cache() cache.Cache {
 
 func (c *Container) createCache() cache.Cache {
 	switch c.config.Cache.Driver {
-	case "memory", "inmemory":
+	case cacheDriverMemory, cacheDriverInmemory:
 		return cache.NewInMemory()
 
 	case "database", "mysql": // Using MySQL cache for "database" driver for backward compatibility
@@ -1195,7 +1200,7 @@ func (c *Container) FileManager() files.FileManager {
 
 func (c *Container) createFileManager() files.FileManager {
 	switch c.config.Files.Driver {
-	case "local":
+	case filesDriverLocal:
 		basePath := c.config.Files.Local.BasePath
 		if basePath == "" {
 			basePath = path.Join(c.config.Legacy.Path, "storage", "app")

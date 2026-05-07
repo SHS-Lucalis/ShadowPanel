@@ -34,9 +34,9 @@ func buildGetCertConfig(t *testing.T) *config.Config {
 	t.Helper()
 
 	cfg := &config.Config{}
-	cfg.Files.Driver = "local"
+	cfg.Files.Driver = filesDriverLocal
 	cfg.Files.Local.BasePath = t.TempDir()
-	cfg.Cache.Driver = "memory"
+	cfg.Cache.Driver = cacheDriverMemory
 	cfg.ACME.StoragePath = "acme"
 
 	return cfg

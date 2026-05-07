@@ -39,9 +39,9 @@ func setupSeederContainer(t *testing.T) *Container {
 		DatabaseURL:    dsn,
 	}
 	cfg.RBAC.CacheTTL = "1s"
-	cfg.Files.Driver = "local"
+	cfg.Files.Driver = filesDriverLocal
 	cfg.Files.Local.BasePath = t.TempDir()
-	cfg.Cache.Driver = "memory"
+	cfg.Cache.Driver = cacheDriverMemory
 
 	stubAPI := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
