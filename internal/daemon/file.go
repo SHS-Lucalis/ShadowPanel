@@ -9,6 +9,7 @@ import (
 	"io"
 	"log/slog"
 	"math"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -28,12 +29,14 @@ const (
 	capabilityFileTransfer = "file_transfer"
 	s3PollInterval         = 200 * time.Millisecond
 	initialPartTimeout     = 2 * time.Minute
+
+	legacyUploadDefaultPerms os.FileMode = 0o644
 )
 
 type daemonNotConnectedError struct{}
 
 func (e *daemonNotConnectedError) Error() string   { return "daemon not connected" }
-func (e *daemonNotConnectedError) HTTPStatus() int { return 502 }
+func (e *daemonNotConnectedError) HTTPStatus() int { return http.StatusBadGateway }
 
 var ErrDaemonNotConnected error = &daemonNotConnectedError{}
 
@@ -112,6 +115,9 @@ func (s *FileService) readDir(
 	if err != nil {
 		if s.legacy != nil && !recursive {
 			return s.legacy.ReadDir(ctx, node, directory)
+		}
+		if s.legacy != nil && recursive {
+			return s.legacy.ReadDirRecursive(ctx, node, directory)
 		}
 
 		return nil, err
@@ -512,7 +518,7 @@ func (s *FileService) Upload(
 			return s.legacy.Upload(ctx, node, filePath, content, perms)
 		}
 
-		return err
+		return errors.WithMessage(err, "Upload: failed to resolve route")
 	}
 
 	if local {
@@ -535,7 +541,11 @@ func (s *FileService) UploadStreamPrepared(
 
 	local, err := s.resolveRoute(nodeID)
 	if err != nil {
-		return err
+		if s.legacy != nil {
+			return s.uploadStreamPreparedLegacy(ctx, node, filePath, transferID, totalSize)
+		}
+
+		return errors.WithMessage(err, "UploadStreamPrepared: failed to resolve route")
 	}
 
 	if local && s.registry.HasCapability(nodeID, capabilityFileTransfer) {
@@ -550,6 +560,34 @@ func (s *FileService) UploadStreamPrepared(
 
 	if dispatchErr := s.dispatcher.DispatchUploadTask(ctx, nodeID, transferID, relPath); dispatchErr != nil {
 		return errors.WithMessage(dispatchErr, "dispatched upload task")
+	}
+
+	return nil
+}
+
+func (s *FileService) uploadStreamPreparedLegacy(
+	ctx context.Context,
+	node *domain.Node,
+	filePath string,
+	transferID string,
+	totalSize uint64,
+) error {
+	storagePath := transfers.TransferDataPath(transferID)
+
+	if !s.storage.Exists(ctx, storagePath) {
+		return errors.Errorf("upload data missing in storage: transfer %s", transferID)
+	}
+
+	reader, err := s.storage.ReadStream(ctx, storagePath)
+	if err != nil {
+		return errors.Wrap(err, "open upload data for legacy upload")
+	}
+	defer func() { _ = reader.Close() }()
+
+	if uploadErr := s.legacy.UploadStream(
+		ctx, node, filePath, reader, totalSize, legacyUploadDefaultPerms,
+	); uploadErr != nil {
+		return errors.WithMessage(uploadErr, "legacy upload stream")
 	}
 
 	return nil

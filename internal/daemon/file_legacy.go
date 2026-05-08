@@ -8,6 +8,7 @@ import (
 	"math"
 	"net"
 	"os"
+	"path"
 	"sync"
 	"time"
 
@@ -21,6 +22,10 @@ import (
 const (
 	filesRetryCount = 2
 	filesRetryDelay = 10 * time.Millisecond
+
+	legacyUploadMinDeadline    = 60 * time.Second
+	legacyUploadMaxDeadline    = 30 * time.Minute
+	legacyUploadBytesPerSecond = 256 * 1024
 )
 
 type FileBINNService struct {
@@ -124,6 +129,47 @@ func (s *FileBINNService) ReadDir(
 	}
 
 	return resultList, nil
+}
+
+// ReadDirRecursive walks the directory tree rooted at directory and returns a
+// flat list of FileInfo entries with FileInfo.Path filled relative to node.WorkPath.
+func (s *FileBINNService) ReadDirRecursive(
+	ctx context.Context,
+	node *domain.Node,
+	directory string,
+) ([]*FileInfo, error) {
+	return s.readDirRecursive(ctx, node, directory)
+}
+
+func (s *FileBINNService) readDirRecursive(
+	ctx context.Context,
+	node *domain.Node,
+	directory string,
+) ([]*FileInfo, error) {
+	entries, err := s.ReadDir(ctx, node, directory)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*FileInfo, 0, len(entries))
+	for _, entry := range entries {
+		childAbs := path.Join(directory, entry.Name)
+		entry.Path = stripWorkPath(node.WorkPath, childAbs)
+		result = append(result, entry)
+
+		if entry.Type != FileTypeDir {
+			continue
+		}
+
+		children, err := s.readDirRecursive(ctx, node, childAbs)
+		if err != nil {
+			return nil, errors.WithMessagef(err, "recursive read dir %q", childAbs)
+		}
+
+		result = append(result, children...)
+	}
+
+	return result, nil
 }
 
 // MkDir creates a directory.
@@ -478,6 +524,10 @@ func (s *FileBINNService) UploadStream(
 			}
 		}()
 
+		if dErr := conn.SetDeadline(legacyUploadDeadline(ctx, size)); dErr != nil {
+			return errors.Wrap(dErr, "failed to extend upload deadline")
+		}
+
 		err = binnapi.WriteMessage(conn, &binnapi.UploadRequestMessage{
 			FilePath: filePath,
 			FileSize: size,
@@ -731,4 +781,23 @@ func (s *FileBINNService) getPool(nodeID uint, cfg config) (*Pool, error) {
 	s.pools[nodeID] = pool
 
 	return pool, nil
+}
+
+func legacyUploadDeadline(ctx context.Context, size uint64) time.Time {
+	if d, ok := ctx.Deadline(); ok {
+		return d
+	}
+
+	extraSecs := size / legacyUploadBytesPerSecond
+	maxExtraSecs := uint64(legacyUploadMaxDeadline / time.Second)
+	if extraSecs > maxExtraSecs {
+		extraSecs = maxExtraSecs
+	}
+
+	total := min(
+		legacyUploadMinDeadline+time.Duration(extraSecs)*time.Second,
+		legacyUploadMaxDeadline,
+	)
+
+	return time.Now().Add(total)
 }
