@@ -137,7 +137,46 @@
                     <td>{{ timestampToDate(file.timestamp) }}</td>
                     <td class="fm-permissions">{{ formatMode(file.mode) }}</td>
                 </tr>
-                <tr v-if="isEmpty" class="fm-row fm-row--empty">
+                <template v-if="showSkeleton">
+                    <tr
+                        v-for="n in 8"
+                        v-bind:key="`skel-${n}`"
+                        class="fm-row fm-row--skeleton"
+                        aria-hidden="true"
+                    >
+                        <td class="fm-content-item">
+                            <span class="fm-row-icon">
+                                <span class="fm-skel fm-skel--icon" />
+                            </span>
+                            <span
+                                class="fm-skel fm-skel--name"
+                                v-bind:style="{ width: `${30 + (n * 11) % 50}%` }"
+                            />
+                        </td>
+                        <td><span class="fm-skel fm-skel--cell fm-skel--narrow" /></td>
+                        <td><span class="fm-skel fm-skel--cell fm-skel--narrow" /></td>
+                        <td><span class="fm-skel fm-skel--cell" /></td>
+                        <td><span class="fm-skel fm-skel--cell fm-skel--narrow" /></td>
+                    </tr>
+                </template>
+                <tr v-else-if="showError" class="fm-row fm-row--error">
+                    <td colspan="5">
+                        <div class="fm-empty fm-empty--error">
+                            <GIcon name="warning" class="fm-empty-icon fm-empty-icon--error" />
+                            <p class="fm-empty-title">{{ lang.manager.errorTitle }}</p>
+                            <p class="fm-empty-hint">{{ errorMessage }}</p>
+                            <button
+                                type="button"
+                                class="fm-empty-retry"
+                                v-on:click="onRetry"
+                            >
+                                <GIcon name="refresh" />
+                                <span>{{ lang.manager.errorRetry }}</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                <tr v-else-if="isEmpty" class="fm-row fm-row--empty">
                     <td colspan="5">
                         <div class="fm-empty">
                             <GIcon name="folder-open" class="fm-empty-icon" />
@@ -183,7 +222,11 @@ const {
     flatVisible,
     selected,
     sort,
+    loading,
+    error,
     selectDirectory,
+    refreshDirectory,
+    clearError,
     sortBy,
     selectRangeTo,
 } = useManager(props.manager)
@@ -191,7 +234,16 @@ const {
 const sortSettings = computed(() => sort.value)
 const acl = computed(() => settings.acl)
 const isRootPath = computed(() => selectedDirectory.value === null)
-const isEmpty = computed(() => directories.value.length === 0 && files.value.length === 0)
+const hasContent = computed(() => directories.value.length > 0 || files.value.length > 0)
+const showSkeleton = computed(() => loading.value && !hasContent.value)
+const showError = computed(() => !loading.value && !!error.value && !hasContent.value)
+const isEmpty = computed(() => !loading.value && !error.value && !hasContent.value)
+const errorMessage = computed(() => error.value?.message || lang.value.manager.errorGeneric)
+
+async function onRetry() {
+    clearError()
+    await refreshDirectory()
+}
 
 const tableArea = ref(null)
 const focusedIndex = ref(-1)
@@ -579,6 +631,10 @@ function onKeyDown(event) {
         @apply text-5xl text-stone-300 dark:text-stone-600 mb-4;
     }
 
+    .fm-empty-icon--error {
+        @apply text-red-400 dark:text-red-500;
+    }
+
     .fm-empty-title {
         @apply text-base font-medium text-stone-600 dark:text-stone-300 mb-1;
     }
@@ -586,9 +642,67 @@ function onKeyDown(event) {
     .fm-empty-hint {
         @apply text-xs text-stone-400 dark:text-stone-500;
     }
+
+    .fm-empty-retry {
+        @apply mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-md
+               bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900
+               text-sm font-medium transition-colors;
+    }
+
+    .fm-empty-retry:hover {
+        @apply bg-stone-900 dark:bg-stone-100;
+    }
+
+    .fm-empty-retry:focus-visible {
+        outline: 2px solid theme('colors.stone.500 / 70%');
+        outline-offset: 2px;
+    }
+
+    tr.fm-row--skeleton,
+    tr.fm-row--skeleton:hover,
+    tr.fm-row--error,
+    tr.fm-row--error:hover {
+        background: transparent !important;
+        cursor: default;
+    }
+
+    .fm-skel {
+        display: inline-block;
+        background: theme('colors.stone.200');
+        border-radius: 4px;
+        vertical-align: middle;
+        animation: fm-skel-pulse 1.4s ease-in-out infinite;
+    }
+
+    .fm-skel--icon {
+        width: 1.1rem;
+        height: 1.1rem;
+    }
+
+    .fm-skel--name {
+        height: 0.85rem;
+    }
+
+    .fm-skel--cell {
+        height: 0.7rem;
+        width: 60%;
+    }
+
+    .fm-skel--narrow {
+        width: 35%;
+    }
+}
+
+.dark .fm-table .fm-skel {
+    background: theme('colors.stone.700');
 }
 
 .dark .fm-table {
     --fm-accent: theme('colors.stone.200');
+}
+
+@keyframes fm-skel-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.45; }
 }
 </style>

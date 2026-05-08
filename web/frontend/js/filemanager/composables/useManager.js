@@ -27,6 +27,8 @@ export function useManager(managerName) {
     const lastSelectedPath = computed(() => manager.value.lastSelectedPath)
     const history = computed(() => manager.value.history)
     const historyPointer = computed(() => manager.value.historyPointer)
+    const loading = computed(() => fm.getManagerLoading(getManagerName()))
+    const error = computed(() => fm.getManagerError(getManagerName()))
 
     // Getters
     const files = computed(() => fm.getFiles(getManagerName()))
@@ -67,6 +69,10 @@ export function useManager(managerName) {
 
     function refreshDirectory() {
         return fm.refreshDirectory(getManagerName())
+    }
+
+    function clearError() {
+        fm.setManagerError(getManagerName(), null)
     }
 
     function levelUp() {
@@ -202,6 +208,8 @@ export function useManager(managerName) {
         lastSelectedPath,
         history,
         historyPointer,
+        loading,
+        error,
         // Getters
         files,
         directories,
@@ -224,6 +232,7 @@ export function useManager(managerName) {
         // Actions
         selectDirectory,
         refreshDirectory,
+        clearError,
         levelUp,
         historyBack,
         historyForward,
