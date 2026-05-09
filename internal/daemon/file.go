@@ -30,7 +30,14 @@ const (
 	s3PollInterval         = 200 * time.Millisecond
 	initialPartTimeout     = 2 * time.Minute
 
-	legacyUploadDefaultPerms os.FileMode = 0o644
+	legacyUploadDefaultPerms  os.FileMode = 0o644
+	legacyUploadMaxBufferSize             = 256 * 1024 * 1024 // 256 MiB
+	// legacyUploadOverallTimeout caps the legacy upload independent of the
+	// caller's ctx deadline (which is typically DaemonDispatchTimeout=2m and
+	// would kill slow networks before they finish). Idle-timeout inside
+	// legacy.UploadStream is the primary stall detector; this is a hard
+	// safety cap for runaway uploads.
+	legacyUploadOverallTimeout = 2 * time.Hour
 )
 
 type daemonNotConnectedError struct{}
@@ -572,23 +579,83 @@ func (s *FileService) uploadStreamPreparedLegacy(
 	transferID string,
 	totalSize uint64,
 ) error {
+	s.logger.Debug("uploadStreamPreparedLegacy: start",
+		"node_id", node.ID, "transfer_id", transferID,
+		"file_path", filePath, "total_size", totalSize)
+
+	if totalSize > legacyUploadMaxBufferSize {
+		s.logger.Debug("uploadStreamPreparedLegacy: size cap exceeded",
+			"transfer_id", transferID, "total_size", totalSize, "cap", legacyUploadMaxBufferSize)
+
+		return errors.Errorf(
+			"legacy upload not supported for size %d (max %d): node requires gRPC daemon",
+			totalSize, legacyUploadMaxBufferSize,
+		)
+	}
+
 	storagePath := transfers.TransferDataPath(transferID)
 
 	if !s.storage.Exists(ctx, storagePath) {
+		s.logger.Debug("uploadStreamPreparedLegacy: data missing in storage",
+			"transfer_id", transferID, "storage_path", storagePath)
+
 		return errors.Errorf("upload data missing in storage: transfer %s", transferID)
 	}
 
-	reader, err := s.storage.ReadStream(ctx, storagePath)
+	readStart := time.Now()
+	content, err := s.storage.Read(ctx, storagePath)
 	if err != nil {
-		return errors.Wrap(err, "open upload data for legacy upload")
-	}
-	defer func() { _ = reader.Close() }()
+		s.logger.Debug("uploadStreamPreparedLegacy: storage read failed",
+			"transfer_id", transferID, "storage_path", storagePath,
+			"duration", time.Since(readStart), "error", err)
 
-	if uploadErr := s.legacy.UploadStream(
-		ctx, node, filePath, reader, totalSize, legacyUploadDefaultPerms,
-	); uploadErr != nil {
+		return errors.Wrap(err, "read upload data for legacy upload")
+	}
+	s.logger.Debug("uploadStreamPreparedLegacy: data read from storage",
+		"transfer_id", transferID, "bytes", len(content),
+		"duration", time.Since(readStart))
+
+	if uint64(len(content)) != totalSize {
+		s.logger.Debug("uploadStreamPreparedLegacy: size mismatch",
+			"transfer_id", transferID, "expected", totalSize, "got", len(content))
+
+		return errors.Errorf(
+			"upload data size mismatch for transfer %s: expected %d, got %d",
+			transferID, totalSize, len(content),
+		)
+	}
+
+	// Detach from caller's deadline (typically DaemonDispatchTimeout=2m, too
+	// short for slow networks where 13MB legitimately takes 13+ min). Keep
+	// caller cancellation propagating so an aborted HTTP request still stops
+	// the upload.
+	uploadCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), legacyUploadOverallTimeout)
+	defer cancel()
+	stopWatcher := make(chan struct{})
+	defer close(stopWatcher)
+	go func() {
+		select {
+		case <-ctx.Done():
+			cancel()
+		case <-stopWatcher:
+		}
+	}()
+
+	uploadStart := time.Now()
+	uploadErr := s.legacy.UploadStream(
+		uploadCtx, node, filePath, bytes.NewReader(content), totalSize, legacyUploadDefaultPerms,
+	)
+	if uploadErr != nil {
+		s.logger.Debug("uploadStreamPreparedLegacy: legacy upload failed",
+			"transfer_id", transferID, "node_id", node.ID,
+			"duration", time.Since(uploadStart), "error", uploadErr)
+
 		return errors.WithMessage(uploadErr, "legacy upload stream")
 	}
+
+	s.logger.Debug("uploadStreamPreparedLegacy: success",
+		"transfer_id", transferID, "node_id", node.ID,
+		"size", totalSize, "duration", time.Since(uploadStart))
 
 	return nil
 }

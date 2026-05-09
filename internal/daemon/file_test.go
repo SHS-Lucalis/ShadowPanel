@@ -876,6 +876,67 @@ func TestFileService_UploadStreamPrepared_NotConnectedLegacyMissingData(t *testi
 	assert.Contains(t, err.Error(), transferID)
 }
 
+func TestFileService_UploadStreamPrepared_NotConnectedLegacyTooLarge(t *testing.T) {
+	// When totalSize exceeds the in-memory buffer cap, the helper must reject
+	// the upload BEFORE touching storage — saving an expensive S3 fetch that
+	// would only fail later at the BINN-stream stage.
+
+	// ARRANGE
+	s := setupFileService(t)
+	node := newTestNode(85)
+	s.registry.setConnected(uint64(node.ID), false)
+	s.registry.setConnectedAnywhere(uint64(node.ID), false)
+
+	certRepo := inmemory.NewClientCertificateRepository()
+	fakeFM := files.NewInMemoryFileManager()
+	legacy := NewFileBINNService(certRepo, fakeFM)
+	svc := NewFileService(s.gateway, s.registry, s.dispatcher, s.storage, s.transferReg, legacy, slog.Default())
+
+	const transferID = "tid-too-large"
+	oversize := uint64(legacyUploadMaxBufferSize) + 1
+
+	// ACT
+	err := svc.UploadStreamPrepared(
+		testContext(t), node, "/srv/gameap/huge.bin", transferID, "sum", oversize,
+	)
+
+	// ASSERT
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "legacy upload not supported")
+	assert.Contains(t, err.Error(), "gRPC daemon")
+}
+
+func TestFileService_UploadStreamPrepared_NotConnectedLegacySizeMismatch(t *testing.T) {
+	// When stored data length differs from the declared totalSize, the helper
+	// must surface a mismatch error rather than passing an underspecified
+	// reader to legacy.UploadStream (which would deadlock or send wrong bytes).
+
+	// ARRANGE
+	s := setupFileService(t)
+	node := newTestNode(86)
+	s.registry.setConnected(uint64(node.ID), false)
+	s.registry.setConnectedAnywhere(uint64(node.ID), false)
+
+	const transferID = "tid-mismatch"
+	storagePath := transfers.TransferDataPath(transferID)
+	require.NoError(t, s.storage.Write(testContext(t), storagePath, []byte("only-7b")))
+
+	certRepo := inmemory.NewClientCertificateRepository()
+	fakeFM := files.NewInMemoryFileManager()
+	legacy := NewFileBINNService(certRepo, fakeFM)
+	svc := NewFileService(s.gateway, s.registry, s.dispatcher, s.storage, s.transferReg, legacy, slog.Default())
+
+	// ACT — declare 100 bytes but storage only has 7
+	err := svc.UploadStreamPrepared(
+		testContext(t), node, "/srv/gameap/x.bin", transferID, "sum", 100,
+	)
+
+	// ASSERT
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "upload data size mismatch")
+	assert.Contains(t, err.Error(), transferID)
+}
+
 func TestFileService_UploadStreamPrepared_NotConnectedLegacyDataPresent(t *testing.T) {
 	// When daemon is offline everywhere, legacy is non-nil, and data is staged
 	// in storage at transfers/{ID}/data, UploadStreamPrepared must hand off to

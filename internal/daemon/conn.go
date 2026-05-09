@@ -104,18 +104,32 @@ func (c *Connection) connect(ctx context.Context) error {
 		Timeout: c.cfg.Timeout,
 	}
 
+	dialStart := time.Now()
 	rawConn, err := dialer.DialContext(ctx, "tcp", address)
 	if err != nil {
+		slog.Debug("daemon conn: tcp dial failed",
+			"address", address, "duration", time.Since(dialStart), "error", err)
+
 		return errors.Wrapf(err, "could not connect to host: %s, port: %d",
 			c.cfg.Host, c.cfg.Port)
 	}
+	slog.Debug("daemon conn: tcp dial ok",
+		"address", address, "duration", time.Since(dialStart))
 
 	conn := tls.Client(rawConn, tlsConfig)
+	hsStart := time.Now()
 	err = conn.HandshakeContext(ctx)
 	if err != nil {
+		slog.Debug("daemon conn: tls handshake failed",
+			"address", address, "duration", time.Since(hsStart), "error", err)
+
 		return errors.Wrapf(err, "could not connect to host: %s, port: %d",
 			c.cfg.Host, c.cfg.Port)
 	}
+	slog.Debug("daemon conn: tls handshake ok",
+		"address", address, "duration", time.Since(hsStart),
+		"tls_version", conn.ConnectionState().Version,
+		"cipher_suite", conn.ConnectionState().CipherSuite)
 
 	// Set connection deadlines
 	if err := conn.SetDeadline(time.Now().Add(c.cfg.Timeout)); err != nil {
@@ -129,7 +143,12 @@ func (c *Connection) connect(ctx context.Context) error {
 
 	c.conn = conn
 
+	loginStart := time.Now()
 	if err := binnapi.Login(ctx, conn, c.cfg.Mode, c.cfg.Username, c.cfg.Password); err != nil {
+		slog.Debug("daemon conn: login failed",
+			"address", address, "mode", c.cfg.Mode,
+			"duration", time.Since(loginStart), "error", err)
+
 		closeErr := conn.Close()
 		if closeErr != nil {
 			slog.Warn("could not close connection", "error", closeErr)
@@ -137,6 +156,9 @@ func (c *Connection) connect(ctx context.Context) error {
 
 		return err
 	}
+	slog.Debug("daemon conn: login ok",
+		"address", address, "mode", c.cfg.Mode,
+		"duration", time.Since(loginStart))
 
 	return nil
 }
