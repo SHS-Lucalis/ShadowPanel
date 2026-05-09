@@ -10,6 +10,7 @@ import (
 	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
+	"github.com/gameap/gameap/pkg/api"
 	pkgstrings "github.com/gameap/gameap/pkg/strings"
 	"github.com/pkg/errors"
 )
@@ -151,6 +152,10 @@ func (h *Handler) prepareServer(
 	}
 
 	gameMod := &gameMods[0]
+
+	if gameMod.GameCode != input.GameID {
+		return nil, api.NewValidationError("game mod does not belong to the specified game")
+	}
 
 	if server.StartCommand == nil || *server.StartCommand == "" {
 		switch node.OS {

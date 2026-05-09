@@ -864,3 +864,116 @@ func TestHandler_DisallowedSettings_Ignored(t *testing.T) {
 	_, hasUnknown := settingsMap["unknown_setting"]
 	assert.False(t, hasUnknown, "unknown_setting should not be saved")
 }
+
+func TestHandler_GameModBelongsToGame_Validation(t *testing.T) {
+	tests := []struct {
+		name              string
+		setupRepo         func(nodeRepo *inmemory.NodeRepository, gameModRepo *inmemory.GameModRepository)
+		requestBody       string
+		expectedStatus    int
+		wantError         string
+		expectedGameID    string
+		expectedGameModID uint
+	}{
+		{
+			name: "game_mod_belongs_to_different_game",
+			setupRepo: func(nodeRepo *inmemory.NodeRepository, gameModRepo *inmemory.GameModRepository) {
+				_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
+				_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
+			},
+			requestBody: `{
+				"name": "My Server",
+				"game_id": "valve",
+				"ds_id": 1,
+				"game_mod_id": 1,
+				"server_ip": "192.168.1.100",
+				"server_port": 27015
+			}`,
+			expectedStatus: http.StatusUnprocessableEntity,
+			wantError:      "game mod does not belong to the specified game",
+		},
+		{
+			name: "wrong_mod_selected_among_many",
+			setupRepo: func(nodeRepo *inmemory.NodeRepository, gameModRepo *inmemory.GameModRepository) {
+				_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
+				_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
+				_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 2, GameCode: "valve"})
+			},
+			requestBody: `{
+				"name": "My Server",
+				"game_id": "valve",
+				"ds_id": 1,
+				"game_mod_id": 1,
+				"server_ip": "192.168.1.100",
+				"server_port": 27015
+			}`,
+			expectedStatus: http.StatusUnprocessableEntity,
+			wantError:      "game mod does not belong to the specified game",
+		},
+		{
+			name: "correct_mod_selected_among_many",
+			setupRepo: func(nodeRepo *inmemory.NodeRepository, gameModRepo *inmemory.GameModRepository) {
+				_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
+				_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
+				_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 2, GameCode: "valve"})
+			},
+			requestBody: `{
+				"name": "My Server",
+				"game_id": "valve",
+				"ds_id": 1,
+				"game_mod_id": 2,
+				"server_ip": "192.168.1.100",
+				"server_port": 27015
+			}`,
+			expectedStatus:    http.StatusCreated,
+			expectedGameID:    "valve",
+			expectedGameModID: 2,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// ARRANGE
+			serverRepo := inmemory.NewServerRepository()
+			nodeRepo := inmemory.NewNodeRepository()
+			gameModRepo := inmemory.NewGameModRepository()
+			daemonTaskRepo := inmemory.NewDaemonTaskRepository()
+			serverSettingsRepo := inmemory.NewServerSettingRepository()
+			responder := api.NewResponder()
+
+			tt.setupRepo(nodeRepo, gameModRepo)
+
+			handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
+
+			body := []byte(tt.requestBody)
+			req := httptest.NewRequest(http.MethodPost, "/api/servers", bytes.NewBuffer(body))
+			req.Header.Set("Content-Type", "application/json")
+			w := httptest.NewRecorder()
+
+			// ACT
+			handler.ServeHTTP(w, req)
+
+			// ASSERT
+			assert.Equal(t, tt.expectedStatus, w.Code)
+
+			if tt.wantError != "" {
+				var response map[string]any
+				require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
+				assert.Equal(t, "error", response["status"])
+				if errorMsg, ok := response["error"].(string); !ok || !strings.Contains(errorMsg, tt.wantError) {
+					t.Errorf("Expected error containing '%s', got: %v", tt.wantError, response["error"])
+				}
+
+				servers, err := serverRepo.FindAll(context.Background(), nil, nil)
+				require.NoError(t, err)
+				assert.Empty(t, servers, "no server must be saved when validation fails")
+			} else {
+				servers, err := serverRepo.FindAll(context.Background(), nil, nil)
+				require.NoError(t, err)
+				require.Len(t, servers, 1)
+				assert.Equal(t, tt.expectedGameID, servers[0].GameID)
+				assert.Equal(t, tt.expectedGameModID, servers[0].GameModID)
+			}
+		})
+	}
+}
