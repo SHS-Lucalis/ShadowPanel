@@ -260,7 +260,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			},
 		},
 		{
-			name:        "successful_sort_by_id_desc_default",
+			name:        "successful_sort_by_id_asc_default",
 			queryParams: "",
 			setupAuth: func() context.Context {
 				return sessionFor(&testUser1)
@@ -277,8 +277,8 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			checkResponse: func(t *testing.T, resp *base.PaginatedResponse[serverResponse]) {
 				t.Helper()
 				require.Len(t, resp.Data, 2)
-				assert.Equal(t, uint(2), resp.Data[0].ID)
-				assert.Equal(t, uint(1), resp.Data[1].ID)
+				assert.Equal(t, uint(1), resp.Data[0].ID)
+				assert.Equal(t, uint(2), resp.Data[1].ID)
 			},
 		},
 		{
