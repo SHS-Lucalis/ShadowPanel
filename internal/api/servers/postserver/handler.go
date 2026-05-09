@@ -23,6 +23,7 @@ type TaskDispatcher interface {
 type Handler struct {
 	serverRepo         repositories.ServerRepository
 	nodeRepo           repositories.NodeRepository
+	gameRepo           repositories.GameRepository
 	gameModRepo        repositories.GameModRepository
 	daemonTaskRepo     repositories.DaemonTaskRepository
 	serverSettingsRepo repositories.ServerSettingRepository
@@ -33,6 +34,7 @@ type Handler struct {
 func NewHandler(
 	serverRepo repositories.ServerRepository,
 	nodeRepo repositories.NodeRepository,
+	gameRepo repositories.GameRepository,
 	gameModRepo repositories.GameModRepository,
 	daemonTaskRepo repositories.DaemonTaskRepository,
 	serverSettingsRepo repositories.ServerSettingRepository,
@@ -42,6 +44,7 @@ func NewHandler(
 	return &Handler{
 		serverRepo:         serverRepo,
 		nodeRepo:           nodeRepo,
+		gameRepo:           gameRepo,
 		gameModRepo:        gameModRepo,
 		daemonTaskRepo:     daemonTaskRepo,
 		serverSettingsRepo: serverSettingsRepo,
@@ -141,6 +144,15 @@ func (h *Handler) prepareServer(
 	}
 
 	node := &nodes[0]
+
+	games, err := h.gameRepo.Find(ctx, &filters.FindGame{Codes: []string{input.GameID}}, nil, nil)
+	if err != nil {
+		return nil, errors.WithMessage(err, "failed to find game")
+	}
+
+	if len(games) == 0 {
+		return nil, errors.New("game not found")
+	}
 
 	gameMods, err := h.gameModRepo.Find(ctx, &filters.FindGameMod{IDs: []uint{server.GameModID}}, nil, nil)
 	if err != nil {

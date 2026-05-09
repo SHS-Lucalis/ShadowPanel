@@ -1,10 +1,12 @@
 package putserver
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
 	"github.com/gameap/gameap/internal/api/base"
+	"github.com/gameap/gameap/internal/domain"
 	"github.com/gameap/gameap/internal/filters"
 	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/internal/services/serverconfigpush"
@@ -14,6 +16,9 @@ import (
 
 type Handler struct {
 	serverRepo   repositories.ServerRepository
+	nodeRepo     repositories.NodeRepository
+	gameRepo     repositories.GameRepository
+	gameModRepo  repositories.GameModRepository
 	configPusher *serverconfigpush.Pusher
 	rbac         base.RBAC
 	responder    base.Responder
@@ -21,12 +26,18 @@ type Handler struct {
 
 func NewHandler(
 	serverRepo repositories.ServerRepository,
+	nodeRepo repositories.NodeRepository,
+	gameRepo repositories.GameRepository,
+	gameModRepo repositories.GameModRepository,
 	configPusher *serverconfigpush.Pusher,
 	rbac base.RBAC,
 	responder base.Responder,
 ) *Handler {
 	return &Handler{
 		serverRepo:   serverRepo,
+		nodeRepo:     nodeRepo,
+		gameRepo:     gameRepo,
+		gameModRepo:  gameModRepo,
 		configPusher: configPusher,
 		rbac:         rbac,
 		responder:    responder,
@@ -82,6 +93,13 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = h.prepareUpdate(ctx, server, input)
+	if err != nil {
+		h.responder.WriteError(ctx, rw, err)
+
+		return
+	}
+
 	err = input.Apply(server)
 	if err != nil {
 		h.responder.WriteError(ctx, rw, errors.WithMessage(err, "failed to apply input"))
@@ -101,4 +119,55 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	h.responder.Write(ctx, rw, base.Success)
+}
+
+func (h *Handler) prepareUpdate(
+	ctx context.Context,
+	currentServer *domain.Server,
+	input *updateServerInput,
+) error {
+	newDSID := uint(input.DSID.Int())           //nolint:gosec // We check it in Validate
+	newGameModID := uint(input.GameModID.Int()) //nolint:gosec // We check it in Validate
+
+	if newDSID != currentServer.DSID {
+		nodes, err := h.nodeRepo.Find(ctx, &filters.FindNode{IDs: []uint{newDSID}}, nil, nil)
+		if err != nil {
+			return errors.WithMessage(err, "failed to find node")
+		}
+
+		if len(nodes) == 0 {
+			return errors.New("node not found")
+		}
+	}
+
+	gameChanged := input.GameID != currentServer.GameID
+	gameModChanged := newGameModID != currentServer.GameModID
+
+	if gameChanged {
+		games, err := h.gameRepo.Find(ctx, &filters.FindGame{Codes: []string{input.GameID}}, nil, nil)
+		if err != nil {
+			return errors.WithMessage(err, "failed to find game")
+		}
+
+		if len(games) == 0 {
+			return errors.New("game not found")
+		}
+	}
+
+	if gameChanged || gameModChanged {
+		gameMods, err := h.gameModRepo.Find(ctx, &filters.FindGameMod{IDs: []uint{newGameModID}}, nil, nil)
+		if err != nil {
+			return errors.WithMessage(err, "failed to find game mod")
+		}
+
+		if len(gameMods) == 0 {
+			return errors.New("game mod not found")
+		}
+
+		if gameMods[0].GameCode != input.GameID {
+			return api.NewValidationError("game mod does not belong to the specified game")
+		}
+	}
+
+	return nil
 }

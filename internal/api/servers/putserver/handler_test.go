@@ -10,11 +10,14 @@ import (
 	"testing"
 
 	"github.com/gameap/gameap/internal/domain"
+	"github.com/gameap/gameap/internal/filters"
+	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/pkg/api"
 	"github.com/gameap/gameap/pkg/auth"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	pkgerrors "github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,7 +27,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		name        string
 		serverID    string
 		requestBody string
-		setupRepo   func(repo *inmemory.ServerRepository)
+		setupRepo   func(repo *inmemory.ServerRepository, nodeRepo *inmemory.NodeRepository, gameRepo *inmemory.GameRepository, gameModRepo *inmemory.GameModRepository)
 		setupAuth   func(ctx context.Context) context.Context
 		wantStatus  int
 		wantError   string
@@ -45,7 +48,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				"query_port": 27016,
 				"rcon_port": 27017
 			}`,
-			setupRepo: func(repo *inmemory.ServerRepository) {
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
 				err := repo.Save(context.Background(), &domain.Server{
 					ID:         1,
 					UID:        uuid.New(),
@@ -81,7 +84,8 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				"server_ip": "192.168.1.1",
 				"server_port": 27015
 			}`,
-			setupRepo: func(_ *inmemory.ServerRepository) {},
+			setupRepo: func(_ *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
+			},
 			setupAuth: func(ctx context.Context) context.Context {
 				session := &auth.Session{
 					User: &domain.User{ID: 1},
@@ -102,7 +106,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				"server_ip": "192.168.1.1",
 				"server_port": 27015
 			}`,
-			setupRepo: func(repo *inmemory.ServerRepository) {
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
 					UID:        uuid.New(),
@@ -135,7 +139,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				"server_ip": "192.168.1.1",
 				"server_port": 27015
 			}`,
-			setupRepo: func(repo *inmemory.ServerRepository) {
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
 					UID:        uuid.New(),
@@ -169,7 +173,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				"server_ip": "invalid!!!",
 				"server_port": 27015
 			}`,
-			setupRepo: func(repo *inmemory.ServerRepository) {
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
 					UID:        uuid.New(),
@@ -203,7 +207,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				"server_ip": "192.168.1.1",
 				"server_port": 99999
 			}`,
-			setupRepo: func(repo *inmemory.ServerRepository) {
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
 					UID:        uuid.New(),
@@ -238,7 +242,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				"server_port": 27015,
 				"query_port": 0
 			}`,
-			setupRepo: func(repo *inmemory.ServerRepository) {
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
 					UID:        uuid.New(),
@@ -273,7 +277,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				"server_port": 27015,
 				"rcon_port": 0
 			}`,
-			setupRepo: func(repo *inmemory.ServerRepository) {
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
 					UID:        uuid.New(),
@@ -308,7 +312,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				"server_port": 27015,
 				"rcon_port": 99999
 			}`,
-			setupRepo: func(repo *inmemory.ServerRepository) {
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
 					UID:        uuid.New(),
@@ -342,7 +346,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				"server_ip": "",
 				"server_port": 27015
 			}`,
-			setupRepo: func(repo *inmemory.ServerRepository) {
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
 					UID:        uuid.New(),
@@ -376,7 +380,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				"server_ip": "192.168.1.1",
 				"server_port": 27015
 			}`,
-			setupRepo: func(repo *inmemory.ServerRepository) {
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
 					UID:        uuid.New(),
@@ -410,7 +414,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				"server_ip": "192.168.1.1",
 				"server_port": 27015
 			}`,
-			setupRepo: func(repo *inmemory.ServerRepository) {
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
 					UID:        uuid.New(),
@@ -444,7 +448,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				"server_ip": "192.168.1.1",
 				"server_port": 27015
 			}`,
-			setupRepo: func(repo *inmemory.ServerRepository) {
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
 					UID:        uuid.New(),
@@ -478,7 +482,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				"server_ip": "192.168.1.1",
 				"server_port": 27015
 			}`,
-			setupRepo: func(repo *inmemory.ServerRepository) {
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
 					UID:        uuid.New(),
@@ -512,7 +516,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				"server_ip": "192.168.1.1",
 				"server_port": 27015
 			}`,
-			setupRepo: func(repo *inmemory.ServerRepository) {
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
 					UID:        uuid.New(),
@@ -539,7 +543,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			name:        "invalid JSON body",
 			serverID:    "1",
 			requestBody: `{"invalid": json}`,
-			setupRepo: func(repo *inmemory.ServerRepository) {
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
 					UID:        uuid.New(),
@@ -580,7 +584,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				"start_command": "./hlds_run -game cstrike",
 				"dir": "/servers/cstrike"
 			}`,
-			setupRepo: func(repo *inmemory.ServerRepository) {
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
 				err := repo.Save(context.Background(), &domain.Server{
 					ID:         1,
 					UID:        uuid.New(),
@@ -616,7 +620,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				"server_ip": "hldm.org",
 				"server_port": 27018
 			}`,
-			setupRepo: func(repo *inmemory.ServerRepository) {
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
 				err := repo.Save(context.Background(), &domain.Server{
 					ID:         1,
 					UID:        uuid.New(),
@@ -652,7 +656,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				"server_ip": "game.example.com",
 				"server_port": 27015
 			}`,
-			setupRepo: func(repo *inmemory.ServerRepository) {
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
 				err := repo.Save(context.Background(), &domain.Server{
 					ID:         1,
 					UID:        uuid.New(),
@@ -689,7 +693,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				"server_port": 27015,
 				"vars": {"maxplayers": "32", "hostname": "My Server"}
 			}`,
-			setupRepo: func(repo *inmemory.ServerRepository) {
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
 				err := repo.Save(context.Background(), &domain.Server{
 					ID:         1,
 					UID:        uuid.New(),
@@ -727,7 +731,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				"cpu_limit": 2000,
 				"ram_limit": 4294967296
 			}`,
-			setupRepo: func(repo *inmemory.ServerRepository) {
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
 				err := repo.Save(context.Background(), &domain.Server{
 					ID:         1,
 					UID:        uuid.New(),
@@ -764,7 +768,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				"server_port": 27015,
 				"cpu_limit": -1
 			}`,
-			setupRepo: func(repo *inmemory.ServerRepository) {
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
 					UID:        uuid.New(),
@@ -799,7 +803,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				"server_port": 27015,
 				"ram_limit": -1
 			}`,
-			setupRepo: func(repo *inmemory.ServerRepository) {
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
 				_ = repo.Save(context.Background(), &domain.Server{
 					ID:         1,
 					UID:        uuid.New(),
@@ -822,16 +826,201 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			wantStatus: http.StatusUnprocessableEntity,
 			wantError:  "ram_limit must be >= 0",
 		},
+		{
+			name:     "node_not_found_when_ds_id_changed",
+			serverID: "1",
+			requestBody: `{
+				"name": "Test Server",
+				"game_id": "cstrike",
+				"ds_id": 99,
+				"game_mod_id": 1,
+				"server_ip": "192.168.1.1",
+				"server_port": 27015
+			}`,
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
+				_ = repo.Save(context.Background(), &domain.Server{
+					ID:         1,
+					UID:        uuid.New(),
+					UUIDShort:  "12345678",
+					Name:       "Test Server",
+					GameID:     "cstrike",
+					DSID:       1,
+					GameModID:  1,
+					ServerIP:   "192.168.1.1",
+					ServerPort: 27015,
+				})
+			},
+			setupAuth: func(ctx context.Context) context.Context {
+				return auth.ContextWithSession(ctx, &auth.Session{User: &domain.User{ID: 1}})
+			},
+			wantStatus: http.StatusInternalServerError,
+			wantError:  "Internal Server Error",
+		},
+		{
+			name:     "game_not_found_when_game_id_changed",
+			serverID: "1",
+			requestBody: `{
+				"name": "Test Server",
+				"game_id": "missing",
+				"ds_id": 1,
+				"game_mod_id": 1,
+				"server_ip": "192.168.1.1",
+				"server_port": 27015
+			}`,
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
+				_ = repo.Save(context.Background(), &domain.Server{
+					ID:         1,
+					UID:        uuid.New(),
+					UUIDShort:  "12345678",
+					Name:       "Test Server",
+					GameID:     "cstrike",
+					DSID:       1,
+					GameModID:  1,
+					ServerIP:   "192.168.1.1",
+					ServerPort: 27015,
+				})
+			},
+			setupAuth: func(ctx context.Context) context.Context {
+				return auth.ContextWithSession(ctx, &auth.Session{User: &domain.User{ID: 1}})
+			},
+			wantStatus: http.StatusInternalServerError,
+			wantError:  "Internal Server Error",
+		},
+		{
+			name:     "game_mod_not_found_when_game_mod_id_changed",
+			serverID: "1",
+			requestBody: `{
+				"name": "Test Server",
+				"game_id": "cstrike",
+				"ds_id": 1,
+				"game_mod_id": 99,
+				"server_ip": "192.168.1.1",
+				"server_port": 27015
+			}`,
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
+				_ = repo.Save(context.Background(), &domain.Server{
+					ID:         1,
+					UID:        uuid.New(),
+					UUIDShort:  "12345678",
+					Name:       "Test Server",
+					GameID:     "cstrike",
+					DSID:       1,
+					GameModID:  1,
+					ServerIP:   "192.168.1.1",
+					ServerPort: 27015,
+				})
+			},
+			setupAuth: func(ctx context.Context) context.Context {
+				return auth.ContextWithSession(ctx, &auth.Session{User: &domain.User{ID: 1}})
+			},
+			wantStatus: http.StatusInternalServerError,
+			wantError:  "Internal Server Error",
+		},
+		{
+			name:     "game_mod_not_belongs_to_game_when_game_id_changed",
+			serverID: "1",
+			requestBody: `{
+				"name": "Test Server",
+				"game_id": "valve",
+				"ds_id": 1,
+				"game_mod_id": 1,
+				"server_ip": "192.168.1.1",
+				"server_port": 27015
+			}`,
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, gameRepo *inmemory.GameRepository, gameModRepo *inmemory.GameModRepository) {
+				_ = repo.Save(context.Background(), &domain.Server{
+					ID:         1,
+					UID:        uuid.New(),
+					UUIDShort:  "12345678",
+					Name:       "Test Server",
+					GameID:     "cstrike",
+					DSID:       1,
+					GameModID:  1,
+					ServerIP:   "192.168.1.1",
+					ServerPort: 27015,
+				})
+				_ = gameRepo.Save(context.Background(), &domain.Game{Code: "cstrike"})
+				_ = gameRepo.Save(context.Background(), &domain.Game{Code: "valve"})
+				_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
+			},
+			setupAuth: func(ctx context.Context) context.Context {
+				return auth.ContextWithSession(ctx, &auth.Session{User: &domain.User{ID: 1}})
+			},
+			wantStatus: http.StatusUnprocessableEntity,
+			wantError:  "game mod does not belong to the specified game",
+		},
+		{
+			name:     "no_validation_when_relations_unchanged",
+			serverID: "1",
+			requestBody: `{
+				"name": "Renamed Server",
+				"game_id": "cstrike",
+				"ds_id": 1,
+				"game_mod_id": 1,
+				"server_ip": "192.168.1.1",
+				"server_port": 27015
+			}`,
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
+				_ = repo.Save(context.Background(), &domain.Server{
+					ID:         1,
+					UID:        uuid.New(),
+					UUIDShort:  "12345678",
+					Name:       "Test Server",
+					GameID:     "cstrike",
+					DSID:       1,
+					GameModID:  1,
+					ServerIP:   "192.168.1.1",
+					ServerPort: 27015,
+				})
+			},
+			setupAuth: func(ctx context.Context) context.Context {
+				return auth.ContextWithSession(ctx, &auth.Session{User: &domain.User{ID: 1}})
+			},
+			wantStatus: http.StatusOK,
+		},
+		{
+			name:     "node_repo_error_when_ds_id_changed",
+			serverID: "1",
+			requestBody: `{
+				"name": "Test Server",
+				"game_id": "cstrike",
+				"ds_id": 2,
+				"game_mod_id": 1,
+				"server_ip": "192.168.1.1",
+				"server_port": 27015
+			}`,
+			setupRepo: func(repo *inmemory.ServerRepository, _ *inmemory.NodeRepository, _ *inmemory.GameRepository, _ *inmemory.GameModRepository) {
+				_ = repo.Save(context.Background(), &domain.Server{
+					ID:         1,
+					UID:        uuid.New(),
+					UUIDShort:  "12345678",
+					Name:       "Test Server",
+					GameID:     "cstrike",
+					DSID:       1,
+					GameModID:  1,
+					ServerIP:   "192.168.1.1",
+					ServerPort: 27015,
+				})
+			},
+			setupAuth: func(ctx context.Context) context.Context {
+				return auth.ContextWithSession(ctx, &auth.Session{User: &domain.User{ID: 1}})
+			},
+			wantStatus: http.StatusInternalServerError,
+			wantError:  "Internal Server Error",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			serverRepo := inmemory.NewServerRepository()
+			nodeRepo := inmemory.NewNodeRepository()
+			gameRepo := inmemory.NewGameRepository()
+			gameModRepo := inmemory.NewGameModRepository()
 			responder := api.NewResponder()
-			handler := NewHandler(serverRepo, nil, nil, responder)
+			handler := NewHandler(serverRepo, nodeRepo, gameRepo, gameModRepo, nil, nil, responder)
 
 			if tt.setupRepo != nil {
-				tt.setupRepo(serverRepo)
+				tt.setupRepo(serverRepo, nodeRepo, gameRepo, gameModRepo)
 			}
 
 			body := []byte(tt.requestBody)
@@ -867,8 +1056,15 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 func TestHandler_ServerUpdatePersistence(t *testing.T) {
 	serverRepo := inmemory.NewServerRepository()
+	nodeRepo := inmemory.NewNodeRepository()
+	gameRepo := inmemory.NewGameRepository()
+	gameModRepo := inmemory.NewGameModRepository()
 	responder := api.NewResponder()
-	handler := NewHandler(serverRepo, nil, nil, responder)
+	handler := NewHandler(serverRepo, nodeRepo, gameRepo, gameModRepo, nil, nil, responder)
+
+	require.NoError(t, nodeRepo.Save(context.Background(), &domain.Node{ID: 2, Name: "node2"}))
+	require.NoError(t, gameRepo.Save(context.Background(), &domain.Game{Code: "valve"}))
+	require.NoError(t, gameModRepo.Save(context.Background(), &domain.GameMod{ID: 2, GameCode: "valve"}))
 
 	originalServer := &domain.Server{
 		ID:         1,
@@ -948,8 +1144,14 @@ func TestHandler_ServerUpdatePersistence(t *testing.T) {
 
 func TestHandler_ServerUpdatePersistence_WithVarsAndLimits(t *testing.T) {
 	serverRepo := inmemory.NewServerRepository()
+	nodeRepo := inmemory.NewNodeRepository()
+	gameRepo := inmemory.NewGameRepository()
+	gameModRepo := inmemory.NewGameModRepository()
 	responder := api.NewResponder()
-	handler := NewHandler(serverRepo, nil, nil, responder)
+	handler := NewHandler(serverRepo, nodeRepo, gameRepo, gameModRepo, nil, nil, responder)
+
+	require.NoError(t, gameRepo.Save(context.Background(), &domain.Game{Code: "valve"}))
+	require.NoError(t, gameModRepo.Save(context.Background(), &domain.GameMod{ID: 2, GameCode: "valve"}))
 
 	originalServer := &domain.Server{
 		ID:         1,
@@ -973,7 +1175,7 @@ func TestHandler_ServerUpdatePersistence_WithVarsAndLimits(t *testing.T) {
 		"name":        "Updated Server Name",
 		"game_id":     "valve",
 		"ds_id":       1,
-		"game_mod_id": 1,
+		"game_mod_id": 2,
 		"server_ip":   "10.0.0.1",
 		"server_port": 27016,
 		"vars":        map[string]string{"maxplayers": "32", "hostname": "My Server"},
@@ -1015,8 +1217,11 @@ func TestHandler_ServerUpdatePersistence_WithVarsAndLimits(t *testing.T) {
 
 func TestHandler_InvalidServerID(t *testing.T) {
 	serverRepo := inmemory.NewServerRepository()
+	nodeRepo := inmemory.NewNodeRepository()
+	gameRepo := inmemory.NewGameRepository()
+	gameModRepo := inmemory.NewGameModRepository()
 	responder := api.NewResponder()
-	handler := NewHandler(serverRepo, nil, nil, responder)
+	handler := NewHandler(serverRepo, nodeRepo, gameRepo, gameModRepo, nil, nil, responder)
 
 	requestBody := `{
 		"name": "Test Server",
@@ -1046,4 +1251,165 @@ func TestHandler_InvalidServerID(t *testing.T) {
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
 	assert.Equal(t, "error", response["status"])
 	assert.Contains(t, response["error"].(string), "invalid server id")
+}
+
+func TestHandler_PrepareUpdateRepoErrors(t *testing.T) {
+	tests := []struct {
+		name        string
+		buildRepos  func() (repositories.NodeRepository, repositories.GameRepository, repositories.GameModRepository)
+		requestBody string
+	}{
+		{
+			name: "node_repo_returns_error",
+			buildRepos: func() (repositories.NodeRepository, repositories.GameRepository, repositories.GameModRepository) {
+				return &errNodeRepo{
+					NodeRepository: inmemory.NewNodeRepository(),
+					findErr:        pkgerrors.New("db down"),
+				}, inmemory.NewGameRepository(), inmemory.NewGameModRepository()
+			},
+			requestBody: `{
+				"name": "Test Server",
+				"game_id": "cstrike",
+				"ds_id": 2,
+				"game_mod_id": 1,
+				"server_ip": "192.168.1.1",
+				"server_port": 27015
+			}`,
+		},
+		{
+			name: "game_repo_returns_error",
+			buildRepos: func() (repositories.NodeRepository, repositories.GameRepository, repositories.GameModRepository) {
+				return inmemory.NewNodeRepository(), &errGameRepo{
+					GameRepository: inmemory.NewGameRepository(),
+					findErr:        pkgerrors.New("db down"),
+				}, inmemory.NewGameModRepository()
+			},
+			requestBody: `{
+				"name": "Test Server",
+				"game_id": "valve",
+				"ds_id": 1,
+				"game_mod_id": 1,
+				"server_ip": "192.168.1.1",
+				"server_port": 27015
+			}`,
+		},
+		{
+			name: "game_mod_repo_returns_error",
+			buildRepos: func() (repositories.NodeRepository, repositories.GameRepository, repositories.GameModRepository) {
+				gameRepo := inmemory.NewGameRepository()
+				_ = gameRepo.Save(context.Background(), &domain.Game{Code: "valve"})
+
+				return inmemory.NewNodeRepository(), gameRepo, &errGameModRepo{
+					GameModRepository: inmemory.NewGameModRepository(),
+					findErr:           pkgerrors.New("db down"),
+				}
+			},
+			requestBody: `{
+				"name": "Test Server",
+				"game_id": "valve",
+				"ds_id": 1,
+				"game_mod_id": 1,
+				"server_ip": "192.168.1.1",
+				"server_port": 27015
+			}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			serverRepo := inmemory.NewServerRepository()
+			nodeRepo, gameRepo, gameModRepo := tt.buildRepos()
+			responder := api.NewResponder()
+			handler := NewHandler(serverRepo, nodeRepo, gameRepo, gameModRepo, nil, nil, responder)
+
+			require.NoError(t, serverRepo.Save(context.Background(), &domain.Server{
+				ID:         1,
+				UID:        uuid.New(),
+				UUIDShort:  "12345678",
+				Name:       "Test Server",
+				GameID:     "cstrike",
+				DSID:       1,
+				GameModID:  1,
+				ServerIP:   "192.168.1.1",
+				ServerPort: 27015,
+			}))
+
+			req := httptest.NewRequest(http.MethodPut, "/servers/1", bytes.NewBufferString(tt.requestBody))
+			req.Header.Set("Content-Type", "application/json")
+			req = mux.SetURLVars(req, map[string]string{"id": "1"})
+			req = req.WithContext(auth.ContextWithSession(req.Context(), &auth.Session{User: &domain.User{ID: 1}}))
+
+			w := httptest.NewRecorder()
+			handler.ServeHTTP(w, req)
+
+			assert.Equal(t, http.StatusInternalServerError, w.Code)
+
+			var response map[string]any
+			require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
+			assert.Equal(t, "error", response["status"])
+			assert.Contains(t, response["error"].(string), "Internal Server Error")
+
+			servers, err := serverRepo.FindAll(context.Background(), nil, nil)
+			require.NoError(t, err)
+			require.Len(t, servers, 1)
+			assert.Equal(t, "Test Server", servers[0].Name, "server must remain unchanged when prepareUpdate fails")
+		})
+	}
+}
+
+type errNodeRepo struct {
+	repositories.NodeRepository
+
+	findErr error
+}
+
+func (r *errNodeRepo) Find(
+	ctx context.Context,
+	filter *filters.FindNode,
+	order []filters.Sorting,
+	pagination *filters.Pagination,
+) ([]domain.Node, error) {
+	if r.findErr != nil {
+		return nil, r.findErr
+	}
+
+	return r.NodeRepository.Find(ctx, filter, order, pagination)
+}
+
+type errGameRepo struct {
+	repositories.GameRepository
+
+	findErr error
+}
+
+func (r *errGameRepo) Find(
+	ctx context.Context,
+	filter *filters.FindGame,
+	order []filters.Sorting,
+	pagination *filters.Pagination,
+) ([]domain.Game, error) {
+	if r.findErr != nil {
+		return nil, r.findErr
+	}
+
+	return r.GameRepository.Find(ctx, filter, order, pagination)
+}
+
+type errGameModRepo struct {
+	repositories.GameModRepository
+
+	findErr error
+}
+
+func (r *errGameModRepo) Find(
+	ctx context.Context,
+	filter *filters.FindGameMod,
+	order []filters.Sorting,
+	pagination *filters.Pagination,
+) ([]domain.GameMod, error) {
+	if r.findErr != nil {
+		return nil, r.findErr
+	}
+
+	return r.GameModRepository.Find(ctx, filter, order, pagination)
 }

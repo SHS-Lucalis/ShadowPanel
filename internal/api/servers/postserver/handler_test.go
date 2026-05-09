@@ -10,8 +10,11 @@ import (
 	"testing"
 
 	"github.com/gameap/gameap/internal/domain"
+	"github.com/gameap/gameap/internal/filters"
+	"github.com/gameap/gameap/internal/repositories"
 	"github.com/gameap/gameap/internal/repositories/inmemory"
 	"github.com/gameap/gameap/pkg/api"
+	pkgerrors "github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -447,15 +450,17 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			// ARRANGE
 			serverRepo := inmemory.NewServerRepository()
 			nodeRepo := inmemory.NewNodeRepository()
+			gameRepo := inmemory.NewGameRepository()
 			gameModRepo := inmemory.NewGameModRepository()
 			daemonTaskRepo := inmemory.NewDaemonTaskRepository()
 			serverSettingsRepo := inmemory.NewServerSettingRepository()
 			responder := api.NewResponder()
 
 			_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
+			_ = gameRepo.Save(context.Background(), &domain.Game{Code: "cstrike"})
 			_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
 
-			handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
+			handler := NewHandler(serverRepo, nodeRepo, gameRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
 
 			body := []byte(tt.requestBody)
 			req := httptest.NewRequest(http.MethodPost, "/api/servers", bytes.NewBuffer(body))
@@ -498,15 +503,17 @@ func TestHandler_ServerPersistence(t *testing.T) {
 	// ARRANGE
 	serverRepo := inmemory.NewServerRepository()
 	nodeRepo := inmemory.NewNodeRepository()
+	gameRepo := inmemory.NewGameRepository()
 	gameModRepo := inmemory.NewGameModRepository()
 	daemonTaskRepo := inmemory.NewDaemonTaskRepository()
 	serverSettingsRepo := inmemory.NewServerSettingRepository()
 	responder := api.NewResponder()
 
 	_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
+	_ = gameRepo.Save(context.Background(), &domain.Game{Code: "cstrike"})
 	_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
 
-	handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
+	handler := NewHandler(serverRepo, nodeRepo, gameRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
 
 	serverData := map[string]any{
 		"install":     true,
@@ -568,6 +575,7 @@ func TestHandler_MultipleServers(t *testing.T) {
 	// ARRANGE
 	serverRepo := inmemory.NewServerRepository()
 	nodeRepo := inmemory.NewNodeRepository()
+	gameRepo := inmemory.NewGameRepository()
 	gameModRepo := inmemory.NewGameModRepository()
 	daemonTaskRepo := inmemory.NewDaemonTaskRepository()
 	serverSettingsRepo := inmemory.NewServerSettingRepository()
@@ -575,10 +583,12 @@ func TestHandler_MultipleServers(t *testing.T) {
 
 	_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
 	_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 2, OS: "windows"})
+	_ = gameRepo.Save(context.Background(), &domain.Game{Code: "cstrike"})
+	_ = gameRepo.Save(context.Background(), &domain.Game{Code: "valve"})
 	_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
 	_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 2, GameCode: "valve"})
 
-	handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
+	handler := NewHandler(serverRepo, nodeRepo, gameRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
 
 	servers := []map[string]any{
 		{
@@ -629,12 +639,14 @@ func TestHandler_ServerWithSettings(t *testing.T) {
 	// ARRANGE
 	serverRepo := inmemory.NewServerRepository()
 	nodeRepo := inmemory.NewNodeRepository()
+	gameRepo := inmemory.NewGameRepository()
 	gameModRepo := inmemory.NewGameModRepository()
 	daemonTaskRepo := inmemory.NewDaemonTaskRepository()
 	serverSettingsRepo := inmemory.NewServerSettingRepository()
 	responder := api.NewResponder()
 
 	_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
+	_ = gameRepo.Save(context.Background(), &domain.Game{Code: "cstrike"})
 	_ = gameModRepo.Save(context.Background(), &domain.GameMod{
 		ID:       1,
 		GameCode: "cstrike",
@@ -644,7 +656,7 @@ func TestHandler_ServerWithSettings(t *testing.T) {
 		},
 	})
 
-	handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
+	handler := NewHandler(serverRepo, nodeRepo, gameRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
 
 	serverData := map[string]any{
 		"name":        "Server with settings",
@@ -706,15 +718,17 @@ func TestHandler_ServerWithoutSettings_BackwardCompatibility(t *testing.T) {
 	// ARRANGE
 	serverRepo := inmemory.NewServerRepository()
 	nodeRepo := inmemory.NewNodeRepository()
+	gameRepo := inmemory.NewGameRepository()
 	gameModRepo := inmemory.NewGameModRepository()
 	daemonTaskRepo := inmemory.NewDaemonTaskRepository()
 	serverSettingsRepo := inmemory.NewServerSettingRepository()
 	responder := api.NewResponder()
 
 	_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
+	_ = gameRepo.Save(context.Background(), &domain.Game{Code: "cstrike"})
 	_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
 
-	handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
+	handler := NewHandler(serverRepo, nodeRepo, gameRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
 
 	serverData := map[string]any{
 		"name":        "Server without settings",
@@ -751,15 +765,17 @@ func TestHandler_SettingEmptyName_ValidationError(t *testing.T) {
 	// ARRANGE
 	serverRepo := inmemory.NewServerRepository()
 	nodeRepo := inmemory.NewNodeRepository()
+	gameRepo := inmemory.NewGameRepository()
 	gameModRepo := inmemory.NewGameModRepository()
 	daemonTaskRepo := inmemory.NewDaemonTaskRepository()
 	serverSettingsRepo := inmemory.NewServerSettingRepository()
 	responder := api.NewResponder()
 
 	_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
+	_ = gameRepo.Save(context.Background(), &domain.Game{Code: "cstrike"})
 	_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
 
-	handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
+	handler := NewHandler(serverRepo, nodeRepo, gameRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
 
 	serverData := map[string]any{
 		"name":        "Server with invalid setting",
@@ -796,12 +812,14 @@ func TestHandler_DisallowedSettings_Ignored(t *testing.T) {
 	// ARRANGE
 	serverRepo := inmemory.NewServerRepository()
 	nodeRepo := inmemory.NewNodeRepository()
+	gameRepo := inmemory.NewGameRepository()
 	gameModRepo := inmemory.NewGameModRepository()
 	daemonTaskRepo := inmemory.NewDaemonTaskRepository()
 	serverSettingsRepo := inmemory.NewServerSettingRepository()
 	responder := api.NewResponder()
 
 	_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
+	_ = gameRepo.Save(context.Background(), &domain.Game{Code: "cstrike"})
 	_ = gameModRepo.Save(context.Background(), &domain.GameMod{
 		ID:       1,
 		GameCode: "cstrike",
@@ -810,7 +828,7 @@ func TestHandler_DisallowedSettings_Ignored(t *testing.T) {
 		},
 	})
 
-	handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
+	handler := NewHandler(serverRepo, nodeRepo, gameRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
 
 	serverData := map[string]any{
 		"name":        "Server with disallowed settings",
@@ -868,7 +886,7 @@ func TestHandler_DisallowedSettings_Ignored(t *testing.T) {
 func TestHandler_GameModBelongsToGame_Validation(t *testing.T) {
 	tests := []struct {
 		name              string
-		setupRepo         func(nodeRepo *inmemory.NodeRepository, gameModRepo *inmemory.GameModRepository)
+		setupRepo         func(nodeRepo *inmemory.NodeRepository, gameRepo *inmemory.GameRepository, gameModRepo *inmemory.GameModRepository)
 		requestBody       string
 		expectedStatus    int
 		wantError         string
@@ -877,8 +895,10 @@ func TestHandler_GameModBelongsToGame_Validation(t *testing.T) {
 	}{
 		{
 			name: "game_mod_belongs_to_different_game",
-			setupRepo: func(nodeRepo *inmemory.NodeRepository, gameModRepo *inmemory.GameModRepository) {
+			setupRepo: func(nodeRepo *inmemory.NodeRepository, gameRepo *inmemory.GameRepository, gameModRepo *inmemory.GameModRepository) {
 				_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
+				_ = gameRepo.Save(context.Background(), &domain.Game{Code: "cstrike"})
+				_ = gameRepo.Save(context.Background(), &domain.Game{Code: "valve"})
 				_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
 			},
 			requestBody: `{
@@ -894,8 +914,10 @@ func TestHandler_GameModBelongsToGame_Validation(t *testing.T) {
 		},
 		{
 			name: "wrong_mod_selected_among_many",
-			setupRepo: func(nodeRepo *inmemory.NodeRepository, gameModRepo *inmemory.GameModRepository) {
+			setupRepo: func(nodeRepo *inmemory.NodeRepository, gameRepo *inmemory.GameRepository, gameModRepo *inmemory.GameModRepository) {
 				_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
+				_ = gameRepo.Save(context.Background(), &domain.Game{Code: "cstrike"})
+				_ = gameRepo.Save(context.Background(), &domain.Game{Code: "valve"})
 				_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
 				_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 2, GameCode: "valve"})
 			},
@@ -912,8 +934,10 @@ func TestHandler_GameModBelongsToGame_Validation(t *testing.T) {
 		},
 		{
 			name: "correct_mod_selected_among_many",
-			setupRepo: func(nodeRepo *inmemory.NodeRepository, gameModRepo *inmemory.GameModRepository) {
+			setupRepo: func(nodeRepo *inmemory.NodeRepository, gameRepo *inmemory.GameRepository, gameModRepo *inmemory.GameModRepository) {
 				_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
+				_ = gameRepo.Save(context.Background(), &domain.Game{Code: "cstrike"})
+				_ = gameRepo.Save(context.Background(), &domain.Game{Code: "valve"})
 				_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
 				_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 2, GameCode: "valve"})
 			},
@@ -936,14 +960,15 @@ func TestHandler_GameModBelongsToGame_Validation(t *testing.T) {
 			// ARRANGE
 			serverRepo := inmemory.NewServerRepository()
 			nodeRepo := inmemory.NewNodeRepository()
+			gameRepo := inmemory.NewGameRepository()
 			gameModRepo := inmemory.NewGameModRepository()
 			daemonTaskRepo := inmemory.NewDaemonTaskRepository()
 			serverSettingsRepo := inmemory.NewServerSettingRepository()
 			responder := api.NewResponder()
 
-			tt.setupRepo(nodeRepo, gameModRepo)
+			tt.setupRepo(nodeRepo, gameRepo, gameModRepo)
 
-			handler := NewHandler(serverRepo, nodeRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
+			handler := NewHandler(serverRepo, nodeRepo, gameRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
 
 			body := []byte(tt.requestBody)
 			req := httptest.NewRequest(http.MethodPost, "/api/servers", bytes.NewBuffer(body))
@@ -976,4 +1001,593 @@ func TestHandler_GameModBelongsToGame_Validation(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestHandler_PrepareServerErrors(t *testing.T) {
+	tests := []struct {
+		name        string
+		setupRepo   func() (repositories.NodeRepository, repositories.GameRepository, repositories.GameModRepository)
+		requestBody string
+		wantError   string
+	}{
+		{
+			name: "node_not_found",
+			setupRepo: func() (repositories.NodeRepository, repositories.GameRepository, repositories.GameModRepository) {
+				nodeRepo := inmemory.NewNodeRepository()
+				gameRepo := inmemory.NewGameRepository()
+				_ = gameRepo.Save(context.Background(), &domain.Game{Code: "cstrike"})
+				gameModRepo := inmemory.NewGameModRepository()
+				_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
+
+				return nodeRepo, gameRepo, gameModRepo
+			},
+			requestBody: `{
+				"name": "My Server",
+				"game_id": "cstrike",
+				"ds_id": 999,
+				"game_mod_id": 1,
+				"server_ip": "192.168.1.100",
+				"server_port": 27015
+			}`,
+			wantError: "Internal Server Error",
+		},
+		{
+			name: "node_repo_returns_error",
+			setupRepo: func() (repositories.NodeRepository, repositories.GameRepository, repositories.GameModRepository) {
+				gameRepo := inmemory.NewGameRepository()
+				_ = gameRepo.Save(context.Background(), &domain.Game{Code: "cstrike"})
+				gameModRepo := inmemory.NewGameModRepository()
+				_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
+
+				return &errNodeRepo{
+					NodeRepository: inmemory.NewNodeRepository(),
+					findErr:        pkgerrors.New("db down"),
+				}, gameRepo, gameModRepo
+			},
+			requestBody: `{
+				"name": "My Server",
+				"game_id": "cstrike",
+				"ds_id": 1,
+				"game_mod_id": 1,
+				"server_ip": "192.168.1.100",
+				"server_port": 27015
+			}`,
+			wantError: "Internal Server Error",
+		},
+		{
+			name: "game_not_found",
+			setupRepo: func() (repositories.NodeRepository, repositories.GameRepository, repositories.GameModRepository) {
+				nodeRepo := inmemory.NewNodeRepository()
+				_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
+				gameModRepo := inmemory.NewGameModRepository()
+				_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
+
+				return nodeRepo, inmemory.NewGameRepository(), gameModRepo
+			},
+			requestBody: `{
+				"name": "My Server",
+				"game_id": "cstrike",
+				"ds_id": 1,
+				"game_mod_id": 1,
+				"server_ip": "192.168.1.100",
+				"server_port": 27015
+			}`,
+			wantError: "Internal Server Error",
+		},
+		{
+			name: "game_repo_returns_error",
+			setupRepo: func() (repositories.NodeRepository, repositories.GameRepository, repositories.GameModRepository) {
+				nodeRepo := inmemory.NewNodeRepository()
+				_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
+				gameModRepo := inmemory.NewGameModRepository()
+				_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
+
+				return nodeRepo, &errGameRepo{
+					GameRepository: inmemory.NewGameRepository(),
+					findErr:        pkgerrors.New("db down"),
+				}, gameModRepo
+			},
+			requestBody: `{
+				"name": "My Server",
+				"game_id": "cstrike",
+				"ds_id": 1,
+				"game_mod_id": 1,
+				"server_ip": "192.168.1.100",
+				"server_port": 27015
+			}`,
+			wantError: "Internal Server Error",
+		},
+		{
+			name: "game_mod_not_found",
+			setupRepo: func() (repositories.NodeRepository, repositories.GameRepository, repositories.GameModRepository) {
+				nodeRepo := inmemory.NewNodeRepository()
+				_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
+				gameRepo := inmemory.NewGameRepository()
+				_ = gameRepo.Save(context.Background(), &domain.Game{Code: "cstrike"})
+
+				return nodeRepo, gameRepo, inmemory.NewGameModRepository()
+			},
+			requestBody: `{
+				"name": "My Server",
+				"game_id": "cstrike",
+				"ds_id": 1,
+				"game_mod_id": 999,
+				"server_ip": "192.168.1.100",
+				"server_port": 27015
+			}`,
+			wantError: "Internal Server Error",
+		},
+		{
+			name: "game_mod_repo_returns_error",
+			setupRepo: func() (repositories.NodeRepository, repositories.GameRepository, repositories.GameModRepository) {
+				nodeRepo := inmemory.NewNodeRepository()
+				_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
+				gameRepo := inmemory.NewGameRepository()
+				_ = gameRepo.Save(context.Background(), &domain.Game{Code: "cstrike"})
+
+				return nodeRepo, gameRepo, &errGameModRepo{
+					GameModRepository: inmemory.NewGameModRepository(),
+					findErr:           pkgerrors.New("db down"),
+				}
+			},
+			requestBody: `{
+				"name": "My Server",
+				"game_id": "cstrike",
+				"ds_id": 1,
+				"game_mod_id": 1,
+				"server_ip": "192.168.1.100",
+				"server_port": 27015
+			}`,
+			wantError: "Internal Server Error",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// ARRANGE
+			serverRepo := inmemory.NewServerRepository()
+			nodeRepo, gameRepo, gameModRepo := tt.setupRepo()
+			daemonTaskRepo := inmemory.NewDaemonTaskRepository()
+			serverSettingsRepo := inmemory.NewServerSettingRepository()
+			responder := api.NewResponder()
+
+			handler := NewHandler(serverRepo, nodeRepo, gameRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
+
+			req := httptest.NewRequest(http.MethodPost, "/api/servers", bytes.NewBufferString(tt.requestBody))
+			req.Header.Set("Content-Type", "application/json")
+			w := httptest.NewRecorder()
+
+			// ACT
+			handler.ServeHTTP(w, req)
+
+			// ASSERT
+			assert.Equal(t, http.StatusInternalServerError, w.Code, "prepareServer errors must surface as 500")
+
+			var response map[string]any
+			require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
+			assert.Equal(t, "error", response["status"])
+
+			errorMsg, ok := response["error"].(string)
+			require.True(t, ok, "error field must be a string")
+			assert.Contains(t, errorMsg, tt.wantError, "error message mismatch")
+
+			servers, err := serverRepo.FindAll(context.Background(), nil, nil)
+			require.NoError(t, err)
+			assert.Empty(t, servers, "no server must be saved when prepareServer fails")
+		})
+	}
+}
+
+func TestHandler_PersistenceErrors(t *testing.T) {
+	tests := []struct {
+		name           string
+		buildHandler   func(t *testing.T) (*Handler, *inmemory.ServerRepository, *inmemory.DaemonTaskRepository, *stubTaskDispatcher)
+		requestBody    string
+		wantError      string
+		assertSideFx   func(t *testing.T, serverRepo *inmemory.ServerRepository, taskRepo *inmemory.DaemonTaskRepository, dispatcher *stubTaskDispatcher)
+		expectedStatus int
+	}{
+		{
+			name: "server_repo_save_error",
+			buildHandler: func(_ *testing.T) (*Handler, *inmemory.ServerRepository, *inmemory.DaemonTaskRepository, *stubTaskDispatcher) {
+				serverRepo := inmemory.NewServerRepository()
+				wrappedRepo := &errServerRepo{
+					ServerRepository: serverRepo,
+					saveErr:          pkgerrors.New("db down"),
+				}
+
+				nodeRepo := inmemory.NewNodeRepository()
+				_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
+
+				gameRepo := inmemory.NewGameRepository()
+				_ = gameRepo.Save(context.Background(), &domain.Game{Code: "cstrike"})
+
+				gameModRepo := inmemory.NewGameModRepository()
+				_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
+
+				daemonTaskRepo := inmemory.NewDaemonTaskRepository()
+				serverSettingsRepo := inmemory.NewServerSettingRepository()
+				responder := api.NewResponder()
+
+				h := NewHandler(wrappedRepo, nodeRepo, gameRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
+
+				return h, serverRepo, daemonTaskRepo, nil
+			},
+			requestBody: `{
+				"name": "My Server",
+				"game_id": "cstrike",
+				"ds_id": 1,
+				"game_mod_id": 1,
+				"server_ip": "192.168.1.100",
+				"server_port": 27015
+			}`,
+			wantError:      "Internal Server Error",
+			expectedStatus: http.StatusInternalServerError,
+			assertSideFx: func(t *testing.T, serverRepo *inmemory.ServerRepository, _ *inmemory.DaemonTaskRepository, _ *stubTaskDispatcher) {
+				t.Helper()
+				servers, err := serverRepo.FindAll(context.Background(), nil, nil)
+				require.NoError(t, err)
+				assert.Empty(t, servers, "underlying repo must not have stored a server")
+			},
+		},
+		{
+			name: "settings_repo_save_error",
+			buildHandler: func(_ *testing.T) (*Handler, *inmemory.ServerRepository, *inmemory.DaemonTaskRepository, *stubTaskDispatcher) {
+				serverRepo := inmemory.NewServerRepository()
+
+				nodeRepo := inmemory.NewNodeRepository()
+				_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
+
+				gameRepo := inmemory.NewGameRepository()
+				_ = gameRepo.Save(context.Background(), &domain.Game{Code: "cstrike"})
+
+				gameModRepo := inmemory.NewGameModRepository()
+				_ = gameModRepo.Save(context.Background(), &domain.GameMod{
+					ID:       1,
+					GameCode: "cstrike",
+					Vars: []domain.GameModVar{
+						{Var: "maxplayers"},
+					},
+				})
+
+				daemonTaskRepo := inmemory.NewDaemonTaskRepository()
+				serverSettingsRepo := &errServerSettingsRepo{
+					ServerSettingRepository: inmemory.NewServerSettingRepository(),
+					saveErr:                 pkgerrors.New("db down"),
+				}
+				responder := api.NewResponder()
+
+				h := NewHandler(serverRepo, nodeRepo, gameRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, nil, responder)
+
+				return h, serverRepo, daemonTaskRepo, nil
+			},
+			requestBody: `{
+				"name": "My Server",
+				"game_id": "cstrike",
+				"ds_id": 1,
+				"game_mod_id": 1,
+				"server_ip": "192.168.1.100",
+				"server_port": 27015,
+				"settings": [
+					{"name": "maxplayers", "value": "32"}
+				]
+			}`,
+			wantError:      "Internal Server Error",
+			expectedStatus: http.StatusInternalServerError,
+			assertSideFx: func(t *testing.T, serverRepo *inmemory.ServerRepository, _ *inmemory.DaemonTaskRepository, _ *stubTaskDispatcher) {
+				t.Helper()
+				servers, err := serverRepo.FindAll(context.Background(), nil, nil)
+				require.NoError(t, err)
+				require.Len(t, servers, 1, "server must be persisted before settings save fails")
+			},
+		},
+		{
+			name: "daemon_task_repo_save_error",
+			buildHandler: func(_ *testing.T) (*Handler, *inmemory.ServerRepository, *inmemory.DaemonTaskRepository, *stubTaskDispatcher) {
+				serverRepo := inmemory.NewServerRepository()
+
+				nodeRepo := inmemory.NewNodeRepository()
+				_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
+
+				gameRepo := inmemory.NewGameRepository()
+				_ = gameRepo.Save(context.Background(), &domain.Game{Code: "cstrike"})
+
+				gameModRepo := inmemory.NewGameModRepository()
+				_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
+
+				underlyingTaskRepo := inmemory.NewDaemonTaskRepository()
+				wrappedTaskRepo := &errDaemonTaskRepo{
+					DaemonTaskRepository: underlyingTaskRepo,
+					saveErr:              pkgerrors.New("db down"),
+				}
+
+				serverSettingsRepo := inmemory.NewServerSettingRepository()
+				responder := api.NewResponder()
+
+				h := NewHandler(serverRepo, nodeRepo, gameRepo, gameModRepo, wrappedTaskRepo, serverSettingsRepo, nil, responder)
+
+				return h, serverRepo, underlyingTaskRepo, nil
+			},
+			requestBody: `{
+				"install": true,
+				"name": "My Server",
+				"game_id": "cstrike",
+				"ds_id": 1,
+				"game_mod_id": 1,
+				"server_ip": "192.168.1.100",
+				"server_port": 27015
+			}`,
+			wantError:      "Internal Server Error",
+			expectedStatus: http.StatusInternalServerError,
+			assertSideFx: func(t *testing.T, serverRepo *inmemory.ServerRepository, taskRepo *inmemory.DaemonTaskRepository, _ *stubTaskDispatcher) {
+				t.Helper()
+				servers, err := serverRepo.FindAll(context.Background(), nil, nil)
+				require.NoError(t, err)
+				require.Len(t, servers, 1, "server must be persisted before daemon task creation is attempted")
+
+				tasks, err := taskRepo.FindAll(context.Background(), nil, nil)
+				require.NoError(t, err)
+				assert.Empty(t, tasks, "no daemon task must remain after failing repo save")
+			},
+		},
+		{
+			name: "task_dispatcher_dispatch_error",
+			buildHandler: func(_ *testing.T) (*Handler, *inmemory.ServerRepository, *inmemory.DaemonTaskRepository, *stubTaskDispatcher) {
+				serverRepo := inmemory.NewServerRepository()
+
+				nodeRepo := inmemory.NewNodeRepository()
+				_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
+
+				gameRepo := inmemory.NewGameRepository()
+				_ = gameRepo.Save(context.Background(), &domain.Game{Code: "cstrike"})
+
+				gameModRepo := inmemory.NewGameModRepository()
+				_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
+
+				daemonTaskRepo := inmemory.NewDaemonTaskRepository()
+				serverSettingsRepo := inmemory.NewServerSettingRepository()
+				responder := api.NewResponder()
+
+				dispatcher := &stubTaskDispatcher{err: pkgerrors.New("grpc down")}
+
+				h := NewHandler(serverRepo, nodeRepo, gameRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, dispatcher, responder)
+
+				return h, serverRepo, daemonTaskRepo, dispatcher
+			},
+			requestBody: `{
+				"install": true,
+				"name": "My Server",
+				"game_id": "cstrike",
+				"ds_id": 1,
+				"game_mod_id": 1,
+				"server_ip": "192.168.1.100",
+				"server_port": 27015
+			}`,
+			wantError:      "Internal Server Error",
+			expectedStatus: http.StatusInternalServerError,
+			assertSideFx: func(t *testing.T, serverRepo *inmemory.ServerRepository, taskRepo *inmemory.DaemonTaskRepository, dispatcher *stubTaskDispatcher) {
+				t.Helper()
+				servers, err := serverRepo.FindAll(context.Background(), nil, nil)
+				require.NoError(t, err)
+				require.Len(t, servers, 1, "server must be persisted before dispatch is attempted")
+
+				tasks, err := taskRepo.FindAll(context.Background(), nil, nil)
+				require.NoError(t, err)
+				assert.Empty(t, tasks, "dispatcher path must not write to repo")
+
+				require.NotNil(t, dispatcher.dispatched, "dispatcher must have been invoked")
+				assert.Equal(t, domain.DaemonTaskTypeServerInstall, dispatcher.dispatched.Task)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// ARRANGE
+			handler, serverRepo, taskRepo, dispatcher := tt.buildHandler(t)
+
+			req := httptest.NewRequest(http.MethodPost, "/api/servers", bytes.NewBufferString(tt.requestBody))
+			req.Header.Set("Content-Type", "application/json")
+			w := httptest.NewRecorder()
+
+			// ACT
+			handler.ServeHTTP(w, req)
+
+			// ASSERT
+			assert.Equal(t, tt.expectedStatus, w.Code)
+
+			var response map[string]any
+			require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
+			assert.Equal(t, "error", response["status"])
+
+			errorMsg, ok := response["error"].(string)
+			require.True(t, ok, "error field must be a string")
+			assert.Contains(t, errorMsg, tt.wantError, "error body mismatch")
+
+			if tt.assertSideFx != nil {
+				tt.assertSideFx(t, serverRepo, taskRepo, dispatcher)
+			}
+		})
+	}
+}
+
+func TestHandler_TaskDispatcher_Success(t *testing.T) {
+	// ARRANGE
+	serverRepo := inmemory.NewServerRepository()
+	nodeRepo := inmemory.NewNodeRepository()
+	gameRepo := inmemory.NewGameRepository()
+	gameModRepo := inmemory.NewGameModRepository()
+	daemonTaskRepo := inmemory.NewDaemonTaskRepository()
+	serverSettingsRepo := inmemory.NewServerSettingRepository()
+	responder := api.NewResponder()
+
+	_ = nodeRepo.Save(context.Background(), &domain.Node{ID: 1, OS: "linux"})
+	_ = gameRepo.Save(context.Background(), &domain.Game{Code: "cstrike"})
+	_ = gameModRepo.Save(context.Background(), &domain.GameMod{ID: 1, GameCode: "cstrike"})
+
+	dispatcher := &stubTaskDispatcher{}
+
+	handler := NewHandler(serverRepo, nodeRepo, gameRepo, gameModRepo, daemonTaskRepo, serverSettingsRepo, dispatcher, responder)
+
+	serverData := map[string]any{
+		"install":     true,
+		"name":        "Dispatched CS Server",
+		"game_id":     "cstrike",
+		"ds_id":       1,
+		"game_mod_id": 1,
+		"server_ip":   "192.168.1.100",
+		"server_port": 27015,
+	}
+
+	body, err := json.Marshal(serverData)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/servers", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	// ACT
+	handler.ServeHTTP(w, req)
+
+	// ASSERT
+	require.Equal(t, http.StatusCreated, w.Code)
+
+	var response createServerResponse
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
+
+	assert.Equal(t, "success", response.Message)
+	assert.Equal(t, uint(stubDispatchedTaskID), response.Result.TaskID, "dispatcher-assigned task ID must be in response")
+
+	servers, err := serverRepo.FindAll(context.Background(), nil, nil)
+	require.NoError(t, err)
+	require.Len(t, servers, 1)
+	assert.Equal(t, servers[0].ID, response.Result.ServerID)
+
+	require.NotNil(t, dispatcher.dispatched, "dispatcher must have been invoked")
+	assert.Equal(t, domain.DaemonTaskTypeServerInstall, dispatcher.dispatched.Task)
+	assert.Equal(t, domain.DaemonTaskStatusWaiting, dispatcher.dispatched.Status)
+	require.NotNil(t, dispatcher.dispatched.ServerID, "ServerID must be populated on the dispatched task")
+	assert.Equal(t, servers[0].ID, *dispatcher.dispatched.ServerID, "dispatched task must reference the saved server")
+
+	tasks, err := daemonTaskRepo.FindAll(context.Background(), nil, nil)
+	require.NoError(t, err)
+	assert.Empty(t, tasks, "dispatcher path must bypass the repository")
+}
+
+const stubDispatchedTaskID = 42
+
+type stubTaskDispatcher struct {
+	err        error
+	dispatched *domain.DaemonTask
+}
+
+func (s *stubTaskDispatcher) Dispatch(_ context.Context, task *domain.DaemonTask) error {
+	s.dispatched = task
+
+	if s.err != nil {
+		return s.err
+	}
+
+	task.ID = stubDispatchedTaskID
+
+	return nil
+}
+
+type errServerRepo struct {
+	repositories.ServerRepository
+
+	saveErr error
+}
+
+func (r *errServerRepo) Save(ctx context.Context, s *domain.Server) error {
+	if r.saveErr != nil {
+		return r.saveErr
+	}
+
+	return r.ServerRepository.Save(ctx, s)
+}
+
+type errNodeRepo struct {
+	repositories.NodeRepository
+
+	findErr error
+}
+
+func (r *errNodeRepo) Find(
+	ctx context.Context,
+	filter *filters.FindNode,
+	order []filters.Sorting,
+	pagination *filters.Pagination,
+) ([]domain.Node, error) {
+	if r.findErr != nil {
+		return nil, r.findErr
+	}
+
+	return r.NodeRepository.Find(ctx, filter, order, pagination)
+}
+
+type errGameRepo struct {
+	repositories.GameRepository
+
+	findErr error
+}
+
+func (r *errGameRepo) Find(
+	ctx context.Context,
+	filter *filters.FindGame,
+	order []filters.Sorting,
+	pagination *filters.Pagination,
+) ([]domain.Game, error) {
+	if r.findErr != nil {
+		return nil, r.findErr
+	}
+
+	return r.GameRepository.Find(ctx, filter, order, pagination)
+}
+
+type errGameModRepo struct {
+	repositories.GameModRepository
+
+	findErr error
+}
+
+func (r *errGameModRepo) Find(
+	ctx context.Context,
+	filter *filters.FindGameMod,
+	order []filters.Sorting,
+	pagination *filters.Pagination,
+) ([]domain.GameMod, error) {
+	if r.findErr != nil {
+		return nil, r.findErr
+	}
+
+	return r.GameModRepository.Find(ctx, filter, order, pagination)
+}
+
+type errDaemonTaskRepo struct {
+	repositories.DaemonTaskRepository
+
+	saveErr error
+}
+
+func (r *errDaemonTaskRepo) Save(ctx context.Context, task *domain.DaemonTask) error {
+	if r.saveErr != nil {
+		return r.saveErr
+	}
+
+	return r.DaemonTaskRepository.Save(ctx, task)
+}
+
+type errServerSettingsRepo struct {
+	repositories.ServerSettingRepository
+
+	saveErr error
+}
+
+func (r *errServerSettingsRepo) Save(ctx context.Context, setting *domain.ServerSetting) error {
+	if r.saveErr != nil {
+		return r.saveErr
+	}
+
+	return r.ServerSettingRepository.Save(ctx, setting)
 }

@@ -484,6 +484,7 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 			Handler: postserver.NewHandler(
 				c.ServerRepository(),
 				c.NodeRepository(),
+				c.GameRepository(),
 				c.GameModRepository(),
 				c.DaemonTaskRepository(),
 				c.ServerSettingRepository(),
@@ -549,6 +550,9 @@ func apiRoutes(c container, router *mux.Router) *mux.Router {
 			Path:   "/api/servers/{id}",
 			Handler: putserver.NewHandler(
 				c.ServerRepository(),
+				c.NodeRepository(),
+				c.GameRepository(),
+				c.GameModRepository(),
 				c.ServerConfigPusher(),
 				c.RBAC(),
 				c.Responder(),
