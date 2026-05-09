@@ -1,6 +1,7 @@
 package enrollsetup
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -116,67 +117,82 @@ func (h *Handler) resolveGRPCHost(r *http.Request) string {
 	return host
 }
 
+const setupScriptTemplate = `#!/bin/bash
+set -euo pipefail
+
+CONNECT_URL="%s"
+GAMEAPCTL_BIN=""
+
+_tmpfile=""
+_tmpbin=""
+cleanup() {
+  [[ -n "${_tmpfile}" && -f "${_tmpfile}" ]] && rm -f "${_tmpfile}"
+  [[ -n "${_tmpbin}"  && -f "${_tmpbin}"  ]] && rm -f "${_tmpbin}"
+  return 0
+}
+trap cleanup EXIT
+
+if [[ "$(id -u)" -ne 0 ]]; then
+  echo "This script must be run as root." >&2
+  echo "Process substitution (bash <(curl ...)) does not survive sudo." >&2
+  echo "Try:" >&2
+  echo "  curl -fsSL '<setup-link>' -o gameap-setup.sh && sudo bash gameap-setup.sh <args>" >&2
+  exit 1
+fi
+
+for cmd in curl tar install; do
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "Error: '$cmd' is required but not installed." >&2
+    echo "Install it via your package manager and re-run this script." >&2
+    exit 1
+  fi
+done
+
+ARCH=$(uname -m)
+case "$ARCH" in
+  x86_64|amd64)  ARCH="amd64" ;;
+  aarch64|arm64) ARCH="arm64" ;;
+  i?86)          ARCH="386" ;;
+  arm*)          ARCH="arm" ;;
+  *) echo "Unsupported architecture: $ARCH" >&2; exit 1 ;;
+esac
+OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+
+if command -v gameapctl >/dev/null 2>&1; then
+  echo "gameapctl found, running self-update..."
+  gameapctl self-update || true
+  GAMEAPCTL_BIN="$(command -v gameapctl)"
+else
+  echo "Downloading gameapctl..."
+  VERSION=$(curl -sL https://api.github.com/repos/gameap/gameapctl/releases \
+            | grep -m1 '"tag_name"' \
+            | sed 's/.*"tag_name": *"//;s/".*//' || true)
+  if [[ -z "${VERSION}" ]]; then
+    echo "Failed to detect latest gameapctl version" >&2
+    exit 1
+  fi
+  ARCHIVE="gameapctl-${VERSION}-${OS}-${ARCH}.tar.gz"
+  DOWNLOAD_URL="https://github.com/gameap/gameapctl/releases/download/${VERSION}/${ARCHIVE}"
+  echo "Downloading ${DOWNLOAD_URL}"
+  _tmpfile="$(mktemp -t gameapctl.XXXXXX.tar.gz)"
+  curl -sLf -o "${_tmpfile}" "${DOWNLOAD_URL}"
+  _tmpbin="$(mktemp -t gameapctl.XXXXXX)"
+  tar -xzOf "${_tmpfile}" gameapctl > "${_tmpbin}"
+  install -m 0755 "${_tmpbin}" /usr/local/bin/gameapctl
+  GAMEAPCTL_BIN="/usr/local/bin/gameapctl"
+fi
+
+case ":${PATH}:" in
+  *:/usr/local/bin:*) ;;
+  *) export PATH="/usr/local/bin:${PATH}" ;;
+esac
+hash -r
+
+%s "$@"
+`
+
 func (h *Handler) buildSetupScript(connectURL, config string, github bool, branch string) string {
-	sb := strings.Builder{}
-	sb.Grow(1024)
-
-	sb.WriteString("#!/bin/bash\nset -e\n\n")
-	sb.WriteString("cleanup() { rm -f /tmp/gameapctl /tmp/gameapctl.tar.gz; }\n")
-	sb.WriteString("trap cleanup EXIT\n\n")
-
-	sb.WriteString("CONNECT_URL=\"")
-	sb.WriteString(connectURL)
-	sb.WriteString("\"\n\n")
-
-	installCmd := h.buildInstallCmd(config, github, branch)
-
-	// Check if gameapctl is already installed
-	sb.WriteString("if command -v gameapctl >/dev/null 2>&1; then\n")
-	sb.WriteString("  echo \"gameapctl found, updating...\"\n")
-	sb.WriteString("  gameapctl self-update || true\n")
-	sb.WriteString("  ")
-	sb.WriteString(strings.Replace(installCmd, "/tmp/gameapctl", "gameapctl", 1))
-	sb.WriteString("\n  exit 0\nfi\n\n")
-
-	// Check required utilities
-	sb.WriteString("for cmd in curl tar; do\n")
-	sb.WriteString("  if ! command -v \"$cmd\" >/dev/null 2>&1; then\n")
-	sb.WriteString("    echo \"Error: '$cmd' is required but not installed.\"\n")
-	sb.WriteString("    echo \"Install it with:\"\n")
-	sb.WriteString("    echo \"  apt-get install $cmd  (Debian/Ubuntu)\"\n")
-	sb.WriteString("    echo \"  yum install $cmd      (RHEL/CentOS)\"\n")
-	sb.WriteString("    exit 1\n")
-	sb.WriteString("  fi\n")
-	sb.WriteString("done\n\n")
-
-	sb.WriteString("OS=$(uname -s | tr '[:upper:]' '[:lower:]')\n")
-	sb.WriteString("ARCH=$(uname -m)\n")
-	sb.WriteString("case \"$ARCH\" in\n")
-	sb.WriteString("  x86_64|amd64) ARCH=\"amd64\" ;;\n")
-	sb.WriteString("  aarch64|arm64) ARCH=\"arm64\" ;;\n")
-	sb.WriteString("  *) echo \"Unsupported architecture: $ARCH\"; exit 1 ;;\n")
-	sb.WriteString("esac\n\n")
-
-	sb.WriteString("echo \"Downloading gameapctl...\"\n")
-	sb.WriteString("VERSION=$(curl -sL ")
-	sb.WriteString("https://api.github.com/repos/gameap/gameapctl/releases")
-	sb.WriteString(" | grep -m1 '\"tag_name\"' | sed 's/.*\"tag_name\": *\"//;s/\".*//')\n")
-	sb.WriteString("if [ -z \"$VERSION\" ]; then\n")
-	sb.WriteString("  echo \"Failed to detect latest gameapctl version\"\n")
-	sb.WriteString("  exit 1\nfi\n\n")
-	sb.WriteString("ARCHIVE=\"gameapctl-${VERSION}-${OS}-${ARCH}.tar.gz\"\n")
-	sb.WriteString("DOWNLOAD_URL=\"https://github.com/gameap/gameapctl/releases/")
-	sb.WriteString("download/${VERSION}/${ARCHIVE}\"\n")
-	sb.WriteString("echo \"Downloading ${DOWNLOAD_URL}\"\n")
-	sb.WriteString("curl -sLf -o /tmp/gameapctl.tar.gz \"$DOWNLOAD_URL\"\n")
-	sb.WriteString("tar -xzf /tmp/gameapctl.tar.gz -C /tmp gameapctl\n")
-	sb.WriteString("chmod +x /tmp/gameapctl\n")
-	sb.WriteString("rm -f /tmp/gameapctl.tar.gz\n\n")
-
-	sb.WriteString(installCmd)
-	sb.WriteString("\n")
-
-	return sb.String()
+	return fmt.Sprintf(setupScriptTemplate, connectURL, h.buildInstallCmd(config, github, branch))
 }
 
 func (h *Handler) buildInstallCmd(
@@ -184,7 +200,7 @@ func (h *Handler) buildInstallCmd(
 ) string {
 	sb := strings.Builder{}
 
-	sb.WriteString("/tmp/gameapctl daemon install --connect=\"$CONNECT_URL\"")
+	sb.WriteString("\"$GAMEAPCTL_BIN\" daemon install --connect=\"$CONNECT_URL\"")
 
 	if config != "" {
 		sb.WriteString(" --config=")

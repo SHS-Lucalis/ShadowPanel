@@ -128,6 +128,10 @@ export async function streamSaveResponse({
         onProgress({ loaded: 0, total: effectiveTotal })
     }
 
+    if (!window.isSecureContext) {
+        return blobSaveResponse({ response, filename, effectiveTotal, signal, onProgress })
+    }
+
     const writable = streamSaver.createWriteStream(
         filename,
         effectiveTotal > 0 ? { size: effectiveTotal } : undefined,
@@ -167,6 +171,58 @@ export async function streamSaveResponse({
             signal.removeEventListener('abort', onAbort)
         }
     }
+
+    return { total: effectiveTotal, response }
+}
+
+async function blobSaveResponse({ response, filename, effectiveTotal, signal, onProgress }) {
+    const reader = response.body.getReader()
+    const chunks = []
+    let loaded = 0
+
+    const onAbort = () => {
+        try {
+            reader.cancel('aborted by user')
+        } catch {
+            /* no-op */
+        }
+    }
+    if (signal) {
+        signal.addEventListener('abort', onAbort, { once: true })
+    }
+
+    try {
+        for (;;) {
+            const { done, value } = await reader.read()
+            if (done) break
+            chunks.push(value)
+            loaded += value.byteLength
+            if (typeof onProgress === 'function') {
+                onProgress({ loaded, total: effectiveTotal })
+            }
+        }
+    } catch (err) {
+        if (signal && signal.aborted) {
+            throw new StreamDownloadError('aborted', 'Aborted', err)
+        }
+        throw new StreamDownloadError('stream', err.message || 'Stream error', err)
+    } finally {
+        if (signal) {
+            signal.removeEventListener('abort', onAbort)
+        }
+    }
+
+    const contentType = response.headers.get('Content-Type') || 'application/octet-stream'
+    const blob = new Blob(chunks, { type: contentType })
+    const blobUrl = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = blobUrl
+    anchor.download = filename
+    anchor.style.display = 'none'
+    document.body.appendChild(anchor)
+    anchor.click()
+    document.body.removeChild(anchor)
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 60000)
 
     return { total: effectiveTotal, response }
 }

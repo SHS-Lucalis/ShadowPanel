@@ -46,6 +46,8 @@ function createManagerState() {
         selectedDirectory: null,
         directories: [],
         files: [],
+        loading: false,
+        error: null,
         selected: {
             directories: [],
             files: [],
@@ -58,6 +60,20 @@ function createManagerState() {
         history: [null],
         historyPointer: 0,
     }
+}
+
+function normalizeFetchError(err) {
+    if (err && err.response) {
+        return {
+            status: err.response.status,
+            message: err.response.data?.message || err.response.statusText || 'Request failed',
+        }
+    }
+    if (err && err.request) {
+        return { status: 0, message: err.request.statusText || 'Network error' }
+    }
+
+    return { status: 0, message: err?.message || 'Unknown error' }
 }
 
 export const useFileManagerStore = defineStore('fm', () => {
@@ -183,6 +199,22 @@ export const useFileManagerStore = defineStore('fm', () => {
         const manager = getManager(managerName)
         manager.directories = directories
         manager.files = files
+    }
+
+    function setManagerLoading(managerName, loading) {
+        getManager(managerName).loading = loading
+    }
+
+    function setManagerError(managerName, error) {
+        getManager(managerName).error = error
+    }
+
+    function getManagerLoading(managerName) {
+        return getManager(managerName).loading
+    }
+
+    function getManagerError(managerName) {
+        return getManager(managerName).error
     }
 
     function addToSelection(managerName, { type, path }) {
@@ -381,37 +413,62 @@ export const useFileManagerStore = defineStore('fm', () => {
         const manager = getManager(managerName)
 
         setManagerContent(managerName, { directories: [], files: [] })
+        setManagerError(managerName, null)
+        setManagerLoading(managerName, true)
+        try {
+            const response = await GET.content(manager.selectedDisk, path)
+            if (response.data.result.status === 'success') {
+                clearSelection(managerName)
+                resetSortSettings(managerName)
+                setManagerContent(managerName, response.data)
+                setManagerDirectory(managerName, path)
 
-        const response = await GET.content(manager.selectedDisk, path)
-        if (response.data.result.status === 'success') {
-            clearSelection(managerName)
-            resetSortSettings(managerName)
-            setManagerContent(managerName, response.data)
-            setManagerDirectory(managerName, path)
-
-            if (history) {
-                addToHistory(managerName, path)
+                if (history) {
+                    addToHistory(managerName, path)
+                }
+            } else {
+                setManagerError(managerName, {
+                    status: 0,
+                    message: response.data.result.message || 'Failed to load directory',
+                })
             }
+        } catch (err) {
+            setManagerError(managerName, normalizeFetchError(err))
+        } finally {
+            setManagerLoading(managerName, false)
         }
     }
 
     async function refreshDirectory(managerName, retried = false) {
         const manager = getManager(managerName)
 
-        const response = await GET.content(manager.selectedDisk, manager.selectedDirectory)
-        clearSelection(managerName)
-        resetSortSettings(managerName)
-        resetHistory(managerName)
+        setManagerError(managerName, null)
+        setManagerLoading(managerName, true)
+        try {
+            const response = await GET.content(manager.selectedDisk, manager.selectedDirectory)
+            clearSelection(managerName)
+            resetSortSettings(managerName)
+            resetHistory(managerName)
 
-        if (manager.selectedDirectory) {
-            addToHistory(managerName, manager.selectedDirectory)
-        }
+            if (manager.selectedDirectory) {
+                addToHistory(managerName, manager.selectedDirectory)
+            }
 
-        if (response.data.result.status === 'success') {
-            setManagerContent(managerName, response.data)
-        } else if (response.data.result.status === 'danger' && !retried) {
-            setManagerDirectory(managerName, null)
-            refreshDirectory(managerName, true)
+            if (response.data.result.status === 'success') {
+                setManagerContent(managerName, response.data)
+            } else if (response.data.result.status === 'danger' && !retried) {
+                setManagerDirectory(managerName, null)
+                await refreshDirectory(managerName, true)
+            } else {
+                setManagerError(managerName, {
+                    status: 0,
+                    message: response.data.result.message || 'Failed to load directory',
+                })
+            }
+        } catch (err) {
+            setManagerError(managerName, normalizeFetchError(err))
+        } finally {
+            setManagerLoading(managerName, false)
         }
     }
 
@@ -493,9 +550,22 @@ export const useFileManagerStore = defineStore('fm', () => {
     }
 
     async function getLoadContent({ manager, disk, path }) {
-        const response = await GET.content(disk, path)
-        if (response.data.result.status === 'success') {
-            setManagerContent(manager, response.data)
+        setManagerError(manager, null)
+        setManagerLoading(manager, true)
+        try {
+            const response = await GET.content(disk, path)
+            if (response.data.result.status === 'success') {
+                setManagerContent(manager, response.data)
+            } else {
+                setManagerError(manager, {
+                    status: 0,
+                    message: response.data.result.message || 'Failed to load directory',
+                })
+            }
+        } catch (err) {
+            setManagerError(manager, normalizeFetchError(err))
+        } finally {
+            setManagerLoading(manager, false)
         }
     }
 
@@ -1056,6 +1126,8 @@ export const useFileManagerStore = defineStore('fm', () => {
         getSelectedCount,
         getSelectedFilesSize,
         getBreadcrumb,
+        getManagerLoading,
+        getManagerError,
         directoryExist,
         fileExist,
         // Root mutations
@@ -1070,6 +1142,8 @@ export const useFileManagerStore = defineStore('fm', () => {
         setManagerDisk,
         setManagerDirectory,
         setManagerContent,
+        setManagerLoading,
+        setManagerError,
         addToSelection,
         removeFromSelection,
         changeSelected,

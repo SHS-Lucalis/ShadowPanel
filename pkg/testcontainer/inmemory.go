@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gameap/gameap/internal/acme"
 	"github.com/gameap/gameap/internal/cache"
 	"github.com/gameap/gameap/internal/certificates"
 	"github.com/gameap/gameap/internal/config"
@@ -138,6 +139,7 @@ func (c *InmemoryContainer) CommandHandler() *grpchandlers.CommandHandler     { 
 func (c *InmemoryContainer) AttachHandler() *grpchandlers.AttachHandler       { return nil }
 func (c *InmemoryContainer) MetricsHub() metrics.Hub                          { return nil }
 func (c *InmemoryContainer) PubSub() pubsub.PubSub                            { return nil }
+func (c *InmemoryContainer) ACMEService() *acme.Service                       { return nil }
 func (c *InmemoryContainer) EnrollmentService() *enrollment.Service {
 	keyManager := enrollment.NewSetupKeyManager(c.cacheService, "")
 

@@ -47,6 +47,13 @@ func NewRedisFromClient(client *redis.Client) *Redis {
 	}
 }
 
+// Client returns the underlying redis client. Intended for callers that need
+// raw command access (e.g., distributed locking via SETNX) which the Cache
+// interface does not expose.
+func (r *Redis) Client() *redis.Client {
+	return r.client
+}
+
 // Get retrieves a value from cache.
 func (r *Redis) Get(ctx context.Context, key string) (any, error) {
 	val, err := r.client.Get(ctx, redisKeyPrefix+key).Result()

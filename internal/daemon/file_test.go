@@ -317,13 +317,12 @@ func TestFileService_ReadDirRecursive_Dispatched_Success(t *testing.T) {
 	assert.Equal(t, "deep/y.txt", got[0].Path)
 }
 
-func TestFileService_ReadDirRecursive_LegacyBypass(t *testing.T) {
-	// When the daemon is not connected anywhere AND legacy is non-nil,
-	// non-recursive ReadDir falls back to legacy. ReadDirRecursive must NOT —
-	// the new readDir branch (file.go:113) gates legacy behind !recursive.
-	// If legacy were invoked, it would call fileManager.Read on the empty
-	// inmemory store first, producing a different "failed to make config" error.
-	// Surfacing ErrDaemonNotConnected proves the recursive path bypassed legacy.
+func TestFileService_ReadDirRecursive_LegacyFallback(t *testing.T) {
+	// When the daemon is not connected anywhere AND legacy is non-nil, the
+	// recursive path must fall through to legacy.ReadDirRecursive — same as
+	// the non-recursive branch. The empty inmemory cert/file stores cause
+	// configMaker to fail with "failed to read server certificate", which
+	// proves the call reached legacy (rather than surfacing ErrDaemonNotConnected).
 
 	// ARRANGE
 	s := setupFileService(t)
@@ -342,10 +341,11 @@ func TestFileService_ReadDirRecursive_LegacyBypass(t *testing.T) {
 	// ASSERT
 	require.Error(t, err)
 	assert.Nil(t, got)
-	assert.ErrorIs(
+	assert.NotErrorIs(
 		t, err, ErrDaemonNotConnected,
-		"recursive path must surface daemon-not-connected; non-recursive path would surface a config-load error from legacy",
+		"recursive path must fall through to legacy and surface its config-load error",
 	)
+	assert.Contains(t, err.Error(), "failed to read server certificate")
 }
 
 func TestFileService_Download_Local_Success(t *testing.T) {
@@ -756,6 +756,218 @@ func TestFileService_UploadStream_NotConnected(t *testing.T) {
 	// ASSERT
 	require.Error(t, err)
 	assert.ErrorIs(t, err, ErrDaemonNotConnected)
+}
+
+func TestFileService_UploadStreamPrepared_LocalWithCapability(t *testing.T) {
+	// ARRANGE
+	s := setupFileService(t)
+	node := newTestNode(80)
+	s.registry.setConnected(uint64(node.ID), true)
+	s.registry.setCapability(uint64(node.ID), capabilityFileTransfer, true)
+
+	const transferID = "tid-local"
+	const checksum = "abc123"
+	const totalSize uint64 = 4096
+
+	var (
+		gotTransferID string
+		gotPath       string
+		gotChecksum   string
+		gotTotal      int64
+	)
+	s.gateway.requestUploadTask = func(_ context.Context, _ uint64, tID, destPath, sum string, total int64) error {
+		gotTransferID = tID
+		gotPath = destPath
+		gotChecksum = sum
+		gotTotal = total
+
+		return nil
+	}
+
+	// ACT
+	err := s.service.UploadStreamPrepared(
+		testContext(t), node, "/srv/gameap/sub/file.bin", transferID, checksum, totalSize,
+	)
+
+	// ASSERT
+	require.NoError(t, err)
+	assert.Equal(t, transferID, gotTransferID)
+	assert.Equal(t, "sub/file.bin", gotPath, "WorkPath prefix must be stripped before sending to gateway")
+	assert.Equal(t, checksum, gotChecksum)
+	assert.Equal(t, int64(totalSize), gotTotal)
+}
+
+func TestFileService_UploadStreamPrepared_RemoteDispatched(t *testing.T) {
+	// ARRANGE
+	s := setupFileService(t)
+	node := newTestNode(81)
+	s.registry.setConnected(uint64(node.ID), false)
+	s.registry.setConnectedAnywhere(uint64(node.ID), true)
+
+	const transferID = "tid-remote"
+
+	var (
+		gotTransferID string
+		gotPath       string
+	)
+	stubDispatcher := &fakeDispatcher{
+		dispatchUploadTask: func(_ context.Context, _ uint64, tID, destPath string) error {
+			gotTransferID = tID
+			gotPath = destPath
+
+			return nil
+		},
+	}
+	svc := NewFileService(s.gateway, s.registry, stubDispatcher, s.storage, s.transferReg, nil, slog.Default())
+
+	// ACT
+	err := svc.UploadStreamPrepared(
+		testContext(t), node, "/srv/gameap/big.bin", transferID, "sum", 8192,
+	)
+
+	// ASSERT
+	require.NoError(t, err)
+	assert.Equal(t, transferID, gotTransferID)
+	assert.Equal(t, "big.bin", gotPath)
+}
+
+func TestFileService_UploadStreamPrepared_NotConnectedNoLegacy(t *testing.T) {
+	// ARRANGE
+	s := setupFileService(t)
+	node := newTestNode(82)
+
+	// ACT
+	err := s.service.UploadStreamPrepared(
+		testContext(t), node, "/srv/gameap/x.bin", "tid-no-legacy", "sum", 1024,
+	)
+
+	// ASSERT
+	require.Error(t, err)
+	assert.ErrorIs(t, err, ErrDaemonNotConnected)
+}
+
+func TestFileService_UploadStreamPrepared_NotConnectedLegacyMissingData(t *testing.T) {
+	// When daemon is offline everywhere AND legacy is non-nil, but the data file
+	// is missing in storage, UploadStreamPrepared must return an explicit error
+	// without invoking the legacy BINN client.
+
+	// ARRANGE
+	s := setupFileService(t)
+	node := newTestNode(83)
+	s.registry.setConnected(uint64(node.ID), false)
+	s.registry.setConnectedAnywhere(uint64(node.ID), false)
+
+	certRepo := inmemory.NewClientCertificateRepository()
+	fakeFM := files.NewInMemoryFileManager()
+	legacy := NewFileBINNService(certRepo, fakeFM)
+	svc := NewFileService(s.gateway, s.registry, s.dispatcher, s.storage, s.transferReg, legacy, slog.Default())
+
+	const transferID = "tid-missing"
+
+	// ACT
+	err := svc.UploadStreamPrepared(
+		testContext(t), node, "/srv/gameap/x.bin", transferID, "sum", 1024,
+	)
+
+	// ASSERT
+	require.Error(t, err)
+	assert.NotErrorIs(t, err, ErrDaemonNotConnected, "fallback branch must be entered before surfacing not-connected")
+	assert.Contains(t, err.Error(), "upload data missing in storage")
+	assert.Contains(t, err.Error(), transferID)
+}
+
+func TestFileService_UploadStreamPrepared_NotConnectedLegacyTooLarge(t *testing.T) {
+	// When totalSize exceeds the in-memory buffer cap, the helper must reject
+	// the upload BEFORE touching storage — saving an expensive S3 fetch that
+	// would only fail later at the BINN-stream stage.
+
+	// ARRANGE
+	s := setupFileService(t)
+	node := newTestNode(85)
+	s.registry.setConnected(uint64(node.ID), false)
+	s.registry.setConnectedAnywhere(uint64(node.ID), false)
+
+	certRepo := inmemory.NewClientCertificateRepository()
+	fakeFM := files.NewInMemoryFileManager()
+	legacy := NewFileBINNService(certRepo, fakeFM)
+	svc := NewFileService(s.gateway, s.registry, s.dispatcher, s.storage, s.transferReg, legacy, slog.Default())
+
+	const transferID = "tid-too-large"
+	oversize := uint64(legacyUploadMaxBufferSize) + 1
+
+	// ACT
+	err := svc.UploadStreamPrepared(
+		testContext(t), node, "/srv/gameap/huge.bin", transferID, "sum", oversize,
+	)
+
+	// ASSERT
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "legacy upload not supported")
+	assert.Contains(t, err.Error(), "gRPC daemon")
+}
+
+func TestFileService_UploadStreamPrepared_NotConnectedLegacySizeMismatch(t *testing.T) {
+	// When stored data length differs from the declared totalSize, the helper
+	// must surface a mismatch error rather than passing an underspecified
+	// reader to legacy.UploadStream (which would deadlock or send wrong bytes).
+
+	// ARRANGE
+	s := setupFileService(t)
+	node := newTestNode(86)
+	s.registry.setConnected(uint64(node.ID), false)
+	s.registry.setConnectedAnywhere(uint64(node.ID), false)
+
+	const transferID = "tid-mismatch"
+	storagePath := transfers.TransferDataPath(transferID)
+	require.NoError(t, s.storage.Write(testContext(t), storagePath, []byte("only-7b")))
+
+	certRepo := inmemory.NewClientCertificateRepository()
+	fakeFM := files.NewInMemoryFileManager()
+	legacy := NewFileBINNService(certRepo, fakeFM)
+	svc := NewFileService(s.gateway, s.registry, s.dispatcher, s.storage, s.transferReg, legacy, slog.Default())
+
+	// ACT — declare 100 bytes but storage only has 7
+	err := svc.UploadStreamPrepared(
+		testContext(t), node, "/srv/gameap/x.bin", transferID, "sum", 100,
+	)
+
+	// ASSERT
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "upload data size mismatch")
+	assert.Contains(t, err.Error(), transferID)
+}
+
+func TestFileService_UploadStreamPrepared_NotConnectedLegacyDataPresent(t *testing.T) {
+	// When daemon is offline everywhere, legacy is non-nil, and data is staged
+	// in storage at transfers/{ID}/data, UploadStreamPrepared must hand off to
+	// the legacy BINN client. The legacy client will fail to load TLS config
+	// against an empty certificate repo — surfacing that error proves the
+	// fallback branch took control before ErrDaemonNotConnected.
+
+	// ARRANGE
+	s := setupFileService(t)
+	node := newTestNode(84)
+	s.registry.setConnected(uint64(node.ID), false)
+	s.registry.setConnectedAnywhere(uint64(node.ID), false)
+
+	const transferID = "tid-present"
+	storagePath := transfers.TransferDataPath(transferID)
+	require.NoError(t, s.storage.Write(testContext(t), storagePath, []byte("staged-data")))
+
+	certRepo := inmemory.NewClientCertificateRepository()
+	fakeFM := files.NewInMemoryFileManager()
+	legacy := NewFileBINNService(certRepo, fakeFM)
+	svc := NewFileService(s.gateway, s.registry, s.dispatcher, s.storage, s.transferReg, legacy, slog.Default())
+
+	// ACT
+	err := svc.UploadStreamPrepared(
+		testContext(t), node, "/srv/gameap/x.bin", transferID, "sum", uint64(len("staged-data")),
+	)
+
+	// ASSERT
+	require.Error(t, err)
+	assert.NotErrorIs(t, err, ErrDaemonNotConnected, "fallback branch must take control")
+	assert.Contains(t, err.Error(), "legacy upload stream", "legacy.UploadStream error must be wrapped")
 }
 
 func TestFileService_MkDir_Local(t *testing.T) {

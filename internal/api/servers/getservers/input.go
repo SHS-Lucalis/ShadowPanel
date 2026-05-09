@@ -125,7 +125,7 @@ func buildFilter(input *input, userID uint, isAdmin bool) *filters.FindServer {
 
 func buildSorting(input *input) []filters.Sorting {
 	defaultSorting := []filters.Sorting{
-		{Field: "id", Direction: filters.SortDirectionDesc},
+		{Field: "id", Direction: filters.SortDirectionAsc},
 	}
 
 	sort, err := filters.ParseUserSort(input.Sort, allowedSortFields)

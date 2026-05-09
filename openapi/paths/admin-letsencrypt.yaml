@@ -1,0 +1,30 @@
+/api/admin/letsencrypt/status:
+  get:
+    tags:
+      - LetsEncrypt
+    summary: ACME / Let's Encrypt status
+    description: |
+      Returns the current state of the in-process ACME client used for
+      automatic Let's Encrypt certificate management. When ACME is disabled
+      (`ACME_ENABLED=false` or required fields missing) the response has
+      `enabled: false` and `state: "disabled"`. Admin only.
+    operationId: getLetsEncryptStatus
+    responses:
+      '200':
+        description: Current ACME state
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/LetsEncryptStatus.yaml'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'
+      '403':
+        description: Forbidden (not an admin)
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/ErrorResponse.yaml'

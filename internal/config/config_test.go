@@ -479,6 +479,227 @@ func TestNormalizeConfigValues_DefaultLanguage(t *testing.T) {
 	}
 }
 
+// =============================================================================
+// ACME helpers (Tier 3 G)
+// =============================================================================
+
+const (
+	testACMEEmail   = "ops@example.com"
+	testCertPath    = "/some/cert.pem"
+	testCertKeyPath = "/some/key.pem"
+)
+
+func TestConfig_ACMEEnabled(t *testing.T) {
+	tests := []struct {
+		name       string
+		mutate     func(*Config)
+		wantResult bool
+	}{
+		{
+			name: "true_when_http01_with_email_and_domains",
+			mutate: func(c *Config) {
+				c.ACME.Enabled = true
+				c.ACME.ChallengeType = ACMEChallengeHTTP01
+				c.ACME.Email = testACMEEmail
+				c.ACME.Domains = []string{"example.com"}
+			},
+			wantResult: true,
+		},
+		{
+			name: "true_when_dns01_with_provider",
+			mutate: func(c *Config) {
+				c.ACME.Enabled = true
+				c.ACME.ChallengeType = ACMEChallengeDNS01
+				c.ACME.Email = testACMEEmail
+				c.ACME.Domains = []string{"example.com"}
+				c.ACME.DNSProvider = "cloudflare"
+			},
+			wantResult: true,
+		},
+		{
+			name: "false_when_acme_disabled",
+			mutate: func(c *Config) {
+				c.ACME.Enabled = false
+				c.ACME.ChallengeType = ACMEChallengeHTTP01
+				c.ACME.Email = testACMEEmail
+				c.ACME.Domains = []string{"example.com"}
+			},
+			wantResult: false,
+		},
+		{
+			name: "false_when_email_missing",
+			mutate: func(c *Config) {
+				c.ACME.Enabled = true
+				c.ACME.ChallengeType = ACMEChallengeHTTP01
+				c.ACME.Email = ""
+				c.ACME.Domains = []string{"example.com"}
+			},
+			wantResult: false,
+		},
+		{
+			name: "false_when_domains_empty",
+			mutate: func(c *Config) {
+				c.ACME.Enabled = true
+				c.ACME.ChallengeType = ACMEChallengeHTTP01
+				c.ACME.Email = testACMEEmail
+				c.ACME.Domains = nil
+			},
+			wantResult: false,
+		},
+		{
+			name: "false_when_dns01_without_provider",
+			mutate: func(c *Config) {
+				c.ACME.Enabled = true
+				c.ACME.ChallengeType = ACMEChallengeDNS01
+				c.ACME.Email = testACMEEmail
+				c.ACME.Domains = []string{"example.com"}
+				c.ACME.DNSProvider = ""
+			},
+			wantResult: false,
+		},
+		{
+			name: "false_for_unknown_challenge_type",
+			mutate: func(c *Config) {
+				c.ACME.Enabled = true
+				c.ACME.ChallengeType = "tls-alpn-01"
+				c.ACME.Email = testACMEEmail
+				c.ACME.Domains = []string{"example.com"}
+			},
+			wantResult: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// ARRANGE
+			cfg := &Config{}
+			tt.mutate(cfg)
+
+			// ACT
+			got := cfg.ACMEEnabled()
+
+			// ASSERT
+			assert.Equal(t, tt.wantResult, got)
+		})
+	}
+}
+
+func TestConfig_EffectiveCertSource(t *testing.T) {
+	tests := []struct {
+		name   string
+		mutate func(*Config)
+		want   CertSource
+	}{
+		{
+			name: "acme_takes_priority_when_enabled",
+			mutate: func(c *Config) {
+				c.ACME.Enabled = true
+				c.ACME.ChallengeType = ACMEChallengeHTTP01
+				c.ACME.Email = testACMEEmail
+				c.ACME.Domains = []string{"example.com"}
+				c.TLS.CertFile = testCertPath
+				c.TLS.KeyFile = testCertKeyPath
+			},
+			want: CertSourceACME,
+		},
+		{
+			name: "file_when_paths_set_and_acme_disabled",
+			mutate: func(c *Config) {
+				c.ACME.Enabled = false
+				c.TLS.CertFile = testCertPath
+				c.TLS.KeyFile = testCertKeyPath
+			},
+			want: CertSourceFile,
+		},
+		{
+			name: "inline_when_only_content_set",
+			mutate: func(c *Config) {
+				c.TLS.Cert = "-----BEGIN CERTIFICATE-----\n-----END CERTIFICATE-----"
+				c.TLS.Key = "-----BEGIN PRIVATE KEY-----\n-----END PRIVATE KEY-----"
+			},
+			want: CertSourceInline,
+		},
+		{
+			name:   "none_when_nothing_configured",
+			mutate: func(_ *Config) {},
+			want:   CertSourceNone,
+		},
+		{
+			name: "none_when_only_cert_path_set",
+			mutate: func(c *Config) {
+				c.TLS.CertFile = testCertPath
+			},
+			want: CertSourceNone,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// ARRANGE
+			cfg := &Config{}
+			tt.mutate(cfg)
+
+			// ACT
+			got := cfg.EffectiveCertSource()
+
+			// ASSERT
+			assert.Equal(t, tt.want, got, "EffectiveCertSource mismatch")
+		})
+	}
+}
+
+func TestCertSource_String(t *testing.T) {
+	tests := []struct {
+		source CertSource
+		want   string
+	}{
+		{source: CertSourceNone, want: "none"},
+		{source: CertSourceACME, want: "acme"},
+		{source: CertSourceFile, want: "file"},
+		{source: CertSourceInline, want: "inline"},
+		{source: CertSource(99), want: "none"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.want, func(t *testing.T) {
+			assert.Equal(t, tt.want, tt.source.String())
+		})
+	}
+}
+
+func TestConfig_TLSEnabled_FollowsEffectiveCertSource(t *testing.T) {
+	tests := []struct {
+		name   string
+		mutate func(*Config)
+		want   bool
+	}{
+		{
+			name: "true_when_acme_enabled",
+			mutate: func(c *Config) {
+				c.ACME.Enabled = true
+				c.ACME.ChallengeType = ACMEChallengeHTTP01
+				c.ACME.Email = testACMEEmail
+				c.ACME.Domains = []string{"example.com"}
+			},
+			want: true,
+		},
+		{
+			name:   "false_when_no_source_configured",
+			mutate: func(_ *Config) {},
+			want:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := &Config{}
+			tt.mutate(cfg)
+
+			assert.Equal(t, tt.want, cfg.TLSEnabled())
+		})
+	}
+}
+
 func generateTestCertificate(t *testing.T) (certPEM []byte, keyPEM []byte) {
 	t.Helper()
 

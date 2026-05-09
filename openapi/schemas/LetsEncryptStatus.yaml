@@ -1,0 +1,61 @@
+type: object
+required:
+  - enabled
+  - state
+properties:
+  enabled:
+    type: boolean
+    description: Whether ACME / Let's Encrypt is configured and active.
+  state:
+    type: string
+    enum:
+      - disabled
+      - pending
+      - active
+      - renewing
+      - failed
+    description: |
+      Current lifecycle state.
+        - `disabled`: ACME is not enabled in config.
+        - `pending`: enabled but initial certificate has not yet been obtained.
+        - `active`: a valid certificate is in use.
+        - `renewing`: renewal is in progress.
+        - `failed`: most recent issuance or renewal failed; see `last_error`.
+  challenge_type:
+    type: string
+    enum:
+      - http-01
+      - dns-01
+    description: |
+      ACME challenge solver in use. `http-01` requires port 80 reachable from
+      the public internet; `dns-01` requires a configured DNS provider and
+      supports wildcard certificates.
+  domains:
+    type: array
+    items:
+      type: string
+    description: Domains covered by the current certificate (SAN list, may include wildcards).
+  dns_provider:
+    type: string
+    description: |
+      Identifier of the DNS-01 provider being used. Format `<plugin-id>:<provider-name>`
+      for plugin-backed providers, or a bare provider name for built-in fallbacks.
+  not_before:
+    type: string
+    format: date-time
+    description: Certificate validity start.
+  not_after:
+    type: string
+    format: date-time
+    description: Certificate validity end.
+  last_renewal_at:
+    type: string
+    format: date-time
+    description: Timestamp of the most recent successful issuance or renewal.
+  next_renewal_check_at:
+    type: string
+    format: date-time
+    description: Next time the renewal loop will inspect the certificate.
+  last_error:
+    type: string
+    description: Last issuance or renewal error, if any.

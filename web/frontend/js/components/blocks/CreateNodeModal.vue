@@ -26,7 +26,7 @@
 
               <div class="curl-container">
                 <code class="curl-link">{{ linuxCmd }}</code>
-                <button class="copy-btn" @click="copyToClipboard('curl', linuxCmd)" :title="trans('main.copy')">
+                <button v-if="canCopy" class="copy-btn" @click="copyToClipboard('curl', linuxCmd)" :title="trans('main.copy')">
                   <Transition name="icon-fade" mode="out-in">
                     <GIcon v-if="copiedKey === 'curl'" name="check" class="copied-icon" key="check" />
                     <GIcon v-else name="copy" key="copy" />
@@ -45,7 +45,7 @@
               <ul class="list-disc">
                 <li class="copyable-item">
                   {{ trans('dedicated_servers.autosetup_host') }}: <code>{{ host }}</code>
-                  <button class="copy-btn" @click="copyToClipboard('host', host)" :title="trans('main.copy')">
+                  <button v-if="canCopy" class="copy-btn" @click="copyToClipboard('host', host)" :title="trans('main.copy')">
                     <Transition name="icon-fade" mode="out-in">
                       <GIcon v-if="copiedKey === 'host'" name="check" class="copied-icon" key="check" />
                       <GIcon v-else name="copy" key="copy" />
@@ -54,7 +54,7 @@
                 </li>
                 <li class="copyable-item">
                   {{ trans('dedicated_servers.autosetup_token') }}: <code>{{ token }}</code>
-                  <button class="copy-btn" @click="copyToClipboard('token', token)" :title="trans('main.copy')">
+                  <button v-if="canCopy" class="copy-btn" @click="copyToClipboard('token', token)" :title="trans('main.copy')">
                     <Transition name="icon-fade" mode="out-in">
                       <GIcon v-if="copiedKey === 'token'" name="check" class="copied-icon" key="check" />
                       <GIcon v-else name="copy" key="copy" />
@@ -67,7 +67,7 @@
 
               <div class="curl-container">
                 <code class="curl-link">curl {{ linkWithConfig }} | bash --</code>
-                <button class="copy-btn" @click="copyToClipboard('curl-legacy', curlCommand)" :title="trans('main.copy')">
+                <button v-if="canCopy" class="copy-btn" @click="copyToClipboard('curl-legacy', curlCommand)" :title="trans('main.copy')">
                   <Transition name="icon-fade" mode="out-in">
                     <GIcon v-if="copiedKey === 'curl-legacy'" name="check" class="copied-icon" key="check" />
                     <GIcon v-else name="copy" key="copy" />
@@ -119,7 +119,7 @@
 
               <div class="curl-container">
                 <code class="curl-link">{{ windowsCmd }}</code>
-                <button class="copy-btn" @click="copyToClipboard('win-cmd', windowsCmd)" :title="trans('main.copy')">
+                <button v-if="canCopy" class="copy-btn" @click="copyToClipboard('win-cmd', windowsCmd)" :title="trans('main.copy')">
                   <Transition name="icon-fade" mode="out-in">
                     <GIcon v-if="copiedKey === 'win-cmd'" name="check" class="copied-icon" key="check" />
                     <GIcon v-else name="copy" key="copy" />
@@ -150,7 +150,7 @@
                   <ul class="list-disc ml-4">
                     <li class="copyable-item">
                       {{ trans('dedicated_servers.autosetup_host') }}: <code>{{ host }}</code>
-                      <button class="copy-btn" @click="copyToClipboard('host-win', host)" :title="trans('main.copy')">
+                      <button v-if="canCopy" class="copy-btn" @click="copyToClipboard('host-win', host)" :title="trans('main.copy')">
                         <Transition name="icon-fade" mode="out-in">
                           <GIcon v-if="copiedKey === 'host-win'" name="check" class="copied-icon" key="check" />
                           <GIcon v-else name="copy" key="copy" />
@@ -159,7 +159,7 @@
                     </li>
                     <li class="copyable-item">
                       {{ trans('dedicated_servers.autosetup_token') }}: <code>{{ token }}</code>
-                      <button class="copy-btn" @click="copyToClipboard('token-win', token)" :title="trans('main.copy')">
+                      <button v-if="canCopy" class="copy-btn" @click="copyToClipboard('token-win', token)" :title="trans('main.copy')">
                         <Transition name="icon-fade" mode="out-in">
                           <GIcon v-if="copiedKey === 'token-win'" name="check" class="copied-icon" key="check" />
                           <GIcon v-else name="copy" key="copy" />
@@ -190,6 +190,7 @@ import {useNodeListStore} from "@/store/nodeList";
 import {storeToRefs} from "pinia"
 import {NFormItem, NSwitch, NInput} from "naive-ui";
 import {errorNotification} from "@/parts/dialogs";
+import {copyToClipboard as copyText, isClipboardSupported} from "@/utils/clipboard";
 
 const props = defineProps({
   modelValue: {
@@ -236,14 +237,26 @@ const buildQueryParams = () => {
   return params.toString()
 }
 
+const buildLinuxCliArgs = () => {
+  let args = ''
+  if (daemonConfigProcessManager.value && daemonConfigProcessManager.value !== 'auto') {
+    args += ` --config='process_manager.name=${daemonConfigProcessManager.value}'`
+  }
+  if (useGithubSource.value) {
+    args += ' --github'
+  }
+  if (branchName.value) {
+    args += ` --branch=${branchName.value}`
+  }
+  return args
+}
+
 const linuxCmd = computed(() => {
   const cmd = autoSetupData.value.linux_cmd || ''
   if (!hasCustomParams.value) {
     return cmd
   }
-  const setupLink = autoSetupData.value.setup_link || ''
-  const separator = setupLink.includes('?') ? '&' : '?'
-  return `curl -sLf '${setupLink}${separator}${buildQueryParams()}' | bash`
+  return `${cmd}${buildLinuxCliArgs()}`
 })
 
 const windowsCmd = computed(() => {
@@ -311,19 +324,14 @@ const curlCommand = computed(() => {
 
 const copiedKey = ref(null)
 let copyTimeout = null
+const canCopy = isClipboardSupported()
 
 const copyToClipboard = async (key, text) => {
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    await navigator.clipboard.writeText(text)
-  } else {
-    const textArea = document.createElement('textarea')
-    textArea.value = text
-    textArea.style.position = 'fixed'
-    textArea.style.left = '-9999px'
-    document.body.appendChild(textArea)
-    textArea.select()
-    document.execCommand('copy')
-    document.body.removeChild(textArea)
+  const ok = await copyText(text)
+  if (!ok) {
+    console.error('Failed to copy to clipboard')
+
+    return
   }
 
   if (copyTimeout) {

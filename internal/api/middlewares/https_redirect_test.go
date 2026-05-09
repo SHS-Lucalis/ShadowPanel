@@ -91,6 +91,15 @@ func TestHTTPSRedirectMiddleware(t *testing.T) {
 			expectedStatus:   http.StatusMovedPermanently,
 			expectedLocation: "https://192.168.1.1:8443/api",
 		},
+		{
+			name:             "passes_through_acme_challenge_over_http",
+			httpsPort:        443,
+			requestHost:      "example.com",
+			requestPath:      "/.well-known/acme-challenge/abc123",
+			hasTLS:           false,
+			expectedStatus:   http.StatusOK,
+			expectedLocation: "",
+		},
 	}
 
 	for _, tt := range tests {
