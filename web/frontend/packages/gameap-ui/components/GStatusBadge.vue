@@ -24,7 +24,9 @@ const badgeClasses = {
 }
 
 const spanClass = computed(() => {
-  return badgeClasses[props.status] ?? 'badge-light'
+  const base = badgeClasses[props.status] ?? 'badge-light'
+
+  return `${base} inline-flex items-center justify-center min-w-[5.5rem]`
 })
 
 const statusText = computed(() => {

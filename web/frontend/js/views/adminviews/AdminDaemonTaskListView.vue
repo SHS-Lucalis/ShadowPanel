@@ -1,7 +1,7 @@
 <template>
   <GBreadcrumbs :items="breadcrumbs"></GBreadcrumbs>
 
-  <div class="mb-1 w-2/3">
+  <div class="mb-1 w-full lg:w-2/3">
     <n-input-group>
       <n-select
           multiple
@@ -48,6 +48,7 @@
       :data="listData"
       :loading="loading"
       :pagination="pagination"
+      :scroll-x="800"
       @update:page="handlePageChange"
   >
     <template #loading>
@@ -58,7 +59,7 @@
 
 <script setup>
 import { GBreadcrumbs, GStatusBadge, Loading, GIcon, GDataTable } from "@gameap/ui"
-import {computed, h, ref, reactive, onMounted} from "vue"
+import {computed, h, ref, reactive, onMounted, onUnmounted} from "vue"
 import {
   NButton,
   NSelect,
@@ -84,11 +85,31 @@ const breadcrumbs = computed(() => {
   ]
 })
 
-const createColumns = () => {
-  return [
+const isSmallScreen = ref(window.innerWidth < 1024)
+
+const handleResize = () => {
+  isSmallScreen.value = window.innerWidth < 1024
+}
+
+const formatDateTime = (value) => {
+  if (!value) {
+    return ''
+  }
+  const d = new Date(value)
+  if (isNaN(d.getTime())) {
+    return ''
+  }
+  const pad = (n) => String(n).padStart(2, '0')
+
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+}
+
+const columns = computed(() => {
+  const cols = [
     {
       title: trans('gdaemon_tasks.task'),
       key: "task",
+      ellipsis: { tooltip: true },
       render(row) {
         return renderTaskNameWithIcon(row.task, trans('gdaemon_tasks.'+row.task))
       },
@@ -96,20 +117,27 @@ const createColumns = () => {
     {
       title: trans('gdaemon_tasks.status'),
       key: "status",
+      className: "whitespace-nowrap",
+      width: 120,
       render(row) {
-        return h(GStatusBadge, {status: row.status, text: trans('gdaemon_tasks.status_' + row.status)})
+        return h(GStatusBadge, {
+          status: row.status,
+          text: trans('gdaemon_tasks.status_' + row.status),
+        })
       },
     },
     {
       title: trans('servers.game_server'),
+      ellipsis: { tooltip: true },
       render(row) {
         if (!row.serverId) {
           return ''
         }
-        let server = servers.value.find((server) => server.id === row.serverId)
+        const server = servers.value.find((server) => server.id === row.serverId)
         if (!server) {
           return ''
         }
+
         return h(
           RouterLink,
           {
@@ -122,43 +150,55 @@ const createColumns = () => {
     },
     {
       title: trans('servers.dedicated_server'),
+      ellipsis: { tooltip: true },
       render(row) {
-        let node = nodes.value.find((node) => node.id === row.nodeId)
+        const node = nodes.value.find((node) => node.id === row.nodeId)
+
         return node ? node.name : ''
       },
     },
     {
       title: trans('gdaemon_tasks.created'),
-      key: "createdAt"
+      key: "createdAt",
+      className: "whitespace-nowrap",
+      width: 160,
     },
-    {
-      title: trans('gdaemon_tasks.updated'),
-      key: "updatedAt"
-    },
-    {
-      title: trans('main.actions'),
-      render(row) {
-        return [
-          h(GButton, {
-            color: 'green',
-            size: 'small',
-            class: 'mr-0.5',
-            route: {name: 'admin.gdaemon_tasks.output', params: {id: row.id}},
-          }, { default: () => [
-            h(GIcon, {name: 'view'}),
-            h("span", {class: 'hidden lg:inline'}, trans('main.view')),
-          ]}),
-        ]
-      },
-    }
   ]
-}
+
+  if (!isSmallScreen.value) {
+    cols.push({
+      title: trans('gdaemon_tasks.updated'),
+      key: "updatedAt",
+      className: "whitespace-nowrap",
+      width: 160,
+    })
+  }
+
+  cols.push({
+    title: trans('main.actions'),
+    className: "whitespace-nowrap",
+    render(row) {
+      return [
+        h(GButton, {
+          color: 'green',
+          size: 'small',
+          class: 'mr-0.5',
+          route: {name: 'admin.gdaemon_tasks.output', params: {id: row.id}},
+        }, { default: () => [
+          h(GIcon, {name: 'view'}),
+          h("span", {class: 'hidden lg:inline'}, trans('main.view')),
+        ]}),
+      ]
+    },
+  })
+
+  return cols
+})
 
 const {daemonTaskList, currentPage, total} = storeToRefs(daemonTaskListStore)
 const {nodes} = storeToRefs(nodeListStore)
 const {servers} = storeToRefs(serverListStore)
 
-const columns = ref(createColumns())
 const pagination = reactive({
   page: currentPage,
   pageSize: 30,
@@ -171,9 +211,15 @@ const loading = computed(() => {
 onMounted(() => {
   currentPage.value = 1
 
+  window.addEventListener('resize', handleResize)
+
   fetchTasks()
   fetchNodes()
   fetchServers()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
 })
 
 const fetchTasks = () => {
@@ -227,8 +273,8 @@ const listData = computed(() => {
       status: task.status,
       serverId: task.server_id,
       nodeId: task.dedicated_server_id,
-      createdAt: (new Date(task.created_at)).toLocaleString(),
-      updatedAt: (new Date(task.updated_at)).toLocaleString(),
+      createdAt: formatDateTime(task.created_at),
+      updatedAt: formatDateTime(task.updated_at),
     }
   })
 })
