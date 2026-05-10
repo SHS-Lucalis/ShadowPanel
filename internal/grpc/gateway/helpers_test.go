@@ -253,6 +253,38 @@ func (f *fakeTaskHandler) Outputs() []*proto.TaskOutput {
 	return slices.Clone(f.outputs)
 }
 
+// fakeTaskFlusher records FlushPending invocations.
+type fakeTaskFlusher struct {
+	mu       sync.Mutex
+	flushed  []uint64
+	flushErr error
+	done     chan struct{}
+}
+
+func newFakeTaskFlusher() *fakeTaskFlusher {
+	return &fakeTaskFlusher{done: make(chan struct{}, 8)}
+}
+
+func (f *fakeTaskFlusher) FlushPending(_ context.Context, nodeID uint64) error {
+	f.mu.Lock()
+	f.flushed = append(f.flushed, nodeID)
+	f.mu.Unlock()
+
+	select {
+	case f.done <- struct{}{}:
+	default:
+	}
+
+	return f.flushErr
+}
+
+func (f *fakeTaskFlusher) Flushed() []uint64 {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	return slices.Clone(f.flushed)
+}
+
 // fakeCommandHandler records command handler invocations.
 type fakeCommandHandler struct {
 	mu      sync.Mutex
@@ -376,6 +408,7 @@ type serviceDeps struct {
 	gameModRepo       *inmemory.GameModRepository
 	apiKeyVerifier    *fakeAPIKeyVerifier
 	taskHandler       *fakeTaskHandler
+	taskFlusher       *fakeTaskFlusher
 	commandHandler    *fakeCommandHandler
 	serverHandler     *fakeServerStatusHandler
 	attachHandler     *fakeAttachHandler
@@ -401,6 +434,7 @@ func newServiceWithDeps(t *testing.T) (*Service, *serviceDeps) {
 		gameModRepo:       inmemory.NewGameModRepository(),
 		apiKeyVerifier:    &fakeAPIKeyVerifier{valid: map[string]uint64{}},
 		taskHandler:       &fakeTaskHandler{},
+		taskFlusher:       newFakeTaskFlusher(),
 		commandHandler:    &fakeCommandHandler{},
 		serverHandler:     &fakeServerStatusHandler{},
 		attachHandler:     &fakeAttachHandler{},
@@ -417,6 +451,7 @@ func newServiceWithDeps(t *testing.T) (*Service, *serviceDeps) {
 		deps.gameModRepo,
 		deps.apiKeyVerifier,
 		deps.taskHandler,
+		deps.taskFlusher,
 		deps.commandHandler,
 		deps.serverHandler,
 		deps.attachHandler,

@@ -9,6 +9,7 @@ import (
 	"github.com/gameap/gameap/pkg/plugin/sdk/common"
 	"github.com/gameap/gameap/pkg/plugin/sdk/daemontasks"
 	"github.com/gameap/gameap/pkg/proto"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -162,7 +163,7 @@ func TestDaemonTasksService_FindDaemonTasks(t *testing.T) {
 			repo := inmemory.NewDaemonTaskRepository()
 			tt.setupRepo(repo)
 
-			svc := NewDaemonTasksService(repo)
+			svc := NewDaemonTasksService(repo, nil)
 			resp, err := svc.FindDaemonTasks(context.Background(), tt.request)
 
 			require.NoError(t, err)
@@ -234,7 +235,7 @@ func TestDaemonTasksService_CreateDaemonTask(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := inmemory.NewDaemonTaskRepository()
-			svc := NewDaemonTasksService(repo)
+			svc := NewDaemonTasksService(repo, nil)
 
 			resp, err := svc.CreateDaemonTask(context.Background(), tt.request)
 
@@ -250,6 +251,117 @@ func TestDaemonTasksService_CreateDaemonTask(t *testing.T) {
 
 			assert.Nil(t, resp.Error)
 			assert.Greater(t, resp.TaskId, uint64(0))
+		})
+	}
+}
+
+type fakeTaskDispatcher struct {
+	dispatched []*domain.DaemonTask
+	err        error
+}
+
+func (f *fakeTaskDispatcher) Dispatch(_ context.Context, task *domain.DaemonTask) error {
+	if f.err != nil {
+		return f.err
+	}
+
+	if task.ID == 0 {
+		task.ID = uint(len(f.dispatched) + 1)
+	}
+	f.dispatched = append(f.dispatched, task)
+
+	return nil
+}
+
+func TestDaemonTasksService_CreateDaemonTask_Dispatch(t *testing.T) {
+	tests := []struct {
+		name           string
+		dispatcher     *fakeTaskDispatcher
+		request        *daemontasks.CreateDaemonTaskRequest
+		wantError      string
+		wantSuccess    bool
+		wantDispatched int
+		wantSaved      int
+		wantTaskFields func(*testing.T, *domain.DaemonTask)
+	}{
+		{
+			name:       "dispatcher_called_when_provided",
+			dispatcher: &fakeTaskDispatcher{},
+			request: &daemontasks.CreateDaemonTaskRequest{
+				NodeId:   8,
+				TaskType: proto.DaemonTaskType_DAEMON_TASK_TYPE_CMD_EXEC,
+				Cmd:      new("echo hello"),
+			},
+			wantSuccess:    true,
+			wantDispatched: 1,
+			wantSaved:      0,
+			wantTaskFields: func(t *testing.T, task *domain.DaemonTask) {
+				t.Helper()
+				assert.Equal(t, uint(8), task.DedicatedServerID)
+				assert.Equal(t, domain.DaemonTaskTypeCmdExec, task.Task)
+				assert.Equal(t, domain.DaemonTaskStatusWaiting, task.Status)
+				require.NotNil(t, task.Cmd)
+				assert.Equal(t, "echo hello", *task.Cmd)
+				assert.Nil(t, task.ServerID)
+			},
+		},
+		{
+			name:       "dispatcher_passes_server_id_when_set",
+			dispatcher: &fakeTaskDispatcher{},
+			request: &daemontasks.CreateDaemonTaskRequest{
+				NodeId:   1,
+				ServerId: new(uint64(42)),
+				TaskType: proto.DaemonTaskType_DAEMON_TASK_TYPE_SERVER_START,
+			},
+			wantSuccess:    true,
+			wantDispatched: 1,
+			wantTaskFields: func(t *testing.T, task *domain.DaemonTask) {
+				t.Helper()
+				require.NotNil(t, task.ServerID)
+				assert.Equal(t, uint(42), *task.ServerID)
+			},
+		},
+		{
+			name:       "dispatcher_error_returns_error_response",
+			dispatcher: &fakeTaskDispatcher{err: errors.New("registry unavailable")},
+			request: &daemontasks.CreateDaemonTaskRequest{
+				NodeId:   1,
+				TaskType: proto.DaemonTaskType_DAEMON_TASK_TYPE_CMD_EXEC,
+				Cmd:      new("ls"),
+			},
+			wantError:      "registry unavailable",
+			wantSuccess:    false,
+			wantDispatched: 0,
+			wantSaved:      0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := inmemory.NewDaemonTaskRepository()
+			svc := NewDaemonTasksService(repo, tt.dispatcher)
+
+			resp, err := svc.CreateDaemonTask(context.Background(), tt.request)
+
+			require.NoError(t, err)
+			assert.Equal(t, tt.wantSuccess, resp.Success)
+
+			if tt.wantError != "" {
+				require.NotNil(t, resp.Error)
+				assert.Contains(t, *resp.Error, tt.wantError)
+			} else {
+				assert.Nil(t, resp.Error)
+			}
+
+			require.Len(t, tt.dispatcher.dispatched, tt.wantDispatched)
+
+			saved, err := repo.Find(context.Background(), nil, nil, nil)
+			require.NoError(t, err)
+			assert.Len(t, saved, tt.wantSaved, "repo.Save should not be called on dispatcher path")
+
+			if tt.wantTaskFields != nil && tt.wantDispatched > 0 {
+				tt.wantTaskFields(t, tt.dispatcher.dispatched[0])
+			}
 		})
 	}
 }
@@ -400,7 +512,7 @@ func TestConvertDaemonTaskToProto_NilOptionalFields(t *testing.T) {
 
 func TestNewDaemonTasksHostLibrary(t *testing.T) {
 	repo := inmemory.NewDaemonTaskRepository()
-	lib := NewDaemonTasksHostLibrary(repo)
+	lib := NewDaemonTasksHostLibrary(repo, nil)
 
 	assert.NotNil(t, lib)
 	assert.NotNil(t, lib.impl)

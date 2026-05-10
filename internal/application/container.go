@@ -1649,7 +1649,7 @@ func (c *Container) createPluginManager() *pkgplugin.Manager {
 			hostlibrary.NewNodesHostLibrary(c.NodeRepository()),
 			hostlibrary.NewGamesHostLibrary(c.GameRepository()),
 			hostlibrary.NewGameModsHostLibrary(c.GameModRepository()),
-			hostlibrary.NewDaemonTasksHostLibrary(c.DaemonTaskRepository()),
+			hostlibrary.NewDaemonTasksHostLibrary(c.DaemonTaskRepository(), c.TaskDispatcher()),
 			hostlibrary.NewServerSettingsHostLibrary(c.ServerSettingRepository()),
 			hostlibrary.NewServerControlHostLibrary(
 				c.ServerRepository(),
@@ -1868,6 +1868,7 @@ func (c *Container) GatewayService() *gateway.Service {
 			c.GameModRepository(),
 			nil,
 			c.TaskHandler(),
+			c.TaskDispatcher(),
 			c.CommandHandler(),
 			c.ServerStatusHandler(),
 			c.AttachHandler(),

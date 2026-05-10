@@ -50,13 +50,22 @@ var protoToDomainType = map[proto.DaemonTaskType]domain.DaemonTaskType{
 	proto.DaemonTaskType_DAEMON_TASK_TYPE_CMD_EXEC:       domain.DaemonTaskTypeCmdExec,
 }
 
-type DaemonTasksServiceImpl struct {
-	daemonTaskRepo repositories.DaemonTaskRepository
+type TaskDispatcher interface {
+	Dispatch(ctx context.Context, task *domain.DaemonTask) error
 }
 
-func NewDaemonTasksService(daemonTaskRepo repositories.DaemonTaskRepository) *DaemonTasksServiceImpl {
+type DaemonTasksServiceImpl struct {
+	daemonTaskRepo repositories.DaemonTaskRepository
+	taskDispatcher TaskDispatcher
+}
+
+func NewDaemonTasksService(
+	daemonTaskRepo repositories.DaemonTaskRepository,
+	taskDispatcher TaskDispatcher,
+) *DaemonTasksServiceImpl {
 	return &DaemonTasksServiceImpl{
 		daemonTaskRepo: daemonTaskRepo,
+		taskDispatcher: taskDispatcher,
 	}
 }
 
@@ -128,7 +137,13 @@ func (s *DaemonTasksServiceImpl) CreateDaemonTask(
 		task.Cmd = req.Cmd
 	}
 
-	if err := s.daemonTaskRepo.Save(ctx, task); err != nil {
+	var err error
+	if s.taskDispatcher != nil {
+		err = s.taskDispatcher.Dispatch(ctx, task)
+	} else {
+		err = s.daemonTaskRepo.Save(ctx, task)
+	}
+	if err != nil {
 		return &daemontasks.CreateDaemonTaskResponse{
 			Success: false,
 			Error:   new(err.Error()),
@@ -188,9 +203,12 @@ type DaemonTasksHostLibrary struct {
 	impl *DaemonTasksServiceImpl
 }
 
-func NewDaemonTasksHostLibrary(daemonTaskRepo repositories.DaemonTaskRepository) *DaemonTasksHostLibrary {
+func NewDaemonTasksHostLibrary(
+	daemonTaskRepo repositories.DaemonTaskRepository,
+	taskDispatcher TaskDispatcher,
+) *DaemonTasksHostLibrary {
 	return &DaemonTasksHostLibrary{
-		impl: NewDaemonTasksService(daemonTaskRepo),
+		impl: NewDaemonTasksService(daemonTaskRepo, taskDispatcher),
 	}
 }
 

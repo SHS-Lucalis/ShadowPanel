@@ -43,6 +43,7 @@ type Service struct {
 	logger            *slog.Logger
 	apiKeyVerifier    APIKeyVerifier
 	taskHandler       TaskHandler
+	taskFlusher       TaskFlusher
 	commandHandler    CommandHandler
 	serverHandler     ServerStatusHandler
 	attachHandler     AttachHandler
@@ -60,6 +61,15 @@ type TaskHandler interface {
 	HandleTaskOutput(ctx context.Context, nodeID uint64, output *proto.TaskOutput) error
 	GetPendingTasks(ctx context.Context, nodeID uint64) ([]*proto.DaemonTask, error)
 	ReconcileWorkingTasks(ctx context.Context, nodeID uint64, inFlightIDs []uint64, reason string) (int, error)
+}
+
+// TaskFlusher pushes still-waiting daemon tasks to a freshly-registered
+// session. Connect calls FlushPending once the daemon's session is live so
+// any tasks that landed in the DB while the daemon was offline (or while a
+// peer API instance owned the session) are delivered immediately, without
+// waiting for the next reconnect.
+type TaskFlusher interface {
+	FlushPending(ctx context.Context, nodeID uint64) error
 }
 
 type CommandHandler interface {
@@ -95,6 +105,7 @@ func NewService(
 	gameModRepo repositories.GameModRepository,
 	apiKeyVerifier APIKeyVerifier,
 	taskHandler TaskHandler,
+	taskFlusher TaskFlusher,
 	commandHandler CommandHandler,
 	serverHandler ServerStatusHandler,
 	attachHandler AttachHandler,
@@ -116,6 +127,7 @@ func NewService(
 		gameModRepo:       gameModRepo,
 		apiKeyVerifier:    apiKeyVerifier,
 		taskHandler:       taskHandler,
+		taskFlusher:       taskFlusher,
 		commandHandler:    commandHandler,
 		serverHandler:     serverHandler,
 		attachHandler:     attachHandler,
@@ -207,7 +219,29 @@ func (s *Service) Connect(stream proto.DaemonGateway_ConnectServer) error {
 		"capabilities", reg.Capabilities,
 	)
 
+	s.flushPendingTasksAsync(reg.NodeId)
+
 	return s.handleMessages(sessionCtx, sess)
+}
+
+// flushPendingTasksAsync pushes any waiting tasks for the freshly-registered
+// node. Runs in its own goroutine so it never blocks handleMessages, and uses
+// context.Background so it survives the gRPC stream context that ends the
+// moment Connect returns. Daemon-side idempotency (processedTasks) makes
+// overlap with RegisterAck.PendingTasks safe.
+func (s *Service) flushPendingTasksAsync(nodeID uint64) {
+	if s.taskFlusher == nil {
+		return
+	}
+
+	go func() {
+		if err := s.taskFlusher.FlushPending(context.Background(), nodeID); err != nil {
+			s.logger.Warn("failed to flush pending tasks on connect",
+				"node_id", nodeID,
+				"error", err,
+			)
+		}
+	}()
 }
 
 // reconcileAbandonedTasks flips any task this node left in `working` to

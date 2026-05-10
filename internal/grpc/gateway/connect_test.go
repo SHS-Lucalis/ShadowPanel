@@ -91,6 +91,54 @@ func TestService_Connect_authenticatesAndSendsRegisterAck(t *testing.T) {
 	assert.False(t, deps.registry.IsConnected(1), "session must be unregistered on Connect return")
 }
 
+func TestService_Connect_flushesPendingTasksAfterRegister(t *testing.T) {
+	svc, deps := newServiceWithDeps(t)
+	setupAuthorizedNode(t, deps, "secret")
+
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	stream := newStubConnectServer(ctx)
+
+	stream.PushMessage(&proto.DaemonMessage{
+		RequestId: "register-flush",
+		Payload: &proto.DaemonMessage_Register{
+			Register: &proto.RegisterRequest{
+				NodeId:  1,
+				ApiKey:  "secret",
+				Version: "v1.0.0",
+			},
+		},
+	})
+
+	connectErrCh := make(chan error, 1)
+	go func() {
+		connectErrCh <- svc.Connect(stream)
+	}()
+
+	require.Eventually(t, func() bool {
+		return len(stream.Sent()) > 0
+	}, time.Second, 5*time.Millisecond, "RegisterAck must be sent")
+
+	select {
+	case <-deps.taskFlusher.done:
+	case <-time.After(time.Second):
+		t.Fatal("FlushPending was not called within 1s after RegisterAck")
+	}
+
+	stream.CloseRecv()
+
+	select {
+	case err := <-connectErrCh:
+		require.NoError(t, err)
+	case <-time.After(2 * time.Second):
+		t.Fatal("Connect did not return in time")
+	}
+
+	flushed := deps.taskFlusher.Flushed()
+	require.Len(t, flushed, 1)
+	assert.Equal(t, uint64(1), flushed[0])
+}
+
 func TestService_Connect_invalidFirstMessageReturnsError(t *testing.T) {
 	t.Run("recv_error_returns_invalid_argument", func(t *testing.T) {
 		// ARRANGE
