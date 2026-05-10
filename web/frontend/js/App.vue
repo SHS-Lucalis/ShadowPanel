@@ -8,6 +8,7 @@
       <n-message-provider>
         <div v-if="user">
           <main-navbar></main-navbar>
+          <status-notifier />
 
           <div id="main-section" class="mt-16 mr-5 sm:flex">
             <div class="sm:visible invisible flex-none">
@@ -62,6 +63,7 @@ import MainNavbar from "./components/MainNavbar.vue"
 import GuestNavbar from "./components/GuestNavbar.vue"
 import MainSidebar from "./components/MainSidebar.vue"
 import ContentView from "./components/ContentView.vue"
+import StatusNotifier from "./components/StatusNotifier.vue"
 import {pageLanguage} from "./i18n/i18n"
 
 import {useRoute, useRouter} from "vue-router"
