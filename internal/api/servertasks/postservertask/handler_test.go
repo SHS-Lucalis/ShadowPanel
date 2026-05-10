@@ -285,6 +285,18 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			wantError:  "repeat_period must match format: '<number> <unit>",
 		},
 		{
+			name:       "execute_date_in_the_past_rejected",
+			setupAuth:  defaultSetupAuth,
+			setupRepos: defaultSetupRepos,
+			requestBody: map[string]any{
+				"command":      "start",
+				"repeat":       1,
+				"execute_date": time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
+			},
+			wantStatus: http.StatusUnprocessableEntity,
+			wantError:  "validation failed: execute_date must not be in the past",
+		},
+		{
 			name: "access denied - no server access",
 			setupAuth: func() context.Context {
 				session := &auth.Session{

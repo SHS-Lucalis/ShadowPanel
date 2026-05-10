@@ -19,6 +19,7 @@ var (
 		"invalid command, must be one of: start, stop, restart, update, reinstall",
 	)
 	ErrExecuteDateIsRequired = api.NewValidationError("execute_date is required")
+	ErrExecuteDateInPast     = api.NewValidationError("execute_date must not be in the past")
 	ErrInvalidRepeat         = api.NewValidationError("repeat must be between 0 and 255")
 	ErrRepeatPeriodRequired  = api.NewValidationError("repeat_period is required when repeat is not 1")
 	ErrInvalidRepeatPeriod   = api.NewValidationError(
@@ -50,6 +51,10 @@ func (s *serverTaskInput) Validate() error {
 
 	if s.ExecuteDate == nil {
 		return ErrExecuteDateIsRequired
+	}
+
+	if s.ExecuteDate.Before(time.Now().Add(-1 * time.Minute)) {
+		return ErrExecuteDateInPast
 	}
 
 	if s.Repeat != nil { //nolint:nestif
