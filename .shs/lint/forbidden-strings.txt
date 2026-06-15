@@ -1,0 +1,18 @@
+# Forbidden plugin/game identifiers inside core SHS Panel.
+#
+# Per architecture plan §5 / §8.2 / §11 the rule is: SHS-plugin-specific
+# identifiers must not appear in core panel code. "Core" is defined in
+# .shs/tools/shslint/main.go (cmd, internal/<core subtrees>, migrations,
+# openapi, web/frontend, and pkg/* except pkg/shspluginsdk).
+#
+# This list is intentionally NARROW — substring matches against generic words
+# (e.g. "arma", "workshop") produce false positives in test fixtures pulling
+# from the GameAP global games API and in icon-font glyph names. Add a term
+# here only when it uniquely identifies a plugin or plugin-scoped concept.
+#
+# Format: one case-insensitive substring per non-empty, non-comment line.
+# Consumed by `make shs-lint` (Makefile target `shs-lint-core`).
+
+# SHS plugin: Arma Reforger Workshop / Config manager
+arma-reforger
+shs.arma-reforger

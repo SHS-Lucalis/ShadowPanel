@@ -1,0 +1,24 @@
+name: SHS
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  shs-lint:
+    name: SHS lint (boundary + scaffolding)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Verify SHS scaffolding
+        run: make shs-scaffold-check
+
+      - name: SHS core boundary lint
+        run: make shs-lint-core
